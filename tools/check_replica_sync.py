@@ -154,6 +154,21 @@ def main():
             if both("state") != initial:
                 raise AssertionError("Research calculation mutated ordered fixture state")
 
+        shot_cases = [
+            ("skill 10 5 3", "23"),
+            ("action 128 100 100 0 0 0", "128 229 114 0"),
+            # Feed that action's power (114) into the next independent research calculation.
+            ("keeper 114 256 100 100 200 50 0 240 4 0 3 10 3 4 200 180 100 0",
+             "256 150 145 11 156 2 3 0"),
+            ("action 256 100 100 2 0 0", "error malformed"),
+            ("keeper 114 256 100 100 0 50 0 240 4 0 3 10 3 4 200 180 100 0", "error malformed"),
+        ]
+        for command, expected in shot_cases:
+            if both(command) != expected:
+                raise AssertionError(f"Unexpected shot research reply for {command}")
+            if both("state") != initial:
+                raise AssertionError("Shot research query mutated ordered fixture state")
+
         cases = [
             ("contact 42 0", "rejected unauthorized"),
             ("contact 999 0", "rejected unknown_participant"),
@@ -176,6 +191,7 @@ def main():
         print(f"TCP replay passed: 2 native processes, {len(cases)} commands, identical full snapshots")
         print("Included delayed delivery, duplicate/future commands, invalid input, and participant checks")
         print("Defender TCP proof passed: ordinary, weakened, special, and rejected inputs agree")
+        print("Shot TCP proof passed: skill adjustment, action power, keeper comparison, and invalid input agree")
     finally:
         for connection in connections:
             connection.close()

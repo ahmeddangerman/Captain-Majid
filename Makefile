@@ -1,7 +1,7 @@
 CXX ?= c++
 CPPFLAGS += -Iengine/include
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
-CORE = engine/src/action_strength.cpp engine/src/session.cpp engine/src/defender_contact.cpp
+CORE = engine/src/action_strength.cpp engine/src/session.cpp engine/src/defender_contact.cpp engine/src/shot_power.cpp engine/src/goalkeeper.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check
@@ -19,9 +19,14 @@ build/core-tests: engine/tests/core_tests.cpp $(CORE) $(HEADERS) | build
 build/defender-tests: engine/tests/defender_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/defender_tests.cpp $(CORE) -o $@
 
-check: build/core-tests build/defender-tests build/captain-prototype
+build/shot-tests: engine/tests/shot_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/shot_tests.cpp $(CORE) -o $@
+
+check: build/core-tests build/defender-tests build/shot-tests build/captain-prototype
 	./build/core-tests
 	./build/defender-tests
+	./build/shot-tests
 	python3 engine/tests/check_cli.py
+	python3 engine/tests/check_shot_cli.py
 	python3 engine/tests/check_adapter.py
 	python3 tools/check_replica_sync.py

@@ -2,13 +2,14 @@
 
 **Date:** 2026-10-26
 
-**Scope:** Native action-strength and field-defender calculations, plus a development replay fixture. The authentic full shot interaction remains incomplete.
+**Scope:** Native skill-index, action-power, field-defender, and goalkeeper comparison calculations, plus a development replay fixture. The authentic full shot interaction remains incomplete.
 
 ## Implemented
 
 - Portable C++17 core with no rendering, audio, networking-library, or ROM dependency at runtime.
 - Original action-power contact-loss behavior, independently implemented from the verified Japanese ROM contract in [ACTION_STRENGTH.md](ACTION_STRENGTH.md).
 - Defender strength variation, weakened/special branches, score calculation, threshold classification, and conditional contact loss, specified in [DEFENDER_CONTACT.md](DEFENDER_CONTACT.md). Coefficients and thresholds are inputs; the engine bundles no original ROM tables.
+- Standard level/move index adjustment, randomized action power, and the pre-override goalkeeper comparison, specified in [SHOT_POWER_AND_KEEPER.md](SHOT_POWER_AND_KEEPER.md). The shared defender roll is reused for goalkeeper strength.
 - A fixture session that separates participant identity from team, rejects unauthorized and unordered commands before state changes, and serializes every fixture state field explicitly.
 - A native terminal executable with a batch arithmetic mode and strict replica command protocol.
 - A Python development adapter that sends commands through loopback TCP to two separate native processes, then compares their complete state after every command.
@@ -28,11 +29,19 @@ The defender increment received an independent review with no critical or import
 
 The TCP experiment also compares ordinary, weak, and special defender calculations and rejection of invalid coefficients. These stateless research requests leave the original ordered fixture state unchanged.
 
+The next original-ROM comparison passes 69,632 skill-index cases, 7,456 randomized action-power cases, and 5,248 goalkeeper cases. Skill checks cover every base-byte/level-byte pair with varying move modifiers plus seeded extra cases. Action checks include carry, critical, weakened, and truncation boundaries. Keeper checks include both team-side pointer paths, threshold equality, numerator wrap, zero strength, and state-adjustment saturation. Every exposed output is compared with original instruction execution.
+
+The loopback proof also checks skill adjustment, action power, and goalkeeper comparison, including using a calculated action power as the next keeper query's input. These remain research queries, not integrated shot commands or complete match state.
+
+Independent review of the skill/action/keeper increment reported no actionable findings and reproduced its full native checks and all three new ROM comparison sets. The earlier defender comparison also remains green after extracting the shared strength-variation code.
+
 ## Limits
 
 - The fixture advances a contact-loss stage; it does not determine an authentic shot result or offer a playable match.
-- The defender calculation returns an original numeric result code. Foul overrides, rewards, ball ownership/trajectory changes, and the full goalkeeper resolution are not yet implemented.
+- The defender and goalkeeper calculations return original numeric result codes. Foul/story overrides, rewards, ball ownership/trajectory changes, and the full goalkeeper result consequences are not yet implemented.
+- The skill helper computes standard indices only. Player/profile lookup, loading the original strength tables, stamina, and special-skill selection are still needed.
 - Random bytes are supplied explicitly. Original random generation and its dependence on frame timing still need study before integrating a complete deterministic match.
+- Static inspection identifies a frame-interrupt random generator that mixes player and sound-driver memory. [RANDOMNESS_NOTES.md](RANDOMNESS_NOTES.md) records why a gameplay trace is required before choosing simulation scheduling compatible with replacement music and online play.
 - The fixture's initial power 300 and loss 37 are developer-selected inputs. They are not claimed to be an actual player's statistics.
 - This snapshot is a comparison format; save loading and network state recovery are not implemented.
 - Python supplies TCP transport for this experiment. Native transport, protocol/version negotiation, identity authentication, encryption, reconnection, and host validation remain future work.
@@ -42,6 +51,6 @@ The TCP experiment also compares ordinary, weak, and special defender calculatio
 
 ## Next checkpoint
 
-Trace the callers that supply player statistics, coefficients, and random values during actual shots. Map numeric result codes to complete changes in ball possession and trajectory, then reconstruct goalkeeper resolution. Add a small visual scene once enough original rules are mapped to display an honest interaction outcome.
+Trace actual player/profile selection and energy accounting, and confirm random scheduling during gameplay. Map defender/keeper numeric result codes and story overrides to complete changes in ball possession, trajectory, and score. Then join the verified parts into one authentic shot flow, with a small visual scene once its outcome is supported by the original behavior.
 
 Early network comparisons continue alongside each simulation increment. Public matchmaking and the rules for additional participants remain part of the engine direction, without committing to an unsupported player count.
