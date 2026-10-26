@@ -34,3 +34,21 @@ for malformed in ("-1 0", "1 256", "65536 1", "1 1 extra", "1 +1", "1.0 1"):
                          capture_output=True, text=True, timeout=5)
     assert bad.returncode == 2 and not bad.stdout, (malformed, bad)
 print("CLI checks passed: malformed input and rejected commands preserve state")
+
+fixture = "300 256 100 100 200 50 0 0 0 1 3 160 100 50 0"
+expected = "256 150 37 128 1 263 3 0"
+result = subprocess.run([binary, "--defender-batch"], input=fixture + "\n",
+                        capture_output=True, text=True, timeout=5, check=True)
+assert result.stdout.strip() == expected, result.stdout
+for malformed in (fixture + " extra", fixture.replace("300", "65536", 1),
+                  "300 256 100 100 0 50 0 0 0 1 3 160 100 50 0",
+                  "300 256 100 100 200 50 2 0 0 1 3 160 100 50 0",
+                  "300 256 100 100 200 50 0 0 0 1 3 100 160 50 0"):
+    bad = subprocess.run([binary, "--defender-batch"], input=malformed + "\n",
+                         capture_output=True, text=True, timeout=5)
+    assert bad.returncode == 2 and not bad.stdout, (malformed, bad)
+result = subprocess.run([binary, "--replica"],
+                        input=f"state\ndefender {fixture}\ndefender {fixture} extra\nstate\nquit\n",
+                        capture_output=True, text=True, timeout=5, check=True)
+assert result.stdout.splitlines() == [initial, expected, "error malformed", initial]
+print("Defender CLI checks passed: strict parameters and stateless replica calculation")

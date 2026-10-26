@@ -2,7 +2,7 @@
 
 A native PC reconstruction project for Captain Tsubasa II, targeting Windows and Linux, with Arabic, English, community graphics/music packs, shaders, and online play as project goals.
 
-The current engine is an early development foundation: one verified action-strength calculation and an ordered replay fixture. A playable match has not been implemented.
+The current engine is an early development foundation: verified action-strength and field-defender calculations, plus an ordered replay fixture. A playable match has not been implemented.
 
 ## Build the prototype
 
@@ -50,9 +50,12 @@ Install the optional [analysis dependencies](tools/README.md), then provide your
 
 ```bash
 .venv/bin/python tools/verify_action_strength.py /path/to/japanese-game.nes
+.venv/bin/python tools/verify_defender_contact.py /path/to/japanese-game.nes
 ```
 
 ROMs, patches, extracted game assets, and generated script data stay outside Git. The public engine sources are independently written; the discovered disassembly is a research reference.
+
+The defender comparison covers strength variation, weakening, special branches, classification, and conditional power loss. It reads the original tables from your ROM during verification. The native `--defender-batch` research mode accepts explicit parameters as documented in [DEFENDER_CONTACT.md](docs/DEFENDER_CONTACT.md).
 
 ## Project reference
 

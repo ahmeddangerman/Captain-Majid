@@ -142,6 +142,18 @@ def main():
         if initial != "CM1|rules=contact-loss-v1|power=300|loss=37|next=0|owner=0|participants=7:0,42:1":
             raise AssertionError(f"Unexpected initial fixture: {initial}")
 
+        defender_cases = [
+            ("300 256 100 100 200 50 0 0 0 1 3 160 100 50 0", "256 150 37 128 1 263 3 0"),
+            ("300 256 100 100 200 50 1 1 4 0 3 160 100 50 0", "16 9 2 255 0 300 3 0"),
+            ("300 256 100 100 200 50 0 1 4 0 3 160 100 50 0", "256 255 63 75 2 300 131 1"),
+            ("300 256 100 100 0 50 0 0 0 1 3 160 100 50 0", "error malformed"),
+        ]
+        for fixture, expected in defender_cases:
+            if both("defender " + fixture) != expected:
+                raise AssertionError(f"Unexpected defender result for {fixture}")
+            if both("state") != initial:
+                raise AssertionError("Research calculation mutated ordered fixture state")
+
         cases = [
             ("contact 42 0", "rejected unauthorized"),
             ("contact 999 0", "rejected unknown_participant"),
@@ -163,6 +175,7 @@ def main():
                 raise AssertionError(f"Unexpected state after {command}")
         print(f"TCP replay passed: 2 native processes, {len(cases)} commands, identical full snapshots")
         print("Included delayed delivery, duplicate/future commands, invalid input, and participant checks")
+        print("Defender TCP proof passed: ordinary, weakened, special, and rejected inputs agree")
     finally:
         for connection in connections:
             connection.close()

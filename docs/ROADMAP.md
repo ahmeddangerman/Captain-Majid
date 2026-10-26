@@ -44,7 +44,7 @@ flowchart LR
 
 **Exit check:** The project has a documented technical map, a repeatable comparison method, and evidence from a native proof that gameplay behavior can be matched. Record any feasibility issues before committing to a wider port scope.
 
-**Evidence so far:** The first native action-strength kernel matches the isolated original routine across 6,656 comparison inputs. Two native fixture processes agree on state over a local TCP development adapter. A complete authentic shot and full-emulator gameplay comparison are still required; this stage is not complete.
+**Evidence so far:** The first native action-strength kernel matches the isolated original routine across 6,656 comparison inputs. The expanded field-defender calculation matches original execution in 19,200 cases. Two native fixture processes agree on state and defender research calculations over a local TCP development adapter. A complete authentic shot and full-emulator gameplay comparison are still required; this stage is not complete.
 
 ### 2. Build an online-ready native foundation — Planned
 
