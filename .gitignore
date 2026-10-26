@@ -160,3 +160,7 @@ roadmap-preview.png
 # Python analysis tools
 __pycache__/
 *.py[cod]
+
+# Native engine outputs and local Python environments
+/build/
+/.venv/

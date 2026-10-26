@@ -1,2 +1,63 @@
-# Captain-Majid
-Repository for Captain Majid project
+# Captain Majid
+
+A native PC reconstruction project for Captain Tsubasa II, targeting Windows and Linux, with Arabic, English, community graphics/music packs, shaders, and online play as project goals.
+
+The current engine is an early development foundation: one verified action-strength calculation and an ordered replay fixture. A playable match has not been implemented.
+
+## Build the prototype
+
+Linux, with a C++17 compiler, Make, and Python 3:
+
+```bash
+make
+make check
+```
+
+The complete check command covers the native core, terminal input handling, and a two-process loopback TCP experiment. No ROM or third-party Python packages are needed for these checks.
+
+A CMake definition is also supplied for Windows/Linux toolchains:
+
+```bash
+cmake -S . -B build
+cmake --build build --config Debug
+ctest --test-dir build -C Debug --output-on-failure
+```
+
+CMake and Windows builds have not yet been exercised in the current environment.
+
+## Try the development fixture
+
+```bash
+./build/captain-prototype --replica
+```
+
+Enter one command per line:
+
+```text
+state
+contact 7 0
+state
+contact 7 1
+state
+quit
+```
+
+This advances a developer-defined contact-loss fixture from power 300 to 263 to 226. Participant 7 controls team 0; participant 42 belongs to the other team. These are sample values, not a complete shooting system. Sequence numbers start at zero and duplicates are rejected.
+
+## Compare with the original ROM
+
+Install the optional [analysis dependencies](tools/README.md), then provide your own verified Japanese ROM:
+
+```bash
+.venv/bin/python tools/verify_action_strength.py /path/to/japanese-game.nes
+```
+
+ROMs, patches, extracted game assets, and generated script data stay outside Git. The public engine sources are independently written; the discovered disassembly is a research reference.
+
+## Project reference
+
+- [Working roadmap](docs/ROADMAP.md)
+- [Engine direction](docs/ENGINE_DIRECTION.md)
+- [Current engine progress and limitations](docs/ENGINE_PROGRESS.md)
+- [ROM findings](docs/ROM_ANALYSIS.md)
+- [Text and dialogue formats](docs/TEXT_FORMAT.md)
