@@ -147,3 +147,16 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Local ROM inputs and generated reverse-engineering output
+*.nes
+*.ips
+*.bps
+*.ups
+*.xdelta
+.analysis/
+roadmap-preview.png
+
+# Python analysis tools
+__pycache__/
+*.py[cod]

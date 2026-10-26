@@ -3,7 +3,7 @@
 **Purpose:** English working reference for the project owner and ChatGPT. This is the canonical source for roadmap stages, dependencies, decisions, and status. A future Arabic fan page may present the same milestones in a more promotional style, but must not change their meaning or progress status.
 
 **Last reviewed:** 2026-10-26  
-**Current project status:** Planning. No game implementation has started.  
+**Current project status:** ROM comparison in progress. No game implementation has started.
 **Schedule:** No dates or delivery estimates are set. ROM analysis and a native feasibility milestone must inform estimates first.
 
 ## Project goal
@@ -14,7 +14,7 @@ Initial desktop targets are Windows and Linux. A faithful reconstruction of the 
 
 ## Roadmap at a glance
 
-All stages are **Planned**. The diagram shows order and dependencies, not an estimate or promise of dates. Online support, mod hooks, and graphics hooks must shape the foundation early; their complete player-facing features arrive after the core game is faithfully playable.
+Stage 0 is **In progress**; later stages are **Planned**. The diagram shows order and dependencies, not an estimate or promise of dates. Online support, mod hooks, and graphics hooks must shape the foundation early; their complete player-facing features arrive after the core game is faithfully playable.
 
 ```mermaid
 flowchart LR
@@ -28,13 +28,13 @@ flowchart LR
 
 ## Stages and exit checks
 
-### 0. Compare the Japanese and Arabic ROM versions — Planned
+### 0. Compare the Japanese and Arabic ROM versions — In progress
 
 **Goal:** Determine which code and content are shared, what each Arabic version changes, and which Arabic presentation should be the initial reference.
 
 **Work:** Inventory the Japanese ROM and every supplied Arabic version; record file hashes and variant identifiers; compare program code, graphics, text data, and layout-related changes; choose the initial Arabic reference after reviewing the differences.
 
-**Exit check:** A version comparison is recorded, the initial Arabic reference is identified, and any variants with gameplay or code changes are called out. ROM files are not currently present in the workspace, so this stage needs the reference files before it can begin.
+**Exit check:** An initial structural comparison is recorded in [ROM_ANALYSIS.md](ROM_ANALYSIS.md). Both Arabic variants change program code and graphics through distinct implementations. Text-engine mapping, emulator boot validation, and selection of the initial Arabic presentation reference remain.
 
 ### 1. Validate the native reconstruction approach — Planned
 
@@ -100,6 +100,6 @@ flowchart LR
 
 Keep every stage at **Planned** until its work has started. Change a stage to **In progress** only when there is a concrete artifact or implementation underway, and to **Complete** only when its exit check has evidence. When the Arabic page is built later, derive its milestone names and statuses from this reference; do not invent separate progress or delivery promises.
 
-## Next input needed
+## Current analysis inputs
 
-The Japanese ROM and the Arabic versions are not in the workspace yet. Place the reference files in the workspace when ready so Stage 0 can compare them. Keep original files intact; analysis should operate on copies or read-only inputs.
+The verified Japanese ROM, one complete Arabic ROM, and the IPS patch for the Extraordinary Arabic variant are available to the current analysis workspace. Original uploads remain unchanged; reconstructed files stay outside the Git repository.
