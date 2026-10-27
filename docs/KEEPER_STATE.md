@@ -73,7 +73,7 @@ Map PRG banks 26/27 at `$8000/$A000` and fixed banks 30/31 at `$C000/$E000`. The
 
 These research runs compared the stated contracts with original CPU writes. Native unit checks cover the branch boundaries, unchanged fields, raw subtype handling, and byte wrapping; the private differential verifier compares native outputs against these original routines. CPU flags and scratch pointers are outside the public result contract.
 
-The prepared `tools/verify_shot_state.py` corpus contains 6,812 story cases and 5,632 keeper-state cases. A completed native differential run for this increment is still pending; the exploratory contract checks above are separate evidence.
+`tools/verify_shot_state.py` matched 6,812 story cases and 5,632 keeper-state cases against the native implementation. These isolated comparisons do not establish a complete save or goal sequence.
 
 ## Research interfaces
 

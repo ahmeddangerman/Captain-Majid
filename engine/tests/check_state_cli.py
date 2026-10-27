@@ -14,6 +14,8 @@ fixtures = [
     ("keeper-story", "story", "0 0 5 4 131 128", "0 0 0"),
     ("keeper-state", "keeperstate", "250 70 9 2 0 1 1", "5 127 4"),
     ("random-step", "random", "0 0 73 0 0 0 0", "1 255 255 0"),
+    ("outcome", "outcome", "0 0 6 0 0 0 122 47 222 7 7 102 206 119 227 248 203 74 132 208 235 2 4 5 7 8 9 10 11",
+     "0 0 11 248 120 227 0 0 102 0 203 74 132 208 4"),
 ]
 for mode, command, fields, expected in fixtures:
     result = subprocess.run([binary, f"--{mode}-batch"], input=fields + "\n",

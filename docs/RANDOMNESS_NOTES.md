@@ -16,7 +16,7 @@ This is evidence about the inputs and call site, not a completed trace of every 
 
 The native `--random-step-batch` research mode takes index, first, second, player byte, sound byte, tail byte, and carry (0/1); it returns new index, first, second, and carry. The replica command is `random` followed by the same fields. This exposes one algorithm step and does not choose when an online simulation should advance it.
 
-`tools/verify_shot_state.py` prepares 3,584 original-instruction comparisons for this step, including all indices, both carries, and RAM aliases at the mirror boundary. A completed native comparison run for this increment is still pending; the presence of the harness is not a passing result.
+`tools/verify_shot_state.py` matched 3,584 original-instruction comparisons for this step, including all indices, both carries, and RAM aliases at the mirror boundary. This verifies the isolated algorithm and sampler; a full gameplay timing trace is still needed.
 
 ## Engine implication
 

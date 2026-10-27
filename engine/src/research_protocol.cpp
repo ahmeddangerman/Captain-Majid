@@ -5,6 +5,7 @@
 #include "captain/energy.hpp"
 #include "captain/keeper_state.hpp"
 #include "captain/reference_random.hpp"
+#include "captain/shot_outcome.hpp"
 
 #include <array>
 #include <charconv>
@@ -70,6 +71,33 @@ bool defender_output(std::istringstream& stream, std::string& output) {
 }
 
 bool research_output(const std::string& command, std::istringstream& stream, std::string& output) {
+    if (command == "outcome") {
+        std::array<std::uint32_t, 29> v{};
+        if (!read_fields(stream, v)) return false;
+        try {
+            const auto r = captain::resolve_shot_outcome({
+                static_cast<std::uint8_t>(v[0]), static_cast<std::uint8_t>(v[1]),
+                static_cast<std::uint8_t>(v[2]), static_cast<std::uint8_t>(v[3]),
+                static_cast<std::uint8_t>(v[4]), static_cast<std::uint8_t>(v[5]),
+                static_cast<std::uint8_t>(v[6]), static_cast<std::uint8_t>(v[7]),
+                static_cast<std::uint8_t>(v[8]), static_cast<std::uint8_t>(v[9]),
+                static_cast<std::uint8_t>(v[10]), static_cast<std::uint8_t>(v[11]),
+                static_cast<std::uint8_t>(v[12]), static_cast<std::uint8_t>(v[13]),
+                static_cast<std::uint8_t>(v[14]), static_cast<std::uint8_t>(v[15]),
+                static_cast<std::uint8_t>(v[16]), static_cast<std::uint8_t>(v[17]),
+                static_cast<std::uint8_t>(v[18]), static_cast<std::uint8_t>(v[19]),
+                static_cast<std::uint8_t>(v[20]),
+                {static_cast<std::uint8_t>(v[21]), static_cast<std::uint8_t>(v[22]),
+                 static_cast<std::uint8_t>(v[23]), static_cast<std::uint8_t>(v[24]),
+                 static_cast<std::uint8_t>(v[25]), static_cast<std::uint8_t>(v[26]),
+                 static_cast<std::uint8_t>(v[27]), static_cast<std::uint8_t>(v[28])}});
+            output = format_fields(std::array<unsigned, 15>{static_cast<unsigned>(r.event),
+                r.result_code, r.possession_side, r.ball_owner, r.left_goals, r.right_goals,
+                r.keeper_timer, r.keeper_penalty, r.keeper_penalty_duration, r.keeper_stun,
+                r.ball_x, r.ball_y, r.defenders, r.ball_active, r.kickoff});
+            return true;
+        } catch (const std::invalid_argument&) { return false; }
+    }
     if (command == "energy") {
         std::array<std::uint32_t, 8> v{};
         if (!read_fields(stream, v, 2) || v[6] > 1 || v[7] > 1) return false;

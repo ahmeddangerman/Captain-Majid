@@ -77,4 +77,4 @@ g++ -std=c++17 -Wall -Wextra -Wpedantic -I engine/include \
 
 `--energy-batch` accepts eight unsigned fields per line: stamina, cost, player ID, side, action, raw subtype, skip-home wrapper (0/1), and incoming carry (0/1). Stamina and cost are 16-bit values; the four context fields are bytes. It returns stamina, effective cost, weakened (0/1), and outgoing carry (0/1).
 
-The replica command is `energy` followed by the same fields. It evaluates an explicit fixture without updating the ordered session. The prepared private-ROM comparison in `tools/verify_shot_state.py` contains 9,728 energy cases. Its native comparison result is pending.
+The replica command is `energy` followed by the same fields. It evaluates an explicit fixture without updating the ordered session. The private-ROM comparison in `tools/verify_shot_state.py` matched 9,728 energy cases against the native implementation.

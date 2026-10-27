@@ -46,7 +46,7 @@ flowchart LR
 
 **Evidence so far:** The first native action-strength kernel matches the isolated original routine across 6,656 comparison inputs. The expanded field-defender calculation matches original execution in 19,200 cases. Two native fixture processes agree on state and defender research calculations over a local TCP development adapter. A complete authentic shot and full-emulator gameplay comparison are still required; this stage is not complete.
 
-**Additional evidence:** Standard skill-index adjustment, randomized action power, and pre-override goalkeeper comparison match original instruction execution for 69,632, 7,456, and 5,248 cases respectively. They are also accessible through the local replica experiment. Stamina deduction, keeper story/state helpers, and one original random step are now implemented with native comparison pending. Full content selection, caller-specific energy accounting, random scheduling, and final shot consequences remain incomplete.
+**Additional evidence:** Standard skill-index adjustment, randomized action power, and pre-override goalkeeper comparison match original instruction execution for 69,632, 7,456, and 5,248 cases respectively. Stamina deduction, keeper story/state helpers, and one original random step match 25,756 further isolated cases. Immediate goalkeeper outcome writes match 384 isolated cases. An explicit calculation links these stages, but complete content selection, caller-specific energy accounting, random scheduling, field recovery, and an ordered playable shot remain incomplete.
 
 ### 2. Build an online-ready native foundation — Planned
 
