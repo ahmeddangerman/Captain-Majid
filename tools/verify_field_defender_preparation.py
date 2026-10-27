@@ -23,12 +23,13 @@ def word(memory, address):
     return memory[address] | memory[address + 1] << 8
 
 
-def original(cpu, case):
+def original(cpu, case, *, flags=0, alternate_type=0):
     player_id, player_type, level, action, situation, subtype = case
     ram = cpu.memory
     record = 0x0300 + player_id * 12
     ram[record:record + 12] = [0] * 12
     ram[record], ram[record + 3] = player_type, level
+    ram[record + 1], ram[record + 2] = flags, alternate_type
     ram[0x0442], ram[0x043D] = player_id, action
     ram[0x044E], ram[0x043E] = situation, subtype
     # Poison prior outputs so a skipped write cannot silently pass.
