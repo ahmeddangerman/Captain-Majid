@@ -14,7 +14,7 @@
 - Keeper story classification override and explicit timer/penalty helpers, specified in [KEEPER_STATE.md](KEEPER_STATE.md). The shot caller still needs to select the appropriate helpers and apply complete consequences.
 - One original random-generator step plus a canonical 2 KiB RAM sampler, specified in [RANDOMNESS_NOTES.md](RANDOMNESS_NOTES.md). Its original gameplay schedule is unresolved.
 - Immediate goal, turnover, rebound, keeper catch, and keeper punch writes at the goalkeeper handoff, specified in [SHOT_OUTCOME.md](SHOT_OUTCOME.md). A calculation sequence links energy, shot power, goalkeeper comparison, and these outcome writes with explicit caller data.
-- Ordered field-contact calculations now carry power/subtype between caller-selected defenders and stop on original result codes 2/3, as documented in [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md). Their subsequent result handlers are not yet connected.
+- Ordered field-contact calculations carry power/subtype between caller-selected defenders and stop on original result codes 2/3, as documented in [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md). The supported action-0 continuation now applies its route gates and connects eligible results to keeper and goal/save calculations.
 - Field result handoffs now distinguish continued play, ball recovery, keeper control, field-player control, and the other defense animation route. The code-3 possession writes match 144 original-ROM cases; the ordinary interior-field code-2 recovery handoff matches 512 cases.
 - A fixture session that separates participant identity from team, rejects unauthorized and unordered commands before state changes, and serializes every fixture state field explicitly.
 - A native terminal executable with a batch arithmetic mode and strict replica command protocol.
@@ -49,9 +49,11 @@ The private-ROM harness passed 9,728 stamina cases, 6,812 story cases, 5,632 kee
 
 The next goalkeeper outcome check matched 384 isolated original-ROM cases across goal, turnover, rebound, catch, and punch branches. It checks immediate match-state writes through the handler handoff; animation, experience, and music calls are skipped in that comparison. The field result-three possession handoff matches 144 further ROM cases. Ordinary interior-field result-two recovery matches 512 cases, including recovered-player coordinates. The linked shot calculation has a native unit check, while an end-to-end original gameplay trace remains pending. [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md) documents the field-defender loop and its current handoff coverage.
 
+The action-0 continuation now connects eligible field results 0/1 to the keeper comparison and its goal/save outcome writes. Its native checks cover a goal, rebound, keeper catch, punch, possession changes, action codes outside this helper, each documented diversion gate, and rejection of field result codes 2/3. It consumes caller-supplied post-contact power/subtype and route values; it does not load player/content data or reconstruct the complete gameplay trace. The existing 384-case original-ROM outcome comparison still verifies the outcome stage, while the new continuation gate has native tests and instruction-trace evidence rather than a separate 6502 differential harness.
+
 ## Limits
 
-- The ordered fixture still advances only a contact-loss stage. The new shot sequence accepts explicit statistics and random values and is not yet an ordered match command or playable interaction.
+- The ordered fixture still advances only a contact-loss stage. The direct shot sequence and gated action-0 continuation accept explicit statistics, route values, and random values; they are not yet ordered match commands or playable interactions.
 - The goalkeeper outcome handoff updates score, possession, keeper state, and punch placement. Code-3 field-defender handoffs and ordinary interior-field code-2 recovery are implemented; active-ball updates, boundary restarts, field-defender rewards, and full phase transitions remain to be integrated.
 - The skill helper computes standard indices only. Player/profile lookup, loading original strength/cost tables, caller-specific stamina accounting, and special-skill selection are still needed.
 - Shot arithmetic receives explicit random bytes. A single original generator step is implemented, but its inputs and frame schedule still need study before integrating a complete deterministic match.
@@ -65,6 +67,6 @@ The next goalkeeper outcome check matched 384 isolated original-ROM cases across
 
 ## Next checkpoint
 
-Join the verified result-code 2/3 handoffs to the ordered field-contact loop, then trace the action-0/1 paths to determine when a field contact reaches the keeper. Continue with player/profile and action-cost selection, caller-specific energy accounting, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
+Join the verified result-code 2/3 handoffs to the ordered field-contact loop. Then connect action-0 continuation inputs to original selectors and match state, trace action 1 and other phases, and continue with player/profile and action-cost selection, caller-specific energy accounting, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
 
 Early network comparisons continue alongside each simulation increment. Public matchmaking and the rules for additional participants remain part of the engine direction, without committing to an unsupported player count.
