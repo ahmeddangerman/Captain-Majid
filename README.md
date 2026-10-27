@@ -2,7 +2,7 @@
 
 A native PC reconstruction project for Captain Tsubasa II, targeting Windows and Linux, with Arabic, English, community graphics/music packs, shaders, and online play as project goals.
 
-The current engine is an early development foundation: verified skill-index, action-power, field-defender, and goalkeeper comparison calculations, plus an ordered replay fixture. A playable match has not been implemented.
+The current engine is an early development foundation: verified skill-index, action-power, field-defender, and goalkeeper comparison calculations, plus an ordered replay fixture. New stamina, keeper story/state, and single-step random calculations are implemented, with their native ROM comparison pending. A playable match has not been implemented.
 
 ## Build the prototype
 
@@ -52,6 +52,7 @@ Install the optional [analysis dependencies](tools/README.md), then provide your
 .venv/bin/python tools/verify_action_strength.py /path/to/japanese-game.nes
 .venv/bin/python tools/verify_defender_contact.py /path/to/japanese-game.nes
 .venv/bin/python tools/verify_shot_power_keeper.py /path/to/japanese-game.nes
+.venv/bin/python tools/verify_shot_state.py /path/to/japanese-game.nes
 ```
 
 ROMs, patches, extracted game assets, and generated script data stay outside Git. The public engine sources are independently written; the discovered disassembly is a research reference.
@@ -59,6 +60,8 @@ ROMs, patches, extracted game assets, and generated script data stay outside Git
 The defender comparison covers strength variation, weakening, special branches, classification, and conditional power loss. It reads the original tables from your ROM during verification. The native `--defender-batch` research mode accepts explicit parameters as documented in [DEFENDER_CONTACT.md](docs/DEFENDER_CONTACT.md).
 
 The skill/action/keeper comparison covers level/move index adjustment, randomized action strength, and the keeper's score/classification before story overrides. Research command formats and remaining limits are in [SHOT_POWER_AND_KEEPER.md](docs/SHOT_POWER_AND_KEEPER.md).
+
+The new state comparison harness covers stamina deduction, keeper story overrides, keeper timer/penalty updates, and one original random-generator step. Its 25,756-case corpus is prepared; no passing native comparison is recorded yet. Research interfaces are documented in [ENERGY_USAGE.md](docs/ENERGY_USAGE.md), [KEEPER_STATE.md](docs/KEEPER_STATE.md), and [RANDOMNESS_NOTES.md](docs/RANDOMNESS_NOTES.md). These commands remain separate calculations; a complete shot and the original random timing still need integration.
 
 ## Project reference
 

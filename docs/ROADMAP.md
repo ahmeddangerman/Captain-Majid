@@ -2,7 +2,7 @@
 
 **Purpose:** English working reference for the project owner and ChatGPT. This is the canonical source for roadmap stages, dependencies, decisions, and status. A future Arabic fan page may present the same milestones in a more promotional style, but must not change their meaning or progress status.
 
-**Last reviewed:** 2026-10-26  
+**Last reviewed:** 2026-10-27
 **Current project status:** ROM analysis and native feasibility work are in progress. A first native arithmetic kernel and local replica fixture are implemented; a playable match interaction remains to be built. See [ENGINE_PROGRESS.md](ENGINE_PROGRESS.md).
 **Schedule:** No dates or delivery estimates are set. ROM analysis and a native feasibility milestone must inform estimates first.
 
@@ -46,7 +46,7 @@ flowchart LR
 
 **Evidence so far:** The first native action-strength kernel matches the isolated original routine across 6,656 comparison inputs. The expanded field-defender calculation matches original execution in 19,200 cases. Two native fixture processes agree on state and defender research calculations over a local TCP development adapter. A complete authentic shot and full-emulator gameplay comparison are still required; this stage is not complete.
 
-**Additional evidence:** Standard skill-index adjustment, randomized action power, and pre-override goalkeeper comparison match original instruction execution for 69,632, 7,456, and 5,248 cases respectively. They are also accessible through the local replica experiment. Full content/energy/random scheduling and final shot consequences remain incomplete.
+**Additional evidence:** Standard skill-index adjustment, randomized action power, and pre-override goalkeeper comparison match original instruction execution for 69,632, 7,456, and 5,248 cases respectively. They are also accessible through the local replica experiment. Stamina deduction, keeper story/state helpers, and one original random step are now implemented with native comparison pending. Full content selection, caller-specific energy accounting, random scheduling, and final shot consequences remain incomplete.
 
 ### 2. Build an online-ready native foundation — Planned
 

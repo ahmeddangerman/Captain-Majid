@@ -39,3 +39,16 @@ Replace `game.nes` and output paths with local files.
 ```
 
 The JSON formats include source hashes, original CPU addresses, raw bytes, aliases, and control-byte counts. They are extraction artifacts rather than final translations; dynamic substitutions and runtime state remain explicit.
+
+## Native comparison harnesses
+
+After building the native prototype with `make`, these optional commands execute isolated original CPU routines from a private Japanese ROM and compare every exposed output with the native batch modes:
+
+```bash
+.venv/bin/python tools/verify_action_strength.py game.nes
+.venv/bin/python tools/verify_defender_contact.py game.nes
+.venv/bin/python tools/verify_shot_power_keeper.py game.nes
+.venv/bin/python tools/verify_shot_state.py game.nes
+```
+
+The last harness prepares 25,756 energy, keeper story/state, and random-step cases. Its RAM model mirrors the NES's internal 2 KiB RAM. It requires the verified Japanese payload and does not copy its tables or instructions into the native engine. See [engine progress](../docs/ENGINE_PROGRESS.md) for completed runs and pending verification.
