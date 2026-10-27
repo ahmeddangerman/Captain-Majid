@@ -6,7 +6,7 @@ CORE += engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_r
 CORE += engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp engine/src/defender_outcome.cpp
 CORE += engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
 CORE += engine/src/defender_selection.cpp
-CORE += engine/src/field_defender_preparation.cpp engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp
+CORE += engine/src/field_defender_preparation.cpp engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp engine/src/field_interruption.cpp
 RESEARCH = engine/src/research_protocol.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
@@ -79,7 +79,11 @@ build/complete-prepared-shot-tests: engine/tests/complete_prepared_shot_tests.cp
 build/field-comparison-content-tests: engine/tests/field_comparison_content_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/field_comparison_content_tests.cpp $(CORE) -o $@
 
-check: build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+build/field-interruption-tests: engine/tests/field_interruption_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/field_interruption_tests.cpp $(CORE) -o $@
+
+check: build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+	./build/field-interruption-tests
 	./build/field-comparison-content-tests
 	./build/complete-prepared-shot-tests
 	./build/prepared-keeper-tests

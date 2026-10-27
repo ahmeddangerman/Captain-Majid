@@ -33,7 +33,7 @@ The native `resolve_defender_outcome` now records these handoffs. The new `resol
 
 ## Later field override discovered
 
-After storing the ordinary comparison result, `$8382` calls `$8E33`. For eligible defender/action contexts, that helper runs `$8B9C`; if the existing result is0 and a carry-dependent threshold test against `$E2` passes, `$8E65` writes result4 and calls a scenario helper. The native ordinary0..3 sequence does not yet implement this later override. Caller content selection and arithmetic before it now match550 fixtures; see [FIELD_COMPARISON_SELECTION.md](FIELD_COMPARISON_SELECTION.md).
+After storing the ordinary comparison result, `$8382` calls `$8E33`. For eligible defender/action contexts, that helper runs `$8B9C`; if the existing result is0 and a carry-dependent threshold test against `$E2` passes, `$8E65` writes result4 and calls `$C55A/$CF4F`, clearing all player statuses and both keeper penalties. The native prepared sequence now applies this override when explicit interruption state is supplied, and routes result4 to a distinct restart decision. Later restart setup remains incomplete. Caller content selection and arithmetic before it now match550 fixtures; see [FIELD_COMPARISON_SELECTION.md](FIELD_COMPARISON_SELECTION.md).
 
 ## Evidence boundary
 

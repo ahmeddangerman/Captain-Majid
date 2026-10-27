@@ -7,7 +7,7 @@
 
 namespace captain {
 enum class DefenderRoute : std::uint8_t {
-    continue_action, recover_ball, keeper_control, player_control, defense_animation
+    continue_action, recover_ball, keeper_control, player_control, defense_animation, restart_decision
 };
 
 struct DefenderOutcomeInput {

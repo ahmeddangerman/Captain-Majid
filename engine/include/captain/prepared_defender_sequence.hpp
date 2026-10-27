@@ -1,6 +1,7 @@
 #pragma once
 #include "captain/field_player_profile.hpp"
 #include "captain/energy.hpp"
+#include "captain/field_interruption.hpp"
 
 namespace captain {
 struct FieldPlayerState {
@@ -17,12 +18,14 @@ struct FieldDefenseContext {
     std::uint16_t incoming_power;
     std::uint8_t initial_result_code;
     bool incoming_energy_carry = false;
+    std::optional<FieldInterruptionContext> interruption{};
 };
 struct PreparedDefenderContact {
     std::uint8_t player_id;
     FieldDefenderPreparationResult preparation;
     EnergyResult energy;
     DefenderContactResult contact;
+    std::optional<FieldInterruptionResult> interruption{};
 };
 struct PreparedDefenderSequenceResult {
     FieldRoster roster;
@@ -30,6 +33,7 @@ struct PreparedDefenderSequenceResult {
     std::uint16_t remaining_power;
     std::uint8_t result_code;
     bool stopped;
+    std::optional<FieldInterruptionState> interruption_state{};
 };
 PreparedDefenderSequenceResult resolve_prepared_field_contacts(
     const FieldRoster& roster, const std::vector<FieldDefenseChoice>& choices,

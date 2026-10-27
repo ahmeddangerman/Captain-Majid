@@ -8,6 +8,10 @@ PreparedDefenderSequenceResult resolve_prepared_field_contacts(
     const FieldDefenseContext& context) {
     PreparedDefenderSequenceResult result{roster, {}, context.incoming_power,
                                           context.initial_result_code, false};
+    if (context.interruption) {
+        if (choices.size() > 10) throw std::invalid_argument("Too many selected defenders");
+        result.interruption_state = context.interruption->state;
+    }
     result.contacts.reserve(choices.size());
     for (const auto& choice : choices) {
         if (choice.player_id == 0 || choice.player_id == 11 || choice.player_id > 21)
@@ -29,10 +33,18 @@ PreparedDefenderSequenceResult resolve_prepared_field_contacts(
         comparison.weakened = energy.weakened;
         const auto contact = calculate_defender_contact(comparison);
         player.stamina = energy.stamina;
-        result.contacts.push_back({choice.player_id, preparation, energy, contact});
+        std::optional<FieldInterruptionResult> interruption;
+        if (context.interruption) {
+            interruption = resolve_field_interruption({contact.result_code,
+                static_cast<std::uint8_t>(choices.size()),choice.player_id,choice.action,
+                context.side,context.interruption->ball_x,context.interruption->ball_y,
+                comparison.random_first,*result.interruption_state});
+            result.interruption_state = interruption->state;
+        }
+        result.contacts.push_back({choice.player_id, preparation, energy, contact,interruption});
         result.remaining_power = contact.incoming_power;
-        result.result_code = contact.result_code;
-        if (contact.result_code >= 2) {
+        result.result_code = interruption ? interruption->result_code : contact.result_code;
+        if (result.result_code >= 2) {
             result.stopped = true;
             break;
         }

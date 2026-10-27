@@ -79,6 +79,8 @@ The original attacking caller now matches native preparation/energy/power in 3,8
 
 Field comparison content selection now matches550 original caller fixtures through arithmetic/classification at834C..837F. The newly identified later8E33 override can produce result4 and remains outside the native ordinary0..3 sequence. The full Make suite and all27 CMake/CTest checks passed; the prior defender arithmetic verifier retained19,200 matching cases. A zero-width selection assertion passed targeted rebuilds afterward. Independent review reproduced all550 new matches without findings. This prevents treating the present joined calculation as a complete original shot trace; see [FIELD_COMPARISON_SELECTION.md](FIELD_COMPARISON_SELECTION.md).
 
+Field result4 interruption now reproduces its immediate reset and initial restart decision in27,904 original-ROM fixtures. With explicit interruption context, the joined contact/shot sequence stops and returns updated statuses/keeper penalties instead of continuing to the goalkeeper. The full Make suite and all28 CMake/CTest checks passed. Extra raw/effective-code and input-preservation assertions passed targeted builds. Independent review reproduced all27,904 matches without findings. Full restart setup and main-loop power updates remain incomplete; see [FIELD_INTERRUPTION.md](FIELD_INTERRUPTION.md).
+
 ## Limits
 
 - The ordered fixture still advances only a contact-loss stage. The direct shot sequence and gated action-0 continuation accept explicit statistics, route values, and random values; they are not yet ordered match commands or playable interactions.

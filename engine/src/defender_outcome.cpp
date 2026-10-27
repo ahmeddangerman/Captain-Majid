@@ -4,12 +4,16 @@
 
 namespace captain {
 DefenderOutcomeResult resolve_defender_outcome(const DefenderOutcomeInput& input) {
-    if ((input.possession_side != 0 && input.possession_side != 11) || input.result_code > 3) {
+    if ((input.possession_side != 0 && input.possession_side != 11) || input.result_code > 4) {
         throw std::invalid_argument("Defender outcome needs a valid side and result code");
     }
     DefenderOutcomeResult result{DefenderRoute::continue_action,
         input.possession_side, input.ball_owner, std::nullopt};
     if (input.result_code < 2) return result;
+    if (input.result_code == 4) {
+        result.route = DefenderRoute::restart_decision;
+        return result;
+    }
     if (input.result_code == 2) {
         result.route = DefenderRoute::recover_ball;
         if (input.recovery) {

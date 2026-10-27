@@ -37,6 +37,8 @@ int main(){
  req(r.flow.field.remaining_power==191&&r.keeper->comparison.ratio==143&&r.flow.continuation->outcome->event==captain::ShotEvent::rebound,"field power loss reaches prepared keeper and rebound outcome");
  in=saved;attack.strength_curve.fill(240);in.field.choices[0].comparison.thresholds={255,220,180,0};kp.skills.clear();r=run();
  req(!r.keeper&&!r.flow.continuation&&r.flow.field_outcome.ball_owner==3&&r.flow.field.roster[0].stamina==200,"terminal field capture skips malformed keeper and its debit");
+ in=saved;in.field.context.interruption=captain::FieldInterruptionContext{120,100,{}};in.field.context.interruption->state.status.fill(7);in.field.context.interruption->state.keeper_penalties={8,9};in.field.choices[0].comparison.random_first=0;r=run();
+ req(r.flow.field.result_code==4&&r.flow.field.contacts[0].contact.result_code==0&&in.field.context.interruption->state.status[3]==7&&!r.keeper&&r.flow.field_outcome.route==captain::DefenderRoute::restart_decision&&r.flow.field.interruption_state->status[3]==0&&r.flow.field.interruption_state->keeper_penalties[1]==0&&r.flow.field.roster[3].stamina==170,"post-comparison interruption clears flags and skips malformed keeper after defender debit");
  in=saved;in.field.continuation.post_loop_active_defenders=1;r=run();req(!r.keeper&&r.flow.continuation->route==captain::ShotContinuationRoute::other_continuation,"diverted route skips keeper");
  in=saved;in.field.continuation.field_proximity_carry=true;r=run();req(!r.keeper&&r.flow.continuation->route==captain::ShotContinuationRoute::loose_ball,"loose-ball diversion skips keeper");
  in=saved;rejects(run);req(in.field.roster[3].stamina==200,"reached keeper failure leaves initial roster unchanged");

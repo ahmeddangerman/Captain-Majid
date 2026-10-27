@@ -18,7 +18,7 @@ The private oracle supplies a full byte-indexed eligibility view and variation-o
 
 ## Remaining boundary
 
-This starts after player/move/energy preparation and stops before `$837F` stores the classification and calls `$8E33`. That later helper can change result0 to **result4** after a proximity/random condition and scenario call. That condition uses the ball position: carry is set for Y in `$60..$9F` and X below `$50` or at least `$B0`; the random threshold is15 with carry and63 otherwise, inclusive. Result4 dispatches separately at `$847C`. The currently joined native field sequence models ordinary comparison codes0..3; it does not reproduce that override. Caller power-loss timing, move bypasses5/6, post-loop active-defender state and original frame random scheduling also remain to be traced before a complete original loop comparison or ordered shot command.
+This starts after player/move/energy preparation and stops before `$837F` stores the classification and calls `$8E33`. That later helper can change result0 to **result4** after a proximity/random condition and scenario call. That condition uses the ball position: carry is set for Y in `$60..$9F` and X below `$50` or at least `$B0`; the random threshold is15 with carry and63 otherwise, inclusive. Result4 dispatches separately at `$847C`. The joined prepared sequence now supports that override with explicit interruption state; see [FIELD_INTERRUPTION.md](FIELD_INTERRUPTION.md). Later restart setup remains incomplete. Caller power-loss timing, move bypasses5/6, post-loop active-defender state and original frame random scheduling also remain to be traced before a complete original loop comparison or ordered shot command.
 
 Run with private ROM and py65:
 

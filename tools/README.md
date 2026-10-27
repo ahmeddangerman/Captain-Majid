@@ -61,3 +61,5 @@ The state harness matched 25,756 energy, keeper story/state, and random-step cas
 `verify_banked_attack.py /path/to/reference.nes` executes original attacker preparation, energy and power including real PRG switching, comparing3,882 constructed cases with the native wrapper. See [BANKED_ATTACK_TRACE.md](../docs/BANKED_ATTACK_TRACE.md). The memory adapter rejects unmodeled hardware; this is not a complete gameplay trace.
 
 `verify_field_comparison_selection.py /path/to/reference.nes` compares original field caller selection and classification in550 constructed fixtures. See [FIELD_COMPARISON_SELECTION.md](../docs/FIELD_COMPARISON_SELECTION.md) for the later result4 boundary.
+
+`verify_field_interruption.py /path/to/reference.nes` checks result4 override, real status reset and initial restart routing in27,904 private-ROM fixtures, with no calls skipped. See [FIELD_INTERRUPTION.md](../docs/FIELD_INTERRUPTION.md).
