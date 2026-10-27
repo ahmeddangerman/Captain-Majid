@@ -37,6 +37,8 @@ An ordinary level1 development shot stops after its first flight result3 and rep
 
 `--flight-defenders N` requires version3 data when N is nonzero. Interactive `flight-defenders N` selects the same explicit burst; zero preserves the controlled scene. Side0 chooses opposing slots12..16, side11 slots1..4. These lists are development inputs, not live player selection.
 
+The later [position-snapshot selector](FLIGHT_SELECTION.md) now builds these lists from a constructed cell/status layout. It still does not simulate continuous movement or multiple flight steps.
+
 ## Evidence limits
 
 Production Make compilation and normal CLI usage provide native evidence; fresh static review is recorded in the work log/plan. No automated tests or native differential suite were added/run. Automatic flight selection/movement, multiple timed bursts, other attacking actions, terminal handler state, general random scheduling and persistent match phases remain incomplete. The optional window retains its existing default controls and has not been rebuilt for this increment.

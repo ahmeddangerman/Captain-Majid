@@ -106,6 +106,8 @@ Field result4 interruption now reproduces its immediate reset and initial restar
 
 ## Next checkpoint
 
+The [flight snapshot selector](FLIGHT_SELECTION.md) now chooses candidates by original cell/status/threshold rules and feeds the development burst. Continuous movement and per-step contact scheduling remain separate.
+
 One explicit [later-flight contact burst](FLIGHT_CONTACTS.md) now feeds loss-adjusted power to the keeper without debiting defender stamina. Automatic movement-based selection, repeated scheduling and terminal handler state remain pending.
 
 Four [continuous original outcome observations](CONTINUOUS_SHOT_OUTCOMES.md) now reach immediate goal, punch and rebound handoffs with opt-in PPU queue acknowledgement. Full next-phase execution, side11 choices and native persistent timing remain pending.

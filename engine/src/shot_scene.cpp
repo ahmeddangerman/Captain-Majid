@@ -1,4 +1,5 @@
 #include "captain/shot_scene.hpp"
+#include "captain/defender_selection.hpp"
 #include <stdexcept>
 
 namespace captain {
@@ -58,10 +59,18 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     if (options.flight_defenders != 0) {
         if (!content.flight)
             throw std::invalid_argument("Flight contacts require version3 flight content");
-        input.flight = FlightContactBurst{{}, *content.flight};
+        const auto cell = field_cell_at(ball_x, ball_y);
+        FlightDefenderSelectionInput selection{side, cell, 0, 100, 255, {}};
+        const bool far_cell_is_target = cell == field_cell_at(204, 172);
+        for (auto& player : selection.players)
+            player = {static_cast<std::uint8_t>(far_cell_is_target ? 48 : 204),
+                      static_cast<std::uint8_t>(far_cell_is_target ? 80 : 172), false};
+        const auto opposing_index = side == 0 ? 10u : 0u;
         for (unsigned i = 0; i < options.flight_defenders; ++i)
-            input.flight->choices.push_back({static_cast<std::uint8_t>(keeper_slot + 1 + i),
-                                            0, 0, 100});
+            selection.players[opposing_index + i] = {ball_x, ball_y, false};
+        input.flight = FlightContactBurst{{}, *content.flight};
+        for (const auto slot : select_flight_defenders(selection))
+            input.flight->choices.push_back({slot, 0, 0, 100});
     }
     input.attack_random_first = 100;
     input.attack_random_second = 100;
