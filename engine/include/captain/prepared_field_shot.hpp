@@ -17,6 +17,10 @@ struct PreparedFieldShotResult {
     DefenderOutcomeResult field_outcome;
     std::optional<Action0ShotContinuationResult> continuation;
 };
+// Field contacts and handoff only; does not evaluate continuation/keeper data.
+PreparedFieldShotResult resolve_prepared_field_handoff(
+    const PreparedFieldShotInput& input, const FieldPlayerProfiles& profiles,
+    const FieldDefenseContent& defense);
 PreparedFieldShotResult resolve_prepared_field_shot(
     const PreparedFieldShotInput& input, const FieldPlayerProfiles& profiles,
     const FieldDefenseContent& defense);

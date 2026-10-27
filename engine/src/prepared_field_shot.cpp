@@ -3,7 +3,7 @@
 #include <utility>
 
 namespace captain {
-PreparedFieldShotResult resolve_prepared_field_shot(
+PreparedFieldShotResult resolve_prepared_field_handoff(
     const PreparedFieldShotInput& input, const FieldPlayerProfiles& profiles,
     const FieldDefenseContent& defense) {
     if (input.context.side != 0 && input.context.side != 11)
@@ -23,18 +23,24 @@ PreparedFieldShotResult resolve_prepared_field_shot(
     const auto handoff = resolve_defender_outcome({field.result_code, context.side,
         input.ball_owner, static_cast<std::uint8_t>(last ? last->player_id : 0),
         static_cast<std::uint8_t>(last ? last->action : 0), recovery});
-    std::optional<Action0ShotContinuationResult> continuation;
-    if (field.result_code < 2) {
+    return {std::move(field), handoff, std::nullopt};
+}
+
+PreparedFieldShotResult resolve_prepared_field_shot(
+    const PreparedFieldShotInput& input, const FieldPlayerProfiles& profiles,
+    const FieldDefenseContent& defense) {
+    auto result = resolve_prepared_field_handoff(input, profiles, defense);
+    if (result.field.result_code < 2) {
         auto next = input.continuation;
-        next.action_code = context.attack_action;
-        next.field_result_code = field.result_code;
-        next.power_after_contacts = field.remaining_power;
-        next.subtype_after_contacts = context.attack_subtype;
-        next.keeper.roll.defender_slot = context.side ^ 11u;
-        next.outcome.possession_side = handoff.possession_side;
-        next.outcome.ball_owner = handoff.ball_owner;
-        continuation = resolve_action0_shot_continuation(next);
+        next.action_code = input.context.attack_action;
+        next.field_result_code = result.field.result_code;
+        next.power_after_contacts = result.field.remaining_power;
+        next.subtype_after_contacts = input.context.attack_subtype;
+        next.keeper.roll.defender_slot = input.context.side ^ 11u;
+        next.outcome.possession_side = result.field_outcome.possession_side;
+        next.outcome.ball_owner = result.field_outcome.ball_owner;
+        result.continuation = resolve_action0_shot_continuation(next);
     }
-    return {std::move(field), handoff, std::move(continuation)};
+    return result;
 }
 }

@@ -55,6 +55,8 @@ ShotSequenceResult resolve_explicit_shot(const ShotSequenceInput& input);
 
 // Routes only action-0 field results 0/1. Diverted routes carry no keeper or
 // outcome result; the caller handles the next gameplay phase.
+ShotContinuationRoute select_action0_shot_route(const Action0ShotContinuationInput& input);
+
 Action0ShotContinuationResult resolve_action0_shot_continuation(
     const Action0ShotContinuationInput& input);
 }

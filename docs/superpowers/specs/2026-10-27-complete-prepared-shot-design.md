@@ -1,0 +1,7 @@
+# Fully prepared action0 shot
+
+Compose attacker preparation, prepared field handoff, continuation routing, keeper preparation and outcome in that order. One supplied22-slot roster is copied, charged for the attacker, then visited defenders, then keeper only if reached. Return those phase outputs and the final updated roster inside the field result. Preserve caller data on exceptions.
+
+Restrict this high-level entry to action0 and a field ball owner on the possession side. Derive attacker record from roster, selected-defender count from choices, initial power/subtype from attacker output. Derive keeper record from the post-contact roster. Keep attacking/keeper subtypes distinct; outcome defense action must use selected keeper response. Outcome timer/penalty and random bytes follow comparison state. Existing score/ball/recovery/random content stays explicit.
+
+Extract existing field-only handoff and route selection for reuse; keep previous public entry behavior unchanged. Terminal field results bypass keeper. Diverted routes evaluate no keeper content. New input supplies attacking situation/random/carry and keeper move/energy carry alongside existing field fixture. Caller must supply selected opposing defenders and post-loop/recovery inputs. No original distance adjustment, game presentation, full-loop ROM comparison, canonical persistent match command or native network gameplay claim.

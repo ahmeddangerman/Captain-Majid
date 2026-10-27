@@ -33,24 +33,32 @@ ShotSequenceResult resolve_explicit_shot(const ShotSequenceInput& input) {
     return {energy, action, keeper_outcome.keeper, keeper_outcome.outcome};
 }
 
-Action0ShotContinuationResult resolve_action0_shot_continuation(
+ShotContinuationRoute select_action0_shot_route(
     const Action0ShotContinuationInput& input) {
     if (input.field_result_code > 1) {
         throw std::invalid_argument("Action-0 keeper continuation accepts field results 0 or 1");
     }
     if (input.action_code != 0) {
-        return {ShotContinuationRoute::unsupported_action, std::nullopt, std::nullopt};
+        return ShotContinuationRoute::unsupported_action;
     }
     if (input.post_loop_active_defenders != 0) {
-        return {ShotContinuationRoute::other_continuation, std::nullopt, std::nullopt};
+        return ShotContinuationRoute::other_continuation;
     }
     if (input.field_proximity_carry) {
-        return {ShotContinuationRoute::loose_ball, std::nullopt, std::nullopt};
+        return ShotContinuationRoute::loose_ball;
     }
     if (input.opposing_keeper_status != 0) {
-        return {ShotContinuationRoute::other_continuation, std::nullopt, std::nullopt};
+        return ShotContinuationRoute::other_continuation;
     }
 
+    return ShotContinuationRoute::keeper_attempt;
+}
+
+Action0ShotContinuationResult resolve_action0_shot_continuation(
+    const Action0ShotContinuationInput& input) {
+    const auto route = select_action0_shot_route(input);
+    if (route != ShotContinuationRoute::keeper_attempt)
+        return {route, std::nullopt, std::nullopt};
     const auto keeper_outcome = resolve_keeper_outcome(input.power_after_contacts,
         input.subtype_after_contacts, input.keeper, input.outcome);
     return {ShotContinuationRoute::keeper_attempt, keeper_outcome.keeper,
