@@ -4,7 +4,7 @@
 
 ## Contract
 
-`FieldPlayerRecord` supplies the player ID, primary type, flags, alternate type, and level. IDs 1..10 and 12..21 are supported. Keeper IDs 0/11 and other IDs are rejected.
+`FieldPlayerRecord` supplies the player ID, primary type, flags, alternate type, and level. Its flags/alternate-type fields are raw record+1/+2, the same bytes that energy interprets as stamina; [PREPARED_DEFENDER_SEQUENCE.md](PREPARED_DEFENDER_SEQUENCE.md) derives them from current stamina before loading each move. IDs 1..10 and 12..21 are supported. Keeper IDs 0/11 and other IDs are rejected.
 
 `FieldPlayerProfiles` supplies ordinary type mappings, alternate type mappings, field skill views, generic position offsets, and the caller-selected team's bytes. Type zero uses `generic_slot_offsets[player_id - 11]` to read a team type for opposing field IDs 12..21; generic own-team records are unsupported. A generic entry may resolve to ordinary type zero.
 

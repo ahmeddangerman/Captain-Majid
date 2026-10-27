@@ -19,6 +19,7 @@
 - The original nearby-defender selector at `$E4D7` returns opposing player IDs in ROM order, applying the side-specific limit, nonzero status skip, and strict square-radius test. Its output matches 1,024 original-ROM cases; caller-supplied radius and later contact data remain explicit.
 - Standard field-defender preparation now selects a skill by defense action/situation and a move by subtype, then loads strength, move effect, and stamina cost from replaceable content. Its contact wrapper supplies the loaded strength and subtype to the existing comparison. The complete original `$8224` loader matches 16,064 fixtures; see [FIELD_DEFENDER_PREPARATION.md](FIELD_DEFENDER_PREPARATION.md).
 - Field-player profile resolution now supplies defender preparation from ordinary types, generic opposing-team positions, and alternate player forms. The composed path matches 91,392 constructed original-ROM fixtures; all tables remain caller-supplied. See [FIELD_PLAYER_PROFILES.md](FIELD_PLAYER_PROFILES.md).
+- Prepared defender sequences now load each visited player and move, apply defensive stamina use, and feed weakening into ordered contacts, returning an updated roster. Terminal results stop later energy use; repeated choices use current stamina. See [PREPARED_DEFENDER_SEQUENCE.md](PREPARED_DEFENDER_SEQUENCE.md).
 - A fixture session that separates participant identity from team, rejects unauthorized and unordered commands before state changes, and serializes every fixture state field explicitly.
 - A native terminal executable with a batch arithmetic mode and strict replica command protocol.
 - A Python development adapter that sends commands through loopback TCP to two separate native processes, then compares their complete state after every command.
@@ -58,11 +59,13 @@ The new `resolve_field_contact_handoff` wrapper joins ordered contact results to
 
 The field-player profile increment passed the full Make suite and all 20 CMake/CTest checks. The earlier preparation comparison still matches 16,064 cases after extending its private helper, while the composed profile comparison matches 91,392 constructed cases. Independent review reported no actionable findings and reproduced the targeted native and composed ROM checks.
 
+The prepared defender sequence has native integration coverage and passed the full Make suite and all 21 CMake/CTest checks. Additional generic-primary-type and stale-comparison-input tests passed targeted rebuilds afterward. The profile/preparation verifier still matches 91,392 original-ROM fixtures and the energy verifier 9,728; these validate components rather than the complete connected original loop.
+
 ## Limits
 
 - The ordered fixture still advances only a contact-loss stage. The direct shot sequence and gated action-0 continuation accept explicit statistics, route values, and random values; they are not yet ordered match commands or playable interactions.
 - The goalkeeper outcome handoff updates score, possession, keeper state, and punch placement. Code-3 field-defender handoffs and ordinary interior-field code-2 recovery are implemented; active-ball updates, boundary restarts, field-defender rewards, and full phase transitions remain to be integrated.
-- Standard field-defender preparation loads strength and cost from supplied content, using a decoded player profile. Ordinary/generic/alternate field profile resolution is implemented; runtime content import, team-data selection, attack/keeper move preparation, and caller-specific stamina accounting still need integration.
+- Standard field-defender preparation loads strength and cost from supplied content, using a decoded player profile. Ordinary/generic/alternate field profile resolution is implemented; runtime content import, team-data selection, attack/keeper move preparation, and attacker/keeper stamina accounting and persistent match-state commits still need integration.
 - Shot arithmetic receives explicit random bytes. A single original generator step is implemented, but its inputs and frame schedule still need study before integrating a complete deterministic match.
 - Static inspection identifies a frame-interrupt random generator that mixes player and sound-driver memory. [RANDOMNESS_NOTES.md](RANDOMNESS_NOTES.md) records why a gameplay trace is required before choosing simulation scheduling compatible with replacement music and online play.
 - The fixture's initial power 300 and loss 37 are developer-selected inputs. They are not claimed to be an actual player's statistics.
@@ -74,6 +77,6 @@ The field-player profile increment passed the full Make suite and all 20 CMake/C
 
 ## Next checkpoint
 
-Connect resolved player profiles, selected defenders, and their tactical choices through caller-specific energy accounting into ordered action-0 match state. Add the runtime content importer and team-data selection caller. Trace the remaining comparison-table selection, action 1 and other phases, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
+Connect the prepared defender sequence and its updated roster to field outcome handoffs and ordered action-0 match state. Add the runtime content importer and team-data selection caller. Trace the remaining comparison-table selection, action 1 and other phases, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
 
 Early network comparisons continue alongside each simulation increment. Public matchmaking and the rules for additional participants remain part of the engine direction, without committing to an unsupported player count.

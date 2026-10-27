@@ -2,6 +2,7 @@
 #include "captain/field_defender_preparation.hpp"
 
 namespace captain {
+// flags/alternate_type represent raw record+1/+2, also the stamina bytes.
 struct FieldPlayerRecord {
     std::uint8_t player_id, type, flags, alternate_type, level;
 };
