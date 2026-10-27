@@ -6,6 +6,8 @@ The CLI and [optional native window](NATIVE_SHOT_SCENE.md) share `calculate_shot
 
 The laboratory also accepts explicit initial keeper state and ordered pre-shot `--recover N` steps. See [goalkeeper recovery](KEEPER_RECOVERY.md) for state fields, examples and why several steps cannot be merged into one elapsed total.
 
+The shared API/CLI now supports both possession sides with `--side 0|11`; mirrored coordinates remain explicit and side11 requires version2 geometry content. See [mirrored shot scenes](MIRRORED_SHOT_SCENE.md) for a native catch example and the still-missing live-flight contact stage. Earlier fixed side0 assumptions below describe the default fixture.
+
 New exports use version2 approach geometry; the reader retains version1 compatibility. See [SHOT_APPROACH.md](SHOT_APPROACH.md). Use `ball-x N`/`ball-y N` interactively, or `--ball-x N`/`--ball-y N` on the CLI, to change the scene's ball position with a version2 pack. Unsupported distance-table indices reject.
 
 ## Run

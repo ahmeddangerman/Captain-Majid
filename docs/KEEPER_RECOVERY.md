@@ -43,7 +43,7 @@ The resettable shared scene accepts initial keeper state and an ordered pre-shot
   --recover 1 --recover 1 --recover 2 --recover 1
 ```
 
-Each `--recover` appends one step. Interactive commands use the same names without `--`; `clear-recovery` clears the list. Every shot replays the list from the supplied initial state, then supplies the resulting timer/penalty to comparison and the same duration/stun to outcome and the keeper-status gate. It does not persist a previous shot's result. The slot0/shared state remain zero in this scene; the pure snapshot helper supports both keepers and shared state.
+Each `--recover` appends one step. Interactive commands use the same names without `--`; `clear-recovery` clears the list. Every shot replays the list from the supplied initial state, then supplies the resulting timer/penalty to comparison and the same duration/stun to outcome and the keeper-status gate. It does not persist a previous shot's result. The state options refer to the selected opposing keeper: slot11 for side0, slot0 for side11. The other keeper/shared state remain zero in this scene; the pure snapshot helper supports both keepers and shared state.
 
 An elapsed sequence matters: a single elapsed5 call is not equivalent to1,1,2,1. Stun recovery and penalty recovery follow separate branches, and penalties reduce at most once per call.
 

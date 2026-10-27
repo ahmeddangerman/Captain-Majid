@@ -36,7 +36,9 @@ def shot_outcome_state(memory, initial_side, event):
 
 
 def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000,
-               max_frames=10000, until='field', ack_ppu_transfers=False):
+               max_frames=10000, until='field', ack_ppu_transfers=False, host_buttons=128):
+    if not isinstance(host_buttons, int) or not 0 <= host_buttons <= 255:
+        raise ValueError('Fixed host button mask must be a byte')
     watched = {0x61C, 0x61D, 0x612, 0x616, 0x617, 0xE2, 0xE3, 0x449, 0x44A, 0x498,
                0x28, 0x29, 0x441, 0x629, 0x635, 0x637, 0x600,
                *(0x300 + 12 * slot + offset for slot in (0, 11) for offset in (5, 6, 7)),
@@ -79,6 +81,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     initial_power = word(memory, 0x61C)
     host_frames = []
     comparisons = []
+    flight_contacts = []
     checkpoints = []
     attacker = {}
     keeper = {}
@@ -136,11 +139,13 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                                    'Other tasks inactive until original code starts them; banks26/27, '
                                    'bank/select shadows consistent with $22.',
                                    'Snapshot scratch/stack bytes outside this setup are explicit input.'],
-                    'host_policy': {'a_button': 'held and edge A supplied at each host frame',
+                    'host_policy': {'buttons': host_buttons,
+                                    'input': 'same fixed held and edge mask each modeled frame; no real sampling',
                                     'display_queue': 'clear $0515 each host frame',
                                     'ppu_transfer_queue': ('acknowledge one pending $0498 descriptor per host frame'
                                                            if ack_ppu_transfers else 'not acknowledged')},
                     'host_frames': host_frames, 'comparisons': comparisons,
+                    'flight_contacts': flight_contacts,
                     'attacker': attacker, 'keeper': keeper,
                     'approach': approach,
                     'keeper_recovery': recovery,
@@ -172,6 +177,16 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                 approach.update({'distance': memory[0x62B], 'destination': memory[0x638],
                                  'random_first': memory[0xE2], 'loose_ball': bool(cpu.p & 1)})
         if bank == 26 and shot_mode:
+            if cpu.pc == 0x888D:
+                flight_contacts.append({'index': memory[0x616], 'defender': memory[0x442],
+                                        'action': memory[0x43D], 'subtype': memory[0x43E],
+                                        'power_before': word(memory, 0x61C),
+                                        'random': [memory[0xE2], memory[0xE3]]})
+            elif cpu.pc == 0x88A8 and flight_contacts:
+                flight_contacts[-1].update({'result_code': memory[0x612],
+                                            'candidate_loss': memory[0x619]})
+            elif cpu.pc == 0x8877 and flight_contacts:
+                flight_contacts[-1]['power_after_handler'] = word(memory, 0x61C)
             if cpu.pc == 0x8F72:
                 slot = memory[0x441]
                 if slot > 21:
@@ -230,7 +245,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                 # Original C8FB pops one PPU transfer descriptor. Acknowledge
                 # consumption only; PPU writes/NMI bank effects are not emulated.
                 memory[0x498] -= 1
-            memory[0x1C], memory[0x1E] = 128, 128
+            memory[0x1C], memory[0x1E] = host_buttons, host_buttons
             host_frames.append({'instruction': steps,
                                 'writes': [{'address': address, 'before': before,
                                             'after': memory[address]} for address, before in values.items()]})
@@ -251,6 +266,8 @@ def main():
                         help='Field dispatch, keeper comparison, or immediate keeper outcome handoff')
     parser.add_argument('--ack-ppu-transfers', action='store_true',
                         help='Explicit host acknowledgement of one pending PPU transfer per modeled frame')
+    parser.add_argument('--host-buttons', type=int, default=128,
+                        help='Fixed held/edge byte each modeled frame; default128=A,129=A+Right')
     args = parser.parse_args()
     try:
         rom = args.rom.read_bytes()
@@ -258,7 +275,8 @@ def main():
             parser.error('ROM does not match verified Japanese reference')
         result = trace_loop(rom[16:262160], args.ram.read_bytes(),
                             args.cartridge_ram.read_bytes() if args.cartridge_ram else None,
-                            until=args.until, ack_ppu_transfers=args.ack_ppu_transfers)
+                            until=args.until, ack_ppu_transfers=args.ack_ppu_transfers,
+                            host_buttons=args.host_buttons)
     except (OSError, ValueError, RuntimeError) as error:
         parser.exit(1, f'Trace stopped: {error}\n')
     json.dump(result, sys.stdout, indent=2)

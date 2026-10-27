@@ -16,7 +16,12 @@ unsigned number(const std::string& text, unsigned maximum) {
     return value;
 }
 void option(Options& options, const std::string& name, const std::string& value) {
-    if (name == "--level") options.level = number(value, 255);
+    if (name == "--side") {
+        const auto side = number(value, 11);
+        if (side != 0 && side != 11) throw std::invalid_argument("Side must be0 or11");
+        options.side = side;
+    }
+    else if (name == "--level") options.level = number(value, 255);
     else if (name == "--keeper-level") options.keeper_level = number(value, 255);
     else if (name == "--subtype") options.subtype = number(value, 255);
     else if (name == "--defenders") options.defenders = number(value, 5);
@@ -43,6 +48,7 @@ const char* event_name(captain::ShotEvent event) {
 void shoot(const captain::ShotContent& content, const Options& options) {
     const auto result = captain::calculate_shot_scene(content, options);
     const auto state = captain::resolve_shot_scene_keeper_state(options);
+    std::cout << "Scene side " << options.side << '\n';
     std::cout << "Pre-shot keeper: timer " << unsigned(state.timer)
               << " | penalty " << unsigned(state.penalty)
               << " | duration " << unsigned(state.penalty_duration)
@@ -83,14 +89,16 @@ void shoot(const captain::ShotContent& content, const Options& options) {
                   << " | owner " << unsigned(result.flow.field_outcome.ball_owner)
                   << " (later field phase is outside this scene)\n";
     }
-    std::cout << "Stamina: attacker " << result.flow.field.roster[3].stamina
-              << " | keeper " << result.flow.field.roster[11].stamina << '\n';
+    const auto owner = options.side == 0 ? 3u : 14u;
+    const auto keeper_slot = options.side ^ 11u;
+    std::cout << "Stamina: attacker " << result.flow.field.roster[owner].stamina
+              << " | keeper " << result.flow.field.roster[keeper_slot].stamina << '\n';
 }
 }
 
 int main(int argc, char** argv) {
     if (argc < 2) {
-        std::cerr << "Usage: captain-shot-lab PACK [--interactive] [--level N] [--keeper-level N] "
+        std::cerr << "Usage: captain-shot-lab PACK [--interactive] [--side 0|11] [--level N] [--keeper-level N] "
                      "[--subtype N] [--defenders 0..5] [--keeper-action 0..3] [--ball-x N] [--ball-y N]\n"
                      "[--keeper-timer N] [--keeper-duration N] [--keeper-penalty N] [--keeper-stun N] [--recover N ...]\n";
         return 2;
@@ -110,13 +118,13 @@ int main(int argc, char** argv) {
         if (!file) throw std::invalid_argument("Unable to open local content pack");
         const auto content = captain::load_shot_content(file);
         std::cout << "Captain Majid native shot laboratory\n"
-                     "Constructed side0 scene with explicit staged randomness and local content.\n"
+                     "Constructed scene with explicit side, staged randomness and local content.\n"
                      "Each shot resets the scene; this is not a match or original outcome-script replay.\n";
         if (!interactive) {
             shoot(content, options);
             return 0;
         }
-        std::cout << "Commands: shoot, level N, keeper-level N, subtype N, defenders N, keeper-action N, ball-x N, ball-y N, quit\n";
+        std::cout << "Commands: shoot, side 0|11, level N, keeper-level N, subtype N, defenders N, keeper-action N, ball-x N, ball-y N, quit\n";
         std::cout << "Keeper state: keeper-timer N, keeper-duration N, keeper-penalty N, keeper-stun N, recover N, clear-recovery\n"
                      "Recover appends a pre-shot elapsed step; each shot reapplies the list from the initial state.\n";
         std::string line;
