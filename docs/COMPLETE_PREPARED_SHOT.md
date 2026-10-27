@@ -11,6 +11,8 @@
 5. For an eligible attempt, select keeper0/11 from the possession side, read its record from the post-contact roster, load its move/profile, debit energy, and compare against remaining shot power.
 6. Resolve goal/save using the keeper result, attacking subtype, selected keeper action, actual side/owner, and the comparison's timer/penalty and current random bytes. Store keeper stamina in the returned roster.
 
+Prepared field comparisons preserve shot power on result1, following the selected-defender caller. Candidate loss is reported but not deducted by this loop. The older isolated contact-loss API remains separate. Consequently the keeper receives full post-attacker power across these contacts, rather than the premature loss used in the earlier prototype.
+
 `result.attack` reports attacker preparation. `result.flow` reports field calculation/handoff and optional continuation. `result.keeper` exists only for a reached keeper attempt. A field or diverted route preserves those earlier phase outputs without inventing a goal/save.
 
 ## Reused APIs

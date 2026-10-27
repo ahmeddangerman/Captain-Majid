@@ -52,9 +52,9 @@ int main() {
     in=fixture(); in.context.incoming_power=120;
     in.choices[0].comparison.thresholds={100,50,0,0};
     r=captain::resolve_prepared_field_shot(in,profiles,defense);
-    require(r.field.result_code==1 && r.field.remaining_power==97 &&
+    require(r.field.result_code==1 && r.field.remaining_power==120 &&
             r.continuation->outcome->event==captain::ShotEvent::rebound,
-            "contact power loss reaches goalkeeper rebound decision");
+            "selected-defender comparison preserves power before keeper rebound decision");
     in=fixture(); in.context.incoming_power=0;
     r=captain::resolve_prepared_field_shot(in,profiles,defense);
     require(r.continuation->outcome->event==captain::ShotEvent::keeper_catch &&

@@ -34,7 +34,7 @@ int main(){
  in.keeper_action=1;in.field.continuation.outcome.punch_intervals.fill(3);r=run();
  req(r.flow.continuation->outcome->event==captain::ShotEvent::keeper_punch&&r.flow.continuation->outcome->ball_active==1&&r.flow.continuation->outcome->ball_x==80&&r.flow.continuation->outcome->ball_y==88,"chosen punch uses current keeper random bytes");
  in=saved;attack.strength_curve.fill(240);in.field.choices[0].comparison.thresholds={200,100,50,0};in.field.continuation.keeper.roll.offset=230;r=run();
- req(r.flow.field.remaining_power==191&&r.keeper->comparison.ratio==143&&r.flow.continuation->outcome->event==captain::ShotEvent::rebound,"field power loss reaches prepared keeper and rebound outcome");
+ req(r.flow.field.remaining_power==214&&r.keeper->comparison.ratio==161&&r.flow.continuation->outcome->event==captain::ShotEvent::rebound,"selected-defender power preservation reaches prepared keeper and rebound outcome");
  in=saved;attack.strength_curve.fill(240);in.field.choices[0].comparison.thresholds={255,220,180,0};kp.skills.clear();r=run();
  req(!r.keeper&&!r.flow.continuation&&r.flow.field_outcome.ball_owner==3&&r.flow.field.roster[0].stamina==200,"terminal field capture skips malformed keeper and its debit");
  in=saved;in.field.context.interruption=captain::FieldInterruptionContext{120,100,{}};in.field.context.interruption->state.status.fill(7);in.field.context.interruption->state.keeper_penalties={8,9};in.field.choices[0].comparison.random_first=0;r=run();

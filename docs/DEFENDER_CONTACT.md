@@ -6,6 +6,10 @@ This contract comes from instructions executed directly in the verified Japanese
 
 The experiment executes `$8EE9` to its return, which calls `$8D06`, followed by `$8132` to its return. A continuation at `$819F–$81B8` supplies the already verified loss stage when the classification is 1. Rewards, ball ownership, animation, clock changes, foul overrides, and goalkeeper actions remain outside this experiment.
 
+## Caller-specific power handling
+
+`compare_defender_contact` now returns arithmetic/classification and the candidate loss without changing incoming power. Prepared selected-defender loops use this API. `calculate_defender_contact` retains the isolated result1 loss continuation described below; existing batch and fixture callers keep that behavior. The original selected-defender loop at `$82F4..$83F5` does not invoke this isolated loss continuation in the observed scheduler paths. See [FIELD_LOOP_SCHEDULING.md](FIELD_LOOP_SCHEDULING.md). The two callers must not be conflated.
+
 ## Inputs
 
 - Incoming power: word at `$061C/$061D`.

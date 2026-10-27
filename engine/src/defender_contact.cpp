@@ -34,7 +34,7 @@ DefenderRollResult roll_defender_strength(const DefenderRollInput& input) {
     return {base, strength, subtype, special};
 }
 
-DefenderContactResult calculate_defender_contact(const DefenderContactInput& input) {
+DefenderContactResult compare_defender_contact(const DefenderContactInput& input) {
     const auto roll = roll_defender_strength({input.defender_power, input.random_first,
         input.random_second, input.range, input.offset, input.weakened, input.eligible,
         input.context, input.defender_slot, input.subtype});
@@ -44,8 +44,14 @@ DefenderContactResult calculate_defender_contact(const DefenderContactInput& inp
     const unsigned quotient = strength ? numerator / strength : 65535;
     const auto score = static_cast<std::uint8_t>(quotient > 255 ? 255 : quotient);
     const auto code = classify_score(score, input.thresholds);
-    const auto remaining = code == 1 ? reduce_action_strength(input.incoming_power, loss)
-                                     : input.incoming_power;
-    return {roll.base, strength, loss, score, code, remaining, roll.subtype, roll.special};
+    return {roll.base, strength, loss, score, code, input.incoming_power,
+            roll.subtype, roll.special};
+}
+
+DefenderContactResult calculate_defender_contact(const DefenderContactInput& input) {
+    auto result = compare_defender_contact(input);
+    if (result.result_code == 1)
+        result.incoming_power = reduce_action_strength(input.incoming_power, result.loss);
+    return result;
 }
 }

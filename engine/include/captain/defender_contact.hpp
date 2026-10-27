@@ -51,5 +51,10 @@ struct DefenderContactResult {
     bool special;
 };
 
+// Comparison/classification only. Reports candidate loss without applying it;
+// the selected-defender caller preserves incoming power at this stage.
+DefenderContactResult compare_defender_contact(const DefenderContactInput& input);
+
+// Isolated caller continuation: applies the candidate loss for result1.
 DefenderContactResult calculate_defender_contact(const DefenderContactInput& input);
 }

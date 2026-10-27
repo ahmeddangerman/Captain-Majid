@@ -77,3 +77,15 @@ The state harness matched 25,756 energy, keeper story/state, and random-step cas
 Internal RAM must be2048bytes. If a path accesses cartridge RAM, supply its8192-byte snapshot with `--cartridge-ram`. Unsupported hardware, absent cartridge data and execution limits stop the trace. Scripts5/6/7 are supported. Host script setup, synthetic stack/registers and acknowledgement of presentation requests are listed explicitly in the report. Rendering, audio, input callbacks, the cooperative scheduler and frame interrupts are omitted. Keep snapshots and generated JSON outside Git. See [FIELD_LOOP_SCHEDULING.md](../docs/FIELD_LOOP_SCHEDULING.md).
 
 The snapshot's mapper shadow `$22` must have PRG mode bit6 clear. Other modes are rejected before execution rather than traced with a different bank arrangement. Host setup also initializes mapper select/shadow `$23` consistently with the original bank helper.
+
+## Selected-defender loop observation
+
+```sh
+.venv/bin/python tools/trace_field_loop.py /path/to/reference.nes \
+  --ram /path/to/private-field-loop-ram.bin \
+  > /path/to/private-analysis/field-loop-trace.json
+```
+
+This entry requires an explicit2048-byte snapshot with side0/11, attack action0..4,1..5 selected defenders in `$0601..$060F`, prepared attacking power at `$061C/$061D`, valid player records, clock and random state. Entry `$82F4` is after attacker/pre-loop setup; exit `$83F5` is before result handoff/player movement. Optional cartridge RAM and mapper-mode limits are the same as for the parser tool.
+
+The tool constructs foreground task5 and background task1, then executes real original subroutines/scheduling. It explicitly acknowledges host frames/display queues and supplies repeated A input. It records comparisons, power/status/clock writes and all host acknowledgements. No NMI, PPU/APU timing, rendering, sound or real controller sampling is modeled, and unsupported hardware accesses stop execution. It is original-code research, not a native differential check or a full-game emulator. See [FIELD_LOOP_SCHEDULING.md](../docs/FIELD_LOOP_SCHEDULING.md) for the seven observations that motivated separating prepared comparison from isolated power loss.

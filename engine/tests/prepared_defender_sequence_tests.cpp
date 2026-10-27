@@ -60,10 +60,10 @@ int main() {
     auto loss=first; loss.comparison.thresholds={200,100,50,0};
     auto second=first; second.player_id=13; second.subtype=193;
     r = captain::resolve_prepared_field_contacts(roster,{loss,second},profiles,defense,context);
-    require(r.contacts[0].contact.result_code==1 && r.remaining_power==233 &&
-            r.contacts[1].contact.incoming_power==233 && r.contacts[1].contact.subtype==193 &&
+    require(r.contacts[0].contact.result_code==1 && r.remaining_power==256 &&
+            r.contacts[1].contact.incoming_power==256 && r.contacts[1].contact.subtype==193 &&
             r.roster[13].stamina==200,
-            "power carries, selected subtype resets and zero-cost move keeps stamina");
+            "selected-defender loop preserves power, resets subtype and keeps zero-cost stamina");
     auto terminal=first; terminal.comparison.thresholds={255,220,180,0};
     auto invalid=first; invalid.player_id=255;
     auto lowpower=context; lowpower.incoming_power=1;

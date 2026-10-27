@@ -37,6 +37,6 @@ After storing the ordinary comparison result, `$8382` calls `$8E33`. For eligibl
 
 ## Evidence boundary
 
-[FIELD_LOOP_SCHEDULING.md](FIELD_LOOP_SCHEDULING.md) records the inspected script/coroutine and clock/status boundaries. The immediate code1 loss in the native contact helper is verified in a different isolated caller; its exact use/timing in this main loop remains unresolved.
+[FIELD_LOOP_SCHEDULING.md](FIELD_LOOP_SCHEDULING.md) records script/coroutine and clock/status boundaries, plus seven bounded original selected-defender loop observations with explicit host frame acknowledgements. They preserve power across result1 contacts; prepared sequences now use comparison only. The immediate code1 loss remains in its different isolated caller. Full original shot/frame timing is still outside this evidence.
 
 This trace establishes call order, loop exits, and the ordinary interior-field recovery handoff. It does not yet reproduce complete screen/action setup, content selection, event messages, rewards, animations, active-ball movement, boundary restarts, match clock, or a full gameplay trace. The native TCP fixture also remains a contact-loss demo rather than a match session.
