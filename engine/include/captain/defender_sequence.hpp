@@ -13,8 +13,9 @@ struct DefenderSequenceResult {
     bool stopped;
 };
 
-// Apply already selected contacts in ROM order. Codes 0/1 continue; 2/3
-// leave the contact loop for their caller-specific result handlers.
+// Apply already selected contacts in ROM order, starting each with its own
+// input subtype while carrying forward power. Codes 0/1 continue; 2/3 leave
+// the contact loop for their caller-specific result handlers.
 DefenderSequenceResult resolve_field_contacts(
     const std::vector<DefenderContactInput>& contacts,
     std::uint16_t incoming_power, std::uint8_t initial_result_code);

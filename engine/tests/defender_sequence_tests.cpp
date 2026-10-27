@@ -45,5 +45,19 @@ int main() {
         std::cerr << "Field result code two must stop before later defenders\n";
         return EXIT_FAILURE;
     }
+
+    const std::array<std::uint8_t, 4> no_thresholds{0, 0, 0, 0};
+    const std::vector<captain::DefenderContactInput> distinct_subtypes{
+        {0, 256, 100, 100, 100, 0, false, true, 4, 0, 0x11, no_thresholds},
+        {0, 256, 100, 100, 100, 0, false, false, 0, 2, 0x22, no_thresholds}
+    };
+    const auto subtype_sequence = captain::resolve_field_contacts(distinct_subtypes, 0, 0);
+    if (subtype_sequence.contacts.size() != 2 ||
+        subtype_sequence.contacts[0].subtype != 0x91 ||
+        subtype_sequence.contacts[1].subtype != 0x22 ||
+        subtype_sequence.contacts[1].special) {
+        std::cerr << "Each defender must start with its own selected subtype\n";
+        return EXIT_FAILURE;
+    }
     std::cout << "Ordered defender contact checks passed\n";
 }
