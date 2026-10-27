@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if (version != '1' && version != '2' && version != '3' && version != '4')
+    if (version < '1' || version > '5')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -93,19 +93,19 @@ ShotContent load_shot_content(std::istream& input) {
     content.keeper_offset = reader.byte();
     reader.bytes(content.keeper_thresholds);
     reader.bytes(content.punch_intervals);
-    if (version == '2' || version == '3' || version == '4') {
+    if (version >= '2') {
         content.approach = ShotApproachContent{};
         reader.bytes(content.approach->outer_distance);
         reader.bytes(content.approach->inner_distance);
     }
-    if (version == '3' || version == '4') {
+    if (version >= '3') {
         content.flight = FlightContactContent{};
         reader.bytes(content.flight->defense_actions);
         reader.bytes(content.flight->eligibility);
         for (auto& pair : content.flight->variation) reader.bytes(pair);
         for (auto& row : content.flight->thresholds) reader.bytes(row);
     }
-    if (version == '4') {
+    if (version >= '4') {
         content.movement = FieldPhaseContent{};
         auto& movement = *content.movement;
         for (auto& threshold : movement.geometry.direction_thresholds) threshold = reader.word();
@@ -122,6 +122,12 @@ ShotContent load_shot_content(std::istream& input) {
         reader.bytes(movement.targets.region_mirror);
         for (auto& formation : movement.targets.on_ball) reader.bytes(formation);
         for (auto& formation : movement.targets.off_ball) reader.bytes(formation);
+    }
+    if (version >= '5') {
+        content.contact = ContactPreludeContent{};
+        reader.bytes(content.contact->field_elapsed);
+        reader.bytes(content.contact->keeper_elapsed);
+        reader.bytes(content.contact->defender_status);
     }
     reader.end();
     return content;

@@ -4,6 +4,7 @@
 #include "captain/shot_approach.hpp"
 #include "captain/flight_contact.hpp"
 #include "captain/field_phase.hpp"
+#include "captain/contact_prelude.hpp"
 #include <istream>
 #include <optional>
 
@@ -21,9 +22,10 @@ struct ShotContent {
     std::optional<ShotApproachContent> approach{};
     std::optional<FlightContactContent> flight{};
     std::optional<FieldPhaseContent> movement{};
+    std::optional<ContactPreludeContent> contact{};
 };
 
-// Development CMJSHOT1/2/3/4 content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..5 content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

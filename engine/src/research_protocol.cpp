@@ -11,6 +11,7 @@
 #include "captain/defender_selection.hpp"
 #include "captain/field_defender_preparation.hpp"
 #include "captain/player_movement.hpp"
+#include "captain/match_clock.hpp"
 
 #include <array>
 #include <charconv>
@@ -82,6 +83,19 @@ bool defender_output(std::istringstream& stream, std::string& output) {
 }
 
 bool research_output(const std::string& command, std::istringstream& stream, std::string& output) {
+    if (command == "clockstep") {
+        std::array<std::uint32_t, 7> values{};
+        if (!read_fields(stream, values, 1)) return false;
+        const auto result = captain::advance_match_clock({static_cast<std::uint16_t>(values[0]),
+            static_cast<std::uint8_t>(values[1]), static_cast<std::uint8_t>(values[2]),
+            static_cast<std::uint8_t>(values[3]), static_cast<std::uint8_t>(values[4])},
+            static_cast<std::uint8_t>(values[5]), static_cast<std::uint8_t>(values[6]));
+        output = format_fields(std::array<unsigned, 8>{result.state.remaining, result.state.extra_time,
+            result.state.flags, result.state.script_flags, result.state.ball_mode,
+            static_cast<unsigned>(result.continuation), result.request_clock_display ? 1u : 0u,
+            result.request_warning_cue ? 1u : 0u});
+        return true;
+    }
     if (command == "playermove") {
         std::array<std::uint32_t, 7> prefix{};
         for (std::size_t i = 0; i < prefix.size(); ++i)

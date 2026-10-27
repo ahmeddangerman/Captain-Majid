@@ -35,6 +35,8 @@ An [optional SDL2 native window](docs/NATIVE_SHOT_SCENE.md) displays that same s
 
 The [native field-phase laboratory](docs/NATIVE_FIELD_PHASE.md) adds persistent position/roster state, formation-based targets, player advancement and prepared terminal flight tails. It uses a private version4 content pack and a bounded `.cmjstate` checkpoint. Full match sequencing and live frame/random scheduling remain incomplete.
 
+The [native phase session](docs/NATIVE_CONTACT_CLOCK.md) extends that checkpoint with contact status/time, keeper recovery and match-clock events. Version5 private content and `.cmjsession` state support possession/recovery handoffs, explicit added-time pauses and period-end boundaries.
+
 ```bash
 ./build/captain-prototype --replica
 ```

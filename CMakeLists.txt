@@ -15,6 +15,8 @@ target_sources(captain_core PRIVATE engine/src/player_movement.cpp)
 target_sources(captain_core PRIVATE engine/src/movement_profile.cpp engine/src/field_targets.cpp engine/src/field_phase.cpp)
 target_sources(captain_core PRIVATE engine/src/field_state_io.cpp)
 target_sources(captain_core PRIVATE engine/src/terminal_flight_phase.cpp)
+target_sources(captain_core PRIVATE engine/src/match_clock.cpp engine/src/contact_prelude.cpp)
+target_sources(captain_core PRIVATE engine/src/phase_session.cpp engine/src/phase_session_io.cpp)
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
 
@@ -26,6 +28,9 @@ target_link_libraries(captain-shot-lab PRIVATE captain_core)
 
 add_executable(captain-field-lab engine/src/field_lab.cpp)
 target_link_libraries(captain-field-lab PRIVATE captain_core)
+
+add_executable(captain-phase-session engine/src/phase_session_lab.cpp)
+target_link_libraries(captain-phase-session PRIVATE captain_core)
 
 option(CAPTAIN_BUILD_SDL_SCENE "Build optional SDL2 development shot window" OFF)
 if(CAPTAIN_BUILD_SDL_SCENE)

@@ -5,9 +5,9 @@ This is the running reference for work between chat updates. Entries distinguish
 ## Current position
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
-- **Available:** native shot calculations, private content loading, a resettable shot lab, persistent field-phase lab, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** native player/formation advancement and prepared terminal flight tails, alongside supported shots in both directions.
-- **Next engine work:** reward/contact-clock/status prelude, recovery/player-control progression, and live ball-flight/frame scheduling.
+- **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
+- **Current milestone:** native contact status/clock and terminal handoffs, including explicit added-time and period-end boundaries, alongside player/formation advancement.
+- **Next engine work:** rewards, recovery/player-control progression, and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -159,3 +159,14 @@ Local source commit: `fa205cc`.
 - Whole-plan review and production build evidence are being completed; work continues into the next phase after that checkpoint.
 
 Checkpoint evidence: Make/CMake production builds completed without warning/error lines. Interactive advancement retains positions across commands. One fresh independent static review found no material implementation defect; current capability summaries were brought up to date. Native/observed snapshot agreement is limited to represented state and the disclosed interrupt-free/prepared boundaries. No automated tests were added/run.
+
+### Native contact clock and phase session — implemented
+
+- Previous field-phase checkpoint is local commit `3e6d8e6`.
+- Added contact elapsed/status rules, ordered keeper recovery and match-clock events, using private version5 content. Existing content versions remain readable.
+- Added264-byte explicit phase-session snapshots and a persistent native command laboratory. Terminal contacts now run the prelude before continuing, and retain pending added-time or period-end boundaries without prematurely transferring possession.
+- Nine original clock observations cover ordinary subtraction, low-byte warning behavior, zero steps, extra time and period end. Four264-byte represented session outputs match original exports in manual hash inspection: possession, loose-ball recovery, added-time pause and period-end pause.
+- Production Make/CMake builds completed. Interactive usage refuses contact/movement at a paused clock boundary and resumes only through an explicit development command. No automated tests were added/run; no claim of live NMI or full-match equivalence.
+- See [NATIVE_CONTACT_CLOCK.md](NATIVE_CONTACT_CLOCK.md) for exact boundaries, format, evidence and remaining gaps. Whole-plan static review follows; work continues into rewards and recovery/control progression.
+
+Checkpoint review: One fresh independent static review found no material findings and checked original contact/clock branches, ordering, deferred continuations and bounded formats. Source is committed locally; no ROM/derived files or webpage changes are included. Work continues into rewards/recovery.

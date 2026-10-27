@@ -1,0 +1,82 @@
+#include "captain/phase_session.hpp"
+#include <stdexcept>
+#include <utility>
+
+namespace captain {
+namespace {
+void validate_contact(const FieldPhaseState& field, const PendingTerminalContact& contact) {
+    if ((contact.result_code != 2 && contact.result_code != 3) ||
+        (contact.defense_action != 0 && contact.defense_action != 2) ||
+        (contact.defense_subtype != 0 && contact.defense_subtype != 128))
+        throw std::invalid_argument("Unsupported terminal contact");
+    field_motion_index(contact.defender_id);
+    if ((contact.defender_id < 11 ? 0 : 11) == field.side)
+        throw std::invalid_argument("Terminal contact requires an opposing field player");
+}
+PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contact,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement) {
+    state.pending.reset();
+    TerminalFlightPhaseResult terminal;
+    if (contact.result_code == 2) {
+        // Placement happened before the clock. Do not re-read the defender's
+        // position after a deferred presentation; preserve that earlier write.
+        state.current.field.selected_defenders = 0;
+        terminal = {state.current.field, TerminalFlightNextPhase::ball_recovery, std::nullopt};
+        state.phase = FieldSessionPhase::ball_recovery;
+    } else {
+        terminal = resolve_prepared_terminal_flight({state.current.field, contact.result_code,
+            contact.defender_id, contact.defense_action, contact.defense_subtype}, primary, movement);
+        state.current.field = terminal.state;
+        state.phase = FieldSessionPhase::player_control;
+    }
+    return {std::move(state), std::nullopt, std::move(terminal)};
+}
+}
+
+void validate_phase_session(const PhaseSessionState& state) {
+    if ((state.current.field.side != 0 && state.current.field.side != 11) ||
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 4)
+        throw std::invalid_argument("Unsupported phase session state");
+    if ((state.phase == FieldSessionPhase::added_time) != bool(state.pending))
+        throw std::invalid_argument("Added-time session needs exactly one pending terminal contact");
+    if (state.pending) validate_contact(state.current.field, *state.pending);
+}
+
+PhaseSessionResult resolve_session_terminal(const PhaseSessionState& input,
+    PendingTerminalContact contact, const PlayerProfileMappings& primary,
+    const FieldPhaseContent& movement, const ContactPreludeContent& prelude) {
+    validate_phase_session(input);
+    if (input.phase == FieldSessionPhase::added_time || input.phase == FieldSessionPhase::period_end)
+        throw std::invalid_argument("Session is waiting at a clock boundary");
+    validate_contact(input.current.field, contact);
+    auto state = input;
+    if (contact.result_code == 2) {
+        const auto& defender = state.current.field.motion[field_motion_index(contact.defender_id)];
+        state.current.field.ball_x = static_cast<std::uint8_t>(defender.x >> 8);
+        state.current.field.ball_y = static_cast<std::uint8_t>(defender.y >> 8);
+    }
+    auto applied = apply_contact_prelude({state.current, contact.defender_id, contact.defense_action, false}, prelude);
+    state.current = applied.state;
+    if (applied.clock.continuation == ClockContinuation::period_end) {
+        state.phase = FieldSessionPhase::period_end;
+        state.pending.reset();
+        return {std::move(state), std::move(applied), std::nullopt};
+    }
+    if (applied.clock.continuation == ClockContinuation::added_time_presentation) {
+        state.phase = FieldSessionPhase::added_time;
+        state.pending = contact;
+        return {std::move(state), std::move(applied), std::nullopt};
+    }
+    auto result = finish(std::move(state), contact, primary, movement);
+    result.prelude = std::move(applied);
+    return result;
+}
+
+PhaseSessionResult resume_session_terminal(const PhaseSessionState& post_presentation,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement) {
+    validate_phase_session(post_presentation);
+    if (post_presentation.phase != FieldSessionPhase::added_time || !post_presentation.pending)
+        throw std::invalid_argument("No added-time terminal contact to resume");
+    return finish(post_presentation, *post_presentation.pending, primary, movement);
+}
+}

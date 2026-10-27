@@ -156,6 +156,7 @@ vite.config.ts.timestamp-*
 *.xdelta
 *.cmjpack
 *.cmjstate
+*.cmjsession
 .analysis/
 roadmap-preview.png
 
