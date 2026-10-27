@@ -30,3 +30,5 @@ Representative observations:
 `--player-movement-batch` and the stateless native `playermove` query accept X word, Y word, speed word, target, status, elapsed, ball cell,64word thresholds and8sign bytes. They return the six values above. Parsing is bounded and rejects extra tokens. The query does not mutate the ordered contact fixture; the Python transport adapter has not been extended.
 
 Production Make compilation and normal native queries are recorded in the work log/plan. No automated tests were added/run. Team profile speeds, target AI, world ordering and terminal state commits are the next layers; their implementation/evidence is recorded separately.
+
+Those next layers are now implemented for staged interrupt-free field phases in [NATIVE_FIELD_PHASE.md](NATIVE_FIELD_PHASE.md). Full clock/prelude and gameplay scheduling remain separate.

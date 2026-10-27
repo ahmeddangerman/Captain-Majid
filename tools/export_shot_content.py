@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese shot data to a local CMJSHOT3 development pack."""
+"""Export private Japanese development data to a local CMJSHOT4 pack."""
 import argparse
 import hashlib
 import struct
@@ -19,7 +19,7 @@ def export_data(rom):
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
-    data = bytearray(b'CMJSHOT3' + hashlib.sha256(rom[16:]).digest())
+    data = bytearray(b'CMJSHOT4' + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -77,6 +77,24 @@ def export_data(rom):
         data.extend(gameplay[flight_variation + 2 * action:flight_variation + 2 * action + 2])
     for action in flight_actions:
         data.extend(gameplay[0x828C + 4 * action:0x828C + 4 * action + 4])
+    data.extend(gameplay[0xFACC:0xFB4C])
+    data.extend(gameplay[0xE8ED:0xE8F5])
+    for player_type in range(35):
+        data.extend(stats[0x95D6 + 4 * player_type + 1:0x95D6 + 4 * player_type + 4])
+    data.extend(struct.pack('<H', 221))
+    for alternate in range(221):
+        data.extend(stats[0x9662 + 12 * alternate + 1:0x9662 + 12 * alternate + 4])
+    data.extend(struct.pack('<H', 256))
+    for profile in range(256):
+        data.extend(stats[0xAFAE + 12 * profile + 4:0xAFAE + 12 * profile + 8])
+    data.extend(gameplay[0xA1DC:0xA1EB])
+    for table, count, lower, upper in ((0xA6AD, 4, 0xA6B5, 0xAB65),
+                                      (0xAB65, 12, 0xAB7D, 0xB98D)):
+        for index in range(count):
+            start = word(gameplay, table + 2 * index)
+            if not lower <= start <= upper - 300:
+                raise ValueError('Unsupported field formation template bounds')
+            data.extend(gameplay[start:start + 300])
     return bytes(data)
 
 

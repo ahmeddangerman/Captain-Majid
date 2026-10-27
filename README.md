@@ -33,6 +33,8 @@ For a native shot calculation using private game data, see [local shot content a
 
 An [optional SDL2 native window](docs/NATIVE_SHOT_SCENE.md) displays that same scene with placeholder graphics and keyboard controls. Enable it with CMake's `CAPTAIN_BUILD_SDL_SCENE` option; the default core build does not require SDL2.
 
+The [native field-phase laboratory](docs/NATIVE_FIELD_PHASE.md) adds persistent position/roster state, formation-based targets, player advancement and prepared terminal flight tails. It uses a private version4 content pack and a bounded `.cmjstate` checkpoint. Full match sequencing and live frame/random scheduling remain incomplete.
+
 ```bash
 ./build/captain-prototype --replica
 ```

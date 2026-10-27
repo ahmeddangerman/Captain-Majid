@@ -16,6 +16,10 @@ public:
     template<std::size_t N> void bytes(std::array<std::uint8_t, N>& values) {
         for (auto& value : values) value = byte();
     }
+    std::uint16_t word() {
+        const auto low = byte();
+        return static_cast<std::uint16_t>(unsigned(low) | (unsigned(byte()) << 8));
+    }
     std::size_t count(std::size_t minimum, std::size_t maximum) {
         const auto low = byte();
         const auto value = unsigned(low) | (unsigned(byte()) << 8);
@@ -59,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if (version != '1' && version != '2' && version != '3')
+    if (version != '1' && version != '2' && version != '3' && version != '4')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -89,17 +93,35 @@ ShotContent load_shot_content(std::istream& input) {
     content.keeper_offset = reader.byte();
     reader.bytes(content.keeper_thresholds);
     reader.bytes(content.punch_intervals);
-    if (version == '2' || version == '3') {
+    if (version == '2' || version == '3' || version == '4') {
         content.approach = ShotApproachContent{};
         reader.bytes(content.approach->outer_distance);
         reader.bytes(content.approach->inner_distance);
     }
-    if (version == '3') {
+    if (version == '3' || version == '4') {
         content.flight = FlightContactContent{};
         reader.bytes(content.flight->defense_actions);
         reader.bytes(content.flight->eligibility);
         for (auto& pair : content.flight->variation) reader.bytes(pair);
         for (auto& row : content.flight->thresholds) reader.bytes(row);
+    }
+    if (version == '4') {
+        content.movement = FieldPhaseContent{};
+        auto& movement = *content.movement;
+        for (auto& threshold : movement.geometry.direction_thresholds) threshold = reader.word();
+        reader.bytes(movement.geometry.axis_signs);
+        const auto profile_entry = [&reader]() {
+            return MovementProfileEntry{reader.byte(), reader.byte(), reader.byte()};
+        };
+        for (auto& entry : movement.profiles.ordinary) entry = profile_entry();
+        movement.profiles.alternate.resize(reader.count(0, 221));
+        for (auto& entry : movement.profiles.alternate) entry = profile_entry();
+        movement.profiles.speeds.resize(reader.count(1, 256));
+        for (auto& row : movement.profiles.speeds)
+            for (auto& speed : row) speed = reader.word();
+        reader.bytes(movement.targets.region_mirror);
+        for (auto& formation : movement.targets.on_ball) reader.bytes(formation);
+        for (auto& formation : movement.targets.off_ball) reader.bytes(formation);
     }
     reader.end();
     return content;

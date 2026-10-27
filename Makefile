@@ -13,10 +13,13 @@ CORE += engine/src/shot_scene.cpp
 CORE += engine/src/shot_approach.cpp
 CORE += engine/src/flight_contact.cpp
 CORE += engine/src/player_movement.cpp
+CORE += engine/src/movement_profile.cpp engine/src/field_targets.cpp engine/src/field_phase.cpp
+CORE += engine/src/field_state_io.cpp
+CORE += engine/src/terminal_flight_phase.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check
-all: build/captain-prototype build/captain-shot-lab
+all: build/captain-prototype build/captain-shot-lab build/captain-field-lab
 
 build:
 	mkdir -p build
@@ -26,6 +29,9 @@ build/captain-prototype: engine/src/main.cpp $(CORE) $(RESEARCH) engine/src/rese
 
 build/captain-shot-lab: engine/src/shot_lab.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/src/shot_lab.cpp $(CORE) -o $@
+
+build/captain-field-lab: engine/src/field_lab.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/src/field_lab.cpp $(CORE) -o $@
 
 build/core-tests: engine/tests/core_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/core_tests.cpp $(CORE) -o $@

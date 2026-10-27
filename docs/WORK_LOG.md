@@ -5,9 +5,9 @@ This is the running reference for work between chat updates. Entries distinguish
 ## Current position
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
-- **Available:** native shot calculations, private content loading, a resettable shot laboratory, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** supported goal/save scenes in both directions, with derived routes and explicit keeper recovery.
-- **Next engine work:** live ball-flight contacts, player movement and the phase after each shot.
+- **Available:** native shot calculations, private content loading, a resettable shot lab, persistent field-phase lab, and an optional SDL2 scene with placeholder graphics.
+- **Current milestone:** native player/formation advancement and prepared terminal flight tails, alongside supported shots in both directions.
+- **Next engine work:** reward/contact-clock/status prelude, recovery/player-control progression, and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -129,9 +129,9 @@ Checkpoint evidence: Make/CMake production builds completed without warnings/err
 
 ## Resume here
 
-1. Carry complete position words, targets/statuses and timing state into terminal flight resolution. Its player-control branch also invokes player movement, so owner/ball writes alone are insufficient.
-2. Build on `advance_field_coordinate` to implement speed/direction, player updates and ordered flight steps, then the distinct terminal possession/recovery transitions.
-3. Commit roster, ball, score and phase changes into one persistent match state before extending online replay beyond the development fixture.
+1. Connect the reward/contact-clock/status prelude to prepared terminal tails so callers do not need captured preprocessed state.
+2. Implement recovery/player-control progression and live ball-flight/frame scheduling on the native movement phase.
+3. Extend the persistent field state into atomic roster/ball/clock/score/phase commits before online match replay.
 
 Keep original data private, retain explicit scheduling limits, and continue with Sol6.1 High for tracing/integration. Overall percentage is unmeasured; report achieved capabilities and remaining checkpoints.
 
@@ -143,6 +143,19 @@ Keep original data private, retain explicit scheduling limits, and continue with
 
 ### Player update implemented
 
+Local source commit: `fa205cc`.
+
 - Added full target-direction and coordinate stepping for a field player, including target/ball-cell stops, status gates, fractional positions and original byte arithmetic.
 - Eight private original observations and normal native query outputs agree on the inspected position/direction/iteration fields. Production Make compilation completed without diagnostics; no automated tests were added/run.
 - Working through the [native field phase plan](superpowers/plans/2026-10-27-native-field-phase.md) continuously. Next are profile speeds, positioning AI and the ordered roster update; independent whole-plan review follows integration.
+
+### Native team phase and prepared terminal tails — checkpoint complete
+
+- Added secondary movement profiles, formation/tactic target selection, and an ordered native field update. Private version4 content keeps original data separate and retains old pack readers.
+- Added239-byte typed field snapshots and `captain-field-lab`, whose state persists between commands. Private snapshots/outputs remain outside Git and exclusive saves refuse existing files.
+- Native advancement updates19players from the captured checkpoint; its represented239-byte state matches the original post-phase export. Prepared player-control and ball-recovery tails also match their respective prepared original snapshots in manual file/hash inspection.
+- The recovery example initially used a checkpoint before clock/status processing. Using the actual post-prelude checkpoint agrees; no fixed elapsed/status correction was inserted into native logic.
+- This is interrupt-free field-phase evidence. NMI/music/controller refresh, full reward/script timing and full-match state are not covered by that agreement. No automated tests were added/run.
+- Whole-plan review and production build evidence are being completed; work continues into the next phase after that checkpoint.
+
+Checkpoint evidence: Make/CMake production builds completed without warning/error lines. Interactive advancement retains positions across commands. One fresh independent static review found no material implementation defect; current capability summaries were brought up to date. Native/observed snapshot agreement is limited to represented state and the disclosed interrupt-free/prepared boundaries. No automated tests were added/run.
