@@ -106,6 +106,8 @@ Field result4 interruption now reproduces its immediate reset and initial restar
 
 ## Next checkpoint
 
+Four [continuous original outcome observations](CONTINUOUS_SHOT_OUTCOMES.md) now reach immediate goal, punch and rebound handoffs with opt-in PPU queue acknowledgement. Full next-phase execution, side11 choices and native persistent timing remain pending.
+
 The [keeper recovery helper](KEEPER_RECOVERY.md) now supports explicit elapsed steps in the resettable scene. Full match scheduling of those steps remains pending.
 
 Extend original shot tracing beyond the keeper comparison to the full outcome and next phase. Private runtime shot content loading and supported distance/target calculations now exist; generic team selection and general random scheduling remain incomplete. Implement elapsed recovery and coherent persistent roster, ball and outcome commits before introducing an ordered action0 match command. Trace action1 and other phases, and extend the keeper handoff through boundary restarts.

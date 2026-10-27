@@ -24,31 +24,45 @@ def keeper_recovery_state(memory):
                         for slot in (0, 11)]}
 
 
+def shot_outcome_state(memory, initial_side, event):
+    record = 0x300 + 12 * (initial_side ^ 11)
+    return {'event': event, 'result_code': memory[0x612],
+            'possession_side': memory[0x5FB], 'ball_owner': memory[0x441],
+            'left_goals': memory[0x28], 'right_goals': memory[0x29],
+            'keeper_timer': memory[record + 5], 'keeper_penalty': memory[record + 7],
+            'keeper_penalty_duration': memory[record + 6], 'keeper_stun': memory[record + 10],
+            'ball_x': memory[0x635], 'ball_y': memory[0x637],
+            'defenders': memory[0x600], 'ball_active': memory[0x5FF], 'kickoff': memory[0x629]}
+
+
 def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000,
-               max_frames=10000, until='field'):
-    watched = {0x61C, 0x61D, 0x612, 0x616, 0x617, 0xE2, 0xE3, 0x449, 0x44A,
+               max_frames=10000, until='field', ack_ppu_transfers=False):
+    watched = {0x61C, 0x61D, 0x612, 0x616, 0x617, 0xE2, 0xE3, 0x449, 0x44A, 0x498,
+               0x28, 0x29, 0x441, 0x629, 0x635, 0x637, 0x600,
                *(0x300 + 12 * slot + offset for slot in (0, 11) for offset in (5, 6, 7)),
                *range(0x5F7, 0x600), *(0x300 + 12 * slot + 10 for slot in range(22))}
     memory = ObservedCartridge(prg, internal_ram, cartridge_ram, watched)
     if memory[0x22] & 64:
         raise ValueError('Snapshot PRG mode bit6 at $22 must be clear')
-    if until not in ('field', 'keeper'):
-        raise ValueError('Expected field or keeper endpoint')
-    minimum = 0 if until == 'keeper' else 1
+    if until not in ('field', 'keeper', 'outcome'):
+        raise ValueError('Expected field, keeper or outcome endpoint')
+    shot_mode = until != 'field'
+    minimum = 0 if shot_mode else 1
     if not minimum <= memory[0x600] <= 5:
         raise ValueError(f'This entry requires {minimum}..5 selected defenders')
     if memory[0x5FB] not in (0, 11) or memory[0x43B] >= 5:
         raise ValueError('Expected possession side0/11 and attack action0..4')
     if max_instructions < 1 or max_frames < 1:
         raise ValueError('Trace limits must be positive')
-    if until == 'keeper' and memory[0x43B] != 0:
-        raise ValueError('Keeper trace mode supports attack action0 only')
+    if shot_mode and memory[0x43B] != 0:
+        raise ValueError('Keeper/outcome trace modes support attack action0 only')
     for index in range(memory[0x600]):
         slot, action = memory[0x601 + index], memory[0x60B + index]
         if slot > 21 or action > 6:
             raise ValueError('Invalid selected defender/action')
-        if until == 'keeper' and (slot in (0, 11) or action not in (2, 3)):
-            raise ValueError('Keeper trace currently supports selected field actions2/3 only')
+        if shot_mode and (slot in (0, 11) or action not in (2, 3)):
+            raise ValueError('Keeper/outcome trace currently supports selected field actions2/3 only')
+    initial_side = memory[0x5FB]
 
     # A constructed scheduler entry; these host writes are not original instructions.
     memory.ram[:0x1A] = bytes(0x1A)
@@ -60,7 +74,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     memory.select = memory[0x23]
     memory.registers[6:8] = [26, 27]
     cpu = MPU(memory=memory)
-    entry = 0x829D if until == 'keeper' else 0x82F4
+    entry = 0x829D if shot_mode else 0x82F4
     cpu.pc, cpu.sp, cpu.p = entry, 0x50, cpu.UNUSED
     initial_power = word(memory, 0x61C)
     host_frames = []
@@ -70,21 +84,44 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     keeper = {}
     approach = {}
     recovery = []
+    passed_keeper = False
+    outcome_event = None
     for steps in range(max_instructions):
         if cpu.pc < 0x8000:
             raise RuntimeError(f'Unexpected execution outside original PRG: ${cpu.pc:04X}')
         bank = memory.bank_at(cpu.pc)
         boundary = None
+        if until == 'outcome' and passed_keeper and bank == 30:
+            if cpu.pc == 0xC636:
+                boundary = 'kickoff_handoff'
+            elif cpu.pc == 0xC633:
+                boundary = 'restart_handoff'
         if bank == 26:
             if cpu.pc == 0x83F5 and (until == 'field' or memory[0x612] >= 2):
                 boundary = 'field_dispatch'
-            elif until == 'keeper' and cpu.pc == 0x856B:
-                boundary = 'keeper_comparison'
+            elif shot_mode and cpu.pc == 0x856B:
+                passed_keeper = True
+                if until == 'keeper':
+                    boundary = 'keeper_comparison'
                 keeper.update({'adjusted_base': word(memory, 0x32), 'strength': memory[0x71],
                                'ratio': memory[0x3A], 'score': cpu.a,
-                               'raw_result': cpu.y, 'subtype': memory[0x43E]})
-            elif until == 'keeper' and cpu.pc in (0x8BE5, 0x88F3):
+                               'raw_result': cpu.y, 'subtype': memory[0x43E],
+                               'instruction': steps, 'host_frames': len(host_frames)})
+            elif until == 'outcome' and passed_keeper and cpu.pc == 0x8BDF:
+                boundary = 'rebound_recovery_handoff'
+            elif shot_mode and cpu.pc in (0x8BE5, 0x88F3):
                 boundary = 'loose_ball' if cpu.pc == 0x8BE5 else 'other_continuation'
+                if passed_keeper and cpu.pc == 0x8BE5:
+                    boundary = 'punch_recovery_handoff'
+            if until == 'outcome' and passed_keeper:
+                if cpu.pc == 0x85AC:
+                    outcome_event = 'goal'
+                elif cpu.pc == 0x8605:
+                    outcome_event = 'special_turnover'
+                elif cpu.pc == 0x861C:
+                    outcome_event = 'rebound'
+                elif cpu.pc == 0x8646:
+                    outcome_event = 'keeper_punch' if memory[0x43D] == 1 else 'keeper_catch'
         if boundary is not None:
             memory.instruction = None
             return {'format': 'captain-selected-defender-loop-trace-v1',
@@ -99,10 +136,19 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                                    'Other tasks inactive until original code starts them; banks26/27, '
                                    'bank/select shadows consistent with $22.',
                                    'Snapshot scratch/stack bytes outside this setup are explicit input.'],
+                    'host_policy': {'a_button': 'held and edge A supplied at each host frame',
+                                    'display_queue': 'clear $0515 each host frame',
+                                    'ppu_transfer_queue': ('acknowledge one pending $0498 descriptor per host frame'
+                                                           if ack_ppu_transfers else 'not acknowledged')},
                     'host_frames': host_frames, 'comparisons': comparisons,
                     'attacker': attacker, 'keeper': keeper,
                     'approach': approach,
                     'keeper_recovery': recovery,
+                    'outcome': (shot_outcome_state(memory, initial_side, outcome_event)
+                                if until == 'outcome' and passed_keeper else None),
+                    'roster': [{'slot': slot, 'type': memory[0x300 + 12 * slot],
+                                'stamina': word(memory, 0x301 + 12 * slot),
+                                'level': memory[0x303 + 12 * slot]} for slot in range(22)],
                     'ball': {'x': memory[0x635], 'y': memory[0x637], 'destination': memory[0x638]},
                     'checkpoints': checkpoints, 'original_writes': memory.writes,
                     'initial_power': initial_power, 'final_power': word(memory, 0x61C),
@@ -117,7 +163,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                                  'before': keeper_recovery_state(memory)})
             elif cpu.pc == 0xD1A0 and recovery:
                 recovery[-1]['after'] = keeper_recovery_state(memory)
-        if bank == 30 and until == 'keeper':
+        if bank == 30 and shot_mode:
             if cpu.pc == 0xDD81:
                 approach['input'] = {'ball_x': memory[0x635], 'ball_y': memory[0x637],
                                      'side': memory[0x5FB], 'subtype': memory[0x43C],
@@ -125,7 +171,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
             elif cpu.pc == 0xDD08:
                 approach.update({'distance': memory[0x62B], 'destination': memory[0x638],
                                  'random_first': memory[0xE2], 'loose_ball': bool(cpu.p & 1)})
-        if bank == 26 and until == 'keeper':
+        if bank == 26 and shot_mode:
             if cpu.pc == 0x8F72:
                 slot = memory[0x441]
                 if slot > 21:
@@ -176,9 +222,14 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
             memory.instruction = None
             if len(host_frames) >= max_frames:
                 raise RuntimeError('Host frame acknowledgement limit reached')
-            values = {address: memory[address] for address in (0x1B, 0x515, 0x1C, 0x1E)}
+            addresses = (0x1B, 0x515, 0x1C, 0x1E) + ((0x498,) if ack_ppu_transfers else ())
+            values = {address: memory[address] for address in addresses}
             memory[0x1B] |= 128
             memory[0x515] = 0
+            if ack_ppu_transfers and memory[0x498]:
+                # Original C8FB pops one PPU transfer descriptor. Acknowledge
+                # consumption only; PPU writes/NMI bank effects are not emulated.
+                memory[0x498] -= 1
             memory[0x1C], memory[0x1E] = 128, 128
             host_frames.append({'instruction': steps,
                                 'writes': [{'address': address, 'before': before,
@@ -196,8 +247,10 @@ def main():
     parser.add_argument('rom', type=Path)
     parser.add_argument('--ram', required=True, type=Path, help='Explicit 2048-byte internal RAM snapshot')
     parser.add_argument('--cartridge-ram', type=Path)
-    parser.add_argument('--until', choices=('field', 'keeper'), default='field',
-                        help='Field dispatch, or action0 attacker entry through keeper comparison')
+    parser.add_argument('--until', choices=('field', 'keeper', 'outcome'), default='field',
+                        help='Field dispatch, keeper comparison, or immediate keeper outcome handoff')
+    parser.add_argument('--ack-ppu-transfers', action='store_true',
+                        help='Explicit host acknowledgement of one pending PPU transfer per modeled frame')
     args = parser.parse_args()
     try:
         rom = args.rom.read_bytes()
@@ -205,7 +258,7 @@ def main():
             parser.error('ROM does not match verified Japanese reference')
         result = trace_loop(rom[16:262160], args.ram.read_bytes(),
                             args.cartridge_ram.read_bytes() if args.cartridge_ram else None,
-                            until=args.until)
+                            until=args.until, ack_ppu_transfers=args.ack_ppu_transfers)
     except (OSError, ValueError, RuntimeError) as error:
         parser.exit(1, f'Trace stopped: {error}\n')
     json.dump(result, sys.stdout, indent=2)

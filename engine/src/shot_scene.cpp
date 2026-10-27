@@ -62,7 +62,9 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     outcome.ball_owner = 3;
     outcome.ball_x = ball_x;
     outcome.ball_y = ball_y;
-    outcome.defenders = static_cast<std::uint8_t>(options.defenders);
+    // The keeper continuation replaces field choices with one selected keeper
+    // at original84FA. This outcome input is at that later checkpoint.
+    outcome.defenders = 1;
     outcome.timer_selector = static_cast<std::uint8_t>(
         (content.attack.moves[0][index].cost_high_flags & 0xF8u) >> 3);
     outcome.punch_intervals = content.punch_intervals;

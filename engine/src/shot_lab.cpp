@@ -53,6 +53,8 @@ void shoot(const captain::ShotContent& content, const Options& options) {
     if (result.keeper) {
         std::cout << "Keeper strength " << unsigned(result.keeper->comparison.strength)
                   << " | ratio " << unsigned(result.keeper->comparison.ratio)
+                  << " | state adjustment " << unsigned(result.keeper->comparison.state_adjustment)
+                  << " | score " << unsigned(result.keeper->comparison.score)
                   << " | raw result " << unsigned(result.keeper->comparison.result_code) << '\n';
     }
     if (result.approach) {
@@ -72,6 +74,9 @@ void shoot(const captain::ShotContent& content, const Options& options) {
                   << " | penalty " << unsigned(resolved.keeper_penalty)
                   << " | duration " << unsigned(resolved.keeper_penalty_duration)
                   << " | stun " << unsigned(resolved.keeper_stun) << '\n';
+        std::cout << "Handoff: defenders " << unsigned(resolved.defenders)
+                  << " | active " << unsigned(resolved.ball_active)
+                  << " | kickoff " << unsigned(resolved.kickoff) << '\n';
     } else {
         std::cout << "Field result " << unsigned(result.flow.field.result_code)
                   << " | route " << unsigned(result.flow.field_outcome.route)
