@@ -6,7 +6,9 @@
 
 For each choice, validate its field slot1..10 or12..21, resolve its profile from the **current** roster, prepare its move, run the `$8FF3` defensive energy wrapper, then compare using the resulting weakened flag. Carry forward shot power; result0/1 visits the next choice, result2/3 stops. Unvisited choices consume no energy and are not evaluated. Duplicate choices intentionally use the already-updated stamina on each visit. Empty choices preserve power and initial result.
 
-The wrapper overwrites comparison inputs for incoming power, defender strength, roster slot, subtype and weakened flag. Random bytes, eligibility, context, coefficients and thresholds are still caller-supplied. An invalid visited choice rejects without exposing partial state updates.
+The wrapper overwrites comparison inputs for incoming power, defender strength, roster slot, subtype and weakened flag. When `context.comparison_content` is present, it also selects eligibility, variation range/offset and thresholds using the actual attack action, visited defense action and player ID. Random bytes and comparison context remain explicit. Without content, those table-derived fields remain supplied by each research fixture. An invalid visited choice rejects without exposing partial state updates.
+
+Content is owned by the context and inspected only for reached comparisons. Empty sequences and choices after a terminal result do not access unused entries. A reached missing entry or zero variation range rejects through the existing selection/arithmetic helpers. Prepared field-player actions5/6 remain unsupported; their original bypass routes are not implemented by this option.
 
 ## Record fields that must stay connected
 
@@ -18,4 +20,4 @@ Energy's special identity check uses the primary type at record+0. It must not u
 
 Native integration tests cover depletion/weakening, exact exhaustion, side skips, primary-type surcharge, generic lookup, repeated records, pre-debit profile aliases, carried power, subtype reset, terminal codes2/3, empty input and rejection without input changes. Existing private-ROM harnesses independently verify profile/preparation and energy behavior. This increment has native composition tests, **not** a new full-ROM loop differential comparison.
 
-The API returns the updated roster for a later match caller to commit. It is not yet an ordered match command, possession/outcome handoff, automatic comparison-content selector, random scheduler, or playable shot interaction.
+The API returns the updated roster for a later match caller to commit. It is not yet an ordered match command, random scheduler, or playable shot interaction. Field handoff and shot wrappers compose this API separately. The optional content connection was compiled in the production executable and received code review; no new behavioral tests or ROM comparison were run for this connection.

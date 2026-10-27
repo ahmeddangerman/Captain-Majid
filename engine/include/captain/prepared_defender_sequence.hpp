@@ -2,6 +2,7 @@
 #include "captain/field_player_profile.hpp"
 #include "captain/energy.hpp"
 #include "captain/field_interruption.hpp"
+#include "captain/field_comparison_content.hpp"
 
 namespace captain {
 struct FieldPlayerState {
@@ -19,6 +20,8 @@ struct FieldDefenseContext {
     std::uint8_t initial_result_code;
     bool incoming_energy_carry = false;
     std::optional<FieldInterruptionContext> interruption{};
+    // Absent for explicit research fixtures; otherwise select from actual actions/slot.
+    std::optional<FieldComparisonContent> comparison_content{};
 };
 struct PreparedDefenderContact {
     std::uint8_t player_id;

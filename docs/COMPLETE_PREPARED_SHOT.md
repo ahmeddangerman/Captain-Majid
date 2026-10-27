@@ -17,7 +17,7 @@
 
 `resolve_prepared_field_handoff` extracts the field-only phase from `resolve_prepared_field_shot`. `select_action0_shot_route` extracts route decisions from the former action0 continuation helper. Existing entry points keep their earlier behavior, verified by their regression tests.
 
-Random values, comparison tables, post-loop gates, recovery records and initial ball/score/keeper state remain explicit. Selected opposing defenders still come from the caller. The wrapper carries keeper-comparison random bytes into its outcome; a punch-placement regression failed before that connection and now verifies the expected coordinates.
+Random values, post-loop gates, recovery records and initial ball/score/keeper state remain explicit. Selected opposing defenders still come from the caller. The caller may supply field comparison tables once at `input.field.context.comparison_content`; the prepared sequence then selects each reached defender's coefficients, eligibility and thresholds from actual actions/slot. Omitting this content retains per-choice research values. The wrapper carries keeper-comparison random bytes into its outcome; a punch-placement regression failed before that connection and now verifies the expected coordinates.
 
 ## Evidence boundary
 

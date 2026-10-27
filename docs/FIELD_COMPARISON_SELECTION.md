@@ -10,6 +10,8 @@ The comparison at `$8EE9` returns X=Y=0. Therefore `$8376` classifies against th
 
 The native content stores action group arrays, eligibility bytes, variation pairs and thresholds. Missing selected entries reject safely. Coefficient pair index is the original selection index masked to7bits, because the doubled byte offset wraps. A zero width can be selected as data but is rejected by the existing comparison arithmetic.
 
+Prepared field contacts and the joined prepared shot can now use these tables through optional `FieldDefenseContext::comparison_content`. Selection happens inside each reached contact, after profile/energy preparation. It replaces stale choice coefficients/eligibility/thresholds and preserves explicit randomness/context plus the prepared strength/weakness/subtype. The default explicit fixture mode remains available. This integration has compilation and code-review evidence only; the 550-case comparison below covers the existing selector/arithmetic, not this new connection.
+
 ## Evidence
 
 The native unit check uses synthetic data for field/keeper groups, eligibility-bit semantics, caller preservation, wrap boundaries and invalid references. `verify_field_comparison_selection.py` executes the original `$834C..$837F` through the actual arithmetic and classification, without skipping calls. It matched **550 constructed fixtures**, including selected content and adjusted strength, rolled strength, loss, score, classification, subtype and special status. The raw four thresholds are read privately as inputs.

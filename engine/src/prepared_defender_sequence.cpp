@@ -31,6 +31,10 @@ PreparedDefenderSequenceResult resolve_prepared_field_contacts(
         comparison.defender_slot = choice.player_id;
         comparison.subtype = choice.subtype;
         comparison.weakened = energy.weakened;
+        if (context.comparison_content) {
+            comparison = configure_field_comparison(comparison, context.attack_action,
+                choice.action, choice.player_id, *context.comparison_content);
+        }
         const auto contact = calculate_defender_contact(comparison);
         player.stamina = energy.stamina;
         std::optional<FieldInterruptionResult> interruption;
