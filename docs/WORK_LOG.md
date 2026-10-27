@@ -25,6 +25,8 @@ This is the running reference for work between chat updates. Entries distinguish
 | `2d2ad7c` | Added both native shot directions, controlled original catch observation and separate flight-contact records. | Mirrored slots/energy and explicit input masks reviewed statically; movement selection remained separate. |
 | `61db9dd` | Connected one later flight-contact burst and private pack version3. | Crowded power33→21/ratio22 inspected; terminal handlers remain pending. Make/CMake builds and static review recorded. |
 | `7460549` | Selected candidates from one position/status snapshot. | Cell/cap/borrow rules traced in the original, native builds/usage and fresh static review recorded. Continuous movement remains separate. |
+| `824c253` | Captured terminal later-flight player/recovery handoffs. | Two continuous original observations and fresh static review; native terminal handlers remain pending. |
+| `28cd887` | Added raw16-bit coordinate stepping and stateless development query. | Original boundary observations, Make/CMake builds, normal queries and fresh static review. Full movement remains pending. |
 
 ## 2026-10-27 20:25 UTC — resumed work
 
@@ -118,6 +120,12 @@ Checkpoint evidence: Two original outcome-mode traces and a separate keeper-mode
 - [Movement foundation](PLAYER_MOVEMENT_FOUNDATION.md) records the helper, exact boundaries and the still-pending speed/direction/target/status/timing integration.
 
 Checkpoint evidence: Make/CMake production builds completed without warnings/errors. Normal batch usage produced the documented edge/wrap results; a native replica query left the fixture state and sequence unchanged. Fresh independent static review found no actionable findings. Six original observations are private; no tests were added/run. This helper does not yet advance full player movement.
+
+### Resume evidence saved
+
+- A further original run captured38movement entries with actual position words, target/status, speed, elapsed and direction. The data is private and gives concrete inputs for porting the next movement stage.
+- Current source checkpoints are committed locally. ROMs, patches, extracted packs, images and original RAM/reports were not added to source control or pushed.
+- The latest production build evidence is Linux Make/CMake without automated tests; native window/Windows and full match behavior remain unverified. The current result is an engine development scene with stronger shot/selection/movement components.
 
 ## Resume here
 
