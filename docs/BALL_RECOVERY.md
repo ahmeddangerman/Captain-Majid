@@ -21,6 +21,6 @@ The helper does not generate the random bytes, move an active ball, or handle bo
 
 ## Comparison evidence
 
-`tools/verify_ball_recovery.py` matched 512 deterministic cases against the verified Japanese ROM, starting after the original random-generator call and stopping at `$8C2E`. The comparison checks ball jitter, defender capture, owner/side selection, subtype clearing, and placement into the selected player's record. The ROM input is supplied privately; it is not stored in the repository.
+`tools/verify_ball_recovery.py` matched 512 deterministic cases against the verified Japanese ROM, starting after the original random-generator call and stopping at `$8C2E`. It compares the native handoff output and confirms that the original routine copies the returned ball coordinates into the selected player's record. The native helper returns these coordinates for its caller; it does not mutate a player roster. The ROM input is supplied privately; it is not stored in the repository.
 
 The research command `--ball-recovery-batch` accepts: ball X/Y, current owner, opposing player, `$E2`, `$E3`, active-ball flag, defender count; then 20 `(X, Y, unavailable)` player records; then the selected defenders as `(player ID, defense action)` pairs. It returns jittered X/Y, owner, side, subtype, and direct-capture flag.

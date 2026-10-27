@@ -108,10 +108,16 @@ def main() -> None:
 
     for index, (case, result) in enumerate(zip(cases, native)):
         want = original(prg, case)
-        observed = result + want[6:8]
-        if observed != want:
-            raise AssertionError(f"case {index}: original={want}, native={observed}, input={case}")
-    print(f"Ball recovery matched {len(cases)} original-ROM cases (owner, side, ball jitter, subtype, and player placement).")
+        expected_handoff = want[:6]
+        rom_player_coordinates = want[6:8]
+        if result != expected_handoff:
+            raise AssertionError(
+                f"case {index}: original handoff={expected_handoff}, native={result}, input={case}")
+        if rom_player_coordinates != result[:2]:
+            raise AssertionError(
+                f"case {index}: ROM owner-record coordinates={rom_player_coordinates}, "
+                f"native ball coordinates={result[:2]}, input={case}")
+    print(f"Ball recovery matched {len(cases)} original-ROM cases (owner, side, ball jitter, subtype, and owner-record coordinate copy).")
 
 
 if __name__ == "__main__":
