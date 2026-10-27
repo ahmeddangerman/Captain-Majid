@@ -51,6 +51,7 @@ After building the native prototype with `make`, these optional commands execute
 .venv/bin/python tools/verify_shot_state.py game.nes
 .venv/bin/python tools/verify_shot_outcome.py game.nes
 .venv/bin/python tools/verify_defender_outcome.py game.nes
+.venv/bin/python tools/verify_ball_recovery.py game.nes
 ```
 
-The state harness matched 25,756 energy, keeper story/state, and random-step cases. Its RAM model mirrors the NES's internal 2 KiB RAM. The goalkeeper outcome harness matched 384 handoff cases; the field defender possession harness matched 144 result-three cases. The scripts require the verified Japanese payload and do not copy its tables or instructions into the native engine. See [engine progress](../docs/ENGINE_PROGRESS.md) for the current scope and remaining work.
+The state harness matched 25,756 energy, keeper story/state, and random-step cases. Its RAM model mirrors the NES's internal 2 KiB RAM. The goalkeeper outcome harness matched 384 handoff cases; the field defender possession harness matched 144 result-three cases; the ball-recovery harness matched 512 ordinary interior-field cases. The scripts require the verified Japanese payload and do not copy its tables or instructions into the native engine. See [engine progress](../docs/ENGINE_PROGRESS.md) for the current scope and remaining work.

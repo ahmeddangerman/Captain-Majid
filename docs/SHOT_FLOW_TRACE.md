@@ -16,12 +16,12 @@ The native `calculate_defender_contact` reproduces one comparison and its code-1
 
 The `$83F5` indirect table sends codes 0/1 to `$8408`, code 2 to `$843F`, and code 3 to `$844B`.
 
-- Codes 0/1 enter the selected action continuation at `$8408` and may then dispatch to additional mode-specific routines.
-- Code 2 runs the defender experience helper and goes through `$8BDF`. That routine adjusts ball coordinates and runs field recovery. Possession is chosen later, so the immediate code-2 handler leaves it unchanged.
+- Codes 0/1 enter the selected action continuation at `$8408` and dispatch on `$043B` through the table at `$841A`: actions 0/1 go to `$DCFD`/`$DE52`, and actions 3/4 go to `$E54C`/`$E596`. Action 2 reaches a self-loop at `$843C`. The action-0 branch checks field proximity and player state before choosing `$84F8`, `$88F3`, or the loose-ball path at `$8BE5`; action 1 has a separate player/ball continuation. These routes do not establish that every code-0/1 result proceeds to the keeper.
+- Code 2 runs the defender experience helper and goes through `$8BDF`. That routine adjusts ball coordinates, checks for a direct field-player capture, and otherwise chooses an available player by expanding the search radius. Its ordinary interior-field handoff updates the ball owner and possession side at `$8E6E`/`$8C12`.
 - Code 3 awards defender experience, then branches by the selected defender. Defender IDs 0 and 11 are keepers and transfer possession directly to that keeper's side. A field defender transfers possession when defense action is 2. Other field-defense actions enter a separate animation/continuation path without an immediate possession write.
 
-The native `resolve_defender_outcome` now records these handoffs. Its immediate code-3 possession writes matched 144 original-ROM cases. It does not predict the later result of code-2 ball recovery or the other code-3 animation path. Defender selection and threshold/variation-table loading remain explicit inputs until their original selectors are reconstructed.
+The native `resolve_defender_outcome` now records these handoffs. Its immediate code-3 possession writes matched 144 original-ROM cases. An optional code-2 recovery fixture invokes `recover_ball`, which matched 512 original-ROM cases through the ordinary interior-field handoff. That helper requires the ball update to be inactive and does not handle boundary restarts. The other code-3 animation path still has no immediate possession update. Defender selection and threshold/variation-table loading remain explicit inputs until their original selectors are reconstructed.
 
 ## Evidence boundary
 
-This trace establishes call order and loop exits. It does not yet reproduce the complete screen/action setup, content selection, event messages, rewards, animations, ball recovery, match clock, restart logic, or a full gameplay trace. The native TCP fixture also remains a contact-loss demo rather than a match session.
+This trace establishes call order, loop exits, and the ordinary interior-field recovery handoff. It does not yet reproduce complete screen/action setup, content selection, event messages, rewards, animations, active-ball movement, boundary restarts, match clock, or a full gameplay trace. The native TCP fixture also remains a contact-loss demo rather than a match session.

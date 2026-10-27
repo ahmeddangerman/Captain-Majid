@@ -8,10 +8,15 @@ DefenderOutcomeResult resolve_defender_outcome(const DefenderOutcomeInput& input
         throw std::invalid_argument("Defender outcome needs a valid side and result code");
     }
     DefenderOutcomeResult result{DefenderRoute::continue_action,
-        input.possession_side, input.ball_owner};
+        input.possession_side, input.ball_owner, std::nullopt};
     if (input.result_code < 2) return result;
     if (input.result_code == 2) {
         result.route = DefenderRoute::recover_ball;
+        if (input.recovery) {
+            result.recovery = recover_ball(*input.recovery);
+            result.possession_side = result.recovery->possession_side;
+            result.ball_owner = result.recovery->ball_owner;
+        }
         return result;
     }
     if (input.defender_id == 0 || input.defender_id == 11) {

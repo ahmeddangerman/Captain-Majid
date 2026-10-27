@@ -1,4 +1,5 @@
 #include "captain/defender_outcome.hpp"
+#include "captain/ball_recovery.hpp"
 
 #include <cstdlib>
 #include <iostream>
@@ -23,6 +24,22 @@ int main() {
               DefenderRoute::recover_ball, 0, 7)) {
         std::cerr << "Defender result two should enter ball recovery without immediate transfer\n";
         return EXIT_FAILURE;
+    }
+    {
+        auto recovery = captain::BallRecoveryInput{};
+        recovery.ball_x = 120;
+        recovery.ball_y = 100;
+        recovery.ball_owner = 22;
+        recovery.opposing_player = 22;
+        recovery.random_e2 = 0x80;
+        recovery.players.fill({120, 100, false});
+        captain::DefenderOutcomeInput input{2, 0, 7, 2, 0};
+        input.recovery = recovery;
+        const auto result = captain::resolve_defender_outcome(input);
+        if (!same(result, DefenderRoute::recover_ball, 11, 12) || !result.recovery) {
+            std::cerr << "Resolved result-two recovery should transfer possession to the selected player\n";
+            return EXIT_FAILURE;
+        }
     }
     if (!same(captain::resolve_defender_outcome({3, 0, 7, 11, 0}),
               DefenderRoute::keeper_control, 11, 11) ||

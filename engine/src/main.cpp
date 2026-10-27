@@ -55,7 +55,8 @@ int replica() {
         input >> command;
         if (command == "defender" || command == "skill" || command == "action" || command == "keeper" ||
             command == "energy" || command == "story" || command == "keeperstate" ||
-            command == "random" || command == "outcome" || command == "defenderoutcome") {
+            command == "random" || command == "outcome" || command == "defenderoutcome" ||
+            command == "ballrecovery") {
             std::string fields;
             std::getline(input, fields);
             const auto output = captain::research::evaluate(command, fields);
@@ -94,9 +95,10 @@ int main(int argc, char** argv) {
     if (argc == 2 && std::string(argv[1]) == "--random-step-batch") return research_batch("random");
     if (argc == 2 && std::string(argv[1]) == "--outcome-batch") return research_batch("outcome");
     if (argc == 2 && std::string(argv[1]) == "--defender-outcome-batch") return research_batch("defenderoutcome");
+    if (argc == 2 && std::string(argv[1]) == "--ball-recovery-batch") return research_batch("ballrecovery");
     std::cerr << "Usage: captain-prototype --replica | --strength-batch | --defender-batch | "
                  "--skill-index-batch | --action-power-batch | --keeper-batch | --energy-batch | "
                  "--keeper-story-batch | --keeper-state-batch | --random-step-batch | --outcome-batch | "
-                 "--defender-outcome-batch\n";
+                 "--defender-outcome-batch | --ball-recovery-batch\n";
     return 2;
 }

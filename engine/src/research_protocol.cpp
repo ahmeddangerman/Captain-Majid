@@ -7,6 +7,7 @@
 #include "captain/reference_random.hpp"
 #include "captain/shot_outcome.hpp"
 #include "captain/defender_outcome.hpp"
+#include "captain/ball_recovery.hpp"
 
 #include <array>
 #include <charconv>
@@ -19,6 +20,12 @@ bool number(const std::string& token, std::uint32_t& value) {
     // from_chars rejects signs/overflow; require consumption of the entire token.
     const auto parsed = std::from_chars(token.data(), token.data() + token.size(), value);
     return parsed.ec == std::errc{} && parsed.ptr == token.data() + token.size();
+}
+
+bool next_number(std::istringstream& stream, std::uint32_t& value,
+                 std::uint32_t maximum = 255) {
+    std::string token;
+    return (stream >> token) && number(token, value) && value <= maximum;
 }
 
 template<std::size_t N>
@@ -72,6 +79,43 @@ bool defender_output(std::istringstream& stream, std::string& output) {
 }
 
 bool research_output(const std::string& command, std::istringstream& stream, std::string& output) {
+    if (command == "ballrecovery") {
+        std::array<std::uint32_t, 8> prefix{};
+        for (std::size_t i = 0; i < prefix.size(); ++i) {
+            const auto maximum = i == 6 ? 1u : (i == 7 ? 10u : 255u);
+            if (!next_number(stream, prefix[i], maximum)) return false;
+        }
+        captain::BallRecoveryInput input{};
+        input.ball_x = static_cast<std::uint8_t>(prefix[0]);
+        input.ball_y = static_cast<std::uint8_t>(prefix[1]);
+        input.ball_owner = static_cast<std::uint8_t>(prefix[2]);
+        input.opposing_player = static_cast<std::uint8_t>(prefix[3]);
+        input.random_e2 = static_cast<std::uint8_t>(prefix[4]);
+        input.random_e3 = static_cast<std::uint8_t>(prefix[5]);
+        input.ball_update_active = prefix[6] != 0;
+        for (auto& player : input.players) {
+            std::array<std::uint32_t, 3> fields{};
+            if (!next_number(stream, fields[0]) || !next_number(stream, fields[1]) ||
+                !next_number(stream, fields[2], 1)) return false;
+            player = {static_cast<std::uint8_t>(fields[0]),
+                static_cast<std::uint8_t>(fields[1]), fields[2] != 0};
+        }
+        for (std::uint32_t i = 0; i < prefix[7]; ++i) {
+            std::array<std::uint32_t, 2> fields{};
+            if (!next_number(stream, fields[0], 21) || !next_number(stream, fields[1])) return false;
+            input.selected_defenders.push_back({static_cast<std::uint8_t>(fields[0]),
+                static_cast<std::uint8_t>(fields[1])});
+        }
+        std::string extra;
+        if (stream >> extra) return false;
+        try {
+            const auto result = captain::recover_ball(input);
+            output = format_fields(std::array<unsigned, 6>{result.ball_x, result.ball_y,
+                result.ball_owner, result.possession_side, result.attack_subtype,
+                result.direct_defender_capture ? 1u : 0u});
+            return true;
+        } catch (const std::invalid_argument&) { return false; }
+    }
     if (command == "defenderoutcome") {
         std::array<std::uint32_t, 5> v{};
         if (!read_fields(stream, v) || v[0] > 3) return false;
