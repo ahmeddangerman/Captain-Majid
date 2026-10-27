@@ -1,0 +1,92 @@
+#include "captain/shot_content.hpp"
+#include <stdexcept>
+#include <string>
+
+namespace captain {
+namespace {
+class Reader {
+public:
+    explicit Reader(std::istream& source) : input(source) {}
+    std::uint8_t byte() {
+        const auto value = input.get();
+        if (value == std::char_traits<char>::eof())
+            throw std::invalid_argument("Truncated shot content pack");
+        return static_cast<std::uint8_t>(value);
+    }
+    template<std::size_t N> void bytes(std::array<std::uint8_t, N>& values) {
+        for (auto& value : values) value = byte();
+    }
+    std::size_t count(std::size_t minimum, std::size_t maximum) {
+        const auto low = byte();
+        const auto value = unsigned(low) | (unsigned(byte()) << 8);
+        if (value < minimum || value > maximum)
+            throw std::invalid_argument("Shot content section count outside supported bounds");
+        return value;
+    }
+    std::vector<std::uint8_t> vector(std::size_t minimum, std::size_t maximum) {
+        std::vector<std::uint8_t> values(count(minimum, maximum));
+        for (auto& value : values) value = byte();
+        return values;
+    }
+    std::vector<FieldDefenseMove> moves() {
+        const auto size = byte();
+        if (size > 64) throw std::invalid_argument("Too many moves in shot content");
+        std::vector<FieldDefenseMove> values;
+        values.reserve(size);
+        for (unsigned i = 0; i < size; ++i)
+            values.push_back({byte(), byte(), byte(), byte()});
+        return values;
+    }
+    void end() {
+        if (input.peek() != std::char_traits<char>::eof())
+            throw std::invalid_argument("Trailing data in shot content pack");
+        if (input.bad()) throw std::invalid_argument("Unable to read shot content pack");
+    }
+private:
+    std::istream& input;
+};
+void field_content(Reader& reader, FieldDefenseContent& content) {
+    for (auto& selectors : content.skill_selectors) reader.bytes(selectors);
+    for (auto& moves : content.moves) moves = reader.moves();
+    reader.bytes(content.strength_curve);
+}
+}
+
+ShotContent load_shot_content(std::istream& input) {
+    Reader reader(input);
+    const std::string magic = "CMJSHOT1";
+    for (const auto expected : magic)
+        if (reader.byte() != static_cast<std::uint8_t>(expected))
+            throw std::invalid_argument("Unsupported shot content pack format/version");
+    ShotContent content{};
+    reader.bytes(content.source_payload_sha256);
+    PlayerProfileMappings mappings{};
+    reader.bytes(mappings.ordinary);
+    mappings.alternate = reader.vector(0, 221);
+    reader.bytes(mappings.generic_slot_offsets);
+    mappings.team_types = reader.vector(0, 256);
+    static_cast<PlayerProfileMappings&>(content.field_players) = mappings;
+    static_cast<PlayerProfileMappings&>(content.goalkeepers) = mappings;
+    content.field_players.skills.resize(reader.count(1, 256));
+    for (auto& skills : content.field_players.skills) reader.bytes(skills);
+    content.goalkeepers.skills.resize(reader.count(1, 256));
+    for (auto& skills : content.goalkeepers.skills) reader.bytes(skills);
+    field_content(reader, content.attack);
+    field_content(reader, content.defense);
+    reader.bytes(content.keeper.skill_selectors);
+    for (auto& moves : content.keeper.moves) moves = reader.moves();
+    reader.bytes(content.keeper.strength_curve);
+    reader.bytes(content.field_comparison.attack_groups);
+    reader.bytes(content.field_comparison.defense_groups);
+    content.field_comparison.eligibility = reader.vector(1, 256);
+    content.field_comparison.variation.resize(reader.count(1, 128));
+    for (auto& pair : content.field_comparison.variation) reader.bytes(pair);
+    reader.bytes(content.field_comparison.thresholds);
+    content.keeper_range = reader.byte();
+    content.keeper_offset = reader.byte();
+    reader.bytes(content.keeper_thresholds);
+    reader.bytes(content.punch_intervals);
+    reader.end();
+    return content;
+}
+}

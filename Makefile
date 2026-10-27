@@ -8,16 +8,20 @@ CORE += engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
 CORE += engine/src/defender_selection.cpp
 CORE += engine/src/field_defender_preparation.cpp engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp engine/src/field_interruption.cpp
 RESEARCH = engine/src/research_protocol.cpp
+CORE += engine/src/shot_content.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check
-all: build/captain-prototype
+all: build/captain-prototype build/captain-shot-lab
 
 build:
 	mkdir -p build
 
 build/captain-prototype: engine/src/main.cpp $(CORE) $(RESEARCH) engine/src/research_protocol.hpp $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/src/main.cpp $(RESEARCH) $(CORE) -o $@
+
+build/captain-shot-lab: engine/src/shot_lab.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/src/shot_lab.cpp $(CORE) -o $@
 
 build/core-tests: engine/tests/core_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/core_tests.cpp $(CORE) -o $@
