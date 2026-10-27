@@ -4,7 +4,7 @@ This is the running reference for work between chat updates. Entries distinguish
 
 ## Current position
 
-- **Full port: roughly 7%.** This is a subjective planning estimate, not a measured percentage of recovered code. There is no playable match yet.
+- **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, a resettable shot laboratory, and an optional SDL2 scene with placeholder graphics.
 - **Current milestone:** supported goal/save scenes in both directions, with derived routes and explicit keeper recovery.
 - **Next engine work:** live ball-flight contacts, player movement and the phase after each shot.
@@ -133,4 +133,16 @@ Checkpoint evidence: Make/CMake production builds completed without warnings/err
 2. Build on `advance_field_coordinate` to implement speed/direction, player updates and ordered flight steps, then the distinct terminal possession/recovery transitions.
 3. Commit roster, ball, score and phase changes into one persistent match state before extending online replay beyond the development fixture.
 
-Keep original data private, retain the explicit scheduling limits, and continue with Sol6.1 High for tracing/integration. Overall progress remains a rough7%, with no full match yet.
+Keep original data private, retain explicit scheduling limits, and continue with Sol6.1 High for tracing/integration. Overall percentage is unmeasured; report achieved capabilities and remaining checkpoints.
+
+## 2026-10-27 21:34 UTC — continuous work resumed
+
+- User authorized successive tasks without routine approval pauses. Continue from movement into terminal transitions and persistent state while the session is available.
+- Retired the unsupported overall7% figure and added observable [port completion checkpoints](PORT_STATUS.md). Historical percentages are not current measurements.
+- Repository is on the existing isolated `work` branch, with prior source checkpoints committed. Private ROM/analysis and local build tools remain available. No tests will be added/run under the active developer constraint; production builds and research observations remain separately labeled.
+
+### Player update implemented
+
+- Added full target-direction and coordinate stepping for a field player, including target/ball-cell stops, status gates, fractional positions and original byte arithmetic.
+- Eight private original observations and normal native query outputs agree on the inspected position/direction/iteration fields. Production Make compilation completed without diagnostics; no automated tests were added/run.
+- Working through the [native field phase plan](superpowers/plans/2026-10-27-native-field-phase.md) continuously. Next are profile speeds, positioning AI and the ordered roster update; independent whole-plan review follows integration.

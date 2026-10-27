@@ -82,6 +82,33 @@ bool defender_output(std::istringstream& stream, std::string& output) {
 }
 
 bool research_output(const std::string& command, std::istringstream& stream, std::string& output) {
+    if (command == "playermove") {
+        std::array<std::uint32_t, 7> prefix{};
+        for (std::size_t i = 0; i < prefix.size(); ++i)
+            if (!next_number(stream, prefix[i], i < 3 ? 65535 : 255)) return false;
+        captain::MovementGeometryContent content{};
+        std::uint32_t value{};
+        for (auto& threshold : content.direction_thresholds) {
+            if (!next_number(stream, value, 65535)) return false;
+            threshold = static_cast<std::uint16_t>(value);
+        }
+        for (auto& sign : content.axis_signs) {
+            if (!next_number(stream, value, 2)) return false;
+            sign = static_cast<std::uint8_t>(value);
+        }
+        std::string extra;
+        if (stream >> extra) return false;
+        try {
+            const auto result = captain::advance_field_player({
+                {static_cast<std::uint16_t>(prefix[0]), static_cast<std::uint16_t>(prefix[1]),
+                 static_cast<std::uint8_t>(prefix[3]), static_cast<std::uint8_t>(prefix[4])},
+                static_cast<std::uint16_t>(prefix[2]), static_cast<std::uint8_t>(prefix[5]),
+                static_cast<std::uint8_t>(prefix[6])}, content);
+            output = format_fields(std::array<unsigned, 6>{result.player.x, result.player.y,
+                result.player.target_cell, result.player.status, result.direction, result.iterations});
+            return true;
+        } catch (const std::invalid_argument&) { return false; }
+    }
     if (command == "fieldaxis") {
         std::array<std::uint32_t, 3> values{};
         if (!read_fields(stream, values, 2) || values[2] > 1) return false;
