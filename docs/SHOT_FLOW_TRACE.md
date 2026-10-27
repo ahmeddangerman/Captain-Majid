@@ -12,9 +12,9 @@ This is a direct instruction trace from the verified Japanese ROM. The external 
 
 ## Integration boundary
 
-The native `calculate_defender_contact` reproduces one comparison and its code-1 power loss. It does not yet select a defender record, apply the loop's roster/action rules, or resolve defender codes 2/3 into match consequences. The current `resolve_explicit_shot` calculates energy, action power, keeper comparison, and goalkeeper outcome, but assumes a direct keeper attempt.
+The native `calculate_defender_contact` reproduces one comparison and its code-1 power loss. `resolve_field_contacts` now applies caller-selected contacts in order, carries forward power and subtype, continues on codes 0/1, and stops on codes 2/3. The existing direct `resolve_explicit_shot` path still assumes a keeper attempt; the field loop is a separate stage until the stopped branches and original selectors are integrated.
 
-The next faithful step is a shot-flow controller that accepts already selected, ordered defender records, applies contacts until the original loop stops, and only calls the keeper path when the original flow reaches it. Defender selection and threshold/variation-table loading remain explicit inputs until their original selectors are reconstructed. Codes 2/3 must be traced through their own result handlers before they can continue to goals or saves.
+The next faithful step is to connect the ordered field-contact stage to the original `$83F5` result dispatch. Its indirect table sends codes 0/1 to `$8408`, code 2 to `$843F`, and code 3 to `$844B`. Those branches still need full state tracing before they can continue to keeper outcomes, possession changes, or goals. Defender selection and threshold/variation-table loading remain explicit inputs until their original selectors are reconstructed.
 
 ## Evidence boundary
 

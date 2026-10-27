@@ -4,7 +4,7 @@ project(CaptainMajid LANGUAGES CXX)
 add_library(captain_core engine/src/action_strength.cpp engine/src/session.cpp
     engine/src/defender_contact.cpp engine/src/shot_power.cpp engine/src/goalkeeper.cpp
     engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_random.cpp
-    engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp)
+    engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp)
 target_include_directories(captain_core PUBLIC engine/include)
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
@@ -31,6 +31,9 @@ if(BUILD_TESTING)
     add_executable(shot-sequence-tests engine/tests/shot_sequence_tests.cpp)
     target_link_libraries(shot-sequence-tests PRIVATE captain_core)
     add_test(NAME shot_sequence COMMAND shot-sequence-tests)
+    add_executable(defender-sequence-tests engine/tests/defender_sequence_tests.cpp)
+    target_link_libraries(defender-sequence-tests PRIVATE captain_core)
+    add_test(NAME defender_sequence COMMAND defender-sequence-tests)
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
         add_test(NAME cli COMMAND ${Python3_EXECUTABLE}

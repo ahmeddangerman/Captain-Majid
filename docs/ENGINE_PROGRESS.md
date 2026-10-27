@@ -14,6 +14,7 @@
 - Keeper story classification override and explicit timer/penalty helpers, specified in [KEEPER_STATE.md](KEEPER_STATE.md). The shot caller still needs to select the appropriate helpers and apply complete consequences.
 - One original random-generator step plus a canonical 2 KiB RAM sampler, specified in [RANDOMNESS_NOTES.md](RANDOMNESS_NOTES.md). Its original gameplay schedule is unresolved.
 - Immediate goal, turnover, rebound, keeper catch, and keeper punch writes at the goalkeeper handoff, specified in [SHOT_OUTCOME.md](SHOT_OUTCOME.md). A calculation sequence links energy, shot power, goalkeeper comparison, and these outcome writes with explicit caller data.
+- Ordered field-contact calculations now carry power/subtype between caller-selected defenders and stop on original result codes 2/3, as documented in [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md). Their subsequent result handlers are not yet connected.
 - A fixture session that separates participant identity from team, rejects unauthorized and unordered commands before state changes, and serializes every fixture state field explicitly.
 - A native terminal executable with a batch arithmetic mode and strict replica command protocol.
 - A Python development adapter that sends commands through loopback TCP to two separate native processes, then compares their complete state after every command.

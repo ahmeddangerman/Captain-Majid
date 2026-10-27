@@ -2,7 +2,7 @@
 
 A native PC reconstruction project for Captain Tsubasa II, targeting Windows and Linux, with Arabic, English, community graphics/music packs, shaders, and online play as project goals.
 
-The current engine is an early development foundation: verified skill-index, action-power, field-defender, goalkeeper, stamina, story/state, and single-step random calculations, plus an ordered replay fixture. It also calculates the immediate goalkeeper outcome and links several shot stages using explicit statistics. A playable match has not been implemented.
+The current engine is an early development foundation: verified skill-index, action-power, field-defender, goalkeeper, stamina, story/state, and single-step random calculations, plus an ordered replay fixture. It calculates immediate goalkeeper outcomes and ordered field-contact results using explicit statistics. A playable match has not been implemented.
 
 ## Build the prototype
 
