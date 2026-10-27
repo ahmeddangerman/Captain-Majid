@@ -45,7 +45,7 @@ The new stamina, keeper story/state, and random-step APIs are exposed through st
 
 The private-ROM harness passed 9,728 stamina cases, 6,812 story cases, 5,632 keeper-state cases, and 3,584 random-step cases: 25,756 total. It uses mirrored RAM for the original random routine and checks the exact reference payload before executing it. The existing native and loopback regression suite also passed. These are isolated comparisons rather than complete match traces.
 
-The next goalkeeper outcome check matched 384 isolated original-ROM cases across goal, turnover, rebound, catch, and punch branches. It checks immediate match-state writes through the handler handoff; animation, experience, and music calls are skipped in that comparison. The linked shot calculation has a native unit check, while an end-to-end original gameplay trace remains pending.
+The next goalkeeper outcome check matched 384 isolated original-ROM cases across goal, turnover, rebound, catch, and punch branches. It checks immediate match-state writes through the handler handoff; animation, experience, and music calls are skipped in that comparison. The linked shot calculation has a native unit check, while an end-to-end original gameplay trace remains pending. [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md) documents the field-defender loop that must run before the keeper path.
 
 ## Limits
 
@@ -63,6 +63,6 @@ The next goalkeeper outcome check matched 384 isolated original-ROM cases across
 
 ## Next checkpoint
 
-Trace actual player/profile and action-cost selection, caller-specific energy accounting, defender contacts, and random scheduling during gameplay. Extend the verified keeper handoff through field recovery and kickoff/restart transitions in a complete original-gameplay trace. Then make the shot an ordered match command and add a small visual scene.
+Implement the field-defender loop from [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md), including the result-code 2/3 paths, then join the supported branches to the keeper handoff. Trace actual player/profile and action-cost selection, caller-specific energy accounting, and random scheduling during gameplay. Extend the keeper handoff through field recovery and kickoff/restart transitions in a complete gameplay trace. Then make the shot an ordered match command and add a small visual scene.
 
 Early network comparisons continue alongside each simulation increment. Public matchmaking and the rules for additional participants remain part of the engine direction, without committing to an unsupported player count.
