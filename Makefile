@@ -102,3 +102,4 @@ check: build/complete-prepared-shot-tests build/prepared-keeper-tests build/prep
 	python3 engine/tests/check_preparation_cli.py
 	python3 engine/tests/check_adapter.py
 	python3 tools/check_replica_sync.py
+	python3 tools/check_reference_cartridge.py

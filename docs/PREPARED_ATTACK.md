@@ -15,6 +15,6 @@ The caller supplies player record/profile content, action, situation, raw subtyp
 
 ## Checks and limits
 
-Native checks cover action0 selector boundaries and high-bit behavior, move flags/cost, side-specific energy, type32 surcharge, action2 zero-cost rule only on side0, energy carry into action power, and energy-to-power weakening. A regression now pins random bytes100/100 and an incoming carry to the correct multiplier228 after weakening. Existing original-ROM oracles still pass 69,632 skill-index, 7,456 action-power, 5,248 keeper and 9,728 energy cases. The attack wrapper itself has native integration tests, not a differential execution of the complete `$819D` loader or `$8F72` caller.
+Native checks cover action0 selector boundaries and high-bit behavior, move flags/cost, side-specific energy, type32 surcharge, action2 zero-cost rule only on side0, energy carry into action power, and energy-to-power weakening. A regression now pins random bytes100/100 and an incoming carry to the correct multiplier228 after weakening. Existing original-ROM oracles still pass 69,632 skill-index, 7,456 action-power, 5,248 keeper and 9,728 energy cases. The later [banked attacking trace](BANKED_ATTACK_TRACE.md) now compares the entire `$8F72` caller and its real banked `$819D` loader in3,882 constructed cases.
 
 The caller still supplies actual player/action/situation/content/random values. Shot-distance adjustments, automatic content import, gamepad choices, random scheduling, keeper move/stamina preparation and persistent match commands remain incomplete.

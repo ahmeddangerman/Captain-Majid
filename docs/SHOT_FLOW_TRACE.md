@@ -10,6 +10,8 @@ This is a direct instruction trace from the verified Japanese ROM. The external 
 4. The result code is stored at `$8148`. Codes 0 and 1 advance to the next selected defender at `$83BC–$83D1`; codes 2 and 3 leave the loop and enter the result dispatcher at `$83F5`.
 5. The keeper comparison is a separate later route at `$854A–$856B`, followed by the story override and keeper result handlers. It is not safe to apply it after every field-defender comparison.
 
+The complete attacking stage now has a banked differential trace: original `$8F72` calls the real move/profile loader, restores its PRG banks, applies energy and rolls power. It matches3,882 constructed native cases without skipped calls. This covers the attacker stage; the remaining field/keeper continuation still needs a joined original trace. See [BANKED_ATTACK_TRACE.md](BANKED_ATTACK_TRACE.md).
+
 ## Integration boundary
 
 The call to `$C54B` with index 7 before `$8349` is the per-defender data preparation path: `$CE6E` switches to PRG banks 28/29 and calls `$8224`. It loads the selected field player's skill/move strength, move effect, and stamina cost before energy handling. The native standard-skill loader and contact wrapper now reproduce that preparation with decoded profiles and replaceable content. Its complete original-ROM comparison passes 16,064 fixtures. [FIELD_DEFENDER_PREPARATION.md](FIELD_DEFENDER_PREPARATION.md) records the remaining profile/content and scheduling boundary.

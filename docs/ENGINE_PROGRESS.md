@@ -75,6 +75,8 @@ Keeper preparation passed the full Make suite and all 24 CMake/CTest checks. Sha
 
 The joined prepared calculation passed the full Make suite and all 25 CMake/CTest checks. An additional field-power-loss-to-rebound assertion passed targeted Make/CMake rebuilds. Component ROM comparisons remained green: 384 keeper outcomes, 512 recoveries, 69,632 skill indices, 7,456 power cases and 5,248 keeper comparisons. Independent review found no correctness issues. Whole original shot execution is not yet reproduced by an end-to-end differential harness.
 
+The original attacking caller now matches native preparation/energy/power in 3,882 constructed cases with actual PRG-bank loading/restoration and no skipped subroutine calls. Fourteen native outputs match; skipped-side carry is explicitly supplied from the trace checkpoint. The harness guard fix passed3 synthetic memory tests, the Make suite and all26 CMake/CTest checks. This strengthens one phase, not the entire joined shot; see [BANKED_ATTACK_TRACE.md](BANKED_ATTACK_TRACE.md).
+
 ## Limits
 
 - The ordered fixture still advances only a contact-loss stage. The direct shot sequence and gated action-0 continuation accept explicit statistics, route values, and random values; they are not yet ordered match commands or playable interactions.

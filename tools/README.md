@@ -55,3 +55,7 @@ After building the native prototype with `make`, these optional commands execute
 ```
 
 The state harness matched 25,756 energy, keeper story/state, and random-step cases. Its RAM model mirrors the NES's internal 2 KiB RAM. The goalkeeper outcome harness matched 384 handoff cases; the field defender possession harness matched 144 result-three cases; the ball-recovery harness matched 512 ordinary interior-field cases. The scripts require the verified Japanese payload and do not copy its tables or instructions into the native engine. See [engine progress](../docs/ENGINE_PROGRESS.md) for the current scope and remaining work.
+
+## Banked attacking-stage comparison
+
+`verify_banked_attack.py /path/to/reference.nes` executes original attacker preparation, energy and power including real PRG switching, comparing3,882 constructed cases with the native wrapper. See [BANKED_ATTACK_TRACE.md](../docs/BANKED_ATTACK_TRACE.md). The memory adapter rejects unmodeled hardware; this is not a complete gameplay trace.

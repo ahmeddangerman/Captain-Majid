@@ -84,6 +84,8 @@ if(BUILD_TESTING)
         add_test(NAME preparation_cli COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/engine/tests/check_preparation_cli.py
             --binary $<TARGET_FILE:captain-prototype>)
+        add_test(NAME reference_cartridge COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_reference_cartridge.py)
         add_test(NAME replica_loopback COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_replica_sync.py
             --binary $<TARGET_FILE:captain-prototype>)
