@@ -89,11 +89,17 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     recovery = []
     passed_keeper = False
     outcome_event = None
+    terminal_flight = None
     for steps in range(max_instructions):
         if cpu.pc < 0x8000:
             raise RuntimeError(f'Unexpected execution outside original PRG: ${cpu.pc:04X}')
         bank = memory.bank_at(cpu.pc)
         boundary = None
+        if shot_mode and not passed_keeper and terminal_flight is not None:
+            if bank == 30 and cpu.pc == 0xC60F:
+                boundary = 'flight_player_control_handoff'
+            elif bank == 26 and cpu.pc == 0x8BDF:
+                boundary = 'flight_ball_recovery_handoff'
         if until == 'outcome' and passed_keeper and bank == 30:
             if cpu.pc == 0xC636:
                 boundary = 'kickoff_handoff'
@@ -151,6 +157,14 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                     'keeper_recovery': recovery,
                     'outcome': (shot_outcome_state(memory, initial_side, outcome_event)
                                 if until == 'outcome' and passed_keeper else None),
+                    'terminal_flight': ({'entry': terminal_flight,
+                                         'handoff': {'possession_side': memory[0x5FB],
+                                                     'ball_owner': memory[0x441],
+                                                     'ball_x': memory[0x635], 'ball_y': memory[0x637],
+                                                     'defenders': memory[0x600],
+                                                     'ball_active': memory[0x5FF]}}
+                                        if terminal_flight is not None and boundary in
+                                        ('flight_player_control_handoff', 'flight_ball_recovery_handoff') else None),
                     'roster': [{'slot': slot, 'type': memory[0x300 + 12 * slot],
                                 'stamina': word(memory, 0x301 + 12 * slot),
                                 'level': memory[0x303 + 12 * slot]} for slot in range(22)],
@@ -178,13 +192,23 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                                  'random_first': memory[0xE2], 'loose_ball': bool(cpu.p & 1)})
         if bank == 26 and shot_mode:
             if cpu.pc == 0x888D:
+                if memory[0x442] in (0, 11) or memory[0x442] > 21:
+                    raise ValueError('Expected an opposing field player at the flight comparison entry')
+                record = 0x300 + 12 * memory[0x442]
                 flight_contacts.append({'index': memory[0x616], 'defender': memory[0x442],
                                         'action': memory[0x43D], 'subtype': memory[0x43E],
+                                        'defender_x': memory[record + 6], 'defender_y': memory[record + 8],
+                                        'ball_x': memory[0x635], 'ball_y': memory[0x637],
+                                        'ball_cell': memory[0x5FE],
                                         'power_before': word(memory, 0x61C),
                                         'random': [memory[0xE2], memory[0xE3]]})
             elif cpu.pc == 0x88A8 and flight_contacts:
                 flight_contacts[-1].update({'result_code': memory[0x612],
                                             'candidate_loss': memory[0x619]})
+                if memory[0x612] >= 2:
+                    terminal_flight = dict(flight_contacts[-1])
+                    terminal_flight.update({'possession_side': memory[0x5FB],
+                                            'ball_owner': memory[0x441]})
             elif cpu.pc == 0x8877 and flight_contacts:
                 flight_contacts[-1]['power_after_handler'] = word(memory, 0x61C)
             if cpu.pc == 0x8F72:

@@ -23,6 +23,8 @@ This is the running reference for work between chat updates. Entries distinguish
 | `b7ee43d` | Added ordered elapsed keeper recovery. | Original caller observations, native build/usage and fresh static review; full match timing remains pending. |
 | `a7bd1f6` | Extended original tracing through goal/punch/rebound handoffs and corrected the scene's keeper-stage count. | Four continuous original observations, native build/usage and fresh static review; explicit presentation acknowledgements remain necessary. |
 | `2d2ad7c` | Added both native shot directions, controlled original catch observation and separate flight-contact records. | Mirrored slots/energy and explicit input masks reviewed statically; movement selection remained separate. |
+| `61db9dd` | Connected one later flight-contact burst and private pack version3. | Crowded power33→21/ratio22 inspected; terminal handlers remain pending. Make/CMake builds and static review recorded. |
+| `7460549` | Selected candidates from one position/status snapshot. | Cell/cap/borrow rules traced in the original, native builds/usage and fresh static review recorded. Continuous movement remains separate. |
 
 ## 2026-10-27 20:25 UTC — resumed work
 
@@ -87,7 +89,9 @@ Local source commit: `61db9dd`.
 - Fresh independent static review found no runtime blocker and corrected one eligibility-table locator. Its two reference values were unchanged, so existing numerical observations remain the same. The reviewed exporter produced a new private11,833-byte pack.
 - Next: select contacts from live positions and implement terminal/restart/recovery phase transitions in persistent state. Full-port estimate remains roughly7%, with no playable match yet.
 
-### Position-snapshot flight selection — current work
+### Position-snapshot flight selection — implemented
+
+Local source commit: `7460549`.
 
 - Added original field-cell encoding and selection from opposing position/status records, including scan order,5/4limits and the original subtraction borrow.
 - Six isolated original observations are recorded privately, covering caps, status/cell filtering, threshold boundaries and the invalid-cell sentinel.
@@ -95,3 +99,20 @@ Local source commit: `61db9dd`.
 - Details and evidence limits are in [flight selection](FLIGHT_SELECTION.md). No automated tests were added or run.
 
 Checkpoint evidence: Make/CMake production builds completed with no warnings/errors. Normal usage retained crowded catch power21/ratio22 and controlled goal power224/kickoff4. Fresh independent static review reported no actionable defects, including cell/status filters, scan/cap/borrow rules and scene placement. Full movement and terminal phase state remain the next work.
+
+### Terminal later-flight research — checkpoint complete
+
+- Two original continuous observations now stop correctly before the next phase when a contact wins the ball or knocks it loose. No keeper was reached, and the reports keep keeper outcomes absent.
+- The paths differ from the initial defender handler: later code3 transfers possession for action0; code2 copies the defender's current coordinates and retains a different timing/active value.
+- The native calculation still reports these as pending handoffs. The new [terminal flight observations](TERMINAL_FLIGHT_TRACES.md) give the next contract instead of guessing those writes.
+- No automated tests were added or run. Full-port estimate remains roughly7%; persistent playable phases and online remain unfinished.
+
+Checkpoint evidence: Two original outcome-mode traces and a separate keeper-mode trace reach witnessed pre-keeper boundaries without skipped calls. Native level5 usage still labels the result2 handoff pending. Fresh independent static review found no actionable issues and checked the saved reports. No native terminal handler or new test was added.
+
+## Resume here
+
+1. Carry comparison-time positions and timing state into terminal flight resolution; implement its distinct possession/recovery writes.
+2. Connect player/ball movement and ordered flight steps to these snapshot calculations.
+3. Commit roster, ball, score and phase changes into one persistent match state before extending online replay beyond the development fixture.
+
+Keep original data private, retain the explicit scheduling limits, and continue with Sol6.1 High for tracing/integration. Overall progress remains a rough7%, with no full match yet.
