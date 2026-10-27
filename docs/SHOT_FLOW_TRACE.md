@@ -4,7 +4,7 @@ This is a direct instruction trace from the verified Japanese ROM. The external 
 
 ## Confirmed order
 
-1. The action caller at `$8298` selects action data and runs the energy/action-power helper beginning at `$8F72`.
+1. The action caller at `$8298` prepares an attacking move through `$C54B` index6 and `$819D`, then runs energy/action power at `$8F72`. The native `prepare_attacking_action` now joins supplied profile/move content, side-specific stamina and action power.
 2. With no selected defenders (`$0600 == 0`), it stores result code 0 at `$82AA` and enters the next result dispatcher.
 3. With defenders, it iterates the records in `$0601...` at `$82B6–$82EF`. Each selected defender runs through `$8349`, which invokes energy handling at `$8FF3`, chooses action/defender threshold data, then calls the comparison at `$8EE9`. On every pass through `$82FC`, the loop reloads that defender's subtype from `$0606,X` into `$043E` at `$8309–$8312`; if the result is 0/1, `$83BC–$83CE` advances to the next record and returns through `$82FC`.
 4. The result code is stored at `$8148`. Codes 0 and 1 advance to the next selected defender at `$83BC–$83D1`; codes 2 and 3 leave the loop and enter the result dispatcher at `$83F5`.

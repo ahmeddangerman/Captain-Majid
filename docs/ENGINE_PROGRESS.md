@@ -21,6 +21,7 @@
 - Field-player profile resolution now supplies defender preparation from ordinary types, generic opposing-team positions, and alternate player forms. The composed path matches 91,392 constructed original-ROM fixtures; all tables remain caller-supplied. See [FIELD_PLAYER_PROFILES.md](FIELD_PLAYER_PROFILES.md).
 - Prepared defender sequences now load each visited player and move, apply defensive stamina use, and feed weakening into ordered contacts, returning an updated roster. Terminal results stop later energy use; repeated choices use current stamina. See [PREPARED_DEFENDER_SEQUENCE.md](PREPARED_DEFENDER_SEQUENCE.md).
 - The prepared field-shot handoff now joins updated defender stamina and contacts to field recovery/possession, then routes eligible action0 attempts through goalkeeper comparison and goal/save outcomes. It derives the last visited defender, remaining power and ownership from preceding stages. Keeper and attacker subtypes remain separate; see [PREPARED_FIELD_SHOT.md](PREPARED_FIELD_SHOT.md).
+- Attacker move preparation now resolves profile/skill, move cost and raw flags, applies the side-specific energy rule (including action2/no-defenders cost0), and feeds weakening into shot power. Its action0 subtype selector special case is implemented; see [PREPARED_ATTACK.md](PREPARED_ATTACK.md).
 - A fixture session that separates participant identity from team, rejects unauthorized and unordered commands before state changes, and serializes every fixture state field explicitly.
 - A native terminal executable with a batch arithmetic mode and strict replica command protocol.
 - A Python development adapter that sends commands through loopback TCP to two separate native processes, then compares their complete state after every command.
@@ -64,6 +65,10 @@ The prepared defender sequence has native integration coverage and passed the fu
 
 The prepared field-shot handoff passed the full Make suite and all 22 CMake/CTest checks. Existing component ROM comparisons remained green: 384 goalkeeper outcomes, 512 recoveries, 5,248 keeper comparisons, 7,456 action-power cases and 69,632 skill-index cases. The joined wrapper has native integration tests; a complete original gameplay trace remains pending. A regression reproduced and corrected the inherited attacker/keeper subtype mix-up in the older shot composition.
 
+Attacker preparation passed the full Make suite and all 23 CMake/CTest checks. Existing skill/action/keeper/energy original-ROM comparisons also remained green. The preparation wrapper itself has native tests; its entire loader/caller has not yet been compared as one original execution.
+
+Attacker preparation passed the full Make suite and all 23 CMake/CTest checks. ROM instruction tracing caught and corrected the side11 cost-override path and energy carry into weakened shot power. Component skill/action/keeper/energy comparisons remain green; the new wrapper itself has native integration tests.
+
 ## Limits
 
 - The ordered fixture still advances only a contact-loss stage. The direct shot sequence and gated action-0 continuation accept explicit statistics, route values, and random values; they are not yet ordered match commands or playable interactions.
@@ -80,6 +85,6 @@ The prepared field-shot handoff passed the full Make suite and all 22 CMake/CTes
 
 ## Next checkpoint
 
-Connect attacker and goalkeeper profile/energy preparation to the joined field-shot handoff, then capture a complete original shot trace before introducing an ordered action0 match command. Persistent state commits must include roster, ball and outcome writes together. Add the runtime content importer and team-data selection caller. Trace the remaining comparison-table selection, action 1 and other phases, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
+Connect prepared attacker power to the joined field-shot handoff; resolve goalkeeper profile/move/stamina next. Then capture a complete original shot trace before introducing an ordered action0 match command. Persistent state commits must include roster, ball and outcome writes together. Add the runtime content importer and team-data selection caller. Trace the remaining comparison-table selection, action 1 and other phases, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
 
 Early network comparisons continue alongside each simulation increment. Public matchmaking and the rules for additional participants remain part of the engine direction, without committing to an unsupported player count.
