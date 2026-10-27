@@ -34,13 +34,17 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     const auto side = static_cast<std::uint8_t>(options.side);
     const std::uint8_t owner = side == 0 ? 3 : 14;
     const auto keeper_slot = side ^ 11u;
+    if (options.flight_defenders > (side == 0 ? 5u : 4u))
+        throw std::invalid_argument("Too many explicit flight defenders for this side");
     captain::CompletePreparedShotInput input{};
     for (auto& player : input.field.roster) player = {1, 20, 1000};
     input.field.roster[owner].level = static_cast<std::uint8_t>(options.level);
     input.field.roster[keeper_slot] = {33, static_cast<std::uint8_t>(options.keeper_level), 1000};
     input.field.ball_owner = owner;
-    input.field.context = {side, 0, static_cast<std::uint8_t>(options.subtype), 0, 0};
-    input.field.context.comparison_content = content.field_comparison;
+    input.field.context.side = side;
+    input.field.context.attack_action = 0;
+    input.field.context.attack_subtype = static_cast<std::uint8_t>(options.subtype);
+    input.field.context.comparison_content.emplace(content.field_comparison);
     const auto ball_x = static_cast<std::uint8_t>(options.ball_x);
     const auto ball_y = static_cast<std::uint8_t>(options.ball_y);
     input.field.context.interruption = captain::FieldInterruptionContext{ball_x, ball_y, {}};
@@ -51,6 +55,14 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     for (unsigned i = 0; i < options.defenders; ++i)
         input.field.choices.push_back({static_cast<std::uint8_t>(keeper_slot + 3 + i), 2, 0, 0,
             {0, 0, 100, 100, 1, 0, false, false, 0, 0, 0, {0, 0, 0, 0}}});
+    if (options.flight_defenders != 0) {
+        if (!content.flight)
+            throw std::invalid_argument("Flight contacts require version3 flight content");
+        input.flight = FlightContactBurst{{}, *content.flight};
+        for (unsigned i = 0; i < options.flight_defenders; ++i)
+            input.flight->choices.push_back({static_cast<std::uint8_t>(keeper_slot + 1 + i),
+                                            0, 0, 100});
+    }
     input.attack_random_first = 100;
     input.attack_random_second = 100;
     input.keeper_action = static_cast<std::uint8_t>(options.keeper_action);

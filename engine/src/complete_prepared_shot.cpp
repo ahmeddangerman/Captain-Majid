@@ -31,6 +31,7 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
     auto flow = resolve_prepared_field_handoff(field_input,profiles,defense_content);
     std::optional<PreparedKeeperResult> keeper;
     std::optional<ShotApproachResult> approach;
+    std::optional<PreparedFlightResult> flight;
     if (flow.field.result_code < 2) {
         auto next = field_input.continuation;
         next.action_code = 0;
@@ -46,12 +47,25 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
             next.outcome.ball_x = approach->target_x;
             next.outcome.ball_y = approach->target_y;
         }
+        // Original DD0E runs flight before DD11 checks the saved loose-ball carry
+        // and before the keeper-status branch. A loose endpoint can still meet players.
+        if (input.flight && next.post_loop_active_defenders == 0) {
+            flight = resolve_prepared_flight_contacts(flow.field.roster, input.flight->choices,
+                profiles, defense_content, input.flight->content,
+                {side, flow.field.remaining_power});
+            if (flight->stopped) {
+                flow.continuation = Action0ShotContinuationResult{
+                    ShotContinuationRoute::other_continuation, std::nullopt, std::nullopt};
+                return {attack, std::move(flow), std::move(keeper), std::move(approach), std::move(flight)};
+            }
+            next.power_after_contacts = flight->remaining_power;
+        }
         const auto route = select_action0_shot_route(next);
         flow.continuation = Action0ShotContinuationResult{route,std::nullopt,std::nullopt};
         if (route == ShotContinuationRoute::keeper_attempt) {
             const auto slot = static_cast<std::uint8_t>(side ^ 11u);
             auto comparison = next.keeper;
-            comparison.incoming_power = flow.field.remaining_power;
+            comparison.incoming_power = next.power_after_contacts;
             keeper = prepare_goalkeeper({record(slot,flow.field.roster),side,input.keeper_action,
                 input.keeper_subtype,0,attack.action_power.subtype,input.keeper_energy_carry,
                 comparison},keeper_profiles,keeper_content);
@@ -71,6 +85,6 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
             flow.continuation->outcome = resolved;
         }
     }
-    return {attack,std::move(flow),std::move(keeper),std::move(approach)};
+    return {attack,std::move(flow),std::move(keeper),std::move(approach),std::move(flight)};
 }
 }

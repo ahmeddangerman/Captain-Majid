@@ -25,6 +25,7 @@ void option(Options& options, const std::string& name, const std::string& value)
     else if (name == "--keeper-level") options.keeper_level = number(value, 255);
     else if (name == "--subtype") options.subtype = number(value, 255);
     else if (name == "--defenders") options.defenders = number(value, 5);
+    else if (name == "--flight-defenders") options.flight_defenders = number(value, 5);
     else if (name == "--keeper-action") options.keeper_action = number(value, 3);
     else if (name == "--ball-x") options.ball_x = number(value, 255);
     else if (name == "--ball-y") options.ball_y = number(value, 255);
@@ -63,6 +64,11 @@ void shoot(const captain::ShotContent& content, const Options& options) {
                   << " | score " << unsigned(result.keeper->comparison.score)
                   << " | raw result " << unsigned(result.keeper->comparison.result_code) << '\n';
     }
+    if (result.flight) {
+        std::cout << "Flight contacts " << result.flight->contacts.size()
+                  << " | remaining " << result.flight->remaining_power
+                  << " | result " << unsigned(result.flight->result_code) << '\n';
+    }
     if (result.approach) {
         const auto& approach = *result.approach;
         std::cout << "Approach distance " << unsigned(approach.distance_adjustment)
@@ -83,6 +89,12 @@ void shoot(const captain::ShotContent& content, const Options& options) {
         std::cout << "Handoff: defenders " << unsigned(resolved.defenders)
                   << " | active " << unsigned(resolved.ball_active)
                   << " | kickoff " << unsigned(resolved.kickoff) << '\n';
+    } else if (result.flight && result.flight->stopped) {
+        const auto& last = result.flight->contacts.back();
+        std::cout << "Pending later-flight handoff: result " << unsigned(result.flight->result_code)
+                  << " | defender " << unsigned(last.player_id)
+                  << " | action " << unsigned(last.action)
+                  << " (terminal handler is outside this calculation)\n";
     } else {
         std::cout << "Field result " << unsigned(result.flow.field.result_code)
                   << " | route " << unsigned(result.flow.field_outcome.route)
@@ -99,7 +111,7 @@ void shoot(const captain::ShotContent& content, const Options& options) {
 int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: captain-shot-lab PACK [--interactive] [--side 0|11] [--level N] [--keeper-level N] "
-                     "[--subtype N] [--defenders 0..5] [--keeper-action 0..3] [--ball-x N] [--ball-y N]\n"
+                     "[--subtype N] [--defenders 0..5] [--flight-defenders 0..5] [--keeper-action 0..3] [--ball-x N] [--ball-y N]\n"
                      "[--keeper-timer N] [--keeper-duration N] [--keeper-penalty N] [--keeper-stun N] [--recover N ...]\n";
         return 2;
     }
@@ -125,6 +137,7 @@ int main(int argc, char** argv) {
             return 0;
         }
         std::cout << "Commands: shoot, side 0|11, level N, keeper-level N, subtype N, defenders N, keeper-action N, ball-x N, ball-y N, quit\n";
+        std::cout << "Flight burst: flight-defenders N (side0 maximum5, side11 maximum4)\n";
         std::cout << "Keeper state: keeper-timer N, keeper-duration N, keeper-penalty N, keeper-stun N, recover N, clear-recovery\n"
                      "Recover appends a pre-shot elapsed step; each shot reapplies the list from the initial state.\n";
         std::string line;

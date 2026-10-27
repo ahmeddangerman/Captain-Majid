@@ -2,6 +2,7 @@
 #include "captain/field_comparison_content.hpp"
 #include "captain/prepared_keeper.hpp"
 #include "captain/shot_approach.hpp"
+#include "captain/flight_contact.hpp"
 #include <istream>
 #include <optional>
 
@@ -17,9 +18,10 @@ struct ShotContent {
     std::array<std::uint8_t, 4> keeper_thresholds;
     std::array<std::uint8_t, 8> punch_intervals;
     std::optional<ShotApproachContent> approach{};
+    std::optional<FlightContactContent> flight{};
 };
 
-// Development CMJSHOT1/2 content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1/2/3 content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

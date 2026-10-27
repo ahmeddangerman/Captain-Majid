@@ -8,6 +8,8 @@ The laboratory also accepts explicit initial keeper state and ordered pre-shot `
 
 The shared API/CLI now supports both possession sides with `--side 0|11`; mirrored coordinates remain explicit and side11 requires version2 geometry content. See [mirrored shot scenes](MIRRORED_SHOT_SCENE.md) for a native catch example and the still-missing live-flight contact stage. Earlier fixed side0 assumptions below describe the default fixture.
 
+Version3 adds16bytes for one explicit later flight-contact burst. Readers retain versions1/2. `--flight-defenders N` requires version3 when nonzero; automatic movement/selection remains missing. See [prepared later-flight contacts](FLIGHT_CONTACTS.md) for the current11,833-byte pack and native example.
+
 New exports use version2 approach geometry; the reader retains version1 compatibility. See [SHOT_APPROACH.md](SHOT_APPROACH.md). Use `ball-x N`/`ball-y N` interactively, or `--ball-x N`/`--ball-y N` on the CLI, to change the scene's ball position with a version2 pack. Unsupported distance-table indices reject.
 
 ## Run

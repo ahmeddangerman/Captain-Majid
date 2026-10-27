@@ -15,6 +15,8 @@ Prepared field comparisons preserve shot power on result1, following the selecte
 
 Optional approach context now derives distance adjustment, target cell/center and loose-ball diversion after nonterminal field results and the post-loop active-defender gate. It uses the rolled attacking subtype; keeper random bytes remain separately supplied. The wrapper returns the approach and uses its target center for the keeper outcome's starting ball coordinates. See [SHOT_APPROACH.md](SHOT_APPROACH.md). Missing context retains explicit inputs.
 
+Optional [later-flight contacts](FLIGHT_CONTACTS.md) now run after approach and before loose-ball/keeper-status routing. Their loss-adjusted power feeds a reached keeper; they do not charge defender stamina. `result.flight` keeps these contacts separate from the initial loop. A terminal flight result returns a pending handoff and no keeper/outcome; initial field outputs do not represent that unresolved later terminal stage. No context retains the existing behavior.
+
 `result.attack` reports attacker preparation. `result.flow` reports field calculation/handoff and optional continuation. `result.keeper` exists only for a reached keeper attempt. A field or diverted route preserves those earlier phase outputs without inventing a goal/save.
 
 ## Reused APIs

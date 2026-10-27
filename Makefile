@@ -11,6 +11,7 @@ RESEARCH = engine/src/research_protocol.cpp
 CORE += engine/src/shot_content.cpp
 CORE += engine/src/shot_scene.cpp
 CORE += engine/src/shot_approach.cpp
+CORE += engine/src/flight_contact.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check

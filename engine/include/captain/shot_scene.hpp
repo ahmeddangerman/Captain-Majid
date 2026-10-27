@@ -12,6 +12,7 @@ struct ShotSceneOptions {
     unsigned keeper_timer = 0, keeper_duration = 0, keeper_penalty = 0, keeper_stun = 0;
     std::vector<unsigned> recovery_steps{};
     unsigned side = 0;
+    unsigned flight_defenders = 0;
 };
 KeeperRecoveryState resolve_shot_scene_keeper_state(const ShotSceneOptions& options);
 CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese shot data to a local CMJSHOT2 development pack."""
+"""Export private Japanese shot data to a local CMJSHOT3 development pack."""
 import argparse
 import hashlib
 import struct
@@ -19,7 +19,7 @@ def export_data(rom):
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
-    data = bytearray(b'CMJSHOT2' + hashlib.sha256(rom[16:]).digest())
+    data = bytearray(b'CMJSHOT3' + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -67,6 +67,16 @@ def export_data(rom):
     data.extend(gameplay[0x86B1:0x86B9])
     data.extend(gameplay[0xDDCB:0xDDD9])
     data.extend(gameplay[0xDDD9:0xDDFD])
+    # Only the two supported action0 flight variants; do not export adjacent
+    # instruction bytes as hypothetical action1..4 eligibility/threshold rows.
+    flight_actions = gameplay[0x888B:0x888D]
+    data.extend(flight_actions)
+    data.extend(gameplay[0x88EB + action] for action in flight_actions)
+    flight_variation = word(gameplay, 0x8D93 + 10)
+    for action in flight_actions:
+        data.extend(gameplay[flight_variation + 2 * action:flight_variation + 2 * action + 2])
+    for action in flight_actions:
+        data.extend(gameplay[0x828C + 4 * action:0x828C + 4 * action + 4])
     return bytes(data)
 
 

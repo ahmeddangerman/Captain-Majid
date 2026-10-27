@@ -59,7 +59,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if (version != '1' && version != '2')
+    if (version != '1' && version != '2' && version != '3')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -89,10 +89,17 @@ ShotContent load_shot_content(std::istream& input) {
     content.keeper_offset = reader.byte();
     reader.bytes(content.keeper_thresholds);
     reader.bytes(content.punch_intervals);
-    if (version == '2') {
+    if (version == '2' || version == '3') {
         content.approach = ShotApproachContent{};
         reader.bytes(content.approach->outer_distance);
         reader.bytes(content.approach->inner_distance);
+    }
+    if (version == '3') {
+        content.flight = FlightContactContent{};
+        reader.bytes(content.flight->defense_actions);
+        reader.bytes(content.flight->eligibility);
+        for (auto& pair : content.flight->variation) reader.bytes(pair);
+        for (auto& row : content.flight->thresholds) reader.bytes(row);
     }
     reader.end();
     return content;

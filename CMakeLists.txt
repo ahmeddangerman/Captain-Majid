@@ -10,6 +10,7 @@ add_library(captain_core engine/src/action_strength.cpp engine/src/session.cpp
     engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp engine/src/field_interruption.cpp engine/src/shot_content.cpp engine/src/shot_scene.cpp)
 target_include_directories(captain_core PUBLIC engine/include)
 target_sources(captain_core PRIVATE engine/src/shot_approach.cpp)
+target_sources(captain_core PRIVATE engine/src/flight_contact.cpp)
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
 
