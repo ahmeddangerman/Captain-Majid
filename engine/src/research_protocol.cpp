@@ -9,6 +9,7 @@
 #include "captain/defender_outcome.hpp"
 #include "captain/ball_recovery.hpp"
 #include "captain/defender_selection.hpp"
+#include "captain/field_defender_preparation.hpp"
 
 #include <array>
 #include <charconv>
@@ -80,6 +81,51 @@ bool defender_output(std::istringstream& stream, std::string& output) {
 }
 
 bool research_output(const std::string& command, std::istringstream& stream, std::string& output) {
+    if (command == "defenderprep") {
+        std::array<std::uint32_t, 4> prefix{};
+        for (auto& value : prefix)
+            if (!next_number(stream, value)) return false;
+        captain::FieldDefenderPreparationInput input{};
+        input.defense_action = static_cast<std::uint8_t>(prefix[0]);
+        input.situation = static_cast<std::uint8_t>(prefix[1]);
+        input.subtype = static_cast<std::uint8_t>(prefix[2]);
+        input.level = static_cast<std::uint8_t>(prefix[3]);
+        std::uint32_t value{};
+        for (auto& skill : input.base_skills) {
+            if (!next_number(stream, value)) return false;
+            skill = static_cast<std::uint8_t>(value);
+        }
+        captain::FieldDefenseContent content{};
+        for (auto& selectors : content.skill_selectors)
+            for (auto& selector : selectors) {
+                if (!next_number(stream, value)) return false;
+                selector = static_cast<std::uint8_t>(value);
+            }
+        for (auto& moves : content.moves) {
+            std::uint32_t count{};
+            if (!next_number(stream, count, 64)) return false;
+            for (std::uint32_t i = 0; i < count; ++i) {
+                std::array<std::uint32_t, 4> fields{};
+                for (auto& field : fields)
+                    if (!next_number(stream, field)) return false;
+                moves.push_back({static_cast<std::uint8_t>(fields[0]),
+                    static_cast<std::uint8_t>(fields[1]), static_cast<std::uint8_t>(fields[2]),
+                    static_cast<std::uint8_t>(fields[3])});
+            }
+        }
+        for (auto& strength : content.strength_curve) {
+            if (!next_number(stream, value)) return false;
+            strength = static_cast<std::uint8_t>(value);
+        }
+        std::string extra;
+        if (stream >> extra) return false;
+        try {
+            const auto r = captain::prepare_field_defender(input, content);
+            output = format_fields(std::array<unsigned, 5>{r.skill_selector, r.skill_index,
+                r.base_strength, r.move_effect, r.stamina_cost});
+            return true;
+        } catch (const std::invalid_argument&) { return false; }
+    }
     if (command == "defenderselection") {
         std::array<std::uint32_t, 4> prefix{};
         for (auto& value : prefix)

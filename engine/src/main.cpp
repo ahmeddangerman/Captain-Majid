@@ -56,7 +56,7 @@ int replica() {
         if (command == "defender" || command == "skill" || command == "action" || command == "keeper" ||
             command == "energy" || command == "story" || command == "keeperstate" ||
             command == "random" || command == "outcome" || command == "defenderoutcome" ||
-            command == "ballrecovery" || command == "defenderselection") {
+            command == "ballrecovery" || command == "defenderselection" || command == "defenderprep") {
             std::string fields;
             std::getline(input, fields);
             const auto output = captain::research::evaluate(command, fields);
@@ -97,9 +97,11 @@ int main(int argc, char** argv) {
     if (argc == 2 && std::string(argv[1]) == "--defender-outcome-batch") return research_batch("defenderoutcome");
     if (argc == 2 && std::string(argv[1]) == "--ball-recovery-batch") return research_batch("ballrecovery");
     if (argc == 2 && std::string(argv[1]) == "--defender-selection-batch") return research_batch("defenderselection");
+    if (argc == 2 && std::string(argv[1]) == "--field-defender-preparation-batch") return research_batch("defenderprep");
     std::cerr << "Usage: captain-prototype --replica | --strength-batch | --defender-batch | "
                  "--skill-index-batch | --action-power-batch | --keeper-batch | --energy-batch | "
                  "--keeper-story-batch | --keeper-state-batch | --random-step-batch | --outcome-batch | "
-                 "--defender-outcome-batch | --ball-recovery-batch | --defender-selection-batch\n";
+                 "--defender-outcome-batch | --ball-recovery-batch | --defender-selection-batch | "
+                 "--field-defender-preparation-batch\n";
     return 2;
 }

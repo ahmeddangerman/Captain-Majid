@@ -6,7 +6,7 @@ add_library(captain_core engine/src/action_strength.cpp engine/src/session.cpp
     engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_random.cpp
     engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp
     engine/src/defender_outcome.cpp engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
-    engine/src/defender_selection.cpp)
+    engine/src/defender_selection.cpp engine/src/field_defender_preparation.cpp)
 target_include_directories(captain_core PUBLIC engine/include)
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
@@ -48,6 +48,9 @@ if(BUILD_TESTING)
     add_executable(defender-selection-tests engine/tests/defender_selection_tests.cpp)
     target_link_libraries(defender-selection-tests PRIVATE captain_core)
     add_test(NAME defender_selection COMMAND defender-selection-tests)
+    add_executable(field-defender-preparation-tests engine/tests/field_defender_preparation_tests.cpp)
+    target_link_libraries(field-defender-preparation-tests PRIVATE captain_core)
+    add_test(NAME field_defender_preparation COMMAND field-defender-preparation-tests)
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
         add_test(NAME cli COMMAND ${Python3_EXECUTABLE}
@@ -59,12 +62,15 @@ if(BUILD_TESTING)
         add_test(NAME state_cli COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/engine/tests/check_state_cli.py
             --binary $<TARGET_FILE:captain-prototype>)
+        add_test(NAME preparation_cli COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/engine/tests/check_preparation_cli.py
+            --binary $<TARGET_FILE:captain-prototype>)
         add_test(NAME replica_loopback COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_replica_sync.py
             --binary $<TARGET_FILE:captain-prototype>)
         add_test(NAME adapter_failures COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/engine/tests/check_adapter.py
             --binary $<TARGET_FILE:captain-prototype>)
-        set_tests_properties(cli shot_cli state_cli replica_loopback adapter_failures PROPERTIES TIMEOUT 45)
+        set_tests_properties(cli shot_cli state_cli preparation_cli replica_loopback adapter_failures PROPERTIES TIMEOUT 45)
     endif()
 endif()

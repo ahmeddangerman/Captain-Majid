@@ -68,6 +68,8 @@ The state comparison harness passed 25,756 cases covering stamina deduction, kee
 
 The nearby-defender selector at `$E4D7` matches 1,024 original-ROM cases. It returns nearby opposing player IDs in original order, including the ROM's team-specific limit and status check. See [DEFENDER_SELECTION.md](docs/DEFENDER_SELECTION.md); player attributes and contact tables are still supplied separately.
 
+Standard field-defender preparation matches 16,064 executions of the complete original loader. It selects the skill and move, loads strength/effect/stamina cost from replaceable content, and can supply that strength to the contact calculation. Profile decoding and full match integration remain in progress; see [FIELD_DEFENDER_PREPARATION.md](docs/FIELD_DEFENDER_PREPARATION.md).
+
 ## Project reference
 
 - [Working roadmap](docs/ROADMAP.md)
