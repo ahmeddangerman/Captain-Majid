@@ -10,6 +10,7 @@ CORE += engine/src/field_defender_preparation.cpp engine/src/field_player_profil
 RESEARCH = engine/src/research_protocol.cpp
 CORE += engine/src/shot_content.cpp
 CORE += engine/src/shot_scene.cpp
+CORE += engine/src/shot_approach.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check

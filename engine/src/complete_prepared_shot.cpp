@@ -30,12 +30,22 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
     field_input.context.attack_subtype = attack.action_power.subtype;
     auto flow = resolve_prepared_field_handoff(field_input,profiles,defense_content);
     std::optional<PreparedKeeperResult> keeper;
+    std::optional<ShotApproachResult> approach;
     if (flow.field.result_code < 2) {
         auto next = field_input.continuation;
         next.action_code = 0;
         next.field_result_code = flow.field.result_code;
         next.power_after_contacts = flow.field.remaining_power;
         next.subtype_after_contacts = attack.action_power.subtype;
+        if (input.approach && next.post_loop_active_defenders == 0) {
+            approach = calculate_shot_approach({input.approach->ball_x,
+                input.approach->ball_y, side, attack.action_power.subtype,
+                input.approach->random_first}, input.approach->content);
+            next.field_proximity_carry = approach->loose_ball;
+            next.keeper.elapsed = approach->distance_adjustment;
+            next.outcome.ball_x = approach->target_x;
+            next.outcome.ball_y = approach->target_y;
+        }
         const auto route = select_action0_shot_route(next);
         flow.continuation = Action0ShotContinuationResult{route,std::nullopt,std::nullopt};
         if (route == ShotContinuationRoute::keeper_attempt) {
@@ -61,6 +71,6 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
             flow.continuation->outcome = resolved;
         }
     }
-    return {attack,std::move(flow),std::move(keeper)};
+    return {attack,std::move(flow),std::move(keeper),std::move(approach)};
 }
 }

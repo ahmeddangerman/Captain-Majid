@@ -54,10 +54,13 @@ void field_content(Reader& reader, FieldDefenseContent& content) {
 
 ShotContent load_shot_content(std::istream& input) {
     Reader reader(input);
-    const std::string magic = "CMJSHOT1";
+    const std::string magic = "CMJSHOT";
     for (const auto expected : magic)
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
+    const auto version = reader.byte();
+    if (version != '1' && version != '2')
+        throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
     PlayerProfileMappings mappings{};
@@ -86,6 +89,11 @@ ShotContent load_shot_content(std::istream& input) {
     content.keeper_offset = reader.byte();
     reader.bytes(content.keeper_thresholds);
     reader.bytes(content.punch_intervals);
+    if (version == '2') {
+        content.approach = ShotApproachContent{};
+        reader.bytes(content.approach->outer_distance);
+        reader.bytes(content.approach->inner_distance);
+    }
     reader.end();
     return content;
 }

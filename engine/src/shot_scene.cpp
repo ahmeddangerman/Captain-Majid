@@ -5,7 +5,7 @@ namespace captain {
 CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
                                                const ShotSceneOptions& options) {
     if (options.level > 255 || options.keeper_level > 255 || options.subtype > 255 ||
-        options.defenders > 5 || options.keeper_action > 3)
+        options.defenders > 5 || options.keeper_action > 3 || options.ball_x > 255 || options.ball_y > 255)
         throw std::invalid_argument("Unsupported development scene options");
     const auto index = options.subtype & 63u;
     if (index >= content.attack.moves[0].size())
@@ -17,7 +17,13 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     input.field.ball_owner = 3;
     input.field.context = {0, 0, static_cast<std::uint8_t>(options.subtype), 0, 0};
     input.field.context.comparison_content = content.field_comparison;
-    input.field.context.interruption = captain::FieldInterruptionContext{160, 100, {}};
+    const auto ball_x = static_cast<std::uint8_t>(options.ball_x);
+    const auto ball_y = static_cast<std::uint8_t>(options.ball_y);
+    input.field.context.interruption = captain::FieldInterruptionContext{ball_x, ball_y, {}};
+    if (content.approach)
+        input.approach = ShotApproachContext{ball_x, ball_y, 0, *content.approach};
+    else if (options.ball_x != 160 || options.ball_y != 100)
+        throw std::invalid_argument("Ball-position changes require version2 approach content");
     for (unsigned i = 0; i < options.defenders; ++i)
         input.field.choices.push_back({static_cast<std::uint8_t>(14 + i), 2, 0, 0,
             {0, 0, 100, 100, 1, 0, false, false, 0, 0, 0, {0, 0, 0, 0}}});
@@ -33,8 +39,8 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     keeper.thresholds = content.keeper_thresholds;
     auto& outcome = input.field.continuation.outcome;
     outcome.ball_owner = 3;
-    outcome.ball_x = 160;
-    outcome.ball_y = 100;
+    outcome.ball_x = ball_x;
+    outcome.ball_y = ball_y;
     outcome.defenders = static_cast<std::uint8_t>(options.defenders);
     outcome.timer_selector = static_cast<std::uint8_t>(
         (content.attack.moves[0][index].cost_high_flags & 0xF8u) >> 3);

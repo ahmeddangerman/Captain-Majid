@@ -58,6 +58,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     checkpoints = []
     attacker = {}
     keeper = {}
+    approach = {}
     for steps in range(max_instructions):
         if cpu.pc < 0x8000:
             raise RuntimeError(f'Unexpected execution outside original PRG: ${cpu.pc:04X}')
@@ -89,6 +90,8 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                                    'Snapshot scratch/stack bytes outside this setup are explicit input.'],
                     'host_frames': host_frames, 'comparisons': comparisons,
                     'attacker': attacker, 'keeper': keeper,
+                    'approach': approach,
+                    'ball': {'x': memory[0x635], 'y': memory[0x637], 'destination': memory[0x638]},
                     'checkpoints': checkpoints, 'original_writes': memory.writes,
                     'initial_power': initial_power, 'final_power': word(memory, 0x61C),
                     'result_code': memory[0x612], 'defender_index': memory[0x616],
@@ -96,6 +99,14 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                     'clock': word(memory, 0x5F7), 'random_bytes': [memory[0xE2], memory[0xE3]],
                     'statuses': [memory[0x300 + 12 * slot + 10] for slot in range(22)],
                     'bank_writes': memory.bank_writes}
+        if bank == 30 and until == 'keeper':
+            if cpu.pc == 0xDD81:
+                approach['input'] = {'ball_x': memory[0x635], 'ball_y': memory[0x637],
+                                     'side': memory[0x5FB], 'subtype': memory[0x43C],
+                                     'random_first': memory[0xE2]}
+            elif cpu.pc == 0xDD08:
+                approach.update({'distance': memory[0x62B], 'destination': memory[0x638],
+                                 'random_first': memory[0xE2], 'loose_ball': bool(cpu.p & 1)})
         if bank == 26 and until == 'keeper':
             if cpu.pc == 0x8F72:
                 slot = memory[0x441]

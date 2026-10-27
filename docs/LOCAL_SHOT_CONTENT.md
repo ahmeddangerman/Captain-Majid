@@ -4,6 +4,8 @@ The native engine now loads shot data from a local, replaceable development pack
 
 The CLI and [optional native window](NATIVE_SHOT_SCENE.md) share `calculate_shot_scene` and the same explicit scene inputs. The window adds placeholder presentation without changing simulation timing or random state.
 
+New exports use version2 approach geometry; the reader retains version1 compatibility. See [SHOT_APPROACH.md](SHOT_APPROACH.md). Use `ball-x N`/`ball-y N` interactively, or `--ball-x N`/`--ball-y N` on the CLI, to change the scene's ball position with a version2 pack. Unsupported distance-table indices reject.
+
 ## Run
 
 Build with Make (`make`) or CMake (`captain-shot-lab` target). Export a new private pack using the optional analysis dependencies:
@@ -30,6 +32,8 @@ Interactive commands are `shoot`, `level N`, `keeper-level N`, `subtype N`, `def
 
 These assumptions reproduce useful inputs from the observed original calculation, but changing one scene input does not recalculate the original animation/movement/random schedule. The laboratory is a development interface, not a complete match, graphical PC port or replay of the original outcome scripts.
 
+For version2, an explicit post-movement approach random byte0 feeds the native geometry helper. Distance, target cell/center and the loose-ball gate are derived from the pack and position, rather than the version1 literal45/clear-proximity gate. Keeper randomness remains a separate explicit pair. The normal default distance is still45; a goal starts its outcome at the actual target center(204,124). Version1 keeps its prior explicit-scene behavior.
+
 ## Pack format
 
 `CMJSHOT1` is an eight-byte magic/version, followed by32source-payload hash bytes. The source hash records provenance; it is not a hash of the entire pack, an authenticity check, or an online compatibility identifier.
@@ -46,6 +50,8 @@ All section counts are unsigned little-endian16-bit except move-list lengths, wh
 The reader bounds every count, rejects missing bytes, unsupported versions and trailing data. Semantically unavailable moves/profiles, zero selected ranges and invalid threshold ordering reject when the existing engine helpers use them. Exported generic team types are empty because runtime team selection is not implemented. Imported field eligibility/variation views include bytes beyond labelled source tables for unusual constructed selections; this does not establish those selections' gameplay legality.
 
 This format is an early development format; incompatible future changes must use a new version. Replacement data can use the same engine types; graphical/music/language pack formats remain separate work.
+
+Version2 magic is `CMJSHOT2`; all preceding sections retain their order, followed by14outer-distance and36inner-distance bytes. Reference output length is11,817bytes. Exact version1 packs remain accepted without approach content. New exporters write version2 only.
 
 ## Current evidence
 

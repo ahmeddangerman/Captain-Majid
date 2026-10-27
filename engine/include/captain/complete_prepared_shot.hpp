@@ -2,6 +2,7 @@
 #include "captain/prepared_field_shot.hpp"
 #include "captain/prepared_attack.hpp"
 #include "captain/prepared_keeper.hpp"
+#include "captain/shot_approach.hpp"
 namespace captain {
 struct CompletePreparedShotInput {
     PreparedFieldShotInput field;
@@ -9,11 +10,13 @@ struct CompletePreparedShotInput {
     bool attack_carry;
     std::uint8_t keeper_action, keeper_subtype;
     bool keeper_energy_carry;
+    std::optional<ShotApproachContext> approach{};
 };
 struct CompletePreparedShotResult {
     PreparedAttackResult attack;
     PreparedFieldShotResult flow;
     std::optional<PreparedKeeperResult> keeper;
+    std::optional<ShotApproachResult> approach{};
 };
 CompletePreparedShotResult resolve_complete_prepared_shot(
     const CompletePreparedShotInput& input, const FieldPlayerProfiles& profiles,

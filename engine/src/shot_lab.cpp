@@ -21,6 +21,8 @@ void option(Options& options, const std::string& name, const std::string& value)
     else if (name == "--subtype") options.subtype = number(value, 255);
     else if (name == "--defenders") options.defenders = number(value, 5);
     else if (name == "--keeper-action") options.keeper_action = number(value, 3);
+    else if (name == "--ball-x") options.ball_x = number(value, 255);
+    else if (name == "--ball-y") options.ball_y = number(value, 255);
     else throw std::invalid_argument("Unknown option: " + name);
 }
 const char* event_name(captain::ShotEvent event) {
@@ -43,6 +45,12 @@ void shoot(const captain::ShotContent& content, const Options& options) {
                   << " | ratio " << unsigned(result.keeper->comparison.ratio)
                   << " | raw result " << unsigned(result.keeper->comparison.result_code) << '\n';
     }
+    if (result.approach) {
+        const auto& approach = *result.approach;
+        std::cout << "Approach distance " << unsigned(approach.distance_adjustment)
+                  << " | target " << unsigned(approach.target_x) << ',' << unsigned(approach.target_y)
+                  << " | route " << (approach.loose_ball ? "loose ball" : "toward keeper") << '\n';
+    }
     if (result.flow.continuation && result.flow.continuation->outcome) {
         const auto& resolved = *result.flow.continuation->outcome;
         std::cout << "Outcome: " << event_name(resolved.event)
@@ -64,7 +72,7 @@ void shoot(const captain::ShotContent& content, const Options& options) {
 int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: captain-shot-lab PACK [--interactive] [--level N] [--keeper-level N] "
-                     "[--subtype N] [--defenders 0..5] [--keeper-action 0..3]\n";
+                     "[--subtype N] [--defenders 0..5] [--keeper-action 0..3] [--ball-x N] [--ball-y N]\n";
         return 2;
     }
     try {
@@ -82,13 +90,13 @@ int main(int argc, char** argv) {
         if (!file) throw std::invalid_argument("Unable to open local content pack");
         const auto content = captain::load_shot_content(file);
         std::cout << "Captain Majid native shot laboratory\n"
-                     "Constructed side0 scene with explicit staged randomness and distance.\n"
+                     "Constructed side0 scene with explicit staged randomness and local content.\n"
                      "Each shot resets the scene; this is not a match or original outcome-script replay.\n";
         if (!interactive) {
             shoot(content, options);
             return 0;
         }
-        std::cout << "Commands: shoot, level N, keeper-level N, subtype N, defenders N, keeper-action N, quit\n";
+        std::cout << "Commands: shoot, level N, keeper-level N, subtype N, defenders N, keeper-action N, ball-x N, ball-y N, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             std::istringstream command(line);

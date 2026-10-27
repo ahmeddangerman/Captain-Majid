@@ -13,6 +13,8 @@
 
 Prepared field comparisons preserve shot power on result1, following the selected-defender caller. Candidate loss is reported but not deducted by this loop. The older isolated contact-loss API remains separate. Consequently the keeper receives full post-attacker power across these contacts, rather than the premature loss used in the earlier prototype.
 
+Optional approach context now derives distance adjustment, target cell/center and loose-ball diversion after nonterminal field results and the post-loop active-defender gate. It uses the rolled attacking subtype; keeper random bytes remain separately supplied. The wrapper returns the approach and uses its target center for the keeper outcome's starting ball coordinates. See [SHOT_APPROACH.md](SHOT_APPROACH.md). Missing context retains explicit inputs.
+
 `result.attack` reports attacker preparation. `result.flow` reports field calculation/handoff and optional continuation. `result.keeper` exists only for a reached keeper attempt. A field or diverted route preserves those earlier phase outputs without inventing a goal/save.
 
 ## Reused APIs

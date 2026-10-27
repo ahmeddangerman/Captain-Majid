@@ -73,7 +73,7 @@ The observer's `--until keeper` mode now starts at `$829D`, after decisions and 
 
 Complete mode restricts selected field actions to2/3. The earlier field action0 snapshots enter after pre-loop setup and do not establish that choice's gameplay legality: script2's field-action dispatch has no supported branch for that constructed choice. That unsupported full-entry attempt stopped on a guarded hardware-range read; no result was accepted. This corrects the scope of the earlier loop experiments.
 
-Four distinct side0 original observations reach keeper comparison, using the same constructed roster/clock/random setup, ball X160 instead of120, valid pre-loop field action2, and opposing keeper primary type33. The attacker's level/subtype and keeper level vary below. Player X/Y positions are explicit: field players(160,100), keepers(16,128)/(240,128).
+Four distinct side0 original observations reach keeper comparison, using the same constructed roster/clock/random setup, ball X160 instead of120, valid pre-loop field action2, and opposing keeper primary type33. The attacker's level/subtype and keeper level vary below. Field player positions are(160,100). Keeper record+6/+8 were subsequently normalized to zero; those role-specific bytes must not be described as field-player coordinates. Keeper+6 is penalty duration. Rerunning retained the same instruction/frame counts and comparison outputs.
 
 | Defenders | Attacker level/subtype | Keeper level | Instructions | Host acknowledgements | Shot power | Field results | Keeper ratio/result |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -83,5 +83,7 @@ Four distinct side0 original observations reach keeper comparison, using the sam
 | 2 | 20 / 3 | 20 | 201,286 | 215 | 58 | 0,0 | 140 / 2 |
 
 Keeper action1 is selected in these observations. Keeper random bytes are(0,100), after starting attacker/field bytes(100,100): original post-loop player movement consumes random state even without NMI. The distance adjustment input is45 at `$062B`; it is distinct from elapsed loop time at `$05FF`. These values must not be silently replaced with the initial random pair or clock delta in native composition.
+
+The observer now records `$DD81/$DD08` approach checkpoints and final ball coordinates. In these four traces, pre-approach random0 remains0, distance45 selects cell233, and actual flight finishes at(204,124). The new native optional approach helper is documented in [SHOT_APPROACH.md](SHOT_APPROACH.md).
 
 A side11 attempt exhausted the instruction bound before keeper comparison. A separate attempt to continue side0 through the later goal/save scenario also exhausted its bound. Neither is a successful full shot outcome. The current evidence connects preparation/comparison stages on observed side0 paths, with host frame actions disclosed; it does not yet validate the native joined wrapper as a whole or provide a playable interaction.

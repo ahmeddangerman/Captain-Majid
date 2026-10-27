@@ -1,5 +1,7 @@
 # First engine foundation progress
 
+For the current work and remaining milestones, see the [development log](WORK_LOG.md). Evidence below records historical checkpoints; it does not mean those suites were rerun for every subsequent change.
+
 **Date:** 2026-10-27
 
 **Scope:** Native skill-index, action-power, field-defender, and goalkeeper comparison calculations, plus a development replay fixture. Stamina, keeper story/state, and a single original random step are verified in isolation. The goalkeeper outcome handoff and an explicit shot sequence are implemented. A playable full shot interaction remains incomplete.
@@ -30,6 +32,7 @@
 - Continuous original attacker-to-keeper observations now include attacking preparation, valid pre-loop field choices, defender comparisons, post-loop player movement and goalkeeper preparation/comparison up to `$856B`. Four side0 paths reach this boundary, including raw keeper results0/2/3. Original movement changes random bytes before the keeper; distance time is a separate input. Outcome scenarios and the side11 continuation remain incomplete. This is original CPU research with disclosed host acknowledgements, not a full native-shot comparison or playable game.
 - A private `.cmjpack` exporter and bounded C++ reader now load replaceable profile/skill/move/curve/comparison data into existing engine APIs. The standalone native `captain-shot-lab` offers CLI/interactive development shots using this local data, with explicit scene gates/randomness and reset state. Linux Make/CMake production builds and normal laboratory usage completed; no new automated tests were run. See [LOCAL_SHOT_CONTENT.md](LOCAL_SHOT_CONTENT.md). This is not a graphical or persistent match; generic team selection, graphics/audio/text import remain pending.
 - An optional SDL2 native scene now displays the same shared calculation with placeholder field/player graphics, keyboard controls and a software capture path. Default builds keep SDL2 optional. Production builds and a640×480capture completed on Linux; real window/GPU/keyboard and Windows behavior are unverified. This is a resettable development scene, not a complete match. See [NATIVE_SHOT_SCENE.md](NATIVE_SHOT_SCENE.md).
+- Native optional shot approach now derives original distance adjustment, destination cell/center and loose-ball diversion from replaceable tables and explicit post-movement randomness. It connects lazily to prepared shots and the version2 local data pack while preserving old pack/context behavior. Eight isolated original observations and the four continuous keeper traces document the geometry; no native differential suite was run. See [SHOT_APPROACH.md](SHOT_APPROACH.md).
 - A fixture session that separates participant identity from team, rejects unauthorized and unordered commands before state changes, and serializes every fixture state field explicitly.
 - A native terminal executable with a batch arithmetic mode and strict replica command protocol.
 - A Python development adapter that sends commands through loopback TCP to two separate native processes, then compares their complete state after every command.
@@ -103,6 +106,6 @@ Field result4 interruption now reproduces its immediate reset and initial restar
 
 ## Next checkpoint
 
-Capture a complete original shot trace and resolve remaining distance/content/random scheduling gaps in the joined prepared calculation before introducing an ordered action0 match command. Persistent state commits must include roster, ball and outcome writes together. Add the runtime content importer and team-data selection caller. Trace the remaining comparison-table selection, action 1 and other phases, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
+Extend original shot tracing beyond the keeper comparison to the full outcome and next phase. Private runtime shot content loading and supported distance/target calculations now exist; generic team selection and general random scheduling remain incomplete. Implement elapsed recovery and coherent persistent roster, ball and outcome commits before introducing an ordered action0 match command. Trace action1 and other phases, and extend the keeper handoff through boundary restarts.
 
 Early network comparisons continue alongside each simulation increment. Public matchmaking and the rules for additional participants remain part of the engine direction, without committing to an unsupported player count.

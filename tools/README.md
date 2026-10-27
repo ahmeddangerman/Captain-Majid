@@ -95,3 +95,5 @@ Add `--until keeper` to start at `$829D` before attacking preparation and stop a
 ## Private native shot content
 
 `export_shot_content.py /path/to/reference.nes /path/to/private-analysis/japanese.cmjpack` writes an original-data development pack after verifying the Japanese payload. Existing outputs are refused. Packs are ignored by Git and should remain outside the repository. Run the native `captain-shot-lab` with that pack; it requires no runtime ROM/Python dependency. See [LOCAL_SHOT_CONTENT.md](../docs/LOCAL_SHOT_CONTENT.md) for format, scene assumptions and remaining work. This imports statistics/moves/comparison content, not graphics, music, dialogue or a team/campaign.
+
+The exporter now writes `CMJSHOT2`, appending original approach-distance arrays. The native reader also accepts old version1 packs. Continuous keeper traces include approach checkpoints and final ball coordinates; stage random inputs remain explicit. See [SHOT_APPROACH.md](../docs/SHOT_APPROACH.md).
