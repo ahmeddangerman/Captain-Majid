@@ -66,3 +66,22 @@ Snapshots use the earlier ordinary player/profile setup, action0, subtype0, situ
 All seven observed paths reach result dispatch and perform **no writes** to `$061C/$061D`. The result1 rolled strength is13 and its candidate loss3. The previous native prepared sequence would reduce23 to20 then17; the original selected-defender caller preserves23 across both contacts. This is sufficient to separate that caller's comparison from the unrelated isolated loss continuation. The prepared sequence now uses `compare_defender_contact`; the existing isolated API retains its old loss behavior.
 
 These are original-code observations, not native differential test passes. The production target compiles after the correction; existing expectations were aligned but no automated tests were added/run. A full shot still requires attacker/pre-loop setup, post-loop player movement, keeper choices/comparison and final phase effects together. Do not extend the seven observations to every action, alternate form or random schedule.
+
+## Continuous attacker-to-keeper mode
+
+The observer's `--until keeper` mode now starts at `$829D`, after decisions and before the actual attacking loader/energy/power call. It executes pre-loop scripts, field contacts, post-loop player movement, shot approach, goalkeeper choice, keeper loader/energy and keeper comparison up to `$856B`. Stage outputs include actual random bytes, costs/stamina, power, keeper range score and classification. Terminal field results or diverted continuations return named boundaries without claiming a keeper attempt.
+
+Complete mode restricts selected field actions to2/3. The earlier field action0 snapshots enter after pre-loop setup and do not establish that choice's gameplay legality: script2's field-action dispatch has no supported branch for that constructed choice. That unsupported full-entry attempt stopped on a guarded hardware-range read; no result was accepted. This corrects the scope of the earlier loop experiments.
+
+Four distinct side0 original observations reach keeper comparison, using the same constructed roster/clock/random setup, ball X160 instead of120, valid pre-loop field action2, and opposing keeper primary type33. The attacker's level/subtype and keeper level vary below. Player X/Y positions are explicit: field players(160,100), keepers(16,128)/(240,128).
+
+| Defenders | Attacker level/subtype | Keeper level | Instructions | Host acknowledgements | Shot power | Field results | Keeper ratio/result |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| 2 | 20 / 0 | 20 | 201,243 | 215 | 33 | 1,1 | 80 / 3 |
+| 0 | 20 / 0 | 80 | 84,261 | 65 | 33 | none | 35 / 3 |
+| 0 | 80 / 0 | 20 | 84,247 | 65 | 224 | none | 255 / 0 |
+| 2 | 20 / 3 | 20 | 201,286 | 215 | 58 | 0,0 | 140 / 2 |
+
+Keeper action1 is selected in these observations. Keeper random bytes are(0,100), after starting attacker/field bytes(100,100): original post-loop player movement consumes random state even without NMI. The distance adjustment input is45 at `$062B`; it is distinct from elapsed loop time at `$05FF`. These values must not be silently replaced with the initial random pair or clock delta in native composition.
+
+A side11 attempt exhausted the instruction bound before keeper comparison. A separate attempt to continue side0 through the later goal/save scenario also exhausted its bound. Neither is a successful full shot outcome. The current evidence connects preparation/comparison stages on observed side0 paths, with host frame actions disclosed; it does not yet validate the native joined wrapper as a whole or provide a playable interaction.
