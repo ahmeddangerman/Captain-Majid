@@ -63,3 +63,17 @@ The state harness matched 25,756 energy, keeper story/state, and random-step cas
 `verify_field_comparison_selection.py /path/to/reference.nes` compares original field caller selection and classification in550 constructed fixtures. See [FIELD_COMPARISON_SELECTION.md](../docs/FIELD_COMPARISON_SELECTION.md) for the later result4 boundary.
 
 `verify_field_interruption.py /path/to/reference.nes` checks result4 override, real status reset and initial restart routing in27,904 private-ROM fixtures, with no calls skipped. See [FIELD_INTERRUPTION.md](../docs/FIELD_INTERRUPTION.md).
+
+## Field script parser observation
+
+`trace_field_script.py` executes the original banks16/17 parser from an explicit private RAM snapshot. It emits JSON presentation requests and writes to watched gameplay addresses (shot power is always watched). This is original-code research, not a native comparison or gameplay replay.
+
+```sh
+.venv/bin/python tools/trace_field_script.py /path/to/reference.nes \
+  --ram /path/to/private-internal-ram.bin --script 7 --watch 0x612 \
+  > /path/to/private-analysis/script7-trace.json
+```
+
+Internal RAM must be2048bytes. If a path accesses cartridge RAM, supply its8192-byte snapshot with `--cartridge-ram`. Unsupported hardware, absent cartridge data and execution limits stop the trace. Scripts5/6/7 are supported. Host script setup, synthetic stack/registers and acknowledgement of presentation requests are listed explicitly in the report. Rendering, audio, input callbacks, the cooperative scheduler and frame interrupts are omitted. Keep snapshots and generated JSON outside Git. See [FIELD_LOOP_SCHEDULING.md](../docs/FIELD_LOOP_SCHEDULING.md).
+
+The snapshot's mapper shadow `$22` must have PRG mode bit6 clear. Other modes are rejected before execution rather than traced with a different bank arrangement. Host setup also initializes mapper select/shadow `$23` consistently with the original bank helper.

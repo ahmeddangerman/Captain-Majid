@@ -23,3 +23,24 @@ The native `calculate_defender_contact` and prepared sequence still apply their 
 ## Next trace
 
 Capture the selected script/coroutine effects and all writes to the shot-power word across two successive defenders, including status/time updates, then compare against the native sequence. Keep gameplay random scheduling separate from replaceable music and presentation. Do not stub script calls as presentation-only without checking their state effects.
+
+## Parser observations (2026-10-27)
+
+`tools/trace_field_script.py` now runs the actual banks16/17 selector and parser with watched RAM writes. It requires an explicit internal RAM snapshot and verified private ROM. It reports its host actions: script/bank initialization, synthetic stack/entry registers, and acknowledgement of presentation requests. It does not execute presentation, scheduler or frame callbacks; its results cannot establish what those omitted phases do.
+
+Two constructed snapshots were captured after the actual defender loader, defensive energy call and `$834C..$8385` selection/comparison/interruption path. Setup: owner3, defender14, primary type1/level20 and stamina1000 for each record; attack/defense actions0, subtypes0, situation0, side0, two selected defenders, random bytes100/100, ball(120,100), and explicit incoming power23 or1. Calls to the real loader/energy/comparison were separate bounded calls with synthetic returns, not a continuous gameplay capture. No original content was added to the repository.
+
+| Original result | Script | Original parser instructions | Presentation requests | Power before → after | Writes to power/result bytes |
+| --- | --- | --- | --- | --- | --- |
+| 1 | 6 | 332 | 0 | 23 → 23 | None |
+| 1 | 7 | 358 | 0 | 23 → 23 | None |
+| 3 | 5 | 207 | 0 | 1 → 1 | None |
+| 3 | 7 | 608 | 1 | 1 → 1 | None |
+
+Each script starts independently from its constructed post-comparison snapshot. These are four observations of the original parser, not four native-engine test passes. The comparison's rolled strength was13 and candidate loss3 in both snapshots. The native isolated code1 contact would apply that loss immediately; this partial original path has not done so at the inspected boundaries. That is a question for the full caller trace, not enough evidence to alter the main-loop rule.
+
+Continuing the original caller from `$8385` reached `$C603/$D193`, then `$EF7F`, which maps banks24/25 and calls their `$800C` entry (`$8851`). Inspection shows this path yields through `$C515` while updating display data. The CPU-only attempt reached scheduler frame wait `$CAAE` and was stopped at its instruction bound; it did not complete the clock helper or reach the caller's next script. No call was skipped to produce a false successful loop trace.
+
+Private snapshots and JSON are stored only in the sibling analysis directory. No native tests or ROM differential suites were added/run in this increment. Next, capture or model that scheduler/display boundary with explicit evidence before resolving complete power-loss timing.
+
+Fresh review identified a snapshot precondition: original bank helper `$CE2D` preserves mapper-mode shadow `$22`. The tool now rejects PRG mode bit6 set and initializes select/shadow `$23` consistently for mode0. The observed snapshots all used `$22=0`. This correction has static review evidence; no behavioral regression test was run.
