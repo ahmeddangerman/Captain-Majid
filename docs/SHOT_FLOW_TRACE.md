@@ -14,7 +14,13 @@ This is a direct instruction trace from the verified Japanese ROM. The external 
 
 The native `calculate_defender_contact` reproduces one comparison and its code-1 power loss. `resolve_field_contacts` now applies caller-selected contacts in order, carries forward power and subtype, continues on codes 0/1, and stops on codes 2/3. The existing direct `resolve_explicit_shot` path still assumes a keeper attempt; the field loop is a separate stage until the stopped branches and original selectors are integrated.
 
-The next faithful step is to connect the ordered field-contact stage to the original `$83F5` result dispatch. Its indirect table sends codes 0/1 to `$8408`, code 2 to `$843F`, and code 3 to `$844B`. Those branches still need full state tracing before they can continue to keeper outcomes, possession changes, or goals. Defender selection and threshold/variation-table loading remain explicit inputs until their original selectors are reconstructed.
+The `$83F5` indirect table sends codes 0/1 to `$8408`, code 2 to `$843F`, and code 3 to `$844B`.
+
+- Codes 0/1 enter the selected action continuation at `$8408` and may then dispatch to additional mode-specific routines.
+- Code 2 runs the defender experience helper and goes through `$8BDF`. That routine adjusts ball coordinates and runs field recovery. Possession is chosen later, so the immediate code-2 handler leaves it unchanged.
+- Code 3 awards defender experience, then branches by the selected defender. Defender IDs 0 and 11 are keepers and transfer possession directly to that keeper's side. A field defender transfers possession when defense action is 2. Other field-defense actions enter a separate animation/continuation path without an immediate possession write.
+
+The native `resolve_defender_outcome` now records these handoffs. Its immediate code-3 possession writes matched 144 original-ROM cases. It does not predict the later result of code-2 ball recovery or the other code-3 animation path. Defender selection and threshold/variation-table loading remain explicit inputs until their original selectors are reconstructed.
 
 ## Evidence boundary
 

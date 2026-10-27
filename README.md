@@ -54,6 +54,7 @@ Install the optional [analysis dependencies](tools/README.md), then provide your
 .venv/bin/python tools/verify_shot_power_keeper.py /path/to/japanese-game.nes
 .venv/bin/python tools/verify_shot_state.py /path/to/japanese-game.nes
 .venv/bin/python tools/verify_shot_outcome.py /path/to/japanese-game.nes
+.venv/bin/python tools/verify_defender_outcome.py /path/to/japanese-game.nes
 ```
 
 ROMs, patches, extracted game assets, and generated script data stay outside Git. The public engine sources are independently written; the discovered disassembly is a research reference.

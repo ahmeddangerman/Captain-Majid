@@ -6,6 +6,7 @@
 #include "captain/keeper_state.hpp"
 #include "captain/reference_random.hpp"
 #include "captain/shot_outcome.hpp"
+#include "captain/defender_outcome.hpp"
 
 #include <array>
 #include <charconv>
@@ -71,6 +72,19 @@ bool defender_output(std::istringstream& stream, std::string& output) {
 }
 
 bool research_output(const std::string& command, std::istringstream& stream, std::string& output) {
+    if (command == "defenderoutcome") {
+        std::array<std::uint32_t, 5> v{};
+        if (!read_fields(stream, v) || v[0] > 3) return false;
+        try {
+            const auto r = captain::resolve_defender_outcome({
+                static_cast<std::uint8_t>(v[0]), static_cast<std::uint8_t>(v[1]),
+                static_cast<std::uint8_t>(v[2]), static_cast<std::uint8_t>(v[3]),
+                static_cast<std::uint8_t>(v[4])});
+            output = format_fields(std::array<unsigned, 3>{static_cast<unsigned>(r.route),
+                r.possession_side, r.ball_owner});
+            return true;
+        } catch (const std::invalid_argument&) { return false; }
+    }
     if (command == "outcome") {
         std::array<std::uint32_t, 29> v{};
         if (!read_fields(stream, v)) return false;

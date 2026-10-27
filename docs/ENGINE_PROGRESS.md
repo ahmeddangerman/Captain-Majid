@@ -15,6 +15,7 @@
 - One original random-generator step plus a canonical 2 KiB RAM sampler, specified in [RANDOMNESS_NOTES.md](RANDOMNESS_NOTES.md). Its original gameplay schedule is unresolved.
 - Immediate goal, turnover, rebound, keeper catch, and keeper punch writes at the goalkeeper handoff, specified in [SHOT_OUTCOME.md](SHOT_OUTCOME.md). A calculation sequence links energy, shot power, goalkeeper comparison, and these outcome writes with explicit caller data.
 - Ordered field-contact calculations now carry power/subtype between caller-selected defenders and stop on original result codes 2/3, as documented in [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md). Their subsequent result handlers are not yet connected.
+- Field result handoffs now distinguish continued play, ball recovery, keeper control, field-player control, and the other defense animation route. The immediate code-3 possession writes match 144 original-ROM cases; later ball recovery remains unimplemented.
 - A fixture session that separates participant identity from team, rejects unauthorized and unordered commands before state changes, and serializes every fixture state field explicitly.
 - A native terminal executable with a batch arithmetic mode and strict replica command protocol.
 - A Python development adapter that sends commands through loopback TCP to two separate native processes, then compares their complete state after every command.
@@ -46,12 +47,12 @@ The new stamina, keeper story/state, and random-step APIs are exposed through st
 
 The private-ROM harness passed 9,728 stamina cases, 6,812 story cases, 5,632 keeper-state cases, and 3,584 random-step cases: 25,756 total. It uses mirrored RAM for the original random routine and checks the exact reference payload before executing it. The existing native and loopback regression suite also passed. These are isolated comparisons rather than complete match traces.
 
-The next goalkeeper outcome check matched 384 isolated original-ROM cases across goal, turnover, rebound, catch, and punch branches. It checks immediate match-state writes through the handler handoff; animation, experience, and music calls are skipped in that comparison. The linked shot calculation has a native unit check, while an end-to-end original gameplay trace remains pending. [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md) documents the field-defender loop that must run before the keeper path.
+The next goalkeeper outcome check matched 384 isolated original-ROM cases across goal, turnover, rebound, catch, and punch branches. It checks immediate match-state writes through the handler handoff; animation, experience, and music calls are skipped in that comparison. The field result-three possession handoff matches 144 further ROM cases. The linked shot calculation has a native unit check, while an end-to-end original gameplay trace remains pending. [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md) documents the field-defender loop and its current handoff coverage.
 
 ## Limits
 
 - The ordered fixture still advances only a contact-loss stage. The new shot sequence accepts explicit statistics and random values and is not yet an ordered match command or playable interaction.
-- The goalkeeper outcome handoff updates score, possession, keeper state, and punch placement. Field-defender overrides, player rewards, later ball recovery/trajectory, and the full phase transitions remain to be integrated.
+- The goalkeeper outcome handoff updates score, possession, keeper state, and punch placement. Code-3 field-defender handoffs are implemented; code-2 ball recovery, field-defender rewards, and full phase transitions remain to be integrated.
 - The skill helper computes standard indices only. Player/profile lookup, loading original strength/cost tables, caller-specific stamina accounting, and special-skill selection are still needed.
 - Shot arithmetic receives explicit random bytes. A single original generator step is implemented, but its inputs and frame schedule still need study before integrating a complete deterministic match.
 - Static inspection identifies a frame-interrupt random generator that mixes player and sound-driver memory. [RANDOMNESS_NOTES.md](RANDOMNESS_NOTES.md) records why a gameplay trace is required before choosing simulation scheduling compatible with replacement music and online play.
