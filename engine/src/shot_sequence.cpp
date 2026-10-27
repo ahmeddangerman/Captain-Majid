@@ -13,10 +13,9 @@ KeeperOutcome resolve_keeper_outcome(std::uint16_t power, std::uint8_t subtype,
                                      GoalkeeperInput keeper_input,
                                      ShotOutcomeInput outcome_input) {
     keeper_input.incoming_power = power;
-    keeper_input.roll.subtype = subtype;
     const auto keeper = calculate_goalkeeper(keeper_input);
     outcome_input.comparison_result = keeper.result_code;
-    outcome_input.attack_subtype = keeper.subtype;
+    outcome_input.attack_subtype = subtype;
     outcome_input.keeper_timer = keeper_input.stored_timer;
     outcome_input.keeper_penalty = keeper_input.stored_penalty;
     const auto outcome = resolve_shot_outcome(outcome_input);

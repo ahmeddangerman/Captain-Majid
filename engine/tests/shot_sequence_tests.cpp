@@ -55,8 +55,15 @@ int main() {
     require(goal.keeper && goal.outcome, "keeper route produces both calculation results");
     require(goal.keeper->result_code == 0 && goal.outcome->event == captain::ShotEvent::goal,
             "post-contact power flows into keeper comparison and goal handler");
-    require(goal.keeper->subtype == 37,
-            "post-contact subtype flows into the goalkeeper result");
+    require(goal.keeper->subtype == 0,
+            "keeper subtype remains separate from attacking subtype");
+    auto subtype_input = make_action0_input();
+    subtype_input.power_after_contacts = 140;
+    subtype_input.subtype_after_contacts = 3;
+    const auto subtype_result = captain::resolve_action0_shot_continuation(subtype_input);
+    require(subtype_result.keeper->result_code == 1 && subtype_result.keeper->subtype == 0 &&
+            subtype_result.outcome->event == captain::ShotEvent::special_turnover,
+            "result-one outcome uses attacking subtype, not keeper move subtype");
     require(goal.outcome->left_goals == 2 && goal.outcome->possession_side == 11 &&
             goal.outcome->kickoff == 4,
             "goal handler updates score, possession, and kickoff");

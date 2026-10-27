@@ -7,7 +7,7 @@ add_library(captain_core engine/src/action_strength.cpp engine/src/session.cpp
     engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp
     engine/src/defender_outcome.cpp engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
     engine/src/defender_selection.cpp engine/src/field_defender_preparation.cpp
-    engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp)
+    engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp)
 target_include_directories(captain_core PUBLIC engine/include)
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
@@ -58,6 +58,9 @@ if(BUILD_TESTING)
     add_executable(prepared-defender-sequence-tests engine/tests/prepared_defender_sequence_tests.cpp)
     target_link_libraries(prepared-defender-sequence-tests PRIVATE captain_core)
     add_test(NAME prepared_defender_sequence COMMAND prepared-defender-sequence-tests)
+    add_executable(prepared-field-shot-tests engine/tests/prepared_field_shot_tests.cpp)
+    target_link_libraries(prepared-field-shot-tests PRIVATE captain_core)
+    add_test(NAME prepared_field_shot COMMAND prepared-field-shot-tests)
     find_package(Python3 COMPONENTS Interpreter QUIET)
     if(Python3_Interpreter_FOUND)
         add_test(NAME cli COMMAND ${Python3_EXECUTABLE}

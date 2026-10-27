@@ -38,7 +38,7 @@ struct Action0ShotContinuationInput {
     bool field_proximity_carry;
     std::uint8_t opposing_keeper_status;
     std::uint16_t power_after_contacts;
-    std::uint8_t subtype_after_contacts;
+    std::uint8_t subtype_after_contacts; // Attacking subtype; distinct from keeper.roll.subtype.
     GoalkeeperInput keeper;
     ShotOutcomeInput outcome;
 };

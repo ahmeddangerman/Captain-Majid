@@ -6,7 +6,7 @@ CORE += engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_r
 CORE += engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp engine/src/defender_outcome.cpp
 CORE += engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
 CORE += engine/src/defender_selection.cpp
-CORE += engine/src/field_defender_preparation.cpp engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp
+CORE += engine/src/field_defender_preparation.cpp engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp
 RESEARCH = engine/src/research_protocol.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
@@ -64,7 +64,11 @@ build/field-player-profile-tests: engine/tests/field_player_profile_tests.cpp $(
 build/prepared-defender-sequence-tests: engine/tests/prepared_defender_sequence_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/prepared_defender_sequence_tests.cpp $(CORE) -o $@
 
-check: build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+build/prepared-field-shot-tests: engine/tests/prepared_field_shot_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/prepared_field_shot_tests.cpp $(CORE) -o $@
+
+check: build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+	./build/prepared-field-shot-tests
 	./build/prepared-defender-sequence-tests
 	./build/field-player-profile-tests
 	./build/core-tests
