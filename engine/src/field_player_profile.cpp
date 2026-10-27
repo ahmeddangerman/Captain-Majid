@@ -2,14 +2,14 @@
 #include <stdexcept>
 
 namespace captain {
-FieldPlayerProfile resolve_field_player_profile(
-    const FieldPlayerRecord& player, const FieldPlayerProfiles& profiles) {
-    if (player.player_id == 0 || player.player_id == 11 || player.player_id > 21)
-        throw std::invalid_argument("Expected a field player ID");
+PlayerProfileReference resolve_player_profile_reference(
+    const FieldPlayerRecord& player, const PlayerProfileMappings& profiles) {
+    if (player.player_id > 21)
+        throw std::invalid_argument("Expected a player ID 0..21");
     auto type = player.type;
     if (type == 0) {
-        if (player.player_id < 12)
-            throw std::invalid_argument("Generic profile requires an opposing field player");
+        if (player.player_id < 11)
+            throw std::invalid_argument("Generic profile requires an opposing player");
         const auto offset = profiles.generic_slot_offsets[player.player_id - 11];
         if (offset >= profiles.team_types.size())
             throw std::invalid_argument("Missing generic team profile entry");
@@ -25,9 +25,18 @@ FieldPlayerProfile resolve_field_player_profile(
         // A generic team entry may itself resolve to ordinary type zero.
         profile = profiles.ordinary[type];
     }
+    return {type, profile};
+}
+
+FieldPlayerProfile resolve_field_player_profile(
+    const FieldPlayerRecord& player, const FieldPlayerProfiles& profiles) {
+    if (player.player_id == 0 || player.player_id == 11 || player.player_id > 21)
+        throw std::invalid_argument("Expected a field player ID");
+    const auto reference = resolve_player_profile_reference(player, profiles);
+    const auto profile = reference.profile_id;
     if (profile >= profiles.skills.size())
         throw std::invalid_argument("Missing field skill profile");
-    return {type, profile, profiles.skills[profile]};
+    return {reference.effective_type, profile, profiles.skills[profile]};
 }
 
 FieldDefenderPreparationResult prepare_profiled_field_defender(

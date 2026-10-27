@@ -6,13 +6,20 @@ namespace captain {
 struct FieldPlayerRecord {
     std::uint8_t player_id, type, flags, alternate_type, level;
 };
-struct FieldPlayerProfiles {
+struct PlayerProfileMappings {
     std::array<std::uint8_t, 35> ordinary;
     std::vector<std::uint8_t> alternate;
-    std::vector<std::array<std::uint8_t, 31>> skills;
     std::array<std::uint8_t, 11> generic_slot_offsets;
     std::vector<std::uint8_t> team_types;
 };
+struct FieldPlayerProfiles : PlayerProfileMappings {
+    std::vector<std::array<std::uint8_t, 31>> skills;
+};
+struct PlayerProfileReference {
+    std::uint8_t effective_type, profile_id;
+};
+PlayerProfileReference resolve_player_profile_reference(
+    const FieldPlayerRecord& player, const PlayerProfileMappings& profiles);
 struct FieldPlayerProfile {
     std::uint8_t effective_type, profile_id;
     std::array<std::uint8_t, 31> skills;
