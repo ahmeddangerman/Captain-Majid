@@ -8,6 +8,7 @@
 #include "captain/shot_outcome.hpp"
 #include "captain/defender_outcome.hpp"
 #include "captain/ball_recovery.hpp"
+#include "captain/defender_selection.hpp"
 
 #include <array>
 #include <charconv>
@@ -79,6 +80,35 @@ bool defender_output(std::istringstream& stream, std::string& output) {
 }
 
 bool research_output(const std::string& command, std::istringstream& stream, std::string& output) {
+    if (command == "defenderselection") {
+        std::array<std::uint32_t, 4> prefix{};
+        for (auto& value : prefix)
+            if (!next_number(stream, value)) return false;
+        if (prefix[0] != 0 && prefix[0] != 11) return false;
+        captain::DefenderSelectionInput input{};
+        input.possession_side = static_cast<std::uint8_t>(prefix[0]);
+        input.ball_x = static_cast<std::uint8_t>(prefix[1]);
+        input.ball_y = static_cast<std::uint8_t>(prefix[2]);
+        input.radius = static_cast<std::uint8_t>(prefix[3]);
+        for (auto& player : input.players) {
+            std::array<std::uint32_t, 3> fields{};
+            if (!next_number(stream, fields[0]) || !next_number(stream, fields[1]) ||
+                !next_number(stream, fields[2], 1)) return false;
+            player = {static_cast<std::uint8_t>(fields[0]),
+                static_cast<std::uint8_t>(fields[1]), fields[2] != 0};
+        }
+        std::string extra;
+        if (stream >> extra) return false;
+        try {
+            const auto selected = captain::select_field_defenders(input);
+            output = std::to_string(selected.size());
+            for (const auto player_id : selected) {
+                output += ' ';
+                output += std::to_string(player_id);
+            }
+            return true;
+        } catch (const std::invalid_argument&) { return false; }
+    }
     if (command == "ballrecovery") {
         std::array<std::uint32_t, 8> prefix{};
         for (std::size_t i = 0; i < prefix.size(); ++i) {

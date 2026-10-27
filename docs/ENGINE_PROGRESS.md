@@ -16,6 +16,7 @@
 - Immediate goal, turnover, rebound, keeper catch, and keeper punch writes at the goalkeeper handoff, specified in [SHOT_OUTCOME.md](SHOT_OUTCOME.md). A calculation sequence links energy, shot power, goalkeeper comparison, and these outcome writes with explicit caller data.
 - Ordered field-contact calculations carry power/subtype between caller-selected defenders and stop on original result codes 2/3, as documented in [SHOT_FLOW_TRACE.md](SHOT_FLOW_TRACE.md). The supported action-0 continuation now applies its route gates and connects eligible results to keeper and goal/save calculations.
 - Field result handoffs now distinguish continued play, ball recovery, keeper control, field-player control, and the other defense animation route. `resolve_field_contact_handoff` joins those results to the ordered contact calculation. The code-3 possession writes match 144 original-ROM cases; the ordinary interior-field code-2 recovery handoff matches 512 cases.
+- The original nearby-defender selector at `$E4D7` returns opposing player IDs in ROM order, applying the side-specific limit, nonzero status skip, and strict square-radius test. Its output matches 1,024 original-ROM cases; caller-supplied radius and later contact data remain explicit.
 - A fixture session that separates participant identity from team, rejects unauthorized and unordered commands before state changes, and serializes every fixture state field explicitly.
 - A native terminal executable with a batch arithmetic mode and strict replica command protocol.
 - A Python development adapter that sends commands through loopback TCP to two separate native processes, then compares their complete state after every command.
@@ -51,7 +52,7 @@ The next goalkeeper outcome check matched 384 isolated original-ROM cases across
 
 The action-0 continuation now connects eligible field results 0/1 to the keeper comparison and its goal/save outcome writes. Its native checks cover a goal, rebound, keeper catch, punch, possession changes, action codes outside this helper, each documented diversion gate, and rejection of field result codes 2/3. It consumes caller-supplied post-contact power/subtype and route values; it does not load player/content data or reconstruct the complete gameplay trace. The existing 384-case original-ROM outcome comparison still verifies the outcome stage, while the new continuation gate has native tests and instruction-trace evidence rather than a separate 6502 differential harness.
 
-The new `resolve_field_contact_handoff` wrapper joins ordered contact results to the existing immediate defender handoff. Native tests cover code-2 recovery, code-3 player possession, the deferred animation route, and code 0/1 continuation. The individual outcome calculations retain their existing 144- and 512-case original-ROM comparisons; the wrapper itself has native integration tests rather than a separate 6502 differential harness. Contact selection, player tables, and persistent match-state updates remain outside this wrapper.
+The new `resolve_field_contact_handoff` wrapper joins ordered contact results to the existing immediate defender handoff. Native tests cover code-2 recovery, code-3 player possession, the deferred animation route, and code 0/1 continuation. The individual outcome calculations retain their existing 144- and 512-case original-ROM comparisons; the wrapper itself has native integration tests rather than a separate 6502 differential harness. Nearby-defender ID selection now matches 1,024 original-ROM cases, but player stats, defense actions, threshold tables, and persistent match-state updates are still outside the contact handoff.
 
 ## Limits
 
@@ -69,6 +70,6 @@ The new `resolve_field_contact_handoff` wrapper joins ordered contact results to
 
 ## Next checkpoint
 
-Connect the existing action-0 continuation to original player/contact selectors and ordered match state. Then trace action 1 and other phases, and continue with player/profile and action-cost selection, caller-specific energy accounting, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
+Use selected defender IDs to reconstruct the original per-player contact inputs and ordered action-0 match state. Then trace action 1 and other phases, and continue with player/profile and action-cost selection, caller-specific energy accounting, and gameplay random scheduling. Extend the keeper handoff through boundary restarts in a complete gameplay trace before making the shot an ordered match command.
 
 Early network comparisons continue alongside each simulation increment. Public matchmaking and the rules for additional participants remain part of the engine direction, without committing to an unsupported player count.

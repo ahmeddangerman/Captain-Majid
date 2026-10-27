@@ -66,6 +66,8 @@ The skill/action/keeper comparison covers level/move index adjustment, randomize
 
 The state comparison harness passed 25,756 cases covering stamina deduction, keeper story overrides, keeper timer/penalty updates, and one original random-generator step. The outcome harness checks 384 immediate goalkeeper results, 144 field-defender possession handoffs, and 512 ordinary loose-ball recovery cases. Research interfaces are documented in [ENERGY_USAGE.md](docs/ENERGY_USAGE.md), [KEEPER_STATE.md](docs/KEEPER_STATE.md), [RANDOMNESS_NOTES.md](docs/RANDOMNESS_NOTES.md), [SHOT_OUTCOME.md](docs/SHOT_OUTCOME.md), and [BALL_RECOVERY.md](docs/BALL_RECOVERY.md). A complete playable shot and the original random timing still need integration.
 
+The nearby-defender selector at `$E4D7` matches 1,024 original-ROM cases. It returns nearby opposing player IDs in original order, including the ROM's team-specific limit and status check. See [DEFENDER_SELECTION.md](docs/DEFENDER_SELECTION.md); player attributes and contact tables are still supplied separately.
+
 ## Project reference
 
 - [Working roadmap](docs/ROADMAP.md)
