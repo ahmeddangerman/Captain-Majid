@@ -102,6 +102,8 @@ Checkpoint evidence: Make/CMake production builds completed with no warnings/err
 
 ### Terminal later-flight research — checkpoint complete
 
+Local source commit: `824c253`.
+
 - Two original continuous observations now stop correctly before the next phase when a contact wins the ball or knocks it loose. No keeper was reached, and the reports keep keeper outcomes absent.
 - The paths differ from the initial defender handler: later code3 transfers possession for action0; code2 copies the defender's current coordinates and retains a different timing/active value.
 - The native calculation still reports these as pending handoffs. The new [terminal flight observations](TERMINAL_FLIGHT_TRACES.md) give the next contract instead of guessing those writes.
@@ -109,10 +111,18 @@ Checkpoint evidence: Make/CMake production builds completed with no warnings/err
 
 Checkpoint evidence: Two original outcome-mode traces and a separate keeper-mode trace reach witnessed pre-keeper boundaries without skipped calls. Native level5 usage still labels the result2 handoff pending. Fresh independent static review found no actionable issues and checked the saved reports. No native terminal handler or new test was added.
 
+### Native position arithmetic — implemented
+
+- Traced the next movement dependency: terminal possession changes also update nineteen field-player records, so committing only a new owner would leave inconsistent state.
+- Added original raw16-bit coordinate addition/clamping, retaining fractional bytes and wrap order. Six original observations are recorded privately; the native query is stateless and does not advance the fixture.
+- [Movement foundation](PLAYER_MOVEMENT_FOUNDATION.md) records the helper, exact boundaries and the still-pending speed/direction/target/status/timing integration.
+
+Checkpoint evidence: Make/CMake production builds completed without warnings/errors. Normal batch usage produced the documented edge/wrap results; a native replica query left the fixture state and sequence unchanged. Fresh independent static review found no actionable findings. Six original observations are private; no tests were added/run. This helper does not yet advance full player movement.
+
 ## Resume here
 
-1. Carry comparison-time positions and timing state into terminal flight resolution; implement its distinct possession/recovery writes.
-2. Connect player/ball movement and ordered flight steps to these snapshot calculations.
+1. Carry complete position words, targets/statuses and timing state into terminal flight resolution. Its player-control branch also invokes player movement, so owner/ball writes alone are insufficient.
+2. Build on `advance_field_coordinate` to implement speed/direction, player updates and ordered flight steps, then the distinct terminal possession/recovery transitions.
 3. Commit roster, ball, score and phase changes into one persistent match state before extending online replay beyond the development fixture.
 
 Keep original data private, retain the explicit scheduling limits, and continue with Sol6.1 High for tracing/integration. Overall progress remains a rough7%, with no full match yet.

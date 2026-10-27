@@ -10,6 +10,7 @@
 #include "captain/ball_recovery.hpp"
 #include "captain/defender_selection.hpp"
 #include "captain/field_defender_preparation.hpp"
+#include "captain/player_movement.hpp"
 
 #include <array>
 #include <charconv>
@@ -81,6 +82,14 @@ bool defender_output(std::istringstream& stream, std::string& output) {
 }
 
 bool research_output(const std::string& command, std::istringstream& stream, std::string& output) {
+    if (command == "fieldaxis") {
+        std::array<std::uint32_t, 3> values{};
+        if (!read_fields(stream, values, 2) || values[2] > 1) return false;
+        output = std::to_string(captain::advance_field_coordinate(
+            static_cast<std::uint16_t>(values[0]), static_cast<std::uint16_t>(values[1]),
+            static_cast<captain::FieldAxis>(values[2])));
+        return true;
+    }
     if (command == "defenderprep") {
         std::array<std::uint32_t, 4> prefix{};
         for (auto& value : prefix)

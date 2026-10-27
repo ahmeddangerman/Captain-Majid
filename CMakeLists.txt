@@ -11,6 +11,7 @@ add_library(captain_core engine/src/action_strength.cpp engine/src/session.cpp
 target_include_directories(captain_core PUBLIC engine/include)
 target_sources(captain_core PRIVATE engine/src/shot_approach.cpp)
 target_sources(captain_core PRIVATE engine/src/flight_contact.cpp)
+target_sources(captain_core PRIVATE engine/src/player_movement.cpp)
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
 

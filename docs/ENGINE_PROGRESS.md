@@ -106,6 +106,8 @@ Field result4 interruption now reproduces its immediate reset and initial restar
 
 ## Next checkpoint
 
+The [coordinate movement foundation](PLAYER_MOVEMENT_FOUNDATION.md) now preserves raw-word addition, fractional position bytes and original field-edge bounds. Full speed/direction, player advancement and phase timing are still pending.
+
 The [flight snapshot selector](FLIGHT_SELECTION.md) now chooses candidates by original cell/status/threshold rules and feeds the development burst. Continuous movement and per-step contact scheduling remain separate.
 
 One explicit [later-flight contact burst](FLIGHT_CONTACTS.md) now feeds loss-adjusted power to the keeper without debiting defender stamina. Automatic movement-based selection, repeated scheduling and terminal handler state remain pending.
