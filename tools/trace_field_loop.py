@@ -15,9 +15,19 @@ def word(memory, address):
     return memory[address] | memory[address + 1] << 8
 
 
+def keeper_recovery_state(memory):
+    return {'shared_flags': memory[0x449], 'shared_timer': memory[0x44A],
+            'keepers': [{'slot': slot, 'timer': memory[0x300 + 12 * slot + 5],
+                         'duration': memory[0x300 + 12 * slot + 6],
+                         'penalty': memory[0x300 + 12 * slot + 7],
+                         'stun': memory[0x300 + 12 * slot + 10]}
+                        for slot in (0, 11)]}
+
+
 def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000,
                max_frames=10000, until='field'):
-    watched = {0x61C, 0x61D, 0x612, 0x616, 0x617, 0xE2, 0xE3,
+    watched = {0x61C, 0x61D, 0x612, 0x616, 0x617, 0xE2, 0xE3, 0x449, 0x44A,
+               *(0x300 + 12 * slot + offset for slot in (0, 11) for offset in (5, 6, 7)),
                *range(0x5F7, 0x600), *(0x300 + 12 * slot + 10 for slot in range(22))}
     memory = ObservedCartridge(prg, internal_ram, cartridge_ram, watched)
     if memory[0x22] & 64:
@@ -59,6 +69,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     attacker = {}
     keeper = {}
     approach = {}
+    recovery = []
     for steps in range(max_instructions):
         if cpu.pc < 0x8000:
             raise RuntimeError(f'Unexpected execution outside original PRG: ${cpu.pc:04X}')
@@ -91,6 +102,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                     'host_frames': host_frames, 'comparisons': comparisons,
                     'attacker': attacker, 'keeper': keeper,
                     'approach': approach,
+                    'keeper_recovery': recovery,
                     'ball': {'x': memory[0x635], 'y': memory[0x637], 'destination': memory[0x638]},
                     'checkpoints': checkpoints, 'original_writes': memory.writes,
                     'initial_power': initial_power, 'final_power': word(memory, 0x61C),
@@ -99,6 +111,12 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                     'clock': word(memory, 0x5F7), 'random_bytes': [memory[0xE2], memory[0xE3]],
                     'statuses': [memory[0x300 + 12 * slot + 10] for slot in range(22)],
                     'bank_writes': memory.bank_writes}
+        if bank == 30:
+            if cpu.pc == 0xD235:
+                recovery.append({'instruction': steps, 'elapsed': cpu.a,
+                                 'before': keeper_recovery_state(memory)})
+            elif cpu.pc == 0xD1A0 and recovery:
+                recovery[-1]['after'] = keeper_recovery_state(memory)
         if bank == 30 and until == 'keeper':
             if cpu.pc == 0xDD81:
                 approach['input'] = {'ball_x': memory[0x635], 'ball_y': memory[0x637],

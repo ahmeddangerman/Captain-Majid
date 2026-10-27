@@ -30,7 +30,22 @@ This is the running reference for work between chat updates. Entries distinguish
 
 ### Shot approach checkpoint
 
+Local source commit: `b8d19e0`.
+
 - `make -j2 all` completed successfully after resumption, with no compiler warnings in the captured output.
 - Normal CLI usage loaded both pack versions. Version2 produced a distance45 goal aimed at(204,124), and a distance90 loose-ball diversion aimed at(196,124). Version1 retained its explicit scene behavior.
 - Author review covered route gates, subtype handling, separate random stages and pack layout. Independent review remains incomplete due to its usage limit. No automated tests were added or run.
 - Keeper recovery research is next; this does not change the rough full-port estimate yet.
+
+### Keeper recovery — in progress
+
+- Original inspection identified wrapped byte subtraction, stun precedence, and a single penalty reduction per update.
+- Implementation follows the [recovery plan](superpowers/plans/2026-10-27-keeper-recovery.md). The scene will accept an explicit pre-shot elapsed step; a complete match clock is still pending.
+
+### 2026-10-27 20:33 UTC — recovery implemented
+
+- Added a pure keeper/shared-state recovery API and explicit ordered recovery steps in the resettable native scene. Timer, penalty, duration and stun now reach the corresponding comparison/outcome/status inputs together.
+- Seven isolated original observations and two continuous original shot observations are recorded privately. The nonzero-state shot preserves the real1,1,2,1sequence and reaches keeper comparison with penalty29.
+- `make -j2 all` completed successfully. Normal CLI usage produced penalty29/duration1 for that explicit sequence; a still-stunned keeper diverted before comparison; a later recovered keeper reached comparison. No automated tests were added or run.
+- A fresh independent read-only review of both approach and recovery reported no actionable correctness findings, including static inspection of the original routines. It did not run tests or establish full-match equivalence.
+- Full-port estimate remains roughly7%: these are stronger engine components, not a playable match. Next work is the original outcome and next-phase boundary.

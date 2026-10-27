@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 namespace captain {
@@ -34,4 +35,17 @@ struct KeeperStateResult {
     std::uint8_t penalty_duration;
 };
 KeeperStateResult update_keeper_state(const KeeperStateInput& input);
+
+// Stored keeper role fields, not field-player coordinates. Timer(+5) does not
+// decay in this caller; duration(+6), penalty(+7), and stun(+10) may change.
+struct KeeperRecoveryState {
+    std::uint8_t timer = 0, penalty_duration = 0, penalty = 0, stun = 0;
+};
+struct KeeperRecoverySnapshot {
+    std::array<KeeperRecoveryState, 2> keepers{}; // Slots0 and11, in that order.
+    std::uint8_t shared_flags = 0, shared_timer = 0;
+};
+// An explicit original elapsed step, not wall-clock time or shot distance.
+KeeperRecoverySnapshot advance_keeper_recovery(const KeeperRecoverySnapshot& state,
+                                               std::uint8_t elapsed);
 }

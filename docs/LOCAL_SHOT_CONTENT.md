@@ -4,6 +4,8 @@ The native engine now loads shot data from a local, replaceable development pack
 
 The CLI and [optional native window](NATIVE_SHOT_SCENE.md) share `calculate_shot_scene` and the same explicit scene inputs. The window adds placeholder presentation without changing simulation timing or random state.
 
+The laboratory also accepts explicit initial keeper state and ordered pre-shot `--recover N` steps. See [goalkeeper recovery](KEEPER_RECOVERY.md) for state fields, examples and why several steps cannot be merged into one elapsed total.
+
 New exports use version2 approach geometry; the reader retains version1 compatibility. See [SHOT_APPROACH.md](SHOT_APPROACH.md). Use `ball-x N`/`ball-y N` interactively, or `--ball-x N`/`--ball-y N` on the CLI, to change the scene's ball position with a version2 pack. Unsupported distance-table indices reject.
 
 ## Run

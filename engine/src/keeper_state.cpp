@@ -25,4 +25,29 @@ KeeperStateResult update_keeper_state(const KeeperStateInput& input) {
     }
     return result;
 }
+
+KeeperRecoverySnapshot advance_keeper_recovery(const KeeperRecoverySnapshot& state,
+                                               std::uint8_t elapsed) {
+    auto result = state;
+    if (result.shared_flags & 128u) {
+        result.shared_timer = static_cast<std::uint8_t>(unsigned(result.shared_timer) - elapsed);
+        if (result.shared_timer & 128u) result.shared_flags = 0;
+    }
+    for (auto& keeper : result.keepers) {
+        if (keeper.stun != 0) {
+            const auto remaining = static_cast<std::uint8_t>(unsigned(keeper.stun) - elapsed);
+            keeper.stun = remaining & 128u ? 0 : remaining;
+            continue;
+        }
+        if (keeper.penalty == 0) continue;
+        auto duration = static_cast<std::uint8_t>(unsigned(keeper.penalty_duration) - elapsed);
+        if (duration & 128u) {
+            duration = static_cast<std::uint8_t>(unsigned(duration) + 3u);
+            const auto penalty = static_cast<std::uint8_t>(unsigned(keeper.penalty) - 25u);
+            keeper.penalty = penalty & 128u ? 0 : penalty;
+        }
+        keeper.penalty_duration = duration;
+    }
+    return result;
+}
 }

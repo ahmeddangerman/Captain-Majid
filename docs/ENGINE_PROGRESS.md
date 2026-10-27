@@ -106,6 +106,8 @@ Field result4 interruption now reproduces its immediate reset and initial restar
 
 ## Next checkpoint
 
+The [keeper recovery helper](KEEPER_RECOVERY.md) now supports explicit elapsed steps in the resettable scene. Full match scheduling of those steps remains pending.
+
 Extend original shot tracing beyond the keeper comparison to the full outcome and next phase. Private runtime shot content loading and supported distance/target calculations now exist; generic team selection and general random scheduling remain incomplete. Implement elapsed recovery and coherent persistent roster, ball and outcome commits before introducing an ordered action0 match command. Trace action1 and other phases, and extend the keeper handoff through boundary restarts.
 
 Early network comparisons continue alongside each simulation increment. Public matchmaking and the rules for additional participants remain part of the engine direction, without committing to an unsupported player count.

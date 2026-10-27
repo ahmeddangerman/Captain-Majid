@@ -2,6 +2,23 @@
 #include <stdexcept>
 
 namespace captain {
+KeeperRecoveryState resolve_shot_scene_keeper_state(const ShotSceneOptions& options) {
+    if (options.keeper_timer > 255 || options.keeper_duration > 255 ||
+        options.keeper_penalty > 255 || options.keeper_stun > 255)
+        throw std::invalid_argument("Keeper state and elapsed step must be bytes");
+    KeeperRecoverySnapshot snapshot{};
+    snapshot.keepers[1] = {static_cast<std::uint8_t>(options.keeper_timer),
+        static_cast<std::uint8_t>(options.keeper_duration),
+        static_cast<std::uint8_t>(options.keeper_penalty),
+        static_cast<std::uint8_t>(options.keeper_stun)};
+    for (const auto elapsed : options.recovery_steps) {
+        if (elapsed > 255)
+            throw std::invalid_argument("Keeper elapsed step must be a byte");
+        snapshot = advance_keeper_recovery(snapshot, static_cast<std::uint8_t>(elapsed));
+    }
+    return snapshot.keepers[1];
+}
+
 CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
                                                const ShotSceneOptions& options) {
     if (options.level > 255 || options.keeper_level > 255 || options.subtype > 255 ||
@@ -10,6 +27,7 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     const auto index = options.subtype & 63u;
     if (index >= content.attack.moves[0].size())
         throw std::invalid_argument("Shot subtype unavailable in this content pack");
+    const auto keeper_state = resolve_shot_scene_keeper_state(options);
     captain::CompletePreparedShotInput input{};
     for (auto& player : input.field.roster) player = {1, 20, 1000};
     input.field.roster[3].level = static_cast<std::uint8_t>(options.level);
@@ -31,6 +49,9 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     input.attack_random_second = 100;
     input.keeper_action = static_cast<std::uint8_t>(options.keeper_action);
     auto& keeper = input.field.continuation.keeper;
+    input.field.continuation.opposing_keeper_status = keeper_state.stun;
+    keeper.stored_timer = keeper_state.timer;
+    keeper.stored_penalty = keeper_state.penalty;
     keeper.roll.random_first = 0;
     keeper.roll.random_second = 100;
     keeper.roll.range = content.keeper_range;
@@ -45,6 +66,10 @@ CompletePreparedShotResult calculate_shot_scene(const ShotContent& content,
     outcome.timer_selector = static_cast<std::uint8_t>(
         (content.attack.moves[0][index].cost_high_flags & 0xF8u) >> 3);
     outcome.punch_intervals = content.punch_intervals;
+    outcome.keeper_timer = keeper_state.timer;
+    outcome.keeper_penalty = keeper_state.penalty;
+    outcome.keeper_penalty_duration = keeper_state.penalty_duration;
+    outcome.keeper_stun = keeper_state.stun;
     return resolve_complete_prepared_shot(input, content.field_players,
         content.attack, content.defense, content.goalkeepers, content.keeper);
 }

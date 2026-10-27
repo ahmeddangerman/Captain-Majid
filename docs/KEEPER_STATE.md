@@ -61,7 +61,7 @@ The classification dispatch begins after `$8599` and its scenario call. Relevant
 | `$861C` | Calls `$86D3`, then `$86BD`. | Experience, defender count reset, optional ball placement when defender index is nonzero, and field recovery. |
 | `$8646` | Calls `$86BD`. If defense action `$043D` equals 1, later calls `$86D3` as well. | Experience, possession transfer for other defense actions, or randomized deflection placement for action 1. |
 
-The penalty duration's later countdown and penalty reduction occur in a separate fixed-bank routine beginning at `$D263`; this increment preserves that byte without implementing the countdown.
+The penalty duration's later countdown and penalty reduction occur in a separate fixed-bank routine beginning at `$D263`. The later [keeper recovery increment](KEEPER_RECOVERY.md) implements that caller as a pure elapsed-state update; this original update helper continues to preserve duration unless the penalty helper sets it.
 
 ## Oracle checkpoints and validation
 

@@ -23,6 +23,11 @@ void option(Options& options, const std::string& name, const std::string& value)
     else if (name == "--keeper-action") options.keeper_action = number(value, 3);
     else if (name == "--ball-x") options.ball_x = number(value, 255);
     else if (name == "--ball-y") options.ball_y = number(value, 255);
+    else if (name == "--keeper-timer") options.keeper_timer = number(value, 255);
+    else if (name == "--keeper-duration") options.keeper_duration = number(value, 255);
+    else if (name == "--keeper-penalty") options.keeper_penalty = number(value, 255);
+    else if (name == "--keeper-stun") options.keeper_stun = number(value, 255);
+    else if (name == "--recover") options.recovery_steps.push_back(number(value, 255));
     else throw std::invalid_argument("Unknown option: " + name);
 }
 const char* event_name(captain::ShotEvent event) {
@@ -37,6 +42,11 @@ const char* event_name(captain::ShotEvent event) {
 }
 void shoot(const captain::ShotContent& content, const Options& options) {
     const auto result = captain::calculate_shot_scene(content, options);
+    const auto state = captain::resolve_shot_scene_keeper_state(options);
+    std::cout << "Pre-shot keeper: timer " << unsigned(state.timer)
+              << " | penalty " << unsigned(state.penalty)
+              << " | duration " << unsigned(state.penalty_duration)
+              << " | stun " << unsigned(state.stun) << '\n';
     std::cout << "Power " << result.attack.action_power.power
               << " | field contacts " << result.flow.field.contacts.size()
               << " | remaining " << result.flow.field.remaining_power << '\n';
@@ -58,6 +68,10 @@ void shoot(const captain::ShotContent& content, const Options& options) {
                   << " | possession " << unsigned(resolved.possession_side)
                   << " | owner " << unsigned(resolved.ball_owner)
                   << " | ball " << unsigned(resolved.ball_x) << ',' << unsigned(resolved.ball_y) << '\n';
+        std::cout << "Post-shot keeper: timer " << unsigned(resolved.keeper_timer)
+                  << " | penalty " << unsigned(resolved.keeper_penalty)
+                  << " | duration " << unsigned(resolved.keeper_penalty_duration)
+                  << " | stun " << unsigned(resolved.keeper_stun) << '\n';
     } else {
         std::cout << "Field result " << unsigned(result.flow.field.result_code)
                   << " | route " << unsigned(result.flow.field_outcome.route)
@@ -72,7 +86,8 @@ void shoot(const captain::ShotContent& content, const Options& options) {
 int main(int argc, char** argv) {
     if (argc < 2) {
         std::cerr << "Usage: captain-shot-lab PACK [--interactive] [--level N] [--keeper-level N] "
-                     "[--subtype N] [--defenders 0..5] [--keeper-action 0..3] [--ball-x N] [--ball-y N]\n";
+                     "[--subtype N] [--defenders 0..5] [--keeper-action 0..3] [--ball-x N] [--ball-y N]\n"
+                     "[--keeper-timer N] [--keeper-duration N] [--keeper-penalty N] [--keeper-stun N] [--recover N ...]\n";
         return 2;
     }
     try {
@@ -97,16 +112,19 @@ int main(int argc, char** argv) {
             return 0;
         }
         std::cout << "Commands: shoot, level N, keeper-level N, subtype N, defenders N, keeper-action N, ball-x N, ball-y N, quit\n";
+        std::cout << "Keeper state: keeper-timer N, keeper-duration N, keeper-penalty N, keeper-stun N, recover N, clear-recovery\n"
+                     "Recover appends a pre-shot elapsed step; each shot reapplies the list from the initial state.\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             std::istringstream command(line);
             std::string name, value, extra;
             if (!(command >> name)) continue;
             try {
-                if (name == "shoot" || name == "quit") {
+                if (name == "shoot" || name == "quit" || name == "clear-recovery") {
                     if (command >> extra) throw std::invalid_argument("Command takes no arguments");
                     if (name == "quit") break;
-                    shoot(content, options);
+                    if (name == "clear-recovery") options.recovery_steps.clear();
+                    else shoot(content, options);
                 } else {
                     if (!(command >> value) || command >> extra)
                         throw std::invalid_argument("Expected one numeric value");
