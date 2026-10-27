@@ -31,6 +31,10 @@ The `$83F5` indirect table sends codes 0/1 to `$8408`, code 2 to `$843F`, and co
 
 The native `resolve_defender_outcome` now records these handoffs. The new `resolve_field_contact_handoff` composes it with the ordered contact sequence: result 2 can invoke the ordinary interior-field recovery, result 3 can transfer control to a keeper or field player, and results 0/1 preserve ownership for the next phase. The immediate code-3 possession writes matched 144 original-ROM cases; ordinary code-2 recovery matched 512. Recovery requires the ball update to be inactive and does not handle boundary restarts. The other code-3 animation path still has no immediate possession update. The original nearby-defender selector now matches 1,024 ROM cases, but player attributes, action-specific defense values, and threshold/variation-table loading still come from explicit caller inputs.
 
+## Later field override discovered
+
+After storing the ordinary comparison result, `$8382` calls `$8E33`. For eligible defender/action contexts, that helper runs `$8B9C`; if the existing result is0 and a carry-dependent threshold test against `$E2` passes, `$8E65` writes result4 and calls a scenario helper. The native ordinary0..3 sequence does not yet implement this later override. Caller content selection and arithmetic before it now match550 fixtures; see [FIELD_COMPARISON_SELECTION.md](FIELD_COMPARISON_SELECTION.md).
+
 ## Evidence boundary
 
 This trace establishes call order, loop exits, and the ordinary interior-field recovery handoff. It does not yet reproduce complete screen/action setup, content selection, event messages, rewards, animations, active-ball movement, boundary restarts, match clock, or a full gameplay trace. The native TCP fixture also remains a contact-loss demo rather than a match session.
