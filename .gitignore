@@ -164,4 +164,5 @@ __pycache__/
 
 # Native engine outputs and local Python environments
 /build/
+/build-ui/
 /.venv/

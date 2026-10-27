@@ -9,6 +9,7 @@ CORE += engine/src/defender_selection.cpp
 CORE += engine/src/field_defender_preparation.cpp engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp engine/src/field_interruption.cpp
 RESEARCH = engine/src/research_protocol.cpp
 CORE += engine/src/shot_content.cpp
+CORE += engine/src/shot_scene.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check

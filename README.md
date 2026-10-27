@@ -29,6 +29,8 @@ Linux builds and checks have been exercised through Make and CMake. Windows exec
 
 For a native shot calculation using private game data, see [local shot content and laboratory](docs/LOCAL_SHOT_CONTENT.md): export a `.cmjpack` from your own verified ROM, then run `captain-shot-lab PACK --interactive`. This is a resettable development scene with explicit random/route inputs; it is not a playable match.
 
+An [optional SDL2 native window](docs/NATIVE_SHOT_SCENE.md) displays that same scene with placeholder graphics and keyboard controls. Enable it with CMake's `CAPTAIN_BUILD_SDL_SCENE` option; the default core build does not require SDL2.
+
 ```bash
 ./build/captain-prototype --replica
 ```

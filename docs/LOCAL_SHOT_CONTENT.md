@@ -2,6 +2,8 @@
 
 The native engine now loads shot data from a local, replaceable development pack. Original data is exported only from the user's private verified Japanese ROM. Source control contains the exporter, reader and engine code; no generated packs, ROM tables, graphics, music or text are bundled.
 
+The CLI and [optional native window](NATIVE_SHOT_SCENE.md) share `calculate_shot_scene` and the same explicit scene inputs. The window adds placeholder presentation without changing simulation timing or random state.
+
 ## Run
 
 Build with Make (`make`) or CMake (`captain-shot-lab` target). Export a new private pack using the optional analysis dependencies:

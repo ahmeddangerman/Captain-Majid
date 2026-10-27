@@ -7,7 +7,7 @@ add_library(captain_core engine/src/action_strength.cpp engine/src/session.cpp
     engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp
     engine/src/defender_outcome.cpp engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
     engine/src/defender_selection.cpp engine/src/field_defender_preparation.cpp
-    engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp engine/src/field_interruption.cpp engine/src/shot_content.cpp)
+    engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp engine/src/field_interruption.cpp engine/src/shot_content.cpp engine/src/shot_scene.cpp)
 target_include_directories(captain_core PUBLIC engine/include)
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
@@ -17,6 +17,13 @@ target_link_libraries(captain-prototype PRIVATE captain_core)
 
 add_executable(captain-shot-lab engine/src/shot_lab.cpp)
 target_link_libraries(captain-shot-lab PRIVATE captain_core)
+
+option(CAPTAIN_BUILD_SDL_SCENE "Build optional SDL2 development shot window" OFF)
+if(CAPTAIN_BUILD_SDL_SCENE)
+    find_package(SDL2 2.0.18 CONFIG REQUIRED)
+    add_executable(captain-shot-scene engine/src/shot_scene_view.cpp)
+    target_link_libraries(captain-shot-scene PRIVATE captain_core SDL2::SDL2)
+endif()
 
 include(CTest)
 if(BUILD_TESTING)
