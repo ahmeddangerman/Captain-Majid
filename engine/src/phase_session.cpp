@@ -36,10 +36,10 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 27)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 30)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
-    const bool staged = phase >= 23 && phase <= 27;
+    const bool staged = phase >= 23 && phase <= 30;
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     if (state.shot_progress) {
@@ -51,6 +51,12 @@ void validate_phase_session(const PhaseSessionState& state) {
             (p.defense_action != 0 && p.defense_action != 2) ||
             (p.defense_subtype != 0 && p.defense_subtype != 128))
             throw std::invalid_argument("Unsupported shot progress context");
+        if ((state.phase == FieldSessionPhase::selected_ball_recovery && p.result_code != 2) ||
+            (state.phase == FieldSessionPhase::selected_defense_animation &&
+             (p.result_code != 3 || p.defense_action != 0)) ||
+            (state.phase == FieldSessionPhase::selected_restart_entry && p.result_code != 4) ||
+            (phase >= 28 && p.cursor == 0))
+            throw std::invalid_argument("Selected handoff phase does not match its terminal result");
         if (p.cursor == 0) {
             if (p.result_code || p.defender_id || p.defense_action || p.defense_subtype)
                 throw std::invalid_argument("Unused shot contact data must be zero");

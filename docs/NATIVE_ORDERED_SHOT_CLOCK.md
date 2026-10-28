@@ -81,3 +81,5 @@ Next: trace and connect the initial selected-field dispatcher27 into its actual
 rewards/possession/approach routes. Keep it distinct from later-flight terminal
 handlers until original evidence establishes the shared path. Script effects,
 frame/random scheduling, restart execution and a complete match remain pending.
+
+Terminal dispatch2/3/4 is now connected separately; see [NATIVE_SELECTED_RESULT_DISPATCH.md](NATIVE_SELECTED_RESULT_DISPATCH.md). Session10 remains330bytes and preserves version9 readers. The historical direct terminal pause regression gap above is now covered.

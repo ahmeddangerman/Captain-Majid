@@ -47,7 +47,7 @@ int main() {
  // Pause after first failed contact and save its exact cursor; second remains unvisited.
  s=initial;s.current.clock.remaining=1;s.current.clock.extra_time=5;c.player_id=12;
  r=step();check(static_cast<unsigned>(r.state.phase)==24,"Failed contact added-time pause");
- auto encoded=encode(r.state);check(encoded.size()==330 && encoded[10]=='9',"Session9 layout");
+ auto encoded=encode(r.state);check(encoded.size()==330 && encoded[10]=='A',"Session10 layout");
  std::istringstream stored(encoded);s=load_phase_session(stored);
  check(encode(s)==encoded,"Paused shot roundtrip");rejects(step);
  s=resume_session_shot_clock(s);c.player_id=13;r=step();
@@ -64,6 +64,14 @@ int main() {
  check(static_cast<unsigned>(r.state.phase)==27 && r.state.current.clock.remaining==449 &&
   r.state.current.field.ball_owner==2 && r.state.current.field.roster[13].stamina==200,"Terminal comparison pauses before dispatch handlers");
  rejects([&]{dispatch_session_shot(r.state,2);});
+ // Terminal added time saves/resumes to dispatch without repeating its comparison.
+ s=initial;s.action->power=1;s.current.clock.remaining=1;s.current.clock.extra_time=5;
+ r=step();check(static_cast<unsigned>(r.state.phase)==24,"Terminal contact added-time pause");
+ encoded=encode(r.state);std::istringstream terminal_saved(encoded);s=load_phase_session(terminal_saved);
+ s=resume_session_shot_clock(s);
+ check(static_cast<unsigned>(s.phase)==27 && s.shot_progress->result_code==3 &&
+  s.current.field.elapsed==3 && s.current.clock.extra_time==5 && s.current.field.ball_owner==2,
+  "Terminal added-time resume reaches dispatch once");
  // An interruption clears all statuses, then9095 gives the carrier status5.
  comparison.thresholds={0,0,0,0};s=initial;c.comparison.random_first=0;
  s.current.field.keepers[0].stun=8;s.current.field.keepers[1].penalty=9;r=step();

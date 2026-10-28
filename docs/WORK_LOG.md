@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** the native phase lab reaches an ordinary action menu and prepares a basic shot. A reusable API now continues from already-prepared attack state through caller-supplied contacts, routes, flight, keeper and outcome calculations without a second stamina debit. The persistent phase session now connects selected shot defenses to terminal rewards/clock/recovery, with explicit saved pauses before flight and restart.
-- **Next engine work:** connect the original selected-field dispatcher from the new timed boundary into possession/approach/flight and keeper outcomes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Current milestone:** timed selected-shot contacts now enter terminal field dispatch. Direct captures return to player control; blocked balls, capture animations and restarts retain explicit pending boundaries. Pure shot/keeper calculations remain separate from the incomplete full-match loop.
+- **Next engine work:** connect selected recovery with its retained prefix and explicit action information, then defense animation/restart and nonterminal approach/flight/keeper routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -322,3 +322,26 @@ Daily website note updated separately; engine/private research remains local.
   is covered). See NATIVE_ORDERED_SHOT_CLOCK.md for commands and evidence limits.
 - Next: original selected-field dispatcher routes and presentation side effects,
   then approach/flight/keeper state. Overall port completion remains unmeasured.
+
+## 2026-10-28 — terminal selected-result dispatch
+
+- Continued timed phase27 through original83F5 field advance and selected-result
+  handlers. Results2/3 grant exactly one selector2 reward. Action2 capture transfers
+  possession and rejoins player control; action0 preserves ownership for animation.
+  Result2 retains ball and selection at recovery entry; result4 stops at restart.
+- Added phase28–30 and session10 marker A, retaining330bytes and readers1–9.
+  CLI resolve-shot-result is atomic and rejects replay/nonterminal result0/1.
+- Extended original observer with terminal dispatch-only mode. Four original/native
+  dispatcher observations match324 prior represented bytes with phase/version
+  normalization; six native progress bytes are excluded from the ROM comparison.
+  No full-shot or script-facing equivalence is claimed.
+- Regression failed against stub, then passed. Added direct terminal added-time
+  save/resume coverage. Full suite and production Make build returned0 with clean
+  compiler output, using an archive of the same core sources to avoid redundant
+  compiles. CMake remains unavailable. Fresh review found no material issues.
+- Manual capture→setup-control rejoins control-ready state with selected defender1.
+  All four result handoffs reject repeated dispatch without source snapshot writes.
+- See NATIVE_SELECTED_RESULT_DISPATCH.md for exact boundaries/evidence. Next:
+  selected recovery with saved prefix/action context, defense animation/restart,
+  then nonterminal approach/flight/keeper routes. Overall completion unmeasured;
+  full playable match and online match remain unfinished.
