@@ -159,6 +159,42 @@ button { font: inherit; }
   margin: 2px 0 0;
   font-size: 15px;
 }
+.daily-update ul {
+  margin: 6px 0 0;
+  padding-inline-start: 1.4em;
+  font-size: 14px;
+}
+.daily-update li + li { margin-top: 3px; }
+.update-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px solid #555;
+}
+.update-controls button {
+  min-height: 34px;
+  padding: 3px 9px;
+  color: var(--white);
+  background: var(--black);
+  border: 1px solid #777;
+  cursor: pointer;
+}
+.update-controls button:hover { background: var(--selected); }
+.update-controls button:focus-visible {
+  outline: 3px solid var(--gold);
+  outline-offset: 1px;
+}
+.update-count {
+  min-width: 52px;
+  color: var(--muted);
+  text-align: center;
+  font: 13px monospace;
+  direction: ltr;
+}
 footer {
   margin-top: 14px;
   color: var(--muted);
@@ -217,13 +253,26 @@ footer {
 
     <section class="daily-update" aria-labelledby="update-title">
       <header>
-        <span>آخر تحديث</span>
-        <time datetime="2026-10-28">٢٨ أكتوبر ٢٠٢٦</time>
+        <span>سجل التحديث اليومي</span>
+        <time id="update-date" datetime="2026-10-28">٢٨ أكتوبر ٢٠٢٦</time>
       </header>
       <h2 id="update-title">من حركة اللاعبين إلى اختيار الهجمة</h2>
-      <p>اكتملت خطوة توصيل الحركة بقائمة الهجوم وتجهيز التسديدة العادية. بناء مباراة كاملة ما زال مستمراً.</p>
+      <div id="update-content" aria-live="polite" aria-atomic="true">
+        <p id="update-summary">دخلت الحركة المستمرة وقائمة القرار إلى نواة اللعب.</p>
+        <ul id="update-points">
+          <li>ارتبط توقيت اللعب والطاقة وتجدد الحارس بحركة اللاعبين حول حامل الكرة.</li>
+          <li>أُضيفت قراءة أزرار اللاعب، والاختيار من قائمة الهجمة، وتجهيز التسديدة العادية.</li>
+          <li>المقارنات تغطي حالات محددة من سلوك النسخة الأصلية؛ المباراة الكاملة واللعب الجماعي لم يكتملَا بعد.</li>
+        </ul>
+      </div>
+      <nav class="update-controls" aria-label="التنقل بين التحديثات اليومية">
+        <button id="update-older" type="button" aria-label="عرض تحديث أقدم">◀ الأقدم</button>
+        <span id="update-count" class="update-count" aria-live="polite">١ / ٣</span>
+        <button id="update-pause" type="button" aria-pressed="false">إيقاف التبديل</button>
+        <button id="update-newer" type="button" aria-label="عرض تحديث أحدث">الأحدث ▶</button>
+      </nav>
     </section>
-    <footer>المراحل تتقدم مع كل إنجاز موثّق</footer>
+    <footer>تتنقل التحديثات بين أيام العمل المسجّلة، من بداية المشروع حتى اليوم</footer>
   </main>
   <script>
 const buttons = Array.from(document.querySelectorAll(".stage-menu button"));
@@ -264,6 +313,86 @@ buttons.forEach((button, index) => {
   });
 });
 
+const updates = [
+  {
+    date: "2026-10-28",
+    dateLabel: "٢٨ أكتوبر ٢٠٢٦",
+    title: "من حركة اللاعبين إلى اختيار الهجمة",
+    summary: "دخلت الحركة المستمرة وقائمة القرار إلى نواة اللعب.",
+    points: [
+      "ارتبط توقيت اللعب والطاقة وتجدد الحارس بحركة اللاعبين حول حامل الكرة.",
+      "أُضيفت قراءة أزرار اللاعب، والاختيار من قائمة الهجمة، وتجهيز التسديدة العادية.",
+      "المقارنات تغطي حالات محددة من سلوك النسخة الأصلية؛ المباراة الكاملة واللعب الجماعي لم يكتملَا بعد."
+    ]
+  },
+  {
+    date: "2026-10-27",
+    dateLabel: "٢٧ أكتوبر ٢٠٢٦",
+    title: "التسديدة تعبر مراحلها الأولى",
+    summary: "انتقلت المحاكاة من حساب التسديدة إلى تتبّع ما يحدث بعدها.",
+    points: [
+      "اتصلت تدخلات المدافعين بتغيّر الاستحواذ واستعادة الكرة في حالات موثّقة.",
+      "امتدّ تتبّع التسديدات إلى قرارات الحارس ومسارات الهدف أو الصدّ أو الارتداد التي أمكن رصدها.",
+      "أُضيف مختبر للتسديد، وبدأ ربط حركة اللاعبين والساعة وتعافي الحارس؛ بقيت المباراة الكاملة قيد البناء."
+    ]
+  },
+  {
+    date: "2026-10-26",
+    dateLabel: "٢٦ أكتوبر ٢٠٢٦",
+    title: "اليوم الأول: وضع أساس المحاكاة",
+    summary: "بدأ العمل بفهم النسخة اليابانية وبناء نواة مستقلة للحاسوب.",
+    points: [
+      "رُسمت الحدود الأولى بين بيانات اللعبة والمحرك الذي سيعيد تنفيذ سلوكها.",
+      "أُنشئت أول نواة محاكاة بلغة سي بلس بلس، مع إمكانية إعادة تشغيل النتائج.",
+      "بدأ تحليل احتكاك المدافعين وقوة التسديدة ومقارنة الحارس؛ لم تكن هناك مباراة قابلة للعب بعد."
+    ]
+  }
+];
+const updateDate = document.getElementById("update-date");
+const updateTitle = document.getElementById("update-title");
+const updateSummary = document.getElementById("update-summary");
+const updatePoints = document.getElementById("update-points");
+const updateCount = document.getElementById("update-count");
+const olderButton = document.getElementById("update-older");
+const newerButton = document.getElementById("update-newer");
+const pauseButton = document.getElementById("update-pause");
+let updateIndex = 0;
+let rotationPaused = false;
+
+function showUpdate(index) {
+  updateIndex = (index + updates.length) % updates.length;
+  const update = updates[updateIndex];
+  updateDate.dateTime = update.date;
+  updateDate.textContent = update.dateLabel;
+  updateTitle.textContent = update.title;
+  updateSummary.textContent = update.summary;
+  updatePoints.replaceChildren(...update.points.map(point => {
+    const item = document.createElement("li");
+    item.textContent = point;
+    return item;
+  }));
+  updateCount.textContent = `${["١", "٢", "٣"][updateIndex]} / ٣`;
+}
+
+function setRotationPaused(paused) {
+  rotationPaused = paused;
+  pauseButton.setAttribute("aria-pressed", String(paused));
+  pauseButton.textContent = paused ? "تشغيل التبديل" : "إيقاف التبديل";
+}
+
+olderButton.addEventListener("click", () => {
+  setRotationPaused(true);
+  showUpdate(updateIndex + 1);
+});
+newerButton.addEventListener("click", () => {
+  setRotationPaused(true);
+  showUpdate(updateIndex - 1);
+});
+pauseButton.addEventListener("click", () => setRotationPaused(!rotationPaused));
+
+window.setInterval(() => {
+  if (!rotationPaused && !document.hidden) showUpdate(updateIndex + 1);
+}, 12000);
 
   </script>
 </body>
