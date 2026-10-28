@@ -4,26 +4,38 @@
 
 namespace captain {
 namespace {
+void validate_selected_actions(const PhaseSessionState& input, const std::vector<RecoveryDefender>& selected) {
+    const auto& progress = *input.shot_progress;
+    for (std::size_t i=0;i<selected.size();++i) {
+        const auto& choice = selected[i];
+        if (choice.player_id != input.scheduling->selected_ids[i] || choice.defense_action > 6 ||
+            (i < progress.cursor && choice.defense_action != 0 && choice.defense_action != 2) ||
+            (i + 1 == progress.cursor && choice.defense_action != progress.defense_action))
+            throw std::invalid_argument("Selected recovery actions must match the captured prefix");
+    }
+}
 RecoverySessionResult recover(const PhaseSessionState& input,
-    const std::vector<RecoveryDefender>& selected, bool retained_prefix,
+    const std::vector<RecoveryDefender>& selected, bool retained_prefix, bool jitter,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement) {
     RecoverySessionResult result{input};
     auto& state = result.state;
     auto& field = state.current.field;
     auto& context = *state.recovery;
-    // Original9070 cleans the special owner; it is not a random-generator call.
-    if ((context.special_owner_flags & 128u) && field.ball_owner == 20) {
-        context.special_owner_flags = 0;
-        field.roster[20].stamina &= 0xFF00u;
-        result.special_owner_cleared = true;
-    }
-    const auto ball = jitter_loose_ball(field.ball_x, field.ball_y, field.random_first, field.random_second);
-    field.ball_x = ball.x;
-    field.ball_y = ball.y;
-    context.x_jitter_control = ball.x_jitter_control;
-    if (!ball.inside_field) {
-        state.phase = retained_prefix ? FieldSessionPhase::selected_boundary_restart : FieldSessionPhase::boundary_restart;
-        return result;
+    if (jitter) {
+        // Original9070 cleans the special owner; it is not a random-generator call.
+        if ((context.special_owner_flags & 128u) && field.ball_owner == 20) {
+            context.special_owner_flags = 0;
+            field.roster[20].stamina &= 0xFF00u;
+            result.special_owner_cleared = true;
+        }
+        const auto ball = jitter_loose_ball(field.ball_x, field.ball_y, field.random_first, field.random_second);
+        field.ball_x = ball.x;
+        field.ball_y = ball.y;
+        context.x_jitter_control = ball.x_jitter_control;
+        if (!ball.inside_field) {
+            state.phase = retained_prefix ? FieldSessionPhase::selected_boundary_restart : FieldSessionPhase::boundary_restart;
+            return result;
+        }
     }
     result.movement = advance_field_phase(field, primary, movement);
     field = result.movement->state;
@@ -49,7 +61,8 @@ RecoverySessionResult recover(const PhaseSessionState& input,
     context.attack_subtype = recovered.attack_subtype;
     if (context.ball_variant == 0)
         context.ball_variant = static_cast<std::uint8_t>((field.random_first & 1u) + 1u);
-    state.phase = retained_prefix ? FieldSessionPhase::selected_recovered_owner : FieldSessionPhase::recovered_owner;
+    state.phase = !jitter ? FieldSessionPhase::clearance_recovered_owner :
+        retained_prefix ? FieldSessionPhase::selected_recovered_owner : FieldSessionPhase::recovered_owner;
     validate_phase_session(state);
     return result;
 }
@@ -62,7 +75,7 @@ RecoverySessionResult advance_session_recovery(const PhaseSessionState& input,
         throw std::invalid_argument("Recovery requires ball-recovery phase and captured context");
     if (input.current.field.selected_defenders != 0)
         throw std::invalid_argument("Connected recovery requires zero selected defenders");
-    return recover(input,{},false,primary,movement);
+    return recover(input,{},false,true,primary,movement);
 }
 RecoverySessionResult advance_session_selected_recovery(const PhaseSessionState& input,
     const std::vector<RecoveryDefender>& selected,
@@ -71,19 +84,20 @@ RecoverySessionResult advance_session_selected_recovery(const PhaseSessionState&
     if (input.phase != FieldSessionPhase::selected_ball_recovery ||
         selected.size() != input.current.field.selected_defenders)
         throw std::invalid_argument("Selected recovery requires its complete saved prefix");
-    const auto& progress = *input.shot_progress;
-    for (std::size_t i=0;i<selected.size();++i) {
-        const auto& choice = selected[i];
-        if (choice.player_id != input.scheduling->selected_ids[i] || choice.defense_action > 6 ||
-            (i < progress.cursor && choice.defense_action != 0 && choice.defense_action != 2) ||
-            (i + 1 == progress.cursor && choice.defense_action != progress.defense_action))
-            throw std::invalid_argument("Selected recovery actions must match the captured prefix");
-    }
-    return recover(input,selected,true,primary,movement);
+    validate_selected_actions(input,selected);
+    return recover(input,selected,true,true,primary,movement);
+}
+RecoverySessionResult advance_session_clearance_recovery(const PhaseSessionState& input,
+    const std::vector<RecoveryDefender>& selected,const PlayerProfileMappings& primary,const FieldPhaseContent& movement) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::clearance_recovery_ready || selected.size()!=input.current.field.selected_defenders)
+        throw std::invalid_argument("Clearance recovery requires its saved complete prefix");
+    validate_selected_actions(input,selected);
+    return recover(input,selected,true,false,primary,movement);
 }
 PhaseSessionState continue_session_selected_recovery(const PhaseSessionState& input) {
     validate_phase_session(input);
-    if (input.phase != FieldSessionPhase::selected_recovered_owner)
+    if (input.phase != FieldSessionPhase::selected_recovered_owner && input.phase != FieldSessionPhase::clearance_recovered_owner)
         throw std::invalid_argument("No selected recovered-owner handoff to continue");
     const auto& field=input.current.field;
     const auto& owner=field.motion[field_motion_index(field.ball_owner)];
@@ -92,7 +106,7 @@ PhaseSessionState continue_session_selected_recovery(const PhaseSessionState& in
          field.roster[field.ball_owner].type != 1 && (owner.x >> 8) >= 128))
         throw std::invalid_argument("Selected recovery awaits keeper-area or story continuation");
     auto state=input;
-    state.shot_progress.reset();
+    state.shot_progress.reset();state.clearance_flight.reset();state.clearance_race.reset();
     state.phase=FieldSessionPhase::player_control;
     validate_phase_session(state);
     return state;

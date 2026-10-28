@@ -68,3 +68,5 @@ constructed from the previous original clearance setup, not a full match trace.
 Next: connect winner presentation/control and timeout recovery handoffs, then
 restart/keeper/story and remaining shot paths. Full playable match, rendering and
 online integration remain unfinished.
+
+Ordinary winner/control and timeout/recovery handoffs are now connected; see [NATIVE_CLEARANCE_HANDOFFS.md](NATIVE_CLEARANCE_HANDOFFS.md). Live presentation is still outside the prepared continuation.

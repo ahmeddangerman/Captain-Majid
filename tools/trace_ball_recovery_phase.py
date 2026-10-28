@@ -22,7 +22,7 @@ def story_gate(memory):
 
 def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000, max_frames=10000,
                    prepare_control=False, control_input=None, control_tick=False,
-                   world_inputs=None, resume_control_time=False, selected_recovery=False):
+                   world_inputs=None, resume_control_time=False, selected_recovery=False, skip_jitter=False):
     if len(ram) != 2048 or ram[0x22] & 64 or ram[0x5FB] not in (0, 11) or ram[0x441] > 21:
         raise ValueError('Expected2048-byte supported field checkpoint')
     if sum((bool(prepare_control), bool(continue_handoff), control_input is not None,
@@ -33,6 +33,8 @@ def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000,
     if world_inputs is not None and (len(world_inputs) != 22 or any(len(pair) != 2 or any(
             not isinstance(v, int) or not 0 <= v <= 255 for v in pair) for pair in world_inputs)):
         raise ValueError('Field round requires22held/pressed pairs')
+    if skip_jitter and (not selected_recovery or continue_handoff or prepare_control or control_input is not None or control_tick or world_inputs is not None or resume_control_time):
+        raise ValueError('No-jitter entry requires selected recovery mode')
     if selected_recovery:
         if prepare_control or control_input is not None or control_tick or world_inputs is not None or resume_control_time:
             raise ValueError('Selected recovery observation only supports recovery/prepared handoff modes')
@@ -55,7 +57,7 @@ def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000,
     cpu = MPU(memory=memory)
     cycle_mode = control_tick or resume_control_time or world_inputs is not None
     entry_pc = (0xE1E7 if control_tick else 0xD217 if resume_control_time else 0xE407 if world_inputs is not None
-                else 0xE14A if control_input is not None else 0xE0DF if prepare_control else 0x8C31 if continue_handoff else 0x8BDF)
+                else 0xE14A if control_input is not None else 0xE0DF if prepare_control else 0x8C31 if continue_handoff else 0x8BE5 if skip_jitter else 0x8BDF)
     cpu.pc, cpu.sp, cpu.p = entry_pc, 0x50, cpu.UNUSED
     if world_inputs is not None or resume_control_time:
         cpu.sp = 0x4E
@@ -157,6 +159,7 @@ def main():
     modes.add_argument('--advance-control', action='store_true')
     modes.add_argument('--resume-control-time', action='store_true')
     modes.add_argument('--advance-world', nargs=2, type=int, metavar=('HELD', 'PRESSED'))
+    parser.add_argument('--skip-jitter', action='store_true', help='Resume clearance timeout at8BE5')
     parser.add_argument('--selected-recovery', action='store_true', help='Preserve an explicit selected field/action prefix')
     parser.add_argument('--max-instructions', type=int, default=2_000_000)
     parser.add_argument('--max-frames', type=int, default=10000)
@@ -167,7 +170,7 @@ def main():
     report, final = trace_recovery(rom[16:262160], args.ram.read_bytes(), args.continue_handoff,
                                    args.max_instructions, args.max_frames, args.prepare_control, args.poll_control,
                                    args.advance_control, [args.advance_world] * 22 if args.advance_world else None,
-                                   args.resume_control_time, args.selected_recovery)
+                                   args.resume_control_time, args.selected_recovery, args.skip_jitter)
     with args.output_ram.open('xb') as output: output.write(final)
     with args.report.open('x') as output: json.dump(report, output, indent=2)
     print(f"Observed {report['boundary']} at ${report['exit']:04X}, {report['original_instructions']} original instructions.")

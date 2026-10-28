@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** selected-shot timing, dispatch and ordinary recovery are connected. Capture clearances now select candidates, run ordered arrival races and save winner/timeout states. Their presentation/control and timeout-recovery handoffs remain pending.
-- **Next engine work:** connect clearance winner presentation/control and timeout recovery, plus selected keeper/story/boundary restarts and nonterminal approach/flight/keeper routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Current milestone:** selected-shot timing, dispatch, ordinary blocked recovery and clearance races are connected. Ordinary clearance winners and timed-out-clearance recovery return to control setup. Keeper/story/restart and remaining shot/goal routes are still pending.
+- **Next engine work:** connect selected keeper/story/boundary restarts and nonterminal approach/flight/keeper/goal routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -409,3 +409,24 @@ Daily website note updated separately; engine/private research remains local.
   See NATIVE_CLEARANCE_RACE.md for evidence and private paths.
 - Next: winner presentation/control and timeout recovery, then remaining restart,
   keeper/story and shot followup. Overall completion remains unmeasured.
+
+## 2026-10-28 — clearance winner and timeout handoffs
+
+- Traced winner DF0D→E0DF and timeout DED4→8BE5. Prepared winner continuation
+  now rejoins player control; timeout retains its exact later recovery entry,
+  without repeating owner cleanup or jitter. Keeper-area winners remain pending.
+- Shared recovery now supports movement-onward clearance entry36 and recovered
+  state37 with retained selected actions/context. Ordinary prepared tails rejoin
+  control, clearing transient contexts; control setup owns prefix clearing.
+- Session14 marker E retains336bytes and readers1–13. Regression failed against
+  stub, then passed. Full native/CLI/adapter/loopback/reference suite and production
+  Make build returned0 with clean compiler logs using a same-source archive.
+- Seven original/native handoff/recovery observations match324 prior represented
+  bytes after phase/version normalization; retained race/distance bytes independently
+  compared, native progress/absence metadata excluded. All three timeout recovery
+  outputs subsequently reached control setup. No full live-match claim.
+- Review found no material issues. Corrected winner observation metadata from
+  SP50 to actual SP4F and regenerated reports with unchanged final RAM.
+  See NATIVE_CLEARANCE_HANDOFFS.md for commands, evidence and exact limits.
+- Next: restart/keeper/story and nonterminal shot followup/goal flow. Overall
+  completion unmeasured; full playable match and online match remain unfinished.

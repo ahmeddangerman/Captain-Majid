@@ -36,12 +36,13 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 35)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 37)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
-    const bool race_pending = state.phase == FieldSessionPhase::clearance_race_winner || state.phase == FieldSessionPhase::clearance_race_timeout;
+    const bool race_pending = phase>=34 && phase<=37;
     const bool clearance = state.phase == FieldSessionPhase::capture_clearance_flight || race_pending;
-    const bool transitional_clearance = clearance && state.phase != FieldSessionPhase::clearance_race_winner;
+    const bool transitional_clearance = state.phase == FieldSessionPhase::capture_clearance_flight ||
+        state.phase == FieldSessionPhase::clearance_race_timeout || state.phase == FieldSessionPhase::clearance_recovery_ready;
     const bool post_possession = state.phase == FieldSessionPhase::selected_recovered_owner || clearance;
     if (bool(state.clearance_flight) != clearance)
         throw std::invalid_argument("Clearance flight phase requires exactly one setup context");
@@ -52,13 +53,13 @@ void validate_phase_session(const PhaseSessionState& state) {
     if (state.clearance_race) {
         const auto& r = *state.clearance_race;
         if (r.active_candidate < 12 || r.active_candidate > 21 || r.opposing_candidate < 1 || r.opposing_candidate > 10 ||
-            state.current.field.elapsed != 1 ||
-            (state.phase == FieldSessionPhase::clearance_race_timeout && r.remaining != 0) ||
+            state.current.field.elapsed != (state.phase == FieldSessionPhase::clearance_recovered_owner ? 0 : 1) ||
+            (phase>=35 && r.remaining != 0) ||
             (state.phase == FieldSessionPhase::clearance_race_winner &&
              state.current.field.ball_owner != r.active_candidate && state.current.field.ball_owner != r.opposing_candidate))
             throw std::invalid_argument("Unsupported clearance race handoff");
     }
-    const bool staged = phase >= 23 && phase <= 35;
+    const bool staged = phase >= 23 && phase <= 37;
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     if (state.shot_progress) {
