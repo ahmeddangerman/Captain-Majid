@@ -257,7 +257,7 @@ footer {
         <button id="update-newer" type="button" aria-label="عرض تحديث أحدث">الأحدث ▶</button>
       </nav>
     </section>
-    <footer>تتنقل التحديثات بين أيام العمل المسجّلة، من بداية المشروع حتى اليوم</footer>
+    <footer>استخدم السهمين لتصفح تحديثات أيام العمل المسجّلة</footer>
   </main>
   <script>
 const buttons = Array.from(document.querySelectorAll(".stage-menu button"));
@@ -361,10 +361,6 @@ olderButton.addEventListener("click", () => {
 newerButton.addEventListener("click", () => {
   showUpdate(updateIndex - 1);
 });
-
-window.setInterval(() => {
-  if (!document.hidden) showUpdate(updateIndex + 1);
-}, 12000);
 
   </script>
 </body>
