@@ -34,7 +34,7 @@ int main(){
  r=continue_session_clearance(s);
  check(static_cast<unsigned>(r.phase)==36 && r.current.field.ball_x==120 && r.current.field.random_second==1,
   "Timeout resumes before movement with no second jitter");
- auto encoded=bytes(r);check(encoded.size()==336 && encoded[10]=='F',"Session15 format");
+ auto encoded=bytes(r);check(encoded.size()==339 && encoded[10]=='G',"Session16 format");
  std::istringstream saved(encoded);r=load_phase_session(saved);
  rejects([&]{continue_session_clearance(r);});
  FieldPhaseContent movement{};movement.profiles.speeds.resize(1);movement.geometry.direction_thresholds.fill(65535);
@@ -55,6 +55,6 @@ int main(){
  choices[0].defense_action=5;rejects([&]{advance_session_clearance_recovery(r,choices,mappings,movement);});
  encoded=bytes(recovered.state);std::istringstream recovered_save(encoded);check(bytes(load_phase_session(recovered_save))==encoded,"Recovered clearance roundtrip");
  encoded[10]='D';rejects([&]{std::istringstream bad(encoded);load_phase_session(bad);});
- auto legacy=before;legacy[10]='D';std::istringstream old(legacy);check(bytes(load_phase_session(old))==before,"Version13 winner stays readable");
+ auto legacy=before;legacy[10]='D';legacy.resize(336);std::istringstream old(legacy);check(bytes(load_phase_session(old))==before,"Version13 winner stays readable");
  std::cout<<"Clearance handoff checks passed\n";
 }

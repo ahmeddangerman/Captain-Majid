@@ -36,9 +36,20 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 39)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 42)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
+    const bool restart_options = phase >= 40 && phase <= 42;
+    if (bool(state.restart_options) != restart_options)
+        throw std::invalid_argument("Restart options require exactly one menu context");
+    if (state.restart_options) {
+        const auto cursor = state.restart_options->cursor;
+        if ((state.phase == FieldSessionPhase::restart_options && cursor != 4 && cursor != 68) ||
+            (state.phase == FieldSessionPhase::restart_tactics && cursor != 0) ||
+            (state.phase == FieldSessionPhase::restart_options_done && cursor != 4) ||
+            state.current.clock.ball_mode != 0)
+            throw std::invalid_argument("Invalid restart menu boundary");
+    }
     const bool race_pending = phase>=34 && phase<=37;
     const bool clearance = state.phase == FieldSessionPhase::capture_clearance_flight || race_pending;
     const bool transitional_clearance = state.phase == FieldSessionPhase::capture_clearance_flight ||
@@ -59,7 +70,7 @@ void validate_phase_session(const PhaseSessionState& state) {
              state.current.field.ball_owner != r.active_candidate && state.current.field.ball_owner != r.opposing_candidate))
             throw std::invalid_argument("Unsupported clearance race handoff");
     }
-    const bool staged = phase >= 23 && phase <= 39;
+    const bool staged = phase >= 23 && phase <= 42;
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     if (state.shot_progress) {

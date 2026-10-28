@@ -9,6 +9,7 @@
 #include "captain/clearance_race.hpp"
 #include "captain/clearance_handoff.hpp"
 #include "captain/restart_route.hpp"
+#include "captain/restart_options.hpp"
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
@@ -68,6 +69,9 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::clearance_recovered_owner: return "clearance recovered owner; presentation pending";
     case captain::FieldSessionPhase::selected_field_restart: return "selected field restart setup pending";
     case captain::FieldSessionPhase::selected_goal_restart: return "selected goal-area restart setup pending";
+    case captain::FieldSessionPhase::restart_options: return "prepared restart options";
+    case captain::FieldSessionPhase::restart_tactics: return "restart tactical UI pending";
+    case captain::FieldSessionPhase::restart_options_done: return "restart options done; caller pending";
     }
     return "invalid";
 }
@@ -84,6 +88,8 @@ void show(const captain::PhaseSessionState& state) {
               << " | cell " << unsigned(field.ball_cell) << " | elapsed " << unsigned(field.elapsed)
               << " | selected " << unsigned(field.selected_defenders)
               << " | random " << unsigned(field.random_first) << ',' << unsigned(field.random_second) << '\n';
+    if(state.restart_options) std::cout << "Restart options: goal area " << state.restart_options->goal_area
+        << " | cursor " << unsigned(state.restart_options->cursor) << '\n';
     if(state.clearance_race) std::cout << "Race: remaining " << unsigned(state.clearance_race->remaining)
         << " | candidates " << unsigned(state.clearance_race->active_candidate) << ','
         << unsigned(state.clearance_race->opposing_candidate) << '\n';
@@ -433,7 +439,7 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
-                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --route-selected-restart | --advance N] "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -442,7 +448,8 @@ int main(int argc, char** argv) {
         bool run_recovery = false, run_continue_recovery = false;
         bool run_setup_control = false;
         bool run_control_tick = false, resume_control_time = false;
-        bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false, run_continue_clearance = false, run_restart_route = false;
+        bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false, run_continue_clearance = false, run_restart_route = false, run_restart_options = false;
+        std::optional<std::array<unsigned,2>> restart_input;
         std::optional<std::string> selected_recovery_file, clearance_file, race_file;
         std::optional<std::array<unsigned,4>> staged_input;
         std::optional<unsigned> dispatch_elapsed;
@@ -469,6 +476,12 @@ int main(int argc, char** argv) {
             else if (option == "--continue-selected-recovery") run_continue_selected = true;
             else if (option == "--continue-clearance") run_continue_clearance = true;
             else if (option == "--route-selected-restart") run_restart_route = true;
+            else if (option == "--open-prepared-restart-options") run_restart_options = true;
+            else if (option == "--restart-options-input") {
+                if (i+2 >= argc || restart_input) throw std::invalid_argument("Expected two restart input bytes");
+                const auto held=number(argv[++i]); const auto pressed=number(argv[++i]);
+                restart_input=std::array<unsigned,2>{held,pressed};
+            }
             else if (option == "--clearance-race-file") {
                 if(++i>=argc || race_file) throw std::invalid_argument("Expected one race content file");
                 race_file=argv[i];
@@ -533,7 +546,7 @@ int main(int argc, char** argv) {
             unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) > 1)
+            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -565,12 +578,14 @@ int main(int argc, char** argv) {
         if (clearance_file) prepare_clearance_file(state,*clearance_file);
         if (race_file) clearance_race_file(state,content,*race_file);
         if (run_continue_clearance) state=captain::continue_session_clearance(state);
+        if (run_restart_options) state=captain::open_prepared_restart_options(state).state;
+        if (restart_input) state=captain::poll_prepared_restart_options(state,(*restart_input)[0],(*restart_input)[1]).state;
         if (run_restart_route) state=captain::route_session_selected_restart(state).state;
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, clearance-race-file FILE, continue-clearance, route-selected-restart, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, clearance-race-file FILE, continue-clearance, route-selected-restart, open-prepared-restart-options, restart-options-input HELD PRESSED, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -579,9 +594,10 @@ int main(int argc, char** argv) {
                 if (!(input >> command)) continue;
                 if (command == "state" || command == "quit" || command == "resume" ||
                     command == "recover" || command == "continue-recovery" || command == "setup-control" ||
-                    command == "advance-control" || command == "resume-control-time" || command == "resume-shot-clock" || command == "resolve-shot-result" || command == "continue-selected-recovery" || command == "continue-clearance" || command == "route-selected-restart") {
+                    command == "advance-control" || command == "resume-control-time" || command == "resume-shot-clock" || command == "resolve-shot-result" || command == "continue-selected-recovery" || command == "continue-clearance" || command == "route-selected-restart" || command == "open-prepared-restart-options") {
                     if (input >> extra) throw std::invalid_argument("Command takes no arguments");
                     if (command == "quit") break;
+                    if (command == "open-prepared-restart-options") state=captain::open_prepared_restart_options(state).state;
                     if (command == "route-selected-restart") state=captain::route_session_selected_restart(state).state;
                     if (command == "continue-clearance") state=captain::continue_session_clearance(state);
                     if (command == "continue-selected-recovery") state = captain::continue_session_selected_recovery(state);
@@ -594,11 +610,12 @@ int main(int argc, char** argv) {
                     if (command == "advance-control" || command == "resume-control-time")
                         advance_control(state, content, command == "resume-control-time");
                     show(state);
-                } else if (command == "poll-control" || command == "advance-world") {
+                } else if (command == "poll-control" || command == "advance-world" || command == "restart-options-input") {
                     std::string pressed;
                     if (!(input >> value >> pressed) || (input >> extra))
-                        throw std::invalid_argument("Expected poll-control HELD PRESSED");
-                    if (command == "poll-control") poll_control(state, content, number(value), number(pressed));
+                        throw std::invalid_argument("Expected " + command + " HELD PRESSED");
+                    if (command == "restart-options-input") state=captain::poll_prepared_restart_options(state,number(value),number(pressed)).state;
+                    else if (command == "poll-control") poll_control(state, content, number(value), number(pressed));
                     else advance_world(state, content, number(value), number(pressed));
                     show(state);
                 } else if (command == "open-action-menu" || command == "prepare-basic-shot") {

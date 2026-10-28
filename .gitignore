@@ -174,3 +174,6 @@ __pycache__/
 
 # Private clearance-race speed content
 *.cmjrace
+
+# Local implementation ledgers
+/.superpowers/

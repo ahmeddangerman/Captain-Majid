@@ -16,7 +16,8 @@ and goal/save calculations exist separately. Restart/keeper/story, nonterminal
 shot/goal integration, live frame/RNG/presentation and online matches remain work.
 
 Latest detailed references:
-- NATIVE_SELECTED_RESTART_ROUTE.md for the latest restart classification step
+- NATIVE_RESTART_OPTIONS.md for prepared shared restart options and saved UI state
+- NATIVE_SELECTED_RESTART_ROUTE.md for restart classification
 - NATIVE_CLEARANCE_HANDOFFS.md and NATIVE_CLEARANCE_RACE.md
 - NATIVE_SELECTED_RECOVERY.md and NATIVE_SELECTED_RESULT_DISPATCH.md
 - PORT_STATUS.md for capability checkpoints rather than percentage guesses

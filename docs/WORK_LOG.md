@@ -447,3 +447,27 @@ Daily website note updated separately; engine/private research remains local.
   Public GitHub main remains the separate promotional website; engine is local.
 - Next engine work: actual field/goal-area restart setup, keeper/story and remaining
   shot/goal integration. Overall completion unmeasured; full match unfinished.
+
+
+## 2026-10-28 — prepared shared restart options
+
+- User chose to continue in the cloud. Traced shared restart options9880..98D5
+  after explicitly prepared opening scripts; live scripts/frame tasks are outside
+  this boundary. Added frozen held/pressed input, ordered toggles/confirmation,
+  saved route/cursor and clear pending tactics/caller boundaries40..42.
+- No clock, movement, stamina, reward, possession or generated random changes.
+  Session16 markerG is339bytes and retains readers1..15. Strict development CLI
+  supports open/poll/save/reload and rejects replay or malformed operations.
+- Focused regression failed with the throwing stub, then passed. Full native/CLI/
+  adapter/loopback/reference suite and production Make build passed with clean
+  compiler diagnostics using the current52-source archive. CMake unavailable.
+- Twelve bounded original/native cases match324prior represented bytes plus
+  independently compared cursor0624. All skipped display/wait/sprite calls are
+  disclosed. Native route metadata is excluded from original-memory claims.
+  Evidence: ../Captain-Majid-analysis/restart-options-tedfarbr. CLI strict input,
+  replay and interactive save checks pass. This is not a complete restart or match.
+- Fresh independent review found no material issues. Fixed its minor misleading
+  command-error text and checked the affected rebuilt CLI. Daily Arabic note adds
+  only the verified saved restart options checkpoint; approved roadmap unchanged.
+- Next: tactical submenu and caller player/action restart setup, keeper/story and
+  nonterminal shot/goal integration. Overall port completion remains unmeasured.

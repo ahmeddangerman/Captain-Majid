@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F')
+    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -52,6 +52,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Clearance handoff requires session version14");
     if (version < 'F' && static_cast<unsigned>(state.phase) > 37)
         throw std::invalid_argument("Selected restart route requires session version15");
+    if (version < 'G' && static_cast<unsigned>(state.phase) > 39)
+        throw std::invalid_argument("Restart options require session version16");
     const auto pending = byte(input);
     const PendingTerminalContact contact{byte(input), byte(input), byte(input), byte(input)};
     if (pending > 1) throw std::invalid_argument("Unsupported pending-contact flag");
@@ -144,6 +146,12 @@ PhaseSessionState load_phase_session(std::istream& input) {
         else if(race.remaining || race.active_candidate || race.opposing_candidate)
             throw std::invalid_argument("Nonzero unused race context");
     }
+    if (version >= 'G') {
+        const auto present = byte(input), goal = byte(input), cursor = byte(input);
+        if (present > 1 || goal > 1) throw std::invalid_argument("Invalid restart options flags");
+        if (present) state.restart_options = RestartOptionsContext{goal != 0,cursor};
+        else if (goal || cursor) throw std::invalid_argument("Nonzero unused restart options");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -154,7 +162,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'F');
+    byte(output, 'G');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -202,6 +210,9 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     byte(output,state.clearance_race ? 1 : 0);
     const auto race=state.clearance_race.value_or(ClearanceRaceContext{});
     byte(output,race.remaining);byte(output,race.active_candidate);byte(output,race.opposing_candidate);
+    byte(output,state.restart_options ? 1 : 0);
+    byte(output,state.restart_options && state.restart_options->goal_area ? 1 : 0);
+    byte(output,state.restart_options ? state.restart_options->cursor : 0);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

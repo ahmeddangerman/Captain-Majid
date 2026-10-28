@@ -27,9 +27,9 @@ int main(){
   const bool goal=x>=176 && y>=96 && y<160;
   check(static_cast<unsigned>(r.state.phase)==(goal?39u:38u),"Restart coordinate thresholds");
  }
- auto encoded=bytes(r.state);check(encoded.size()==336 && encoded[10]=='F',"Session15 format");
+ auto encoded=bytes(r.state);check(encoded.size()==339 && encoded[10]=='G',"Session16 format");
  std::istringstream saved(encoded);check(bytes(load_phase_session(saved))==encoded,"Restart route snapshot");
  encoded[10]='E';rejects([&]{std::istringstream bad(encoded);load_phase_session(bad);});
- auto legacy=before;legacy[10]='E';std::istringstream old(legacy);check(bytes(load_phase_session(old))==before,"Version14 restart entry remains readable");
+ auto legacy=before;legacy[10]='E';legacy.resize(336);std::istringstream old(legacy);check(bytes(load_phase_session(old))==before,"Version14 restart entry remains readable");
  std::cout<<"Selected restart route checks passed\n";
 }
