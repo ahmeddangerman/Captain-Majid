@@ -138,6 +138,27 @@ button { font: inherit; }
   direction: ltr;
   justify-self: end;
 }
+.daily-update {
+  margin-top: 10px;
+  border: 3px solid var(--white);
+  padding: 10px 16px;
+}
+.daily-update header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  color: var(--muted);
+  font-size: 13px;
+}
+.daily-update h2 {
+  margin: 3px 0 0;
+  font-size: 17px;
+}
+.daily-update p {
+  margin: 2px 0 0;
+  font-size: 15px;
+}
 footer {
   margin-top: 14px;
   color: var(--muted);
@@ -176,31 +197,41 @@ footer {
     <section class="roadmap" aria-label="مراحل المشروع">
       <nav class="stage-menu" aria-label="مراحل خارطة الطريق">
         <ol>
-          <li><button type="button" aria-pressed="true" data-title="النسخ واللغات" data-copy="إعادة بناء اللعبة للحاسوب بالنسخ العربية والإنجليزية واليابانية"><span class="cursor" aria-hidden="true"></span><span>النسخ واللغات</span></button></li>
-          <li><button type="button" aria-pressed="false" data-title="إضافات مبهرة" data-copy="تحسين التجربة بإضافات مبهرة: تعديلات، رسومات، ومؤثرات بصرية"><span class="cursor" aria-hidden="true"></span><span>إضافات مبهرة</span></button></li>
-          <li><button type="button" aria-pressed="false" data-title="نسخ الحاسوب" data-copy="إطلاق نسختي Windows و Linux"><span class="cursor" aria-hidden="true"></span><span>نسخ الحاسوب</span></button></li>
-          <li><button type="button" aria-pressed="false" data-title="اللعب الجماعي" data-copy="إطلاق نسخة اللعب الجماعي عبر الإنترنت"><span class="cursor" aria-hidden="true"></span><span>اللعب الجماعي</span></button></li>
+          <li><button type="button" aria-pressed="true" data-title="إعادة البناء والترجمة" data-copy="بناء نسخة الحاسوب بترجمة جديدة قابلة للتوسّع، مع دعم العربية من اليمين إلى اليسار." data-status="قيد التطوير"><span class="cursor" aria-hidden="true"></span><span>إعادة البناء والترجمة</span></button></li>
+          <li><button type="button" aria-pressed="false" data-title="تحسينات جودة الحياة" data-copy="تحسينات عملية تجعل التجربة على الحاسوب أسهل، بعد استقرار أساس اللعب." data-status="مخطط"><span class="cursor" aria-hidden="true"></span><span>جودة الحياة</span></button></li>
+          <li><button type="button" aria-pressed="false" data-title="التعديلات والرسوم" data-copy="دعم استبدال الرسومات والموسيقى وإضافة المؤثرات البصرية." data-status="مخطط"><span class="cursor" aria-hidden="true"></span><span>التعديلات والرسوم</span></button></li>
+          <li><button type="button" aria-pressed="false" data-title="نسخ الحاسوب" data-copy="إطلاق نسختي Windows و Linux." data-status="مخطط"><span class="cursor" aria-hidden="true"></span><span>نسخ الحاسوب</span></button></li>
+          <li><button type="button" aria-pressed="false" data-title="اللعب الجماعي عبر الإنترنت" data-copy="اللعب مع الأصدقاء أولاً، ثم التوسع إلى البحث عن خصوم عشوائيين وعدد أكبر من اللاعبين." data-status="مخطط"><span class="cursor" aria-hidden="true"></span><span>اللعب الجماعي</span></button></li>
         </ol>
       </nav>
 
       <section class="stage-detail" id="stage-detail" aria-live="polite" aria-atomic="true">
         <div class="detail-top">
-          <h2 id="stage-title">النسخ واللغات</h2>
-          <span class="status">مخطط</span>
+          <h2 id="stage-title">إعادة البناء والترجمة</h2>
+          <span class="status" id="stage-status">قيد التطوير</span>
         </div>
-        <p id="stage-copy">إعادة بناء اللعبة للحاسوب بالنسخ العربية والإنجليزية واليابانية</p>
-        <span class="stage-count" dir="ltr"><bdi id="stage-current">١</bdi> / <bdi>٤</bdi></span>
+        <p id="stage-copy">بناء نسخة الحاسوب بترجمة جديدة قابلة للتوسّع، مع دعم العربية من اليمين إلى اليسار.</p>
+        <span class="stage-count" dir="ltr"><bdi id="stage-current">١</bdi> / <bdi>٥</bdi></span>
       </section>
     </section>
 
-    <footer>كل المراحل مخططة</footer>
+    <section class="daily-update" aria-labelledby="update-title">
+      <header>
+        <span>آخر تحديث</span>
+        <time datetime="2026-10-28">٢٨ أكتوبر ٢٠٢٦</time>
+      </header>
+      <h2 id="update-title">من حركة اللاعبين إلى اختيار الهجمة</h2>
+      <p>اكتملت خطوة توصيل الحركة بقائمة الهجوم وتجهيز التسديدة العادية. بناء مباراة كاملة ما زال مستمراً.</p>
+    </section>
+    <footer>المراحل تتقدم مع كل إنجاز موثّق</footer>
   </main>
   <script>
 const buttons = Array.from(document.querySelectorAll(".stage-menu button"));
 const title = document.getElementById("stage-title");
 const copy = document.getElementById("stage-copy");
+const status = document.getElementById("stage-status");
 const currentStage = document.getElementById("stage-current");
-const digits = ["١", "٢", "٣", "٤"];
+const digits = ["١", "٢", "٣", "٤", "٥"];
 
 function selectStage(index, moveFocus = false) {
   const selected = (index + buttons.length) % buttons.length;
@@ -210,6 +241,7 @@ function selectStage(index, moveFocus = false) {
     if (active) {
       title.textContent = button.dataset.title;
       copy.textContent = button.dataset.copy;
+      status.textContent = button.dataset.status;
       currentStage.textContent = digits[i];
       if (moveFocus) button.focus();
     }

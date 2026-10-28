@@ -36,7 +36,7 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 17)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 20)
         throw std::invalid_argument("Unsupported phase session state");
     if ((state.phase == FieldSessionPhase::added_time) != bool(state.pending))
         throw std::invalid_argument("Added-time session needs exactly one pending terminal contact");
@@ -46,7 +46,8 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Unsupported recovery opposing player");
     if (static_cast<unsigned>(state.phase) >= 5 && !state.recovery)
         throw std::invalid_argument("Recovery continuation needs captured recovery context");
-    if (static_cast<unsigned>(state.phase) >= 5 && state.phase != FieldSessionPhase::field_contact_pending &&
+    const bool selected_phase = state.phase == FieldSessionPhase::field_contact_pending || static_cast<unsigned>(state.phase) >= 18;
+    if (static_cast<unsigned>(state.phase) >= 5 && !selected_phase &&
         state.current.field.selected_defenders != 0)
         throw std::invalid_argument("Recovery continuation requires zero selected defenders");
     if (static_cast<unsigned>(state.phase) >= 6) {
@@ -76,14 +77,23 @@ void validate_phase_session(const PhaseSessionState& state) {
                 throw std::invalid_argument("Nonzero unused selected defender slot");
         }
     }
-    if (state.phase == FieldSessionPhase::field_contact_pending) {
+    if (selected_phase) {
         const auto& field = state.current.field;
-        if (field.selected_defenders == 0 || field.selected_defenders > (field.side == 0 ? 5 : 4))
+        if ((state.phase == FieldSessionPhase::field_contact_pending && field.selected_defenders == 0) ||
+            field.selected_defenders > (field.side == 0 ? 5 : 4))
             throw std::invalid_argument("Field-contact continuation needs a selected opposing prefix");
         for (unsigned i = 0; i < field.selected_defenders; ++i)
             if ((state.scheduling->selected_ids[i] < 11 ? 0 : 11) == field.side)
                 throw std::invalid_argument("Selected contact player must oppose possession");
     }
+    if (state.action && state.action->action > 9 &&
+        (static_cast<unsigned>(state.phase) >= 19 ||
+         (state.phase == FieldSessionPhase::human_action_menu && (state.action->cursor & 128u))))
+        throw std::invalid_argument("Unsupported captured action ID");
+    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || state.current.field.side != 0 || state.action->menu_route >= 6))
+        throw std::invalid_argument("Human attacking menu requires captured action context and side0");
+    if (state.phase == FieldSessionPhase::attack_prepared && state.action->action != 0)
+        throw std::invalid_argument("Only ordinary shots are supported at attack-prepared phase");
 }
 
 PhaseSessionResult resolve_session_terminal(const PhaseSessionState& input,

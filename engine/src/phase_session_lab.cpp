@@ -39,6 +39,9 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::field_contact_pending: return "nearby field contact pending";
     case captain::FieldSessionPhase::goal_area_action: return "goal-area action pending";
     case captain::FieldSessionPhase::special_callback: return "special callback pending";
+    case captain::FieldSessionPhase::human_action_menu: return "human action menu";
+    case captain::FieldSessionPhase::attack_choice_pending: return "confirmed action pending";
+    case captain::FieldSessionPhase::attack_prepared: return "ordinary shot prepared";
     }
     return "invalid";
 }
@@ -91,6 +94,13 @@ void show(const captain::PhaseSessionState& state) {
         for (unsigned i = 0; i < field.selected_defenders; ++i) std::cout << ' ' << unsigned(schedule.selected_ids[i]);
         std::cout << '\n';
     } else std::cout << "Scheduling: context absent\n";
+    if (state.action) {
+        const auto& action = *state.action;
+        std::cout << "Action: " << unsigned(action.action) << " | route " << unsigned(action.menu_route)
+                  << " | cursor " << unsigned(action.cursor) << " | flash " << unsigned(action.flash_counter)
+                  << " | auxiliary " << unsigned(action.auxiliary) << " | move " << unsigned(action.move_effect)
+                  << ',' << unsigned(action.move_flags) << " | power " << action.power << '\n';
+    } else std::cout << "Action: context absent\n";
     for (unsigned slot = 1; slot <= 21; ++slot) {
         if (slot == 11) continue;
         const auto& actor = field.motion[captain::field_motion_index(static_cast<std::uint8_t>(slot))];
@@ -223,13 +233,42 @@ void advance_world_file(captain::PhaseSessionState& state, const captain::ShotCo
         throw std::invalid_argument("Trailing or unreadable world input data");
     advance_world_inputs(state, content, inputs);
 }
+void open_action_menu(captain::PhaseSessionState& state, const captain::ShotContent& content) {
+    if (!content.action_menu) throw std::invalid_argument("Action menu requires version9 menu content");
+    const auto result = captain::open_human_action_menu(state, *content.action_menu);
+    state = result.state;
+    std::cout << "Opened human attacking menu; no game-frame/NMI work performed.\n";
+    for (const auto& request : result.presentation)
+        std::cout << "Presentation request " << static_cast<unsigned>(request.kind)
+                  << " | id " << unsigned(request.id) << '\n';
+}
+void menu_input(captain::PhaseSessionState& state, const captain::ShotContent& content, unsigned pressed) {
+    if (!content.action_menu) throw std::invalid_argument("Action menu polling requires version9 menu content");
+    const auto result = captain::poll_human_action_menu(state, static_cast<std::uint8_t>(pressed), *content.action_menu);
+    state = result.state;
+    std::cout << "Menu input | confirmed " << result.confirmed << '\n';
+    for (const auto& request : result.presentation)
+        std::cout << "Presentation request " << static_cast<unsigned>(request.kind)
+                  << " | id " << unsigned(request.id) << '\n';
+}
+void prepare_basic_shot(captain::PhaseSessionState& state, const captain::ShotContent& content) {
+    if (!content.action_menu) throw std::invalid_argument("Shot preparation requires version9 menu content");
+    const auto result = captain::prepare_session_basic_shot(state, content.field_players, content.attack);
+    state = result.state;
+    std::cout << "Prepared ordinary shot | stamina " << state.current.field.roster[state.current.field.ball_owner].stamina
+              << " | raw cost " << result.preparation.preparation.stamina_cost
+              << " | power " << result.preparation.action_power.power
+              << " | subtype " << unsigned(result.preparation.action_power.subtype)
+              << " | move " << unsigned(result.preparation.preparation.move_effect) << '\n';
+}
 }
 
 int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
-                     "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | --advance N] "
+                     "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -238,7 +277,9 @@ int main(int argc, char** argv) {
         bool run_recovery = false, run_continue_recovery = false;
         bool run_setup_control = false;
         bool run_control_tick = false, resume_control_time = false;
+        bool run_open_action_menu = false, run_prepare_basic_shot = false;
         std::optional<unsigned> code, defender, elapsed;
+        std::optional<unsigned> menu_pressed;
         std::optional<std::array<unsigned, 2>> poll_input;
         std::optional<std::array<unsigned, 2>> world_input;
         std::optional<std::string> world_file;
@@ -253,6 +294,12 @@ int main(int argc, char** argv) {
             else if (option == "--setup-control") run_setup_control = true;
             else if (option == "--advance-control") run_control_tick = true;
             else if (option == "--resume-control-time") resume_control_time = true;
+            else if (option == "--open-action-menu") run_open_action_menu = true;
+            else if (option == "--prepare-basic-shot") run_prepare_basic_shot = true;
+            else if (option == "--menu-input") {
+                if (++i >= argc || menu_pressed) throw std::invalid_argument("Expected one --menu-input PRESSED");
+                menu_pressed = number(argv[i]);
+            }
             else if (option == "--advance-world-file") {
                 if (++i >= argc || world_file) throw std::invalid_argument("Expected one world input file");
                 world_file = argv[i];
@@ -283,9 +330,11 @@ int main(int argc, char** argv) {
                 else { subtype = number(argv[i]); defense_options = true; }
             } else throw std::invalid_argument("Unknown session option");
         }
-        if (unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) +
-            unsigned(run_recovery) + unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
-            unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) + unsigned(bool(world_file)) > 1)
+        if (unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) + unsigned(run_recovery) +
+            unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
+            unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
+            unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
+            unsigned(run_prepare_basic_shot) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -304,11 +353,14 @@ int main(int argc, char** argv) {
         if (run_control_tick || resume_control_time) advance_control(state, content, resume_control_time);
         if (world_input) advance_world(state, content, (*world_input)[0], (*world_input)[1]);
         if (world_file) advance_world_file(state, content, *world_file);
+        if (run_open_action_menu) open_action_menu(state, content);
+        if (menu_pressed) menu_input(state, content, *menu_pressed);
+        if (run_prepare_basic_shot) prepare_basic_shot(state, content);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -333,6 +385,15 @@ int main(int argc, char** argv) {
                         throw std::invalid_argument("Expected poll-control HELD PRESSED");
                     if (command == "poll-control") poll_control(state, content, number(value), number(pressed));
                     else advance_world(state, content, number(value), number(pressed));
+                    show(state);
+                } else if (command == "open-action-menu" || command == "prepare-basic-shot") {
+                    if (input >> extra) throw std::invalid_argument("Command takes no arguments");
+                    if (command == "open-action-menu") open_action_menu(state, content);
+                    else prepare_basic_shot(state, content);
+                    show(state);
+                } else if (command == "menu-input") {
+                    if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected menu-input PRESSED");
+                    menu_input(state, content, number(value));
                     show(state);
                 } else if (command == "advance" || command == "save" || command == "advance-world-file") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");

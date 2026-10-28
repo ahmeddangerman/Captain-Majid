@@ -43,9 +43,11 @@ The [persistent recovery session](docs/NATIVE_RECOVERY_SESSION.md) continues ter
 
 The [player-control setup](docs/NATIVE_CONTROL_SETUP.md) prepares either possession side, refreshes the carrier/ball cell and selects the controlled defender for opposing possession. That checkpoint introduced session4 with optional control context.
 
-[Logical control polling](docs/NATIVE_CONTROL_INPUT.md) now accepts staged buttons, cycles defenders and moves the controlled player at the decision boundary. Current private exports use content7/session5. The calculation pauses before the following clock, menu or AI stage; a playable input/frame loop remains unfinished.
+[Logical control polling](docs/NATIVE_CONTROL_INPUT.md) accepts staged buttons, cycles defenders and moves the controlled player at the decision boundary. That checkpoint introduced content7/session5. The calculation pauses before the following clock, menu or AI stage; a playable input/frame loop remains unfinished.
 
-[Ordinary control cycles](docs/NATIVE_CONTROL_CYCLE.md) now connect the clock, keeper recovery, stamina and ordered field updates back to control-ready, with explicit encounter/time/special pauses. Current exports use content8/session6. Repeated logical walking works in the lab; live presentation and remaining action/AI routes are unfinished.
+[Ordinary control cycles](docs/NATIVE_CONTROL_CYCLE.md) connect the clock, keeper recovery, stamina and ordered field updates back to control-ready, with explicit encounter/time/special pauses. That checkpoint introduced content8/session6. Repeated logical walking works in the lab; live presentation and remaining action/AI routes are unfinished.
+
+The [native human action menu](docs/NATIVE_ACTION_MENU.md) continues a side0 encounter or control menu through direction selection, confirmation and ordinary shot preparation. This is still a prepared-action boundary: defender decisions, flight and goal/save resolution are not integrated into this phase session.
 
 ```bash
 ./build/captain-prototype --replica

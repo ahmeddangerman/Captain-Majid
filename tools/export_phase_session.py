@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
-"""Export an explicit private RAM checkpoint into a bounded CMJSESSION6 file."""
+"""Export an explicit private RAM checkpoint into a bounded CMJSESSION7 file."""
 import argparse
 import struct
 from pathlib import Path
 from export_field_state import export_state
 
 
-def export_session(ram, phase=0, pending=None, include_experience=True, include_recovery=True, include_control=True, include_scheduling=True):
+def export_session(ram, phase=0, pending=None, include_experience=True, include_recovery=True,
+                   include_control=True, include_scheduling=True, include_action=True):
     field = export_state(ram)
-    if phase not in range(18) or (phase == 3) != (pending is not None):
+    if phase not in range(21) or (phase == 3) != (pending is not None):
         raise ValueError('Only added-time phase3 requires pending terminal data')
-    if phase >= 5 and phase != 15 and ram[0x600] != 0:
+    if phase >= 5 and phase not in (15, 18, 19, 20) and ram[0x600] != 0:
         raise ValueError('Recovery continuation requires zero selected defenders')
     if phase >= 6 and (ram[0x441] in (0, 11) or (0 if ram[0x441] < 11 else 11) != ram[0x5FB]):
         raise ValueError('Recovered owner must be a field player on the possession side')
@@ -22,6 +23,13 @@ def export_session(ram, phase=0, pending=None, include_experience=True, include_
         raise ValueError('Opposing control-ready state needs a side0 field defender')
     if phase >= 13 and not include_scheduling:
         raise ValueError('Control-cycle phase requires captured scheduling context')
+    if phase >= 18 and (ram[0x5FB] != 0 or not include_action or ram[0x621] >= 6):
+        raise ValueError('Human action phase requires a supported captured action context')
+    if include_action and ((phase >= 19 and ram[0x43B] > 9) or
+                           (phase == 18 and ram[0x61E] & 128 and ram[0x43B] > 9)):
+        raise ValueError('An active menu/confirmed action needs a supported action ID')
+    if phase == 20 and ram[0x43B] != 0:
+        raise ValueError('Prepared attack phase currently supports ordinary shot action0 only')
     if phase in (13, 14) and ram[0x5FF] != 1:
         raise ValueError('Control-cycle phase requires elapsed1')
     if pending is not None:
@@ -54,34 +62,38 @@ def export_session(ram, phase=0, pending=None, include_experience=True, include_
         if any(id not in (*range(1, 11), *range(12, 22)) for id in ids):
             raise ValueError('Selected prefix needs field-player IDs')
         schedule = bytes((ram[0x613], ram[0x618], ram[0x44B], *ids, *([0] * (5 - count))))
-        if phase == 15 and (count == 0 or count > (5 if ram[0x5FB] == 0 else 4)
-                            or any((0 if id < 11 else 11) == ram[0x5FB] for id in ids)):
-            raise ValueError('Field-contact phase needs opposing selected prefix')
-    return (b'CMJSESSION6' + field + clock
+        if ((phase == 15 and count == 0) or
+                (phase in (15, 18, 19, 20) and (count > (5 if ram[0x5FB] == 0 else 4)
+                 or any((0 if id < 11 else 11) == ram[0x5FB] for id in ids)))):
+            raise ValueError('Selected contact/menu prefix must contain opposing field players')
+    action = bytes(ram[a] for a in (0x43B, 0x621, 0x61E, 0x61F, 0x628, 0x444, 0x443, 0x61C, 0x61D)) if include_action else bytes(9)
+    return (b'CMJSESSION7' + field + clock
             + struct.pack('<BB4B', phase, int(pending is not None), *(pending or (0, 0, 0, 0)))
             + bytes((int(include_experience),)) + experience
             + bytes((int(include_recovery),)) + recovery
             + bytes((int(include_control),)) + control
-            + bytes((int(include_scheduling),)) + schedule)
+            + bytes((int(include_scheduling),)) + schedule
+            + bytes((int(include_action),)) + action)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('ram', type=Path)
     parser.add_argument('output', type=Path)
-    parser.add_argument('--phase', type=int, choices=range(18), default=0)
+    parser.add_argument('--phase', type=int, choices=range(21), default=0)
     parser.add_argument('--pending', type=int, nargs=4, metavar=('CODE', 'DEFENDER', 'ACTION', 'SUBTYPE'))
     parser.add_argument('--without-experience', action='store_true', help='Do not infer campaign/experience context')
     parser.add_argument('--without-recovery', action='store_true', help='Omit unavailable recovery context')
     parser.add_argument('--without-control', action='store_true', help='Omit unavailable control context')
     parser.add_argument('--without-scheduling', action='store_true', help='Omit unavailable cycle/selection context')
+    parser.add_argument('--without-action', action='store_true', help='Omit unavailable action/menu context')
     args = parser.parse_args()
     if args.output.suffix != '.cmjsession':
         parser.error('Use a private .cmjsession output path (ignored by Git)')
     try:
         data = export_session(args.ram.read_bytes(), args.phase, args.pending,
                               not args.without_experience, not args.without_recovery, not args.without_control,
-                              not args.without_scheduling)
+                              not args.without_scheduling, not args.without_action)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError, struct.error) as error:

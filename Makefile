@@ -23,6 +23,7 @@ CORE += engine/src/recovery_session.cpp
 CORE += engine/src/control_session.cpp
 CORE += engine/src/control_input.cpp
 CORE += engine/src/control_tick.cpp
+CORE += engine/src/action_menu.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check

@@ -229,3 +229,24 @@ Final checkpoint: Make/CMake production builds returned0 with no warning/error l
 - Final production builds and fresh whole-plan review are in progress. After this checkpoint, continue into pending encounter/action flow rather than stopping for routine approval. Overall port completion remains unmeasured; no complete playable match yet.
 
 Checkpoint complete: Final Make/CMake production builds returned0 without warning/error lines. One fresh independent static review found no material findings and checked original order/energy/player-loop/interrupt bytes, bounded formats and atomic errors. Reviewer ran no builds/tests/simulation. No automated tests added/run. Source saved locally; continuing into encounter/action selection under the user's continuous authorization.
+
+## Paused at user request — 2026-10-28
+
+- Last completed local source checkpoint: `eeeef17` (ordinary control cycles). No push or private-data publication.
+- The next action-menu increment is unfinished and uncommitted. Its spec/plan are `superpowers/specs/2026-10-28-native-action-menu-design.md` and `superpowers/plans/2026-10-28-native-action-menu.md`.
+- Added bounded private menu observations in `tools/trace_action_menu.py`; original contact menu opens, direction+A confirms an ordinary shot, and a prepared8F72 observation returns stamina917/power45/subtype128 for the inspected input. These are research observations, not tests.
+- In-progress source adds action context/phases18–20, menu opening/polling and prepared basic-shot functions in `action_menu.hpp/.cpp`. This source has not been built or reviewed. Session7/content9 codecs/export and lab integration are still missing; finish those before claiming the increment complete.
+- Original presentation observations: opening resets display parameter/motion flag and0469high byte; contact entry clears facing, while free-menu entry preserves it. Cursor flash counter is preserved during opening. Special-move inventory, pass targets and opposing menus remain outside this increment.
+- Resume from this marker and the existing uncommitted changes. Work stopped on the user's explicit pause; no further builds, tests, review dispatch or implementation should run until resumed.
+
+## 2026-10-28 — native action menu and prepared ordinary shot
+
+- Resumed from the user-requested pause at local commit `eeeef17`. Scope is the existing action-menu plan only; the user asked to stop again after this milestone. No public push or website changes.
+- Added private content9 with original menu direction/icon/title/background tables, and session7 with optional nine-byte action context. Session7 is324bytes; older snapshots still load with the new context absent and reject menu entry rather than inventing action data.
+- Connected ordinary side0 menu entry from a nearby-contact pause or a no-contact menu request, explicit logical direction/A polling, cursor flashing, keeper stun/penalty warning requests, and a prepared action0/subtype0 shot using the existing attacker/energy/power calculation.
+- Byte-for-byte original/native represented session comparisons cover contact and free-menu entry, keeper-stun and keeper-penalty warning branches, first and repeated direction polls, same-poll direction+A confirmation, the prepared-shot boundary, and preservation of an out-of-range stale action byte until a menu selection becomes active. The observed shot result is stamina917, raw cost80, power45, subtype128. A controlled stamina60 invocation is rejected against raw cost80. These are bounded/manual CPU and CLI comparisons, not automated tests.
+- Old session6 without action context loads and refuses to open the menu. Private v9 pack and all RAM/session observations remain under `/workspace/Captain-Majid-analysis`, outside Git.
+- Updated the working roadmap with fresh expandable Arabic/English/Japanese translations, Arabic right-to-left text support, and quality-of-life work after the core loop is stable. The Arabic NES-style page now has five concise milestones and a dated one-paragraph progress update.
+- One fresh static review found no Critical findings. It identified the stale action-byte boundary and a keeper-warning wording error; both are corrected. The stale-byte original/native 324-byte menu and selection checkpoints match.
+- Final Make and CMake production builds returned0 without warning/error lines. No automated tests were added or run. The next gameplay task is defender decision/shot-flight continuation. Overall completion remains unmeasured.
+- GitHub publication remains blocked: the managed network rejects GitHub API requests and `gh auth status` reports an invalid `GH_TOKEN`. I did not push code because I could not verify or set repository privacy. All project and website edits are local only.
