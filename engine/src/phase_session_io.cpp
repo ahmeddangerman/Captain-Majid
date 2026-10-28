@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G')
+    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -54,6 +54,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Selected restart route requires session version15");
     if (version < 'G' && static_cast<unsigned>(state.phase) > 39)
         throw std::invalid_argument("Restart options require session version16");
+    if (version < 'H' && static_cast<unsigned>(state.phase) > 42)
+        throw std::invalid_argument("Nonterminal dispatch requires session version17");
     const auto pending = byte(input);
     const PendingTerminalContact contact{byte(input), byte(input), byte(input), byte(input)};
     if (pending > 1) throw std::invalid_argument("Unsupported pending-contact flag");
@@ -162,7 +164,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'G');
+    byte(output, 'H');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));

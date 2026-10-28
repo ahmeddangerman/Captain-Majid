@@ -69,6 +69,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::clearance_recovered_owner: return "clearance recovered owner; presentation pending";
     case captain::FieldSessionPhase::selected_field_restart: return "selected field restart setup pending";
     case captain::FieldSessionPhase::selected_goal_restart: return "selected goal-area restart setup pending";
+    case captain::FieldSessionPhase::selected_attack_presentation: return "selected shot attacking presentation pending";
     case captain::FieldSessionPhase::restart_options: return "prepared restart options";
     case captain::FieldSessionPhase::restart_tactics: return "restart tactical UI pending";
     case captain::FieldSessionPhase::restart_options_done: return "restart options done; caller pending";

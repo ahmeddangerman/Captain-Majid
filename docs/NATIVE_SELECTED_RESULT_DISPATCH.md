@@ -22,7 +22,8 @@ inactive. No downstream script, reward, recovery scan, animation or restart is
 implied at these pending boundaries.
 
 `--resolve-shot-result` and interactive `resolve-shot-result` expose this step.
-Repeated invocation and result0/1 reject atomically. New phase28/29/30 snapshots
+Repeated invocation rejects atomically. Results0/1 now reach phase43 before
+attacking presentation; see [NATIVE_NONTERMINAL_DISPATCH.md](NATIVE_NONTERMINAL_DISPATCH.md). New phase28/29/30 snapshots
 retain progress; a direct transfer clears progress and can use `--setup-control`.
 
 Session10 uses marker `A` at the existing version byte and remains330bytes. Readers

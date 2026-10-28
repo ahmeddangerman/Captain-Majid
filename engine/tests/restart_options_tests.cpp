@@ -30,7 +30,9 @@ int main(){try{
    r.presentation[4].kind==ControlPresentationKind::sprite && r.presentation[4].id==4,"Options opening requests");
   auto expected=s;expected.phase=r.state.phase;expected.restart_options=r.state.restart_options;expected.current.clock.ball_mode=0;
   check(bytes(expected)==bytes(r.state),"Menu changes time/owner/status/stamina/rewards/action");
-  auto saved=roundtrip(r.state);check(bytes(saved).size()==339 && bytes(saved)[10]=='G',"Session16 format");
+  auto saved=roundtrip(r.state);check(bytes(saved).size()==339 && bytes(saved)[10]=='H',"Session17 format");
+  auto versionG=bytes(saved);versionG[10]='G';std::istringstream previous(versionG);
+  check(bytes(load_phase_session(previous))==bytes(saved),"VersionG options rewrites canonically asH");
   rejects([&]{open_prepared_restart_options(saved);});
   auto untouched=bytes(saved);auto no=poll_prepared_restart_options(saved,0,128);
   check(bytes(no.state)==untouched && no.presentation.empty(),"Pressed A alone must not confirm");

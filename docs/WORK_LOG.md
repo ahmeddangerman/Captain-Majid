@@ -471,3 +471,26 @@ Daily website note updated separately; engine/private research remains local.
   only the verified saved restart options checkpoint; approved roadmap unchanged.
 - Next: tactical submenu and caller player/action restart setup, keeper/story and
   nonterminal shot/goal integration. Overall port completion remains unmeasured.
+
+
+## 2026-10-28 — nonterminal shots reach attacking presentation
+
+- User requested continuous work and original comparison at every gameplay step;
+  recorded that requirement in AGENTS.md. Continued phase27 result0/1 through
+  original83F5 field advance to8408 before script8. Zero-defender shots supported.
+- Added saved phase43 and session17H (339bytes, readers1..16). No new clock,
+  reward, stamina, possession or random writes. Existing38..42 validation retained;
+  phase43 requires completed nonterminal prefix and rejects replay.
+- Real regression failed against terminal-only rejection, then passed. Full
+  native/CLI/adapter/loopback/reference suite and production Make build passed
+  with clean diagnostics using the current52-source archive. CMake unavailable.
+- Four bounded original/native comparisons match324prior represented bytes;
+  native metadata excluded from ROM-memory claims. Original observer skips no
+  calls/frames on this boundary. Added repeatable private-input comparison command
+  tools/check_nonterminal_dispatch_original.py; all four generated cases pass.
+- Independent review found no material issue. Added its positiveG→H restart-save
+  regression (passes) and updated the prior dispatcher documentation. Evidence and
+  commands in NATIVE_NONTERMINAL_DISPATCH.md. Engine source remains private/local.
+- Next original step is script8→8410 status/clock→847F keeper status→ordinary
+  actionC618/DCFD. Live scripts, actual shot flight, goal/keeper integration,
+  complete matches and online play remain unfinished. Overall port unmeasured.

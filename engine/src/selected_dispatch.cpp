@@ -6,8 +6,8 @@ SelectedDispatchResult resolve_session_selected_result(const PhaseSessionState& 
     const PlayerProfileMappings& primary,const FieldPhaseContent& content,
     const ExperienceContent& experience) {
     validate_phase_session(input);
-    if (input.phase != FieldSessionPhase::shot_dispatch_ready || input.shot_progress->result_code < 2)
-        throw std::invalid_argument("Selected dispatch requires a timed terminal field result");
+    if (input.phase != FieldSessionPhase::shot_dispatch_ready)
+        throw std::invalid_argument("Selected dispatch requires a timed field result");
     const auto progress = *input.shot_progress;
     // Original83F5 advances E074 before any reward or ownership write.
     auto movement = advance_field_phase(input.current.field,primary,content);
@@ -20,7 +20,9 @@ SelectedDispatchResult resolve_session_selected_result(const PhaseSessionState& 
         state.experience = reward->state;
     }
     bool sound = false;
-    if (progress.result_code == 2) {
+    if (progress.result_code < 2) {
+        state.phase = FieldSessionPhase::selected_attack_presentation;
+    } else if (progress.result_code == 2) {
         // Initial selected contact: no later-flight ball placement, no second
         // reward or clock step.8BDF owns the next recovery operation.
         state.phase = FieldSessionPhase::selected_ball_recovery;

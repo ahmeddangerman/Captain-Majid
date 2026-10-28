@@ -56,10 +56,10 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
         raise ValueError('Race mode cannot combine other entry modes')
     if clearance_only and (dispatch_only or until != 'field' or memory[0x612] != 3 or memory[0x43D] != 0):
         raise ValueError('Clearance mode needs captured field result3/action0')
-    if dispatch_only and (until != 'field' or memory[0x612] not in (2,3,4)):
-        raise ValueError('Dispatch-only mode needs field mode and terminal selected result2/3/4')
+    if dispatch_only and (until != 'field' or memory[0x612] not in (0,1,2,3,4)):
+        raise ValueError('Dispatch-only mode needs field mode and selected result0..4')
     shot_mode = until != 'field'
-    minimum = 0 if shot_mode else 1
+    minimum = 0 if shot_mode or dispatch_only else 1
     if not minimum <= memory[0x600] <= 5:
         raise ValueError(f'This entry requires {minimum}..5 selected defenders')
     if memory[0x5FB] not in (0, 11) or memory[0x43B] >= 5:
@@ -120,7 +120,8 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
         if clearance_only and bank == 30 and cpu.pc == 0xDE96:
             boundary = 'capture_clearance_flight_setup'
         if dispatch_only:
-            if bank == 26 and cpu.pc == 0x8BDF: boundary = 'selected_ball_recovery_handoff'
+            if bank == 26 and cpu.pc == 0x8408: boundary = 'selected_attack_presentation'
+            elif bank == 26 and cpu.pc == 0x8BDF: boundary = 'selected_ball_recovery_handoff'
             elif bank == 26 and cpu.pc == 0x9366: boundary = 'selected_restart_entry'
             elif bank == 30 and cpu.pc == 0xC60F: boundary = 'selected_player_control_handoff'
             elif bank == 30 and cpu.pc == 0xC630: boundary = 'selected_defense_animation_handoff'
@@ -330,7 +331,7 @@ def main():
     parser.add_argument('--race-tail', choices=('winner','timeout'), help='Continue captured race presentation to control/recovery entry')
     parser.add_argument('--race-only', action='store_true', help='Start at DE96; stop at clearance winner/timeout')
     parser.add_argument('--clearance-only', action='store_true', help='Start at capture clearance; stop before DE96 flight setup')
-    parser.add_argument('--dispatch-only', action='store_true', help='Start at selected result dispatch2/3/4')
+    parser.add_argument('--dispatch-only', action='store_true', help='Start at selected result dispatch0..4')
     parser.add_argument('--ack-ppu-transfers', action='store_true',
                         help='Explicit host acknowledgement of one pending PPU transfer per modeled frame')
     parser.add_argument('--host-buttons', type=int, default=128,

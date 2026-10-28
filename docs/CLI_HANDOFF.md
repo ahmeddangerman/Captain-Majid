@@ -16,6 +16,7 @@ and goal/save calculations exist separately. Restart/keeper/story, nonterminal
 shot/goal integration, live frame/RNG/presentation and online matches remain work.
 
 Latest detailed references:
+- NATIVE_NONTERMINAL_DISPATCH.md for passed-defense/unopposed attacking entry
 - NATIVE_RESTART_OPTIONS.md for prepared shared restart options and saved UI state
 - NATIVE_SELECTED_RESTART_ROUTE.md for restart classification
 - NATIVE_CLEARANCE_HANDOFFS.md and NATIVE_CLEARANCE_RACE.md

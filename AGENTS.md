@@ -45,6 +45,8 @@ engine work; do not claim a browser render from source-only verification.
   Native Windows builds and a complete graphical match remain unverified.
 - Research tools use tools/requirements.txt in a private Python environment.
   Trace private original behavior before inventing missing gameplay rules.
+- Compare every new gameplay behavior with controlled original ROM observations;
+  record matches, differences and partial coverage before building further on it.
 - Preserve atomic errors, original byte arithmetic/order and snapshot readers.
   Keep live frame/random/audio/presentation limitations explicit. Prepared
   acknowledgements are not evidence of running the original presentation engine.

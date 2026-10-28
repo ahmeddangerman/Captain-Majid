@@ -33,7 +33,7 @@ int main(){
   r.state.current.field.roster[2].stamina==123 && r.movement.players.size()==19,
   "Dispatch advances movement without clock or attacker debit");
  check(bytes(s)==before,"Input preserved");
- auto encoded=bytes(r.state);check(encoded.size()==339 && encoded[10]=='G',"Session16 format");
+ auto encoded=bytes(r.state);check(encoded.size()==339 && encoded[10]=='H',"Session17 format");
  std::istringstream saved(encoded);check(bytes(load_phase_session(saved))==encoded,"Dispatch snapshot roundtrip");
  encoded[10]='9';rejects([&]{std::istringstream old(encoded);load_phase_session(old);});
  auto initial=s;s=r.state;rejects(run);s=initial;
@@ -48,7 +48,25 @@ int main(){
  s.shot_progress->result_code=4;r=run();
  check(static_cast<unsigned>(r.state.phase)==30 && !r.reward && r.state.experience->totals[0]==0,
   "Restart entry has no defender reward");
- s.shot_progress->result_code=0;rejects(run);
+ // Both nonterminal result codes share8408 after movement and before script8.
+ for(unsigned result:{0u,1u}) {
+  s=initial;s.shot_progress->result_code=result;const auto entry=bytes(s);r=run();
+  check(static_cast<unsigned>(r.state.phase)==43 && !r.reward && !r.request_possession_sound &&
+   r.state.current.field.elapsed==0 && r.state.current.clock.remaining==449 &&
+   r.state.experience->totals[0]==0 && r.state.current.field.ball_owner==2 &&
+   r.state.current.field.selected_defenders==1 && bytes(s)==entry,"Nonterminal passes to attacking presentation without reward/time/owner writes");
+  auto saved_result=bytes(r.state);std::istringstream pending(saved_result);
+  check(bytes(load_phase_session(pending))==saved_result,"Nonterminal dispatch save");
+  auto legacy_new=saved_result;legacy_new[10]='G';rejects([&]{std::istringstream bad(legacy_new);load_phase_session(bad);});
+  auto corrupt=r.state;corrupt.shot_progress->result_code=2;rejects([&]{bytes(corrupt);});
+  corrupt=r.state;corrupt.current.field.selected_defenders=2;corrupt.scheduling->selected_ids[1]=13;
+  rejects([&]{bytes(corrupt);});
+  s=r.state;rejects(run);
+ }
+ s=initial;s.current.field.selected_defenders=0;s.scheduling->selected_ids.fill(0);
+ s.shot_progress=ShotContactProgress{};r=run();
+ check(static_cast<unsigned>(r.state.phase)==43 && !r.reward,"Unopposed shot dispatch");
+ s=initial;
  s.shot_progress->result_code=2;experience.player_mappings[1]=255;rejects(run);
  check(bytes(s)==before,"Reached reward errors preserve original state");
  // A phase27 session9 checkpoint remains readable and rewrites canonically.
