@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** repeated ordinary logical walking cycles join buttons, controlled movement, clock, keeper recovery, stamina, field players and nearby encounters. Pending action/AI/special routes are explicit.
-- **Next engine work:** encounter and action/AI decisions connected to prepared calculations; goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Current milestone:** the native phase lab reaches an ordinary action menu and prepares a basic shot. A reusable API now continues from already-prepared attack state through caller-supplied contacts, routes, flight, keeper and outcome calculations without a second stamina debit. The persistent phase session still stops at prepared-shot state.
+- **Next engine work:** connect explicit defender decisions and shot handoffs to persistent match state; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -250,3 +250,11 @@ Checkpoint complete: Final Make/CMake production builds returned0 without warnin
 - One fresh static review found no Critical findings. It identified the stale action-byte boundary and a keeper-warning wording error; both are corrected. The stale-byte original/native 324-byte menu and selection checkpoints match.
 - Final Make and CMake production builds returned0 without warning/error lines. No automated tests were added or run. The next gameplay task is defender decision/shot-flight continuation. Overall completion remains unmeasured.
 - GitHub publication remains blocked: the managed network rejects GitHub API requests and `gh auth status` reports an invalid `GH_TOKEN`. I did not push code because I could not verify or set repository privacy. All project and website edits are local only.
+
+## 2026-10-28 — reusable prepared-shot continuation
+
+- Extracted `resolve_prepared_shot_continuation` as a public pure API for action0 shots whose attacker preparation is already committed. The caller supplies the post-cost roster and prepared power/subtype; the function does not debit the attacker again.
+- `resolve_complete_prepared_shot` now performs its existing attacker preparation once, then delegates the existing field-contact, approach, flight, keeper and outcome sequence to the extracted function.
+- Defender/keeper choices, random bytes, post-loop gates and optional approach/flight remain explicit. This does not add defender AI, a session command, persistent score/restart state or a full playable shot loop.
+- `make -j2 all` completed with exit code0. No automated tests were added or run under the active developer instruction.
+- Next: connect explicit defense decisions and downstream shot handoffs to persistent match state without inferring scheduling or charging attack stamina twice. Overall port completion remains unmeasured.

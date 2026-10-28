@@ -8,26 +8,25 @@ FieldPlayerRecord record(std::uint8_t slot, const FieldRoster& roster) {
     return {slot,p.type,static_cast<std::uint8_t>(p.stamina),
         static_cast<std::uint8_t>(p.stamina >> 8),p.level};
 }
-}
-CompletePreparedShotResult resolve_complete_prepared_shot(
-    const CompletePreparedShotInput& input, const FieldPlayerProfiles& profiles,
-    const FieldDefenseContent& attack_content, const FieldDefenseContent& defense_content,
-    const GoalkeeperProfiles& keeper_profiles, const GoalkeeperMoveContent& keeper_content) {
-    auto field_input = input.field;
-    const auto side = field_input.context.side;
-    const auto owner = field_input.ball_owner;
-    if ((side != 0 && side != 11) || field_input.context.attack_action != 0 ||
+void validate_action0_field(const PreparedFieldShotInput& field) {
+    const auto side = field.context.side;
+    const auto owner = field.ball_owner;
+    if ((side != 0 && side != 11) || field.context.attack_action != 0 ||
         owner == 0 || owner == 11 || owner > 21 || (owner < 11 ? 0 : 11) != side)
         throw std::invalid_argument("Prepared shot requires action0 and a field owner on its side");
-    if (field_input.choices.size() > 10)
+    if (field.choices.size() > 10)
         throw std::invalid_argument("At most ten selected field defenders supported");
-    const auto attack = prepare_attacking_action({record(owner,field_input.roster),
-        0,input.attack_situation,field_input.context.attack_subtype,side,
-        static_cast<std::uint8_t>(field_input.choices.size()),input.attack_random_first,
-        input.attack_random_second,input.attack_carry},profiles,attack_content);
-    field_input.roster[owner].stamina = attack.energy.stamina;
-    field_input.context.incoming_power = attack.action_power.power;
-    field_input.context.attack_subtype = attack.action_power.subtype;
+}
+}
+PreparedShotContinuationResult resolve_prepared_shot_continuation(
+    const PreparedShotContinuationInput& input, const FieldPlayerProfiles& profiles,
+    const FieldDefenseContent& defense_content, const GoalkeeperProfiles& keeper_profiles,
+    const GoalkeeperMoveContent& keeper_content) {
+    auto field_input = input.field;
+    validate_action0_field(field_input);
+    const auto side = field_input.context.side;
+    const auto owner = field_input.ball_owner;
+    const auto attack_subtype = field_input.context.attack_subtype;
     auto flow = resolve_prepared_field_handoff(field_input,profiles,defense_content);
     std::optional<PreparedKeeperResult> keeper;
     std::optional<ShotApproachResult> approach;
@@ -37,10 +36,10 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
         next.action_code = 0;
         next.field_result_code = flow.field.result_code;
         next.power_after_contacts = flow.field.remaining_power;
-        next.subtype_after_contacts = attack.action_power.subtype;
+        next.subtype_after_contacts = attack_subtype;
         if (input.approach && next.post_loop_active_defenders == 0) {
             approach = calculate_shot_approach({input.approach->ball_x,
-                input.approach->ball_y, side, attack.action_power.subtype,
+                input.approach->ball_y, side, attack_subtype,
                 input.approach->random_first}, input.approach->content);
             next.field_proximity_carry = approach->loose_ball;
             next.keeper.elapsed = approach->distance_adjustment;
@@ -56,7 +55,7 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
             if (flight->stopped) {
                 flow.continuation = Action0ShotContinuationResult{
                     ShotContinuationRoute::other_continuation, std::nullopt, std::nullopt};
-                return {attack, std::move(flow), std::move(keeper), std::move(approach), std::move(flight)};
+                return {std::move(flow), std::move(keeper), std::move(approach), std::move(flight)};
             }
             next.power_after_contacts = flight->remaining_power;
         }
@@ -67,11 +66,11 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
             auto comparison = next.keeper;
             comparison.incoming_power = next.power_after_contacts;
             keeper = prepare_goalkeeper({record(slot,flow.field.roster),side,input.keeper_action,
-                input.keeper_subtype,0,attack.action_power.subtype,input.keeper_energy_carry,
+                input.keeper_subtype,0,attack_subtype,input.keeper_energy_carry,
                 comparison},keeper_profiles,keeper_content);
             auto outcome = next.outcome;
             outcome.comparison_result = keeper->comparison.result_code;
-            outcome.attack_subtype = attack.action_power.subtype;
+            outcome.attack_subtype = attack_subtype;
             outcome.defense_action = input.keeper_action;
             outcome.possession_side = side;
             outcome.ball_owner = owner;
@@ -85,6 +84,29 @@ CompletePreparedShotResult resolve_complete_prepared_shot(
             flow.continuation->outcome = resolved;
         }
     }
-    return {attack,std::move(flow),std::move(keeper),std::move(approach),std::move(flight)};
+    return {std::move(flow),std::move(keeper),std::move(approach),std::move(flight)};
+}
+
+CompletePreparedShotResult resolve_complete_prepared_shot(
+    const CompletePreparedShotInput& input, const FieldPlayerProfiles& profiles,
+    const FieldDefenseContent& attack_content, const FieldDefenseContent& defense_content,
+    const GoalkeeperProfiles& keeper_profiles, const GoalkeeperMoveContent& keeper_content) {
+    auto field_input = input.field;
+    validate_action0_field(field_input);
+    const auto side = field_input.context.side;
+    const auto owner = field_input.ball_owner;
+    const auto attack = prepare_attacking_action({record(owner,field_input.roster),
+        0,input.attack_situation,field_input.context.attack_subtype,side,
+        static_cast<std::uint8_t>(field_input.choices.size()),input.attack_random_first,
+        input.attack_random_second,input.attack_carry},profiles,attack_content);
+    field_input.roster[owner].stamina = attack.energy.stamina;
+    field_input.context.incoming_power = attack.action_power.power;
+    field_input.context.attack_subtype = attack.action_power.subtype;
+    auto remainder = resolve_prepared_shot_continuation(
+        {std::move(field_input),input.keeper_action,input.keeper_subtype,
+         input.keeper_energy_carry,input.approach,input.flight},profiles,defense_content,
+        keeper_profiles,keeper_content);
+    return {attack,std::move(remainder.flow),std::move(remainder.keeper),
+        std::move(remainder.approach),std::move(remainder.flight)};
 }
 }

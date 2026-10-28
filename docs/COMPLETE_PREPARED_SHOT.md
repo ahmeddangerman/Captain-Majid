@@ -2,6 +2,8 @@
 
 `resolve_complete_prepared_shot` runs attacking preparation, ordered field contacts, their handoff, continuation gates, keeper preparation and immediate goal/save outcome. It copies a supplied roster and returns the updated roster at `result.flow.field.roster`. The caller must commit that roster together with the returned possession/ball/score writes; this API does not modify a persistent match session.
 
+`resolve_prepared_shot_continuation` begins after attacker preparation. Its field roster must already contain the attacker's post-cost stamina, and `field.context.incoming_power` / `attack_subtype` must hold the prepared action0 result. It does not debit or prepare the attacker. Defender choices, keeper action/subtype, randomness, route gates, and optional approach/flight remain explicit inputs. The convenience `resolve_complete_prepared_shot` now prepares once and delegates to this same continuation. This extraction does not yet connect phase-session snapshots or add defender AI.
+
 ## Order
 
 1. Validate action0 and a field ball owner on the possession side. Accept at most ten selected field defenders.
