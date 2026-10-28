@@ -33,7 +33,7 @@ int main(){
   r.state.current.field.roster[2].stamina==123 && r.movement.players.size()==19,
   "Dispatch advances movement without clock or attacker debit");
  check(bytes(s)==before,"Input preserved");
- auto encoded=bytes(r.state);check(encoded.size()==330 && encoded[10]=='B',"Session11 format");
+ auto encoded=bytes(r.state);check(encoded.size()==332 && encoded[10]=='C',"Session12 format");
  std::istringstream saved(encoded);check(bytes(load_phase_session(saved))==encoded,"Dispatch snapshot roundtrip");
  encoded[10]='9';rejects([&]{std::istringstream old(encoded);load_phase_session(old);});
  auto initial=s;s=r.state;rejects(run);s=initial;
@@ -52,7 +52,7 @@ int main(){
  s.shot_progress->result_code=2;experience.player_mappings[1]=255;rejects(run);
  check(bytes(s)==before,"Reached reward errors preserve original state");
  // A phase27 session9 checkpoint remains readable and rewrites canonically.
- encoded=before;encoded[10]='9';std::istringstream legacy(encoded);
+ encoded=before;encoded.resize(330);encoded[10]='9';std::istringstream legacy(encoded);
  check(bytes(load_phase_session(legacy))==before,"Version9 phase27 remains readable");
  std::cout<<"Selected result dispatch checks passed\n";
 }

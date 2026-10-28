@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** selected shots now run ordered contact timing, terminal result dispatch and blocked-ball recovery. Direct captures and ordinary recovered balls return to control setup. Animation, selected keeper/story/boundary routes and nonterminal flight remain pending.
-- **Next engine work:** connect defense animation and selected keeper/story/boundary restart handling, then nonterminal approach/flight/keeper routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Current milestone:** selected-shot timing, terminal dispatch and ordinary blocked-ball recovery are connected. The action0 capture path now prepares a saved clearance target; its live flight remains pending. Direct captures and ordinary recoveries rejoin control setup.
+- **Next engine work:** connect clearance-flight scheduling/recovery and selected keeper/story/boundary restart handling, then nonterminal approach/flight/keeper routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -368,3 +368,24 @@ Daily website note updated separately; engine/private research remains local.
 - Next: defense animation, selected keeper/story/boundary/restart handling, then
   nonterminal shot approach/flight/keeper integration. Overall port unmeasured;
   full playable match and online play remain unfinished.
+
+## 2026-10-28 — capture clearance setup
+
+- Traced E678: the action0 capture animation begins a clearance, switching active
+  side and selecting a reflected target while retaining the original carrier.
+  Connected through E6CC, stopping before DE96 flight scheduling. Music/task2 are
+  explicit requests, with no extra clock, energy, rewards or generated randomness.
+- Added private replaceable destination export/load, phase33 and one-byte saved
+  distance context. Session12 marker C is332bytes and reads versions1–11.
+- Regression failed against the throwing stub, then passed all32 synthetic
+  sample/reflection combinations. Full native/CLI/adapter/loopback/reference suite
+  and production Make build passed using a same-source core archive. Reviewer
+  found no material issues; added its direct version11 compatibility check.
+- Four original/native clearance setup observations match324 prior represented
+  bytes with phase/version normalization, plus distance062B. Native progress
+  metadata is excluded. Replay checks pass; no full-shot/renderer equivalence.
+- Exporter was corrected to avoid importing py65 for a standard-library data
+  export. Private content and raw observations remain outside Git. See
+  NATIVE_CAPTURE_CLEARANCE.md for commands, exact boundary and evidence.
+- Next: clearance DE96 flight/recovery, then restart/keeper/story and nonterminal
+  shot followup. Overall port completion remains unmeasured; no full playable match.

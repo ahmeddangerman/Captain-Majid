@@ -36,17 +36,23 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 32)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 33)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
-    const bool staged = phase >= 23 && phase <= 32;
+    const bool clearance = state.phase == FieldSessionPhase::capture_clearance_flight;
+    const bool post_possession = state.phase == FieldSessionPhase::selected_recovered_owner || clearance;
+    if (bool(state.clearance_flight) != clearance)
+        throw std::invalid_argument("Clearance flight phase requires exactly one setup context");
+    if (clearance && (state.current.field.side != 11 || state.current.field.ball_owner == 0 || state.current.field.ball_owner >= 11))
+        throw std::invalid_argument("Clearance requires the original side0 carrier and active side11");
+    const bool staged = phase >= 23 && phase <= 33;
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     if (state.shot_progress) {
         const auto& p = *state.shot_progress;
         const auto count = state.current.field.selected_defenders;
         if (!state.scheduling || !state.action || !state.recovery || !state.control || !state.experience ||
-            (state.current.field.side != 0 && state.phase != FieldSessionPhase::selected_recovered_owner) || state.action->action != 0 || count > 5 ||
+            (state.current.field.side != 0 && !post_possession) || state.action->action != 0 || count > 5 ||
             p.cursor > count || p.result_code > 4 ||
             (p.defense_action != 0 && p.defense_action != 2) ||
             (p.defense_subtype != 0 && p.defense_subtype != 128))
@@ -57,6 +63,7 @@ void validate_phase_session(const PhaseSessionState& state) {
             (state.phase == FieldSessionPhase::selected_restart_entry && p.result_code != 4) ||
             ((state.phase == FieldSessionPhase::selected_recovered_owner ||
               state.phase == FieldSessionPhase::selected_boundary_restart) && p.result_code != 2) ||
+            (clearance && (p.result_code != 3 || p.defense_action != 0)) ||
             (phase >= 28 && p.cursor == 0))
             throw std::invalid_argument("Selected handoff phase does not match its terminal result");
         if (p.cursor == 0) {
@@ -91,7 +98,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Recovery continuation requires zero selected defenders");
     if (static_cast<unsigned>(state.phase) >= 6 && state.phase != FieldSessionPhase::selected_boundary_restart) {
         field_motion_index(state.current.field.ball_owner);
-        if ((state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
+        if (!clearance && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;
         if (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176)
@@ -99,7 +106,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     }
     if (static_cast<unsigned>(state.phase) >= 9 && (!state.control || !state.experience))
         throw std::invalid_argument("Control-ready state needs captured control/experience context");
-    if (static_cast<unsigned>(state.phase) >= 9 && state.phase != FieldSessionPhase::selected_recovered_owner && state.current.field.side == 11 &&
+    if (static_cast<unsigned>(state.phase) >= 9 && !post_possession && state.current.field.side == 11 &&
         (state.control->controlled_player < 1 || state.control->controlled_player > 10))
         throw std::invalid_argument("Opposing control-ready state needs a side0 field defender");
     if (static_cast<unsigned>(state.phase) >= 13 && !state.scheduling)
@@ -119,10 +126,10 @@ void validate_phase_session(const PhaseSessionState& state) {
     if (selected_phase) {
         const auto& field = state.current.field;
         if ((state.phase == FieldSessionPhase::field_contact_pending && field.selected_defenders == 0) ||
-            field.selected_defenders > (field.side == 0 || state.phase == FieldSessionPhase::selected_recovered_owner ? 5 : 4))
+            field.selected_defenders > (field.side == 0 || post_possession ? 5 : 4))
             throw std::invalid_argument("Field-contact continuation needs a selected opposing prefix");
         for (unsigned i = 0; i < field.selected_defenders; ++i)
-            if (state.phase != FieldSessionPhase::selected_recovered_owner &&
+            if (!post_possession &&
                 (state.scheduling->selected_ids[i] < 11 ? 0 : 11) == field.side)
                 throw std::invalid_argument("Selected contact player must oppose possession");
     }
@@ -130,7 +137,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         (static_cast<unsigned>(state.phase) >= 19 ||
          (state.phase == FieldSessionPhase::human_action_menu && (state.action->cursor & 128u))))
         throw std::invalid_argument("Unsupported captured action ID");
-    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && state.phase != FieldSessionPhase::selected_recovered_owner) || state.action->menu_route >= 6))
+    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && !post_possession) || state.action->menu_route >= 6))
         throw std::invalid_argument("Human attacking menu requires captured action context and side0");
     if (static_cast<unsigned>(state.phase) >= 20 && state.action->action != 0)
         throw std::invalid_argument("Only ordinary shots are supported at attack-prepared phase");

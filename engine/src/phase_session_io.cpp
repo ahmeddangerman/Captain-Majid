@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && version != 'A' && version != 'B')
+    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -44,6 +44,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Selected handoff phase requires session version10");
     if (version < 'B' && static_cast<unsigned>(state.phase) > 30)
         throw std::invalid_argument("Selected recovery phase requires session version11");
+    if (version < 'C' && static_cast<unsigned>(state.phase) > 32)
+        throw std::invalid_argument("Clearance flight phase requires session version12");
     const auto pending = byte(input);
     const PendingTerminalContact contact{byte(input), byte(input), byte(input), byte(input)};
     if (pending > 1) throw std::invalid_argument("Unsupported pending-contact flag");
@@ -122,6 +124,12 @@ PhaseSessionState load_phase_session(std::istream& input) {
                  progress.defense_action || progress.defense_subtype)
             throw std::invalid_argument("Nonzero unused shot progress");
     }
+    if (version >= 'C') {
+        const auto present = byte(input), distance = byte(input);
+        if (present > 1) throw std::invalid_argument("Unsupported clearance presence flag");
+        if (present) state.clearance_flight = ClearanceFlightContext{distance};
+        else if (distance) throw std::invalid_argument("Nonzero unused clearance context");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -132,7 +140,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'B');
+    byte(output, 'C');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -175,6 +183,8 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     const auto progress = state.shot_progress.value_or(ShotContactProgress{});
     for (const auto value : {progress.cursor,progress.result_code,progress.defender_id,
                             progress.defense_action,progress.defense_subtype}) byte(output,value);
+    byte(output,state.clearance_flight ? 1 : 0);
+    byte(output,state.clearance_flight ? state.clearance_flight->distance_adjustment : 0);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

@@ -36,7 +36,7 @@ def shot_outcome_state(memory, initial_side, event):
 
 
 def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000,
-               max_frames=10000, until='field', ack_ppu_transfers=False, host_buttons=128, final_ram=None, dispatch_only=False):
+               max_frames=10000, until='field', ack_ppu_transfers=False, host_buttons=128, final_ram=None, dispatch_only=False, clearance_only=False):
     if final_ram is not None and not isinstance(final_ram, bytearray):
         raise ValueError('Final RAM capture must be a caller-owned bytearray')
     if not isinstance(host_buttons, int) or not 0 <= host_buttons <= 255:
@@ -50,6 +50,8 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
         raise ValueError('Snapshot PRG mode bit6 at $22 must be clear')
     if until not in ('field', 'keeper', 'outcome'):
         raise ValueError('Expected field, keeper or outcome endpoint')
+    if clearance_only and (dispatch_only or until != 'field' or memory[0x612] != 3 or memory[0x43D] != 0):
+        raise ValueError('Clearance mode needs captured field result3/action0')
     if dispatch_only and (until != 'field' or memory[0x612] not in (2,3,4)):
         raise ValueError('Dispatch-only mode needs field mode and terminal selected result2/3/4')
     shot_mode = until != 'field'
@@ -80,7 +82,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     memory.select = memory[0x23]
     memory.registers[6:8] = [26, 27]
     cpu = MPU(memory=memory)
-    entry = 0x83F5 if dispatch_only else 0x829D if shot_mode else 0x82F4
+    entry = 0xE678 if clearance_only else 0x83F5 if dispatch_only else 0x829D if shot_mode else 0x82F4
     cpu.pc, cpu.sp, cpu.p = entry, 0x50, cpu.UNUSED
     initial_power = word(memory, 0x61C)
     host_frames = []
@@ -100,6 +102,8 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
             raise RuntimeError(f'Unexpected execution outside original PRG: ${cpu.pc:04X}')
         bank = memory.bank_at(cpu.pc)
         boundary = None
+        if clearance_only and bank == 30 and cpu.pc == 0xDE96:
+            boundary = 'capture_clearance_flight_setup'
         if dispatch_only:
             if bank == 26 and cpu.pc == 0x8BDF: boundary = 'selected_ball_recovery_handoff'
             elif bank == 26 and cpu.pc == 0x9366: boundary = 'selected_restart_entry'
@@ -308,6 +312,7 @@ def main():
     parser.add_argument('--cartridge-ram', type=Path)
     parser.add_argument('--until', choices=('field', 'keeper', 'outcome'), default='field',
                         help='Field dispatch, keeper comparison, or immediate keeper outcome handoff')
+    parser.add_argument('--clearance-only', action='store_true', help='Start at capture clearance; stop before DE96 flight setup')
     parser.add_argument('--dispatch-only', action='store_true', help='Start at selected result dispatch2/3/4')
     parser.add_argument('--ack-ppu-transfers', action='store_true',
                         help='Explicit host acknowledgement of one pending PPU transfer per modeled frame')
@@ -321,7 +326,7 @@ def main():
         result = trace_loop(rom[16:262160], args.ram.read_bytes(),
                             args.cartridge_ram.read_bytes() if args.cartridge_ram else None,
                             until=args.until, ack_ppu_transfers=args.ack_ppu_transfers,
-                            host_buttons=args.host_buttons, dispatch_only=args.dispatch_only)
+                            host_buttons=args.host_buttons, dispatch_only=args.dispatch_only, clearance_only=args.clearance_only)
     except (OSError, ValueError, RuntimeError) as error:
         parser.exit(1, f'Trace stopped: {error}\n')
     json.dump(result, sys.stdout, indent=2)

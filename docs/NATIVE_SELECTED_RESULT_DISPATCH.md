@@ -71,3 +71,5 @@ presentation/frame/random scheduling, keeper/goal integration and a playable
 match remain pending.
 
 Selected recovery is now connected separately; see [NATIVE_SELECTED_RECOVERY.md](NATIVE_SELECTED_RECOVERY.md). Session11 retains330bytes and prior readers.
+
+Action0 capture now reaches a saved clearance setup; see [NATIVE_CAPTURE_CLEARANCE.md](NATIVE_CAPTURE_CLEARANCE.md). Live clearance flight remains pending.

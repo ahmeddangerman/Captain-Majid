@@ -23,7 +23,7 @@ CORE += engine/src/recovery_session.cpp
 CORE += engine/src/control_session.cpp
 CORE += engine/src/control_input.cpp
 CORE += engine/src/control_tick.cpp
-CORE += engine/src/action_menu.cpp engine/src/session_shot.cpp engine/src/staged_shot.cpp engine/src/selected_dispatch.cpp
+CORE += engine/src/action_menu.cpp engine/src/session_shot.cpp engine/src/staged_shot.cpp engine/src/selected_dispatch.cpp engine/src/capture_clearance.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check
@@ -119,7 +119,11 @@ build/selected-dispatch-tests: engine/tests/selected_dispatch_tests.cpp $(CORE) 
 build/selected-recovery-tests: engine/tests/selected_recovery_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/selected_recovery_tests.cpp $(CORE) -o $@
 
-check: build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+build/capture-clearance-tests: engine/tests/capture_clearance_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/capture_clearance_tests.cpp $(CORE) -o $@
+
+check: build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+	./build/capture-clearance-tests
 	./build/selected-recovery-tests
 	./build/selected-dispatch-tests
 	./build/staged-shot-tests

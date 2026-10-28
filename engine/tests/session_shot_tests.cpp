@@ -42,8 +42,8 @@ int main() {
     require(static_cast<unsigned>(r.state.phase) == 21 && r.defenses.result_code == 0 &&
         r.state.action->power == 1 && r.state.current.field.roster[3].stamina == 123,
         "Empty selection advances without preparing/debiting attacker");
-    auto encoded = bytes(r.state); require(encoded.size() == 330 && encoded[10] == 'B', "Session11 layout");
-    std::istringstream saved(encoded); require(bytes(load_phase_session(saved)) == encoded, "Session11 roundtrip");
+    auto encoded = bytes(r.state); require(encoded.size() == 332 && encoded[10] == 'C', "Session12 layout");
+    std::istringstream saved(encoded); require(bytes(load_phase_session(saved)) == encoded, "Session12 roundtrip");
     auto legacy = encoded; legacy[10] = '7';
     rejects([&] { std::istringstream old(legacy); load_phase_session(old); });
     auto prior = s; s = r.state; rejects(run); s = prior;
