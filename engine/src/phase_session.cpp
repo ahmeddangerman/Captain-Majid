@@ -36,16 +36,29 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 33)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 35)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
-    const bool clearance = state.phase == FieldSessionPhase::capture_clearance_flight;
+    const bool race_pending = state.phase == FieldSessionPhase::clearance_race_winner || state.phase == FieldSessionPhase::clearance_race_timeout;
+    const bool clearance = state.phase == FieldSessionPhase::capture_clearance_flight || race_pending;
+    const bool transitional_clearance = clearance && state.phase != FieldSessionPhase::clearance_race_winner;
     const bool post_possession = state.phase == FieldSessionPhase::selected_recovered_owner || clearance;
     if (bool(state.clearance_flight) != clearance)
         throw std::invalid_argument("Clearance flight phase requires exactly one setup context");
-    if (clearance && (state.current.field.side != 11 || state.current.field.ball_owner == 0 || state.current.field.ball_owner >= 11))
+    if (transitional_clearance && (state.current.field.side != 11 || state.current.field.ball_owner == 0 || state.current.field.ball_owner >= 11))
         throw std::invalid_argument("Clearance requires the original side0 carrier and active side11");
-    const bool staged = phase >= 23 && phase <= 33;
+    if (bool(state.clearance_race) != race_pending)
+        throw std::invalid_argument("Race handoff requires exactly one race context");
+    if (state.clearance_race) {
+        const auto& r = *state.clearance_race;
+        if (r.active_candidate < 12 || r.active_candidate > 21 || r.opposing_candidate < 1 || r.opposing_candidate > 10 ||
+            state.current.field.elapsed != 1 ||
+            (state.phase == FieldSessionPhase::clearance_race_timeout && r.remaining != 0) ||
+            (state.phase == FieldSessionPhase::clearance_race_winner &&
+             state.current.field.ball_owner != r.active_candidate && state.current.field.ball_owner != r.opposing_candidate))
+            throw std::invalid_argument("Unsupported clearance race handoff");
+    }
+    const bool staged = phase >= 23 && phase <= 35;
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     if (state.shot_progress) {
@@ -98,7 +111,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Recovery continuation requires zero selected defenders");
     if (static_cast<unsigned>(state.phase) >= 6 && state.phase != FieldSessionPhase::selected_boundary_restart) {
         field_motion_index(state.current.field.ball_owner);
-        if (!clearance && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
+        if (!transitional_clearance && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;
         if (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176)

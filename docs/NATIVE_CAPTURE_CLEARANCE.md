@@ -65,3 +65,5 @@ they do not resolve that earlier presentation difference or prove a full shot.
 Next: original DE96 clearance-flight scheduling and its recovery handoff, then
 remaining restart/keeper/story and nonterminal shot paths. A complete playable
 match, production renderer and online match remain unfinished.
+
+The bounded DE96 arrival race is now connected; see [NATIVE_CLEARANCE_RACE.md](NATIVE_CLEARANCE_RACE.md). Presentation/control and timeout recovery remain pending. Session13 retains prior readers.

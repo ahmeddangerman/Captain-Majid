@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** selected-shot timing, terminal dispatch and ordinary blocked-ball recovery are connected. The action0 capture path now prepares a saved clearance target; its live flight remains pending. Direct captures and ordinary recoveries rejoin control setup.
-- **Next engine work:** connect clearance-flight scheduling/recovery and selected keeper/story/boundary restart handling, then nonterminal approach/flight/keeper routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Current milestone:** selected-shot timing, dispatch and ordinary recovery are connected. Capture clearances now select candidates, run ordered arrival races and save winner/timeout states. Their presentation/control and timeout-recovery handoffs remain pending.
+- **Next engine work:** connect clearance winner presentation/control and timeout recovery, plus selected keeper/story/boundary restarts and nonterminal approach/flight/keeper routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -389,3 +389,23 @@ Daily website note updated separately; engine/private research remains local.
   NATIVE_CAPTURE_CLEARANCE.md for commands, exact boundary and evidence.
 - Next: clearance DE96 flight/recovery, then restart/keeper/story and nonterminal
   shot followup. Overall port completion remains unmeasured; no full playable match.
+
+## 2026-10-28 — clearance arrival race
+
+- Connected DE96 bounded candidate race: nearest eligible players excluding old
+  carrier/opposing player, active-first selector35 then other selector36 movement,
+  first cell arrival wins. Preserves original zero-byte256-round wrap.
+- Winner commits side/owner and high coordinates with retained fractions, stopping
+  before DF0D presentation. Timeout stops DED4 before script52/recovery. No clock,
+  stamina, experience or generated randomness is added; elapsed becomes1.
+- Added private replacement speed export/load, phase34/35 and original race-byte
+  context. Session13 marker D is336bytes and reads versions1–12.
+- Regression failed against stub, then passed. Review found no material findings;
+  added its suggested distinct nonzero selector35/36 checks. Full Make suite/build
+  passed using a same-source core archive, with clean compiler logs. CMake absent.
+- Four original/native race observations match324 prior represented bytes after
+  phase/version normalization, plus independent distance/counter/candidate bytes.
+  Progress metadata is excluded. This is not full-match/frame/renderer equivalence.
+  See NATIVE_CLEARANCE_RACE.md for evidence and private paths.
+- Next: winner presentation/control and timeout recovery, then remaining restart,
+  keeper/story and shot followup. Overall completion remains unmeasured.

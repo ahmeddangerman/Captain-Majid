@@ -6,6 +6,7 @@
 #include "captain/staged_shot.hpp"
 #include "captain/selected_dispatch.hpp"
 #include "captain/capture_clearance.hpp"
+#include "captain/clearance_race.hpp"
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
@@ -59,6 +60,8 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::selected_recovered_owner: return "selected recovered owner; presentation pending";
     case captain::FieldSessionPhase::selected_boundary_restart: return "selected recovery boundary restart pending";
     case captain::FieldSessionPhase::capture_clearance_flight: return "capture clearance prepared; flight pending";
+    case captain::FieldSessionPhase::clearance_race_winner: return "clearance won; presentation pending";
+    case captain::FieldSessionPhase::clearance_race_timeout: return "clearance race timeout; recovery pending";
     }
     return "invalid";
 }
@@ -75,6 +78,9 @@ void show(const captain::PhaseSessionState& state) {
               << " | cell " << unsigned(field.ball_cell) << " | elapsed " << unsigned(field.elapsed)
               << " | selected " << unsigned(field.selected_defenders)
               << " | random " << unsigned(field.random_first) << ',' << unsigned(field.random_second) << '\n';
+    if(state.clearance_race) std::cout << "Race: remaining " << unsigned(state.clearance_race->remaining)
+        << " | candidates " << unsigned(state.clearance_race->active_candidate) << ','
+        << unsigned(state.clearance_race->opposing_candidate) << '\n';
     if (state.clearance_flight) std::cout << "Clearance distance adjustment "
         << unsigned(state.clearance_flight->distance_adjustment) << '\n';
     if (state.shot_progress) std::cout << "Shot progress: cursor " << unsigned(state.shot_progress->cursor)
@@ -384,6 +390,23 @@ void prepare_clearance_file(captain::PhaseSessionState& state, const std::string
     std::cout << "Capture clearance prepared | side music request " << result.request_side_music
               << " | cooperative task request " << unsigned(result.requested_task) << '\n';
 }
+void clearance_race_file(captain::PhaseSessionState& state,const captain::ShotContent& content,const std::string& path) {
+    std::ifstream input(path);
+    if(!input) throw std::invalid_argument("Unable to open private race content");
+    captain::ClearanceRaceContent race{};
+    for(auto& pair:race.speeds) for(auto& speed:pair) {
+        unsigned value;
+        if(!(input>>value) || value>65535) throw std::invalid_argument("Expected512 unsigned race speed words");
+        speed=static_cast<std::uint16_t>(value);
+    }
+    input>>std::ws;
+    if(input.peek()!=std::char_traits<char>::eof() || input.bad()) throw std::invalid_argument("Trailing or unreadable race data");
+    const auto result=captain::resolve_session_clearance_race(state,content.field_players,*content.movement,race);
+    state=result.state;
+    std::cout << "Clearance race | rounds " << result.rounds << " | winner "
+        << (result.winner?std::to_string(*result.winner):"none") << " | pending script " << unsigned(result.pending_script)
+        << " | side music request " << result.request_side_music << '\n';
+}
 void prepare_basic_shot(captain::PhaseSessionState& state, const captain::ShotContent& content) {
     if (!content.action_menu) throw std::invalid_argument("Shot preparation requires version9 menu content");
     const auto result = captain::prepare_session_basic_shot(state, content.field_players, content.attack);
@@ -401,7 +424,7 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
-                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --advance N] "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -411,7 +434,7 @@ int main(int argc, char** argv) {
         bool run_setup_control = false;
         bool run_control_tick = false, resume_control_time = false;
         bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false;
-        std::optional<std::string> selected_recovery_file, clearance_file;
+        std::optional<std::string> selected_recovery_file, clearance_file, race_file;
         std::optional<std::array<unsigned,4>> staged_input;
         std::optional<unsigned> dispatch_elapsed;
         std::optional<unsigned> code, defender, elapsed;
@@ -435,6 +458,10 @@ int main(int argc, char** argv) {
             else if (option == "--resume-shot-clock") resume_shot_clock = true;
             else if (option == "--resolve-shot-result") run_selected_result = true;
             else if (option == "--continue-selected-recovery") run_continue_selected = true;
+            else if (option == "--clearance-race-file") {
+                if(++i>=argc || race_file) throw std::invalid_argument("Expected one race content file");
+                race_file=argv[i];
+            }
             else if (option == "--prepare-clearance-file") {
                 if (++i >= argc || clearance_file) throw std::invalid_argument("Expected one clearance content file");
                 clearance_file=argv[i];
@@ -495,7 +522,7 @@ int main(int argc, char** argv) {
             unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) > 1)
+            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -525,11 +552,12 @@ int main(int argc, char** argv) {
         if (selected_recovery_file) recover_selected_file(state,content,*selected_recovery_file);
         if (run_continue_selected) state = captain::continue_session_selected_recovery(state);
         if (clearance_file) prepare_clearance_file(state,*clearance_file);
+        if (race_file) clearance_race_file(state,content,*race_file);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, clearance-race-file FILE, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -578,9 +606,10 @@ int main(int argc, char** argv) {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected menu-input PRESSED");
                     menu_input(state, content, number(value));
                     show(state);
-                } else if (command == "advance" || command == "save" || command == "advance-world-file" || command == "shot-defenders-file" || command == "recover-selected-file" || command == "prepare-clearance-file") {
+                } else if (command == "advance" || command == "save" || command == "advance-world-file" || command == "shot-defenders-file" || command == "recover-selected-file" || command == "prepare-clearance-file" || command == "clearance-race-file") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");
                     if (command == "save") save(value, state);
+                    else if (command == "clearance-race-file") { clearance_race_file(state,content,value); show(state); }
                     else if (command == "prepare-clearance-file") { prepare_clearance_file(state,value); show(state); }
                     else if (command == "recover-selected-file") { recover_selected_file(state,content,value); show(state); }
                     else if (command == "shot-defenders-file") { shot_defenders_file(state, content, value); show(state); }

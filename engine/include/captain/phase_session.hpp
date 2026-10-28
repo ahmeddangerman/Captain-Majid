@@ -16,7 +16,7 @@ enum class FieldSessionPhase : std::uint8_t {
     shot_defender_next = 23, shot_contact_added_time = 24, shot_dispatch_clock = 25,
     shot_dispatch_added_time = 26, shot_dispatch_ready = 27,
     selected_ball_recovery = 28, selected_defense_animation = 29, selected_restart_entry = 30,
-    selected_recovered_owner = 31, selected_boundary_restart = 32, capture_clearance_flight = 33
+    selected_recovered_owner = 31, selected_boundary_restart = 32, capture_clearance_flight = 33, clearance_race_winner = 34, clearance_race_timeout = 35
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;
@@ -44,6 +44,7 @@ struct ShotContactProgress {
     std::uint8_t cursor = 0, result_code = 0, defender_id = 0, defense_action = 0, defense_subtype = 0;
 };
 struct ClearanceFlightContext { std::uint8_t distance_adjustment = 0; };
+struct ClearanceRaceContext { std::uint8_t remaining = 0, active_candidate = 0, opposing_candidate = 0; };
 struct PhaseSessionState {
     ContactPreludeState current;
     FieldSessionPhase phase = FieldSessionPhase::field;
@@ -55,6 +56,7 @@ struct PhaseSessionState {
     std::optional<ActionContext> action{};
     std::optional<ShotContactProgress> shot_progress{};
     std::optional<ClearanceFlightContext> clearance_flight{};
+    std::optional<ClearanceRaceContext> clearance_race{};
 };
 struct PhaseSessionResult {
     PhaseSessionState state;

@@ -171,3 +171,6 @@ __pycache__/
 
 # Private replaceable capture-clearance content
 *.cmjclearance
+
+# Private clearance-race speed content
+*.cmjrace
