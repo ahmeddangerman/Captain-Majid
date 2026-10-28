@@ -23,7 +23,7 @@ CORE += engine/src/recovery_session.cpp
 CORE += engine/src/control_session.cpp
 CORE += engine/src/control_input.cpp
 CORE += engine/src/control_tick.cpp
-CORE += engine/src/action_menu.cpp engine/src/session_shot.cpp engine/src/staged_shot.cpp engine/src/selected_dispatch.cpp engine/src/capture_clearance.cpp engine/src/clearance_race.cpp engine/src/clearance_handoff.cpp
+CORE += engine/src/action_menu.cpp engine/src/session_shot.cpp engine/src/staged_shot.cpp engine/src/selected_dispatch.cpp engine/src/capture_clearance.cpp engine/src/clearance_race.cpp engine/src/clearance_handoff.cpp engine/src/restart_route.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check
@@ -128,7 +128,11 @@ build/clearance-race-tests: engine/tests/clearance_race_tests.cpp $(CORE) $(HEAD
 build/clearance-handoff-tests: engine/tests/clearance_handoff_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/clearance_handoff_tests.cpp $(CORE) -o $@
 
-check: build/clearance-handoff-tests build/clearance-race-tests build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+build/restart-route-tests: engine/tests/restart_route_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/restart_route_tests.cpp $(CORE) -o $@
+
+check: build/restart-route-tests build/clearance-handoff-tests build/clearance-race-tests build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+	./build/restart-route-tests
 	./build/clearance-handoff-tests
 	./build/clearance-race-tests
 	./build/capture-clearance-tests

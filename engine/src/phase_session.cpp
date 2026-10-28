@@ -36,7 +36,7 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 37)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 39)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
     const bool race_pending = phase>=34 && phase<=37;
@@ -59,7 +59,7 @@ void validate_phase_session(const PhaseSessionState& state) {
              state.current.field.ball_owner != r.active_candidate && state.current.field.ball_owner != r.opposing_candidate))
             throw std::invalid_argument("Unsupported clearance race handoff");
     }
-    const bool staged = phase >= 23 && phase <= 37;
+    const bool staged = phase >= 23 && phase <= 39;
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     if (state.shot_progress) {
@@ -78,6 +78,7 @@ void validate_phase_session(const PhaseSessionState& state) {
             ((state.phase == FieldSessionPhase::selected_recovered_owner ||
               state.phase == FieldSessionPhase::selected_boundary_restart) && p.result_code != 2) ||
             (clearance && (p.result_code != 3 || p.defense_action != 0)) ||
+            (phase>=38 && p.result_code!=4) ||
             (phase >= 28 && p.cursor == 0))
             throw std::invalid_argument("Selected handoff phase does not match its terminal result");
         if (p.cursor == 0) {

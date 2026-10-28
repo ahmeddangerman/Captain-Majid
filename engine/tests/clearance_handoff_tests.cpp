@@ -34,7 +34,7 @@ int main(){
  r=continue_session_clearance(s);
  check(static_cast<unsigned>(r.phase)==36 && r.current.field.ball_x==120 && r.current.field.random_second==1,
   "Timeout resumes before movement with no second jitter");
- auto encoded=bytes(r);check(encoded.size()==336 && encoded[10]=='E',"Session14 format");
+ auto encoded=bytes(r);check(encoded.size()==336 && encoded[10]=='F',"Session15 format");
  std::istringstream saved(encoded);r=load_phase_session(saved);
  rejects([&]{continue_session_clearance(r);});
  FieldPhaseContent movement{};movement.profiles.speeds.resize(1);movement.geometry.direction_thresholds.fill(65535);

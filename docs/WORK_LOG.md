@@ -6,7 +6,7 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** selected-shot timing, dispatch, ordinary blocked recovery and clearance races are connected. Ordinary clearance winners and timed-out-clearance recovery return to control setup. Keeper/story/restart and remaining shot/goal routes are still pending.
+- **Current milestone:** selected-shot/control/recovery and ordinary clearance handoffs are connected. Interrupted shots now select field or opposing goal-area restart setup. Actual restart setup, keeper/story and remaining shot/goal routes remain pending.
 - **Next engine work:** connect selected keeper/story/boundary restarts and nonterminal approach/flight/keeper/goal routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
@@ -430,3 +430,20 @@ Daily website note updated separately; engine/private research remains local.
   See NATIVE_CLEARANCE_HANDOFFS.md for commands, evidence and exact limits.
 - Next: restart/keeper/story and nonterminal shot followup/goal flow. Overall
   completion unmeasured; full playable match and online match remain unfinished.
+
+## 2026-10-28 — restart route and local CLI transition
+
+- Continued selected restart30 through original9366 situation clear and branch.
+  New38/39 distinguish field versus opposing goal-area setup; later restart UI
+  remains pending. No repeated reset/movement/reward/clock. Session15 marker F
+  remains336bytes, preserving readers1–14.
+- Focused regression failed against stub, then passed. Full suite and production
+  Make build returned0 with clean diagnostics. Four original/native route states
+  match324 prior represented bytes after phase/version normalization. Review found
+  no material issues. See NATIVE_SELECTED_RESTART_ROUTE.md.
+- Added AGENTS.md and CLI_HANDOFF.md for the user's Windows/WSL move. Transition
+  package preserves the local work branch/history, source snapshot, private
+  analysis, resume prompt, checksums and a fresh-destination restore script.
+  Public GitHub main remains the separate promotional website; engine is local.
+- Next engine work: actual field/goal-area restart setup, keeper/story and remaining
+  shot/goal integration. Overall completion unmeasured; full match unfinished.
