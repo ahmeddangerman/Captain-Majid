@@ -35,7 +35,7 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 9)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 12)
         throw std::invalid_argument("Unsupported phase session state");
     if ((state.phase == FieldSessionPhase::added_time) != bool(state.pending))
         throw std::invalid_argument("Added-time session needs exactly one pending terminal contact");
@@ -55,9 +55,9 @@ void validate_phase_session(const PhaseSessionState& state) {
         if (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176)
             throw std::invalid_argument("Recovered-owner continuation requires an interior ball");
     }
-    if (state.phase == FieldSessionPhase::control_ready && (!state.control || !state.experience))
+    if (static_cast<unsigned>(state.phase) >= 9 && (!state.control || !state.experience))
         throw std::invalid_argument("Control-ready state needs captured control/experience context");
-    if (state.phase == FieldSessionPhase::control_ready && state.current.field.side == 11 &&
+    if (static_cast<unsigned>(state.phase) >= 9 && state.current.field.side == 11 &&
         (state.control->controlled_player < 1 || state.control->controlled_player > 10))
         throw std::invalid_argument("Opposing control-ready state needs a side0 field defender");
 }

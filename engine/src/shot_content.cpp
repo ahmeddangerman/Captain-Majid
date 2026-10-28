@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if (version < '1' || version > '6')
+    if (version < '1' || version > '7')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -135,6 +135,10 @@ ShotContent load_shot_content(std::istream& input) {
         reader.bytes(content.experience->player_mappings);
         reader.bytes(content.experience->reward_factors);
         for (auto& base : content.experience->stage_bases) base = reader.word();
+    }
+    if (version >= '7') {
+        content.control_movement = ControlMovementContent{};
+        for (auto& speed : content.control_movement->carrier_speeds) speed = reader.word();
     }
     reader.end();
     return content;

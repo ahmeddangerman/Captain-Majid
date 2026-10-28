@@ -6,6 +6,7 @@
 #include "captain/field_phase.hpp"
 #include "captain/contact_prelude.hpp"
 #include "captain/experience.hpp"
+#include "captain/control_input.hpp"
 #include <istream>
 #include <optional>
 
@@ -25,9 +26,10 @@ struct ShotContent {
     std::optional<FieldPhaseContent> movement{};
     std::optional<ContactPreludeContent> contact{};
     std::optional<ExperienceContent> experience{};
+    std::optional<ControlMovementContent> control_movement{};
 };
 
-// Development CMJSHOT1..6 content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..7 content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

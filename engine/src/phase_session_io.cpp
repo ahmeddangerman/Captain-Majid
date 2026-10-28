@@ -20,7 +20,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if (version != '1' && version != '2' && version != '3' && version != '4')
+    if (version < '1' || version > '5')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -73,9 +73,10 @@ PhaseSessionState load_phase_session(std::istream& input) {
         const auto low = byte(input);
         control.travel_accumulator = static_cast<std::uint16_t>(unsigned(low) | (unsigned(byte(input)) << 8));
         control.display_parameter = byte(input);
+        if (version >= '5') control.motion_requested = byte(input);
         if (present) state.control = control;
         else if (control.decision_timer || control.facing || control.controlled_player ||
-                 control.last_carrier_cell || control.travel_accumulator || control.display_parameter)
+                 control.last_carrier_cell || control.travel_accumulator || control.display_parameter || control.motion_requested)
             throw std::invalid_argument("Nonzero unused control data");
     }
     if (input.peek() != std::char_traits<char>::eof())
@@ -88,7 +89,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, '4');
+    byte(output, '5');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -115,7 +116,8 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     const auto control = state.control.value_or(ControlContext{});
     for (const auto value : {control.decision_timer, control.facing, control.controlled_player,
          control.last_carrier_cell, static_cast<std::uint8_t>(control.travel_accumulator),
-         static_cast<std::uint8_t>(control.travel_accumulator >> 8), control.display_parameter}) byte(output, value);
+         static_cast<std::uint8_t>(control.travel_accumulator >> 8), control.display_parameter,
+         control.motion_requested}) byte(output, value);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

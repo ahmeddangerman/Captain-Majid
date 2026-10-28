@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** persistent terminal/recovery phases now reach field-carrier control setup for both sides, including ball/cell refresh and controlled-defender selection. Live inputs remain unfinished; restart/keeper/story routes stay explicit.
-- **Next engine work:** logical input/decision handling, carrier movement, recovery restart/keeper/story progression, remaining reward callers and live ball-flight/frame scheduling.
+- **Current milestone:** persistent control setup now supports logical button polling, defender switching and controlled movement at the original decision boundary. The following clock/menu/AI stages remain explicit pauses.
+- **Next engine work:** post-input clock/menu/AI continuation, stamina/field advancement, recovery restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -206,3 +206,14 @@ Final checkpoint: Make/CMake production commands returned0 without warning/error
 - Production builds, joined-session usage and fresh whole-plan static review are being finalized. No automated tests added/run. Live inputs/actions, full frame timing, presentation and a complete match remain unfinished; overall completion stays unmeasured.
 
 Final checkpoint: Make/CMake production builds returned0 without warning/error lines. Joined rewarded contact→recovery→prepared control→setup produces the same documented304-byte original control-ready hash. Repeated setup and legacy session3 without control context are rejected without mutating state. One fresh independent static review found no material findings and inspected original setup/selection bytes; it executed no code/builds/tests. Source saved locally, no public push or private data publication. Next: logical button/decision handling and carrier movement, with frame/clock scheduling still explicit work ahead.
+
+## 2026-10-28 — logical input polls and controlled movement
+
+- Resumed from local source commit `48e3873`. Added one staged post-yield input poll with explicit held/pressed masks, native per-poll flags/facing, defender cycling, decision timer and raw controlled movement.
+- Preserved original priority rules: side0 heldB before movement, side11 pressedA over B, opposite axis bits choosing positive motion, full-speed diagonals, and no invented status gate for controlled movement.
+- Imported private selector32 speed data in content7, distinct from team movement selectors33/34. Session5 adds the overwritten-on-poll motion byte; versions1–4 remain readable, including version4 setup checkpoints.
+- Sixteen private original/native represented305-byte state observations agree in manual hash inspection. Repeated native usage from a version4 snapshot waits ten polls and steps on the eleventh, agreeing with the original timer0 result; another poll is rejected at the clock boundary without mutation.
+- Added explicit clock10/menu11/AI12 pause phases. No clock/stamina/AI/menu progression or live frame/random schedule is inferred. See [NATIVE_CONTROL_INPUT.md](NATIVE_CONTROL_INPUT.md).
+- Production builds and one fresh whole-plan review are being finalized. No automated tests added/run; full playable match remains unfinished and overall progress stays unmeasured.
+
+Final checkpoint: Make/CMake production builds returned0 with no warning/error lines. One fresh independent static review found no material findings after inspecting original input/movement bytes, the bounded codecs/guards and existing observation/persistent-usage records. No repository code/builds/tests were executed by the reviewer; no automated tests were added/run for this increment. Source saved locally; no public push or private data publication. Next resume point is phase10 clock progression and phase11/12 menu/AI decisions, followed by stamina/other-player updates and live frame/random scheduling.

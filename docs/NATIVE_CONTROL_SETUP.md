@@ -60,6 +60,8 @@ Interactive command: `setup-control`. It can follow `rewarded-contact`, `recover
 
 Absent context requires zero padding. Versions1–3 remain readable with control context absent. `--without-control` explicitly omits it from export. Phase9 requires all three optional contexts, an interior ball and a field owner on the possession side; for side11, the controlled defender must be ID1–10. Unsupported versions/flags, missing phase context, truncation, trailing bytes and nonzero unused padding are rejected. Content version6 is unchanged. These development snapshots are not a complete game save or network protocol; all original data remains private.
 
+The later [logical control polling](NATIVE_CONTROL_INPUT.md) checkpoint adds current snapshot5/content7 while retaining these setup formats. The304-byte evidence below describes setup before polling; old version4 setup snapshots can poll because the added motion byte is overwritten before use.
+
 ## Evidence and limits
 
 `tools/trace_ball_recovery_phase.py --prepare-control` observes original setup to `$E145`. It uses the existing disclosed cooperative scheduler and host frame/input/display/graphics acknowledgements, without skipping original calls or executing NMI/audio/PPU timing. Reports now record the ordered high-level presentation requests.

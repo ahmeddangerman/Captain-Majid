@@ -8,7 +8,7 @@ namespace captain {
 enum class FieldSessionPhase : std::uint8_t {
     field = 0, player_control = 1, ball_recovery = 2, added_time = 3, period_end = 4,
     boundary_restart = 5, recovered_owner = 6, keeper_interaction = 7, story_transition = 8,
-    control_ready = 9
+    control_ready = 9, control_clock_pending = 10, action_menu_pending = 11, ai_cell_decision = 12
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;
@@ -21,6 +21,7 @@ struct ControlContext {
     std::uint8_t decision_timer = 0, facing = 0, controlled_player = 0, last_carrier_cell = 0;
     std::uint16_t travel_accumulator = 0;
     std::uint8_t display_parameter = 0;
+    std::uint8_t motion_requested = 0;
 };
 struct PhaseSessionState {
     ContactPreludeState current;

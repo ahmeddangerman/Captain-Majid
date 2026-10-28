@@ -21,6 +21,7 @@ CORE += engine/src/phase_session.cpp engine/src/phase_session_io.cpp
 CORE += engine/src/experience.cpp
 CORE += engine/src/recovery_session.cpp
 CORE += engine/src/control_session.cpp
+CORE += engine/src/control_input.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check

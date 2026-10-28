@@ -31,6 +31,9 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::keeper_interaction: return "keeper-area interaction pending";
     case captain::FieldSessionPhase::story_transition: return "story transition pending";
     case captain::FieldSessionPhase::control_ready: return "player control ready; input loop pending";
+    case captain::FieldSessionPhase::control_clock_pending: return "control clock step pending";
+    case captain::FieldSessionPhase::action_menu_pending: return "action menu pending";
+    case captain::FieldSessionPhase::ai_cell_decision: return "opposing-carrier cell decision pending";
     }
     return "invalid";
 }
@@ -72,7 +75,8 @@ void show(const captain::PhaseSessionState& state) {
                   << " | controlled player " << unsigned(control.controlled_player)
                   << " | last carrier cell " << unsigned(control.last_carrier_cell)
                   << " | travel " << control.travel_accumulator
-                  << " | display parameter " << unsigned(control.display_parameter) << '\n';
+                  << " | display parameter " << unsigned(control.display_parameter)
+                  << " | motion requested " << unsigned(control.motion_requested) << '\n';
     } else std::cout << "Control: context absent\n";
     for (unsigned slot = 1; slot <= 21; ++slot) {
         if (slot == 11) continue;
@@ -149,12 +153,25 @@ void setup_control(captain::PhaseSessionState& state) {
         std::cout << "Presentation request " << static_cast<unsigned>(request.kind)
                   << " | id " << unsigned(request.id) << '\n';
 }
+void poll_control(captain::PhaseSessionState& state, const captain::ShotContent& content, unsigned held, unsigned pressed) {
+    if (!content.control_movement) throw std::invalid_argument("Control polling requires version7 speed content");
+    const auto result = captain::poll_session_control(state, static_cast<std::uint8_t>(held),
+        static_cast<std::uint8_t>(pressed), content.field_players, *content.movement, *content.control_movement);
+    state = result.state;
+    std::cout << "Input poll | decision step " << result.decision_step
+              << " | moved player " << (result.moved_player ? std::to_string(*result.moved_player) : "none")
+              << " | speed " << result.movement_speed << '\n';
+    if (result.menu_requested) std::cout << "Action-menu script68 pending; handler not executed.\n";
+    for (const auto& request : result.presentation)
+        std::cout << "Presentation request " << static_cast<unsigned>(request.kind)
+                  << " | id " << unsigned(request.id) << '\n';
+}
 }
 
 int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
-                     "or [--resume | --recover | --continue-recovery | --setup-control | --advance N] "
+                     "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -163,6 +180,7 @@ int main(int argc, char** argv) {
         bool run_recovery = false, run_continue_recovery = false;
         bool run_setup_control = false;
         std::optional<unsigned> code, defender, elapsed;
+        std::optional<std::array<unsigned, 2>> poll_input;
         unsigned action = 0, subtype = 0;
         std::string capture;
         for (int i = 3; i < argc; ++i) {
@@ -172,6 +190,12 @@ int main(int argc, char** argv) {
             else if (option == "--recover") run_recovery = true;
             else if (option == "--continue-recovery") run_continue_recovery = true;
             else if (option == "--setup-control") run_setup_control = true;
+            else if (option == "--poll-control") {
+                if (i + 2 >= argc || poll_input) throw std::invalid_argument("Expected one --poll-control HELD PRESSED");
+                const auto held = number(argv[++i]);
+                const auto pressed = number(argv[++i]);
+                poll_input = std::array<unsigned, 2>{held, pressed};
+            }
             else if (option == "--contact" || option == "--rewarded-contact" || option == "--defender" || option == "--advance" ||
                      option == "--defense-action" || option == "--defense-subtype" || option == "--capture") {
                 if (++i >= argc) throw std::invalid_argument("Missing option value");
@@ -187,7 +211,7 @@ int main(int argc, char** argv) {
             } else throw std::invalid_argument("Unknown session option");
         }
         if (unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) +
-            unsigned(run_recovery) + unsigned(run_continue_recovery) + unsigned(run_setup_control) > 1)
+            unsigned(run_recovery) + unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -202,11 +226,12 @@ int main(int argc, char** argv) {
         if (run_recovery) recover(state, content);
         if (run_continue_recovery) continue_recovery(state);
         if (run_setup_control) setup_control(state);
+        if (poll_input) poll_control(state, content, (*poll_input)[0], (*poll_input)[1]);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -221,6 +246,12 @@ int main(int argc, char** argv) {
                     if (command == "recover") recover(state, content);
                     if (command == "continue-recovery") continue_recovery(state);
                     if (command == "setup-control") setup_control(state);
+                    show(state);
+                } else if (command == "poll-control") {
+                    std::string pressed;
+                    if (!(input >> value >> pressed) || (input >> extra))
+                        throw std::invalid_argument("Expected poll-control HELD PRESSED");
+                    poll_control(state, content, number(value), number(pressed));
                     show(state);
                 } else if (command == "advance" || command == "save") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");
