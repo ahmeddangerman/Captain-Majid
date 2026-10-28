@@ -50,7 +50,15 @@ Candidate closest_available(const BallRecoveryInput& input,
 }
 }
 
-BallRecoveryResult recover_ball(const BallRecoveryInput& input) {
+LooseBallPosition jitter_loose_ball(std::uint8_t x, std::uint8_t y,
+    std::uint8_t random_e2, std::uint8_t random_e3) {
+    const auto ball_x = add_jitter(x, random_e3);
+    const auto ball_y = add_jitter(y, random_e2);
+    return {ball_x, ball_y, static_cast<std::uint8_t>(random_e3 & 0x83u),
+        ball_x >= 48 && ball_x < 208 && ball_y >= 80 && ball_y < 176};
+}
+
+BallRecoveryResult recover_stationary_ball(const BallRecoveryInput& input) {
     if (input.ball_update_active) {
         throw std::invalid_argument("Active ball movement must be resolved before recovery");
     }
@@ -63,8 +71,8 @@ BallRecoveryResult recover_ball(const BallRecoveryInput& input) {
         }
     }
 
-    const auto ball_y = add_jitter(input.ball_y, input.random_e2);
-    const auto ball_x = add_jitter(input.ball_x, input.random_e3);
+    const auto ball_y = input.ball_y;
+    const auto ball_x = input.ball_x;
     if (ball_x < 0x30 || ball_x >= 0xd0 || ball_y < 0x50 || ball_y >= 0xb0) {
         throw std::invalid_argument("Ball recovery only covers the ordinary interior field");
     }
@@ -87,5 +95,13 @@ BallRecoveryResult recover_ball(const BallRecoveryInput& input) {
         : right.player_id;
     const std::uint8_t side = owner < 11 ? 0 : 11;
     return {ball_x, ball_y, owner, side, 0, false};
+}
+
+BallRecoveryResult recover_ball(const BallRecoveryInput& input) {
+    auto stationary = input;
+    const auto position = jitter_loose_ball(input.ball_x, input.ball_y, input.random_e2, input.random_e3);
+    stationary.ball_x = position.x;
+    stationary.ball_y = position.y;
+    return recover_stationary_ball(stationary);
 }
 }

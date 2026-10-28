@@ -33,11 +33,13 @@ For a native shot calculation using private game data, see [local shot content a
 
 An [optional SDL2 native window](docs/NATIVE_SHOT_SCENE.md) displays that same scene with placeholder graphics and keyboard controls. Enable it with CMake's `CAPTAIN_BUILD_SDL_SCENE` option; the default core build does not require SDL2.
 
-The [native field-phase laboratory](docs/NATIVE_FIELD_PHASE.md) adds persistent position/roster state, formation-based targets, player advancement and prepared terminal flight tails. It uses a private version4 content pack and a bounded `.cmjstate` checkpoint. Full match sequencing and live frame/random scheduling remain incomplete.
+The [native field-phase laboratory](docs/NATIVE_FIELD_PHASE.md) adds persistent position/roster state, formation-based targets, player advancement and prepared terminal flight tails. It requires private version4 or newer content and a bounded `.cmjstate` checkpoint. Full match sequencing and live frame/random scheduling remain incomplete.
 
 The [native phase session](docs/NATIVE_CONTACT_CLOCK.md) extends that checkpoint with contact status/time, keeper recovery and match-clock events. Version5 private content and `.cmjsession` state support possession/recovery handoffs, explicit added-time pauses and period-end boundaries.
 
-The [terminal reward integration](docs/NATIVE_CONTACT_REWARDS.md) adds persistent named-player experience and an explicit rewarded contact operation. Current private exports use content version6 and session version2; older supported formats remain readable.
+The [terminal reward integration](docs/NATIVE_CONTACT_REWARDS.md) adds persistent named-player experience and an explicit rewarded contact operation. That checkpoint introduced content version6 and session version2; older supported formats remain readable.
+
+The [persistent recovery session](docs/NATIVE_RECOVERY_SESSION.md) continues terminal loose balls through player advancement and recipient selection, preserving clock/rewards and coordinate fractions. Session version3 adds optional recovery context; unsupported restart/keeper/story routes pause explicitly. Prepared continuation can reach player control, while live input and presentation timing remain unfinished.
 
 ```bash
 ./build/captain-prototype --replica

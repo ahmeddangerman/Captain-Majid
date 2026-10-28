@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** persistent named-player rewards joined to terminal status/clock/handoffs, explicit added-time and period-end boundaries, and player/formation advancement.
-- **Next engine work:** recovery/player-control progression, remaining reward callers, and live ball-flight/frame scheduling.
+- **Current milestone:** persistent terminal rewards/status/clock now continue through ordinary loose-ball movement/recipient selection and a prepared player-control tail. Restart/keeper/story routes remain explicit pauses.
+- **Next engine work:** native player controls, recovery restart/keeper/story progression, remaining reward callers and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -182,3 +182,16 @@ Checkpoint review: One fresh independent static review found no material finding
 - Next resume point: integrate actual loose-ball recovery/player-control progression with phase-session state, then live ball-flight/frame/random scheduling. Full playable match and online match remain unfinished; overall port completion stays unmeasured.
 
 Final checkpoint: One fresh independent static review found no material findings, including original reward byte arithmetic and mapping, saturation, grant counts, resume behavior, backward formats and atomic session updates. Make/CMake production commands returned0 without diagnostics; no automated tests were added/run. Current task is complete as a local source checkpoint. No public push, website change or private game-data upload was performed.
+
+## 2026-10-28 — persistent recovery and prepared control tail
+
+- Resumed from local source commit `92d87ce` under the user's request for the next step. Reused the existing isolated `work` branch and private tools/data; no public website changes.
+- Corrected a research description: original9070 performs special-owner cleanup, not a random-generator call. Added a bounded original recovery observation tool with explicit host scheduler/frame/input/display acknowledgements.
+- Split ball jitter from recipient selection so native field advancement occurs in the original order. Committed ownership updates preserve fractions, clock, experience and keeper role state; possession sound is an event.
+- Added optional recovery context and bounded296-byte session3 snapshots, retaining versions1/2 with missing context explicit. Native `recover` and `continue-recovery` commands retain state and pause at restart, keeper-area and story gates.
+- Eight original recovery observations and seven subsequent boundary observations agree with native represented saved state in manual hash inspection. Joined rewarded contact→recovery→prepared control usage retains clock452/experience2 and transfers owner14/side11 to player2/side0. Repeated recovery after control is rejected without mutation.
+- Production builds and whole-plan static review are being finalized. No automated tests added/run; observations do not establish live NMI/full-match equivalence. See [NATIVE_RECOVERY_SESSION.md](NATIVE_RECOVERY_SESSION.md).
+
+Review checkpoint: One fresh independent static review found no material implementation findings, including original byte inspection of keeper/story gates, special-owner cleanup and ball-variant initialization. Completed the planned9070 documentation correction in its remaining historical descriptions/comment and marked README's session2 reference as historical. Reviewer ran no code/builds/tests. Legacy session1/2 usage loads with recovery context absent and rejects recovery without mutating state.
+
+Final checkpoint: Make/CMake production commands returned0 without warning/error lines after the final format guards. Fresh normal recovery/control command outputs retain the documented original snapshot hashes. Source saved locally; no private data or website changes included. No automated tests added/run. Next resume point is native player-control setup/actions, followed by explicit recovery restart/keeper/story handling and live frame/ball/random scheduling. Overall completion remains unmeasured.

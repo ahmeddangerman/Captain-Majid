@@ -33,7 +33,7 @@ def original(prg: bytes, fields: tuple) -> tuple[int, ...]:
         ram[record + 6], ram[record + 8] = player[0], player[1]
         ram[record + 10] = 1 if player[2] else 0
 
-    # Start where the $8BDF caller returns from its random-generator call.
+    # Start where the $8BDF caller returns from special-owner cleanup at9070.
     # The E2/E3 bytes are controlled inputs here; the subsequent recovery
     # code, including coordinate jitter and the ownership handoff, is original.
     cpu.pc, cpu.sp, cpu.p = 0x8BE2, 0xFD, cpu.UNUSED

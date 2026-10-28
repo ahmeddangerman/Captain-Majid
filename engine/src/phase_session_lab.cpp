@@ -1,5 +1,6 @@
 #include "captain/phase_session_io.hpp"
 #include "captain/shot_content.hpp"
+#include "captain/recovery_session.hpp"
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
@@ -24,6 +25,10 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::ball_recovery: return "ball recovery";
     case captain::FieldSessionPhase::added_time: return "added-time presentation pending";
     case captain::FieldSessionPhase::period_end: return "period transition pending";
+    case captain::FieldSessionPhase::boundary_restart: return "boundary restart pending";
+    case captain::FieldSessionPhase::recovered_owner: return "recovered owner; presentation tail pending";
+    case captain::FieldSessionPhase::keeper_interaction: return "keeper-area interaction pending";
+    case captain::FieldSessionPhase::story_transition: return "story transition pending";
     }
     return "invalid";
 }
@@ -49,6 +54,15 @@ void show(const captain::PhaseSessionState& state) {
         for (const auto total : state.experience->totals) std::cout << ' ' << total;
         std::cout << '\n';
     } else std::cout << "Experience: context absent\n";
+    if (state.recovery) {
+        const auto& recovery = *state.recovery;
+        std::cout << "Recovery: opponent " << unsigned(recovery.opposing_player)
+                  << " | attack subtype " << unsigned(recovery.attack_subtype)
+                  << " | owner flags " << unsigned(recovery.special_owner_flags)
+                  << " | ball variant " << unsigned(recovery.ball_variant)
+                  << " | game mode " << unsigned(recovery.game_mode)
+                  << " | jitter control " << unsigned(recovery.x_jitter_control) << '\n';
+    } else std::cout << "Recovery: context absent\n";
     for (unsigned slot = 1; slot <= 21; ++slot) {
         if (slot == 11) continue;
         const auto& actor = field.motion[captain::field_motion_index(static_cast<std::uint8_t>(slot))];
@@ -101,17 +115,31 @@ void advance(captain::PhaseSessionState& state, const captain::ShotContent& cont
     state.current.field = result.state;
     std::cout << "Advanced " << result.players.size() << " actors; clock unchanged.\n";
 }
+void recover(captain::PhaseSessionState& state, const captain::ShotContent& content) {
+    const auto result = captain::advance_session_recovery(state, content.field_players, *content.movement);
+    state = result.state;
+    std::cout << "Recovery advanced " << (result.movement ? result.movement->players.size() : 0)
+              << " actors | recipient " << (result.recipient ? std::to_string(result.recipient->ball_owner) : "pending")
+              << " | owner cleanup " << result.special_owner_cleared
+              << " | possession sound request " << result.request_possession_sound << '\n';
+}
+void continue_recovery(captain::PhaseSessionState& state) {
+    state = captain::continue_session_recovery(state);
+    std::cout << "Prepared recovery tail: " << phase_name(state.phase)
+              << "; frozen development inputs, no presentation/NMI emulation.\n";
+}
 }
 
 int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
-                     "or [--resume | --advance N] "
+                     "or [--resume | --recover | --continue-recovery | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
     try {
         bool interactive = false, run_resume = false, defense_options = false, rewarded = false;
+        bool run_recovery = false, run_continue_recovery = false;
         std::optional<unsigned> code, defender, elapsed;
         unsigned action = 0, subtype = 0;
         std::string capture;
@@ -119,6 +147,8 @@ int main(int argc, char** argv) {
             const std::string option = argv[i];
             if (option == "--interactive") interactive = true;
             else if (option == "--resume") run_resume = true;
+            else if (option == "--recover") run_recovery = true;
+            else if (option == "--continue-recovery") run_continue_recovery = true;
             else if (option == "--contact" || option == "--rewarded-contact" || option == "--defender" || option == "--advance" ||
                      option == "--defense-action" || option == "--defense-subtype" || option == "--capture") {
                 if (++i >= argc) throw std::invalid_argument("Missing option value");
@@ -133,7 +163,8 @@ int main(int argc, char** argv) {
                 else { subtype = number(argv[i]); defense_options = true; }
             } else throw std::invalid_argument("Unknown session option");
         }
-        if (unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) > 1)
+        if (unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) +
+            unsigned(run_recovery) + unsigned(run_continue_recovery) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -145,21 +176,26 @@ int main(int argc, char** argv) {
         std::cout << "Captain Majid native phase session; development checkpoint, incomplete match.\n";
         if (code) contact(state, content, *code, *defender, action, subtype, rewarded);
         if (run_resume) resume(state, content);
+        if (run_recovery) recover(state, content);
+        if (run_continue_recovery) continue_recovery(state);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
                 std::istringstream input(line);
                 std::string command, value, extra;
                 if (!(input >> command)) continue;
-                if (command == "state" || command == "quit" || command == "resume") {
+                if (command == "state" || command == "quit" || command == "resume" ||
+                    command == "recover" || command == "continue-recovery") {
                     if (input >> extra) throw std::invalid_argument("Command takes no arguments");
                     if (command == "quit") break;
                     if (command == "resume") resume(state, content);
+                    if (command == "recover") recover(state, content);
+                    if (command == "continue-recovery") continue_recovery(state);
                     show(state);
                 } else if (command == "advance" || command == "save") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");

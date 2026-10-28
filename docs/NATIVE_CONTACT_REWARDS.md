@@ -36,7 +36,9 @@ Rewarded operations require private version6 content and captured experience con
 | Campaign and opponent stage | 2 |
 | Eleven little-endian experience totals | 22 |
 
-When context is absent, its24bytes must all be zero. Readers reject invalid presence, campaign/stage bounds, truncation, trailing bytes and nonzero unused padding. Version1 remains readable with experience absent; current writers produce version2. `export_phase_session.py --without-experience` explicitly omits that context.
+When context is absent, its24bytes must all be zero. Readers reject invalid presence, campaign/stage bounds, truncation, trailing bytes and nonzero unused padding. Version1 remains readable with experience absent; writers at this checkpoint produced version2. `export_phase_session.py --without-experience` explicitly omits that context.
+
+The later [recovery integration](NATIVE_RECOVERY_SESSION.md) advances current writers to session version3, retaining these version1/2 readers and adding optional recovery context. The289-byte evidence below describes this reward checkpoint.
 
 ## Evidence and limits
 

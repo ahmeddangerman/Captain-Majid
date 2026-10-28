@@ -35,22 +35,38 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 4)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 8)
         throw std::invalid_argument("Unsupported phase session state");
     if ((state.phase == FieldSessionPhase::added_time) != bool(state.pending))
         throw std::invalid_argument("Added-time session needs exactly one pending terminal contact");
     if (state.pending) validate_contact(state.current.field, *state.pending);
     if (state.experience) validate_experience_state(*state.experience);
+    if (state.recovery && state.recovery->opposing_player > 21)
+        throw std::invalid_argument("Unsupported recovery opposing player");
+    if (static_cast<unsigned>(state.phase) >= 5 && !state.recovery)
+        throw std::invalid_argument("Recovery continuation needs captured recovery context");
+    if (static_cast<unsigned>(state.phase) >= 5 && state.current.field.selected_defenders != 0)
+        throw std::invalid_argument("Recovery continuation requires zero selected defenders");
+    if (static_cast<unsigned>(state.phase) >= 6) {
+        field_motion_index(state.current.field.ball_owner);
+        if ((state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
+            throw std::invalid_argument("Recovered owner must belong to the possession side");
+        const auto& field = state.current.field;
+        if (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176)
+            throw std::invalid_argument("Recovered-owner continuation requires an interior ball");
+    }
 }
 
 PhaseSessionResult resolve_session_terminal(const PhaseSessionState& input,
     PendingTerminalContact contact, const PlayerProfileMappings& primary,
     const FieldPhaseContent& movement, const ContactPreludeContent& prelude) {
     validate_phase_session(input);
-    if (input.phase == FieldSessionPhase::added_time || input.phase == FieldSessionPhase::period_end)
-        throw std::invalid_argument("Session is waiting at a clock boundary");
+    if (input.phase != FieldSessionPhase::field && input.phase != FieldSessionPhase::player_control &&
+        input.phase != FieldSessionPhase::ball_recovery)
+        throw std::invalid_argument("Session is waiting at a continuation boundary");
     validate_contact(input.current.field, contact);
     auto state = input;
+    if (state.recovery) state.recovery->opposing_player = contact.defender_id;
     if (contact.result_code == 2) {
         const auto& defender = state.current.field.motion[field_motion_index(contact.defender_id)];
         state.current.field.ball_x = static_cast<std::uint8_t>(defender.x >> 8);

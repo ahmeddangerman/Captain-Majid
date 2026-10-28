@@ -9,7 +9,7 @@
 | Original behavior research | Private CPU observations and many historical component comparisons; full frame/audio behavior remains outside the harness. | Supported gameplay phases have documented original inputs, outputs and timing boundaries. |
 | Native shot calculation | Development lab joins preparation, initial contacts, one later burst, keeper comparison and immediate outcomes in both directions. | Gameplay supplies the inputs from a coherent match rather than a resettable constructed scene. |
 | Movement | Native target-direction, speed profiles, formation/tactic targets and ordered field advancement implemented for staged interrupt-free inputs. Live frame/random scheduling and ball-flight progression remain pending. | Player and ball state advance coherently through action and possession transitions. |
-| Persistent match state | Persistent field and phase-session labs include named-player rewards, contact status/time, keeper recovery, clock events and supported terminal tails. Added-time/period-end pauses are explicit. No canonical full-match state yet. | Atomic roster/ball/clock/score/phase commits, save/replay snapshots and supported next actions. |
+| Persistent match state | Persistent phase-session lab joins named-player rewards, contact/clock, terminal handoffs and ordinary loose-ball recipient selection. Prepared control tails and explicit clock/restart/keeper/story pauses exist. No canonical full-match state yet. | Atomic roster/ball/clock/score/phase commits, save/replay snapshots and supported next actions. |
 | Playable match | Not implemented. | Two teams can start, finish and restart a complete match with supported rules and controls. |
 | Campaign and team AI | Not integrated. | Original team setup, progression, AI decisions and match scheduling work in native play. |
 | Game presentation and languages | Private content analysis and placeholder native window; no complete runtime graphics/music/text/cutscene system. | Arabic, Japanese and English game flows render and play correctly. |
@@ -21,7 +21,7 @@
 
 ## Current engineering sequence
 
-1. Connect autonomous recovery/player-control progression and remaining reward callers around the joined terminal phase.
+1. Extend native player controls and the explicit recovery restart/keeper/story routes; connect remaining reward callers.
 2. Extend field snapshots into coherent match phases with clock/score, recovery and player actions.
 3. Integrate live ball-flight and frame/random scheduling with atomic state commits.
 4. Complete playable match, original presentation and desktop integration.
