@@ -41,6 +41,8 @@ The [terminal reward integration](docs/NATIVE_CONTACT_REWARDS.md) adds persisten
 
 The [persistent recovery session](docs/NATIVE_RECOVERY_SESSION.md) continues terminal loose balls through player advancement and recipient selection, preserving clock/rewards and coordinate fractions. Session version3 adds optional recovery context; unsupported restart/keeper/story routes pause explicitly. Prepared continuation can reach player control, while live input and presentation timing remain unfinished.
 
+The [player-control setup](docs/NATIVE_CONTROL_SETUP.md) now prepares either possession side, refreshes the carrier/ball cell and selects the controlled defender for opposing possession. Current session exports use version4 with optional control context. Setup stops before the live input loop.
+
 ```bash
 ./build/captain-prototype --replica
 ```

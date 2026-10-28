@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** persistent terminal rewards/status/clock now continue through ordinary loose-ball movement/recipient selection and a prepared player-control tail. Restart/keeper/story routes remain explicit pauses.
-- **Next engine work:** native player controls, recovery restart/keeper/story progression, remaining reward callers and live ball-flight/frame scheduling.
+- **Current milestone:** persistent terminal/recovery phases now reach field-carrier control setup for both sides, including ball/cell refresh and controlled-defender selection. Live inputs remain unfinished; restart/keeper/story routes stay explicit.
+- **Next engine work:** logical input/decision handling, carrier movement, recovery restart/keeper/story progression, remaining reward callers and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -195,3 +195,14 @@ Final checkpoint: One fresh independent static review found no material findings
 Review checkpoint: One fresh independent static review found no material implementation findings, including original byte inspection of keeper/story gates, special-owner cleanup and ball-variant initialization. Completed the planned9070 documentation correction in its remaining historical descriptions/comment and marked README's session2 reference as historical. Reviewer ran no code/builds/tests. Legacy session1/2 usage loads with recovery context absent and rejects recovery without mutating state.
 
 Final checkpoint: Make/CMake production commands returned0 without warning/error lines after the final format guards. Fresh normal recovery/control command outputs retain the documented original snapshot hashes. Source saved locally; no private data or website changes included. No automated tests added/run. Next resume point is native player-control setup/actions, followed by explicit recovery restart/keeper/story handling and live frame/ball/random scheduling. Overall completion remains unmeasured.
+
+## 2026-10-28 — field-carrier control setup
+
+- Resumed from local source commit `c81afdd`. Extended original observation mode through E0DF→E145, stopping before live controller/frame logic and recording ordered presentation requests.
+- Added control setup for both possession sides, ball/cell refresh from the carrier, decision/facing initialization and nearest available controlled-defender selection for opposing possession. Reused the recovery nearest-player primitive.
+- Preserved original special-owner cleanup and the0469 high-byte write through the existing represented slot10. Clock values/ordinary experience totals and coordinate fractions are retained; script/ball flags are initialized as in the original setup.
+- Added optional seven-byte control context and304-byte session4 snapshots, retaining readers1–3 with missing context explicit. Native `setup-control` yields phase9 control-ready, distinct from phase1 handler entry.
+- Seven private original/native represented saved-state observations agree in manual hash inspection, including stale ball coordinates, count clearing, unavailable defenders, side normalization and both field edges. See [NATIVE_CONTROL_SETUP.md](NATIVE_CONTROL_SETUP.md).
+- Production builds, joined-session usage and fresh whole-plan static review are being finalized. No automated tests added/run. Live inputs/actions, full frame timing, presentation and a complete match remain unfinished; overall completion stays unmeasured.
+
+Final checkpoint: Make/CMake production builds returned0 without warning/error lines. Joined rewarded contact→recovery→prepared control→setup produces the same documented304-byte original control-ready hash. Repeated setup and legacy session3 without control context are rejected without mutating state. One fresh independent static review found no material findings and inspected original setup/selection bytes; it executed no code/builds/tests. Source saved locally, no public push or private data publication. Next: logical button/decision handling and carrier movement, with frame/clock scheduling still explicit work ahead.

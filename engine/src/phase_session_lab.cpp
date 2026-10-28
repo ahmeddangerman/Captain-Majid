@@ -1,6 +1,7 @@
 #include "captain/phase_session_io.hpp"
 #include "captain/shot_content.hpp"
 #include "captain/recovery_session.hpp"
+#include "captain/control_session.hpp"
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
@@ -29,6 +30,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::recovered_owner: return "recovered owner; presentation tail pending";
     case captain::FieldSessionPhase::keeper_interaction: return "keeper-area interaction pending";
     case captain::FieldSessionPhase::story_transition: return "story transition pending";
+    case captain::FieldSessionPhase::control_ready: return "player control ready; input loop pending";
     }
     return "invalid";
 }
@@ -63,6 +65,15 @@ void show(const captain::PhaseSessionState& state) {
                   << " | game mode " << unsigned(recovery.game_mode)
                   << " | jitter control " << unsigned(recovery.x_jitter_control) << '\n';
     } else std::cout << "Recovery: context absent\n";
+    if (state.control) {
+        const auto& control = *state.control;
+        std::cout << "Control: timer " << unsigned(control.decision_timer)
+                  << " | facing " << unsigned(control.facing)
+                  << " | controlled player " << unsigned(control.controlled_player)
+                  << " | last carrier cell " << unsigned(control.last_carrier_cell)
+                  << " | travel " << control.travel_accumulator
+                  << " | display parameter " << unsigned(control.display_parameter) << '\n';
+    } else std::cout << "Control: context absent\n";
     for (unsigned slot = 1; slot <= 21; ++slot) {
         if (slot == 11) continue;
         const auto& actor = field.motion[captain::field_motion_index(static_cast<std::uint8_t>(slot))];
@@ -128,18 +139,29 @@ void continue_recovery(captain::PhaseSessionState& state) {
     std::cout << "Prepared recovery tail: " << phase_name(state.phase)
               << "; frozen development inputs, no presentation/NMI emulation.\n";
 }
+void setup_control(captain::PhaseSessionState& state) {
+    const auto result = captain::prepare_session_control(state);
+    state = result.state;
+    std::cout << "Prepared control | selected defender "
+              << (result.defender ? std::to_string(result.defender->player_id) : "unchanged")
+              << " | special cleanup " << result.special_owner_cleared << '\n';
+    for (const auto& request : result.presentation)
+        std::cout << "Presentation request " << static_cast<unsigned>(request.kind)
+                  << " | id " << unsigned(request.id) << '\n';
+}
 }
 
 int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
-                     "or [--resume | --recover | --continue-recovery | --advance N] "
+                     "or [--resume | --recover | --continue-recovery | --setup-control | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
     try {
         bool interactive = false, run_resume = false, defense_options = false, rewarded = false;
         bool run_recovery = false, run_continue_recovery = false;
+        bool run_setup_control = false;
         std::optional<unsigned> code, defender, elapsed;
         unsigned action = 0, subtype = 0;
         std::string capture;
@@ -149,6 +171,7 @@ int main(int argc, char** argv) {
             else if (option == "--resume") run_resume = true;
             else if (option == "--recover") run_recovery = true;
             else if (option == "--continue-recovery") run_continue_recovery = true;
+            else if (option == "--setup-control") run_setup_control = true;
             else if (option == "--contact" || option == "--rewarded-contact" || option == "--defender" || option == "--advance" ||
                      option == "--defense-action" || option == "--defense-subtype" || option == "--capture") {
                 if (++i >= argc) throw std::invalid_argument("Missing option value");
@@ -164,7 +187,7 @@ int main(int argc, char** argv) {
             } else throw std::invalid_argument("Unknown session option");
         }
         if (unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) +
-            unsigned(run_recovery) + unsigned(run_continue_recovery) > 1)
+            unsigned(run_recovery) + unsigned(run_continue_recovery) + unsigned(run_setup_control) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -178,11 +201,12 @@ int main(int argc, char** argv) {
         if (run_resume) resume(state, content);
         if (run_recovery) recover(state, content);
         if (run_continue_recovery) continue_recovery(state);
+        if (run_setup_control) setup_control(state);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -190,12 +214,13 @@ int main(int argc, char** argv) {
                 std::string command, value, extra;
                 if (!(input >> command)) continue;
                 if (command == "state" || command == "quit" || command == "resume" ||
-                    command == "recover" || command == "continue-recovery") {
+                    command == "recover" || command == "continue-recovery" || command == "setup-control") {
                     if (input >> extra) throw std::invalid_argument("Command takes no arguments");
                     if (command == "quit") break;
                     if (command == "resume") resume(state, content);
                     if (command == "recover") recover(state, content);
                     if (command == "continue-recovery") continue_recovery(state);
+                    if (command == "setup-control") setup_control(state);
                     show(state);
                 } else if (command == "advance" || command == "save") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");

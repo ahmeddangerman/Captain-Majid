@@ -1,0 +1,11 @@
+# Native player-control setup
+
+Continue the existing player-control handoff through the original E0DF→E145 setup, stopping before the live input loop. Preserve the ball-carrier snapshot, refresh ball position/cell, initialize decision/UI state, normalize possession side, and choose the controlled defender when the opposing side owns the ball.
+
+Use the existing pure field calculations and a copied session operation. Alternatives were entering the entire input/AI/frame loop now (its scheduling remains unresolved), or only renaming the current handoff (no gameplay progress). Choose a bounded native setup with presentation requests emitted separately under the user's standing authorization to continue.
+
+Original setup sets script/ball mode128, travel accumulator0, display parameter2 and the high byte at0469 to1. That address is represented by the existing optional experience slot10; preserve its low byte. Decision timer becomes10 and movement region255. Carrier integer coordinates replace ball coordinates and recompute its cell. Ball variant/defender count become0. Side derives from owner; facing is64 for side0 or0 for side11. Side0 can clear special flags/player20 low stamina. Side11 clears opposing player, finds the nearest available side0 field player, assigns carrier target5 and captures the ball cell for later AI decisions.
+
+Add optional control context for decision timer, facing, controlled player, last carrier cell, travel accumulator and display parameter. Snapshot version4 appends presence+seven bytes to version3 (304bytes total), with old readers retained and missing context explicit. Setup requires field carrier plus recovery/control/experience context; it does not invent missing inputs. New phase9 marks control-ready before the original yield/input loop. Keep existing ball-recovery selectors compatible while exposing their nearest-player calculation for control setup.
+
+Emit ordered typed display/script/map requests instead of executing original presentation. No live NMI/controller/audio timing or legal match actions are inferred. Build production Make/CMake and inspect bounded original observations/native state, with no tests added/run under developer constraint. Keep all original data private. One fresh whole-plan review and local source commit finish this step.

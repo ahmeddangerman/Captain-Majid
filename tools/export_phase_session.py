@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
-"""Export an explicit private RAM checkpoint into a bounded CMJSESSION3 file."""
+"""Export an explicit private RAM checkpoint into a bounded CMJSESSION4 file."""
 import argparse
 import struct
 from pathlib import Path
 from export_field_state import export_state
 
 
-def export_session(ram, phase=0, pending=None, include_experience=True, include_recovery=True):
+def export_session(ram, phase=0, pending=None, include_experience=True, include_recovery=True, include_control=True):
     field = export_state(ram)
-    if phase not in range(9) or (phase == 3) != (pending is not None):
+    if phase not in range(10) or (phase == 3) != (pending is not None):
         raise ValueError('Only added-time phase3 requires pending terminal data')
     if phase >= 5 and ram[0x600] != 0:
         raise ValueError('Recovery continuation requires zero selected defenders')
@@ -16,6 +16,10 @@ def export_session(ram, phase=0, pending=None, include_experience=True, include_
         raise ValueError('Recovered owner must be a field player on the possession side')
     if phase >= 6 and not (48 <= ram[0x635] < 208 and 80 <= ram[0x637] < 176):
         raise ValueError('Recovered-owner continuation requires an interior ball')
+    if phase == 9 and not (include_experience and include_recovery and include_control):
+        raise ValueError('Control-ready state requires all captured contexts')
+    if phase == 9 and ram[0x5FB] == 11 and not 1 <= ram[0x5FD] <= 10:
+        raise ValueError('Opposing control-ready state needs a side0 field defender')
     if pending is not None:
         code, defender, action, subtype = pending
         if (code not in (2, 3) or defender not in (*range(1, 11), *range(12, 22))
@@ -36,26 +40,29 @@ def export_session(ram, phase=0, pending=None, include_experience=True, include_
         recovery = bytes(ram[a] for a in (0x442, 0x43C, 0x44C, 0x44E, 0x446, 0x62C))
     elif phase >= 5:
         raise ValueError('Recovery continuation requires captured recovery context')
-    return (b'CMJSESSION3' + field + clock
+    control = bytes(ram[a] for a in (0x614, 0x517, 0x5FD, 0x617, 0x642, 0x643, 0x8E)) if include_control else bytes(7)
+    return (b'CMJSESSION4' + field + clock
             + struct.pack('<BB4B', phase, int(pending is not None), *(pending or (0, 0, 0, 0)))
             + bytes((int(include_experience),)) + experience
-            + bytes((int(include_recovery),)) + recovery)
+            + bytes((int(include_recovery),)) + recovery
+            + bytes((int(include_control),)) + control)
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('ram', type=Path)
     parser.add_argument('output', type=Path)
-    parser.add_argument('--phase', type=int, choices=range(9), default=0)
+    parser.add_argument('--phase', type=int, choices=range(10), default=0)
     parser.add_argument('--pending', type=int, nargs=4, metavar=('CODE', 'DEFENDER', 'ACTION', 'SUBTYPE'))
     parser.add_argument('--without-experience', action='store_true', help='Do not infer campaign/experience context')
     parser.add_argument('--without-recovery', action='store_true', help='Omit unavailable recovery context')
+    parser.add_argument('--without-control', action='store_true', help='Omit unavailable control context')
     args = parser.parse_args()
     if args.output.suffix != '.cmjsession':
         parser.error('Use a private .cmjsession output path (ignored by Git)')
     try:
         data = export_session(args.ram.read_bytes(), args.phase, args.pending,
-                              not args.without_experience, not args.without_recovery)
+                              not args.without_experience, not args.without_recovery, not args.without_control)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError, struct.error) as error:

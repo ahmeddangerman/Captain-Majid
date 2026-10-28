@@ -66,6 +66,8 @@ Absent context requires zero padding. Readers retain session versions1/2 with re
 
 This remains a development snapshot, not a complete game save or authenticated network protocol. ROMs, exported packs, RAM and snapshots remain private and ignored by Git.
 
+The later [control setup](NATIVE_CONTROL_SETUP.md) adds current snapshot version4 while retaining version3 and these recovery boundaries. The296-byte observations below describe the recovery checkpoint.
+
 ## Evidence and limitations
 
 `tools/trace_ball_recovery_phase.py` observes original entry `$8BDF` to the recovered-owner boundary, or an outside-field boundary. With `--continue-handoff`, it observes the prepared tail to player control or the keeper/story gate. Its cooperative scheduler/host frame/input/display/graphics acknowledgements are disclosed in the report. No original calls are skipped; NMI, PPU, audio and real frame timing are not emulated.

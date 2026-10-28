@@ -20,7 +20,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if (version != '1' && version != '2' && version != '3')
+    if (version != '1' && version != '2' && version != '3' && version != '4')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -64,6 +64,20 @@ PhaseSessionState load_phase_session(std::istream& input) {
                  recovery.ball_variant || recovery.game_mode || recovery.x_jitter_control)
             throw std::invalid_argument("Nonzero unused recovery data");
     }
+    if (version >= '4') {
+        const auto present = byte(input);
+        if (present > 1) throw std::invalid_argument("Unsupported control presence flag");
+        ControlContext control{};
+        control.decision_timer = byte(input); control.facing = byte(input);
+        control.controlled_player = byte(input); control.last_carrier_cell = byte(input);
+        const auto low = byte(input);
+        control.travel_accumulator = static_cast<std::uint16_t>(unsigned(low) | (unsigned(byte(input)) << 8));
+        control.display_parameter = byte(input);
+        if (present) state.control = control;
+        else if (control.decision_timer || control.facing || control.controlled_player ||
+                 control.last_carrier_cell || control.travel_accumulator || control.display_parameter)
+            throw std::invalid_argument("Nonzero unused control data");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -74,7 +88,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, '3');
+    byte(output, '4');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -97,6 +111,11 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     const auto recovery = state.recovery.value_or(RecoveryContext{});
     for (const auto value : {recovery.opposing_player, recovery.attack_subtype, recovery.special_owner_flags,
          recovery.ball_variant, recovery.game_mode, recovery.x_jitter_control}) byte(output, value);
+    byte(output, state.control ? 1 : 0);
+    const auto control = state.control.value_or(ControlContext{});
+    for (const auto value : {control.decision_timer, control.facing, control.controlled_player,
+         control.last_carrier_cell, static_cast<std::uint8_t>(control.travel_accumulator),
+         static_cast<std::uint8_t>(control.travel_accumulator >> 8), control.display_parameter}) byte(output, value);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

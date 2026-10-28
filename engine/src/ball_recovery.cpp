@@ -17,19 +17,15 @@ std::uint8_t player_id_for_index(std::size_t index) {
     return static_cast<std::uint8_t>(index < 10 ? index + 1 : index + 2);
 }
 
-struct Candidate {
-    std::uint8_t player_id;
-    std::uint8_t radius;
-};
+}
 
-Candidate closest_available(const BallRecoveryInput& input,
-                            std::uint8_t side,
-                            std::uint8_t ball_x,
-                            std::uint8_t ball_y) {
+NearestFieldPlayerResult find_nearest_field_player(const NearestFieldPlayerInput& input) {
+    if (input.side != 0 && input.side != 11)
+        throw std::invalid_argument("Nearest-player search requires side0 or11");
     for (unsigned radius = 8; radius <= 248; radius += 8) {
         for (std::size_t index = 0; index < input.players.size(); ++index) {
             const auto id = player_id_for_index(index);
-            const bool on_side = side == 0 ? id < 11 : id >= 12;
+            const bool on_side = input.side == 0 ? id < 11 : id >= 12;
             if (!on_side || id == input.ball_owner || id == input.opposing_player) {
                 continue;
             }
@@ -37,17 +33,16 @@ Candidate closest_available(const BallRecoveryInput& input,
             if (player.unavailable) continue;
 
             const auto dx = static_cast<unsigned>(
-                player.x > ball_x ? player.x - ball_x : ball_x - player.x);
+                player.x > input.ball_x ? player.x - input.ball_x : input.ball_x - player.x);
             if (dx >= radius) continue;
             const auto dy = static_cast<unsigned>(
-                player.y > ball_y ? player.y - ball_y : ball_y - player.y);
+                player.y > input.ball_y ? player.y - input.ball_y : input.ball_y - player.y);
             if (dy < radius) {
                 return {id, static_cast<std::uint8_t>(radius)};
             }
         }
     }
-    throw std::invalid_argument("Ball recovery needs an available player on each side");
-}
+    throw std::invalid_argument("Nearest-player search needs an available player on the requested side");
 }
 
 LooseBallPosition jitter_loose_ball(std::uint8_t x, std::uint8_t y,
@@ -87,8 +82,10 @@ BallRecoveryResult recover_stationary_ball(const BallRecoveryInput& input) {
         }
     }
 
-    const auto left = closest_available(input, 0, ball_x, ball_y);
-    const auto right = closest_available(input, 11, ball_x, ball_y);
+    const auto left = find_nearest_field_player({0, ball_x, ball_y, input.ball_owner,
+        input.opposing_player, input.players});
+    const auto right = find_nearest_field_player({11, ball_x, ball_y, input.ball_owner,
+        input.opposing_player, input.players});
     const auto owner = left.radius < right.radius ||
             (left.radius == right.radius && (input.random_e2 & 0x80) == 0)
         ? left.player_id

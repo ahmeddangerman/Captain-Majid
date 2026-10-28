@@ -15,6 +15,12 @@ struct RecoveryDefender {
     std::uint8_t player_id;
     std::uint8_t defense_action;
 };
+struct NearestFieldPlayerInput {
+    std::uint8_t side, ball_x, ball_y, ball_owner, opposing_player;
+    std::array<RecoveryPlayer, 20> players;
+};
+struct NearestFieldPlayerResult { std::uint8_t player_id, radius; };
+NearestFieldPlayerResult find_nearest_field_player(const NearestFieldPlayerInput& input);
 
 struct BallRecoveryInput {
     std::uint8_t ball_x;

@@ -20,10 +20,13 @@ def story_gate(memory):
             and memory[0x306 + 12 * owner] >= 128)
 
 
-def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000, max_frames=10000):
+def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000, max_frames=10000,
+                   prepare_control=False):
     if len(ram) != 2048 or ram[0x22] & 64 or ram[0x5FB] not in (0, 11) or ram[0x441] > 21:
         raise ValueError('Expected2048-byte supported field checkpoint')
-    if ram[0x600] != 0:
+    if prepare_control and continue_handoff:
+        raise ValueError('Choose recovery continuation or control setup')
+    if ram[0x600] != 0 and not prepare_control:
         raise ValueError('Connected terminal recovery requires zero selected defenders')
     if max_instructions < 1 or max_frames < 1:
         raise ValueError('Observation bounds must be positive')
@@ -37,15 +40,24 @@ def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000,
     memory.select = memory[0x23]
     memory.registers[6:8] = [26, 27]
     cpu = MPU(memory=memory)
-    cpu.pc, cpu.sp, cpu.p = (0x8C31 if continue_handoff else 0x8BDF), 0x50, cpu.UNUSED
+    cpu.pc, cpu.sp, cpu.p = (0xE0DF if prepare_control else 0x8C31 if continue_handoff else 0x8BDF), 0x50, cpu.UNUSED
     entry = cpu.pc
-    frames, checkpoints = [], []
+    frames, checkpoints, presentation = [], [], []
     for steps in range(max_instructions):
         if cpu.pc < 0x8000:
             raise RuntimeError(f'Unexpected execution outside original PRG: ${cpu.pc:04X}')
         bank = memory.bank_at(cpu.pc)
         boundary = None
-        if bank == 26:
+        if prepare_control and bank == 31 and cpu.pc == 0xE145:
+            boundary = 'player_control_ready'
+        if prepare_control and bank == 31:
+            if cpu.pc in (0xE0E1, 0xE0E6, 0xE26E, 0xE273, 0xE279):
+                presentation.append({'kind': 0, 'id': cpu.a})
+            elif cpu.pc == 0xE235:
+                presentation.append({'kind': 1, 'id': cpu.a})
+            elif cpu.pc == 0xE247:
+                presentation.append({'kind': 2, 'id': 0})
+        if bank == 26 and not prepare_control:
             if not continue_handoff and cpu.pc == 0x8CA4:
                 if not (48 <= memory[0x635] < 208 and 80 <= memory[0x637] < 176):
                     boundary = 'boundary_restart'
@@ -69,6 +81,7 @@ def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000,
                 'host_setup': 'Foreground task5/SP50, background task1/EB86/SP90, banks26/27; scheduler slots replaced.',
                 'host_policy': 'Each CAAE frame: set1B.bit7, clear515, set held/edge buttons129, consume one498 descriptor.',
                 'host_frames': frames, 'checkpoints': checkpoints,
+                'presentation_requests': presentation,
                 'ball': [memory[0x635], memory[0x637]], 'owner': memory[0x441],
                 'side': memory[0x5FB], 'elapsed': memory[0x5FF],
                 'random': [memory[0xE2], memory[0xE3]]}, bytes(memory.ram[:2048])
@@ -92,7 +105,9 @@ def main():
     parser.add_argument('ram', type=Path)
     parser.add_argument('report', type=Path)
     parser.add_argument('output_ram', type=Path)
-    parser.add_argument('--continue-handoff', action='store_true')
+    modes = parser.add_mutually_exclusive_group()
+    modes.add_argument('--continue-handoff', action='store_true')
+    modes.add_argument('--prepare-control', action='store_true')
     parser.add_argument('--max-instructions', type=int, default=2_000_000)
     parser.add_argument('--max-frames', type=int, default=10000)
     args = parser.parse_args()
@@ -100,7 +115,7 @@ def main():
     if len(rom) != 393232 or rom[:4] != b'NES\x1a' or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
         parser.error('ROM does not match the verified Japanese reference')
     report, final = trace_recovery(rom[16:262160], args.ram.read_bytes(), args.continue_handoff,
-                                   args.max_instructions, args.max_frames)
+                                   args.max_instructions, args.max_frames, args.prepare_control)
     with args.output_ram.open('xb') as output: output.write(final)
     with args.report.open('x') as output: json.dump(report, output, indent=2)
     print(f"Observed {report['boundary']} at ${report['exit']:04X}, {report['original_instructions']} original instructions.")
