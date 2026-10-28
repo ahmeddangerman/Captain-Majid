@@ -22,7 +22,7 @@ def story_gate(memory):
 
 def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000, max_frames=10000,
                    prepare_control=False, control_input=None, control_tick=False,
-                   world_inputs=None, resume_control_time=False):
+                   world_inputs=None, resume_control_time=False, selected_recovery=False):
     if len(ram) != 2048 or ram[0x22] & 64 or ram[0x5FB] not in (0, 11) or ram[0x441] > 21:
         raise ValueError('Expected2048-byte supported field checkpoint')
     if sum((bool(prepare_control), bool(continue_handoff), control_input is not None,
@@ -33,7 +33,13 @@ def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000,
     if world_inputs is not None and (len(world_inputs) != 22 or any(len(pair) != 2 or any(
             not isinstance(v, int) or not 0 <= v <= 255 for v in pair) for pair in world_inputs)):
         raise ValueError('Field round requires22held/pressed pairs')
-    if ram[0x600] != 0 and not prepare_control:
+    if selected_recovery:
+        if prepare_control or control_input is not None or control_tick or world_inputs is not None or resume_control_time:
+            raise ValueError('Selected recovery observation only supports recovery/prepared handoff modes')
+        if not 1 <= ram[0x600] <= 5 or any(ram[0x601+i] not in (*range(1,11),*range(12,22)) or
+                                         ram[0x60B+i] > 6 for i in range(ram[0x600])):
+            raise ValueError('Selected recovery needs a bounded field/action prefix')
+    if ram[0x600] != 0 and not prepare_control and not selected_recovery:
         raise ValueError('Connected terminal recovery requires zero selected defenders')
     if max_instructions < 1 or max_frames < 1:
         raise ValueError('Observation bounds must be positive')
@@ -151,6 +157,7 @@ def main():
     modes.add_argument('--advance-control', action='store_true')
     modes.add_argument('--resume-control-time', action='store_true')
     modes.add_argument('--advance-world', nargs=2, type=int, metavar=('HELD', 'PRESSED'))
+    parser.add_argument('--selected-recovery', action='store_true', help='Preserve an explicit selected field/action prefix')
     parser.add_argument('--max-instructions', type=int, default=2_000_000)
     parser.add_argument('--max-frames', type=int, default=10000)
     args = parser.parse_args()
@@ -160,7 +167,7 @@ def main():
     report, final = trace_recovery(rom[16:262160], args.ram.read_bytes(), args.continue_handoff,
                                    args.max_instructions, args.max_frames, args.prepare_control, args.poll_control,
                                    args.advance_control, [args.advance_world] * 22 if args.advance_world else None,
-                                   args.resume_control_time)
+                                   args.resume_control_time, args.selected_recovery)
     with args.output_ram.open('xb') as output: output.write(final)
     with args.report.open('x') as output: json.dump(report, output, indent=2)
     print(f"Observed {report['boundary']} at ${report['exit']:04X}, {report['original_instructions']} original instructions.")

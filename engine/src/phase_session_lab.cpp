@@ -55,6 +55,8 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::selected_ball_recovery: return "selected shot loose-ball recovery pending";
     case captain::FieldSessionPhase::selected_defense_animation: return "selected defense animation pending";
     case captain::FieldSessionPhase::selected_restart_entry: return "selected shot restart entry";
+    case captain::FieldSessionPhase::selected_recovered_owner: return "selected recovered owner; presentation pending";
+    case captain::FieldSessionPhase::selected_boundary_restart: return "selected recovery boundary restart pending";
     }
     return "invalid";
 }
@@ -175,6 +177,28 @@ void recover(captain::PhaseSessionState& state, const captain::ShotContent& cont
     std::cout << "Recovery advanced " << (result.movement ? result.movement->players.size() : 0)
               << " actors | recipient " << (result.recipient ? std::to_string(result.recipient->ball_owner) : "pending")
               << " | owner cleanup " << result.special_owner_cleared
+              << " | possession sound request " << result.request_possession_sound << '\n';
+}
+void recover_selected_file(captain::PhaseSessionState& state, const captain::ShotContent& content,
+                           const std::string& path) {
+    captain::validate_phase_session(state);
+    if (state.phase != captain::FieldSessionPhase::selected_ball_recovery)
+        throw std::invalid_argument("Selected recovery requires its saved handoff");
+    std::ifstream input(path);
+    if (!input) throw std::invalid_argument("Unable to open selected recovery action file");
+    std::vector<captain::RecoveryDefender> choices;
+    for (unsigned i=0;i<state.current.field.selected_defenders;++i) {
+        unsigned action;
+        if (!(input >> action) || action > 6) throw std::invalid_argument("Expected one action0..6 per saved selected player");
+        choices.push_back({state.scheduling->selected_ids[i],static_cast<std::uint8_t>(action)});
+    }
+    input >> std::ws;
+    if (input.peek() != std::char_traits<char>::eof() || input.bad())
+        throw std::invalid_argument("Trailing or unreadable selected recovery actions");
+    const auto result = captain::advance_session_selected_recovery(state,choices,content.field_players,*content.movement);
+    state = result.state;
+    std::cout << "Selected recovery | recipient " << (result.recipient ? std::to_string(result.recipient->ball_owner) : "pending")
+              << " | direct selected capture " << (result.recipient && result.recipient->direct_defender_capture)
               << " | possession sound request " << result.request_possession_sound << '\n';
 }
 void continue_recovery(captain::PhaseSessionState& state) {
@@ -353,7 +377,7 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
-                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --advance N] "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -362,7 +386,8 @@ int main(int argc, char** argv) {
         bool run_recovery = false, run_continue_recovery = false;
         bool run_setup_control = false;
         bool run_control_tick = false, resume_control_time = false;
-        bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false;
+        bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false;
+        std::optional<std::string> selected_recovery_file;
         std::optional<std::array<unsigned,4>> staged_input;
         std::optional<unsigned> dispatch_elapsed;
         std::optional<unsigned> code, defender, elapsed;
@@ -385,6 +410,11 @@ int main(int argc, char** argv) {
             else if (option == "--prepare-basic-shot") run_prepare_basic_shot = true;
             else if (option == "--resume-shot-clock") resume_shot_clock = true;
             else if (option == "--resolve-shot-result") run_selected_result = true;
+            else if (option == "--continue-selected-recovery") run_continue_selected = true;
+            else if (option == "--recover-selected-file") {
+                if (++i >= argc || selected_recovery_file) throw std::invalid_argument("Expected one selected recovery file");
+                selected_recovery_file = argv[i];
+            }
             else if (option == "--dispatch-shot") {
                 if (++i >= argc || dispatch_elapsed) throw std::invalid_argument("Expected one dispatch elapsed byte");
                 dispatch_elapsed = number(argv[i]);
@@ -437,7 +467,7 @@ int main(int argc, char** argv) {
             unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) > 1)
+            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -464,11 +494,13 @@ int main(int argc, char** argv) {
         if (dispatch_elapsed) dispatch_shot(state,*dispatch_elapsed);
         if (resume_shot_clock) state = captain::resume_session_shot_clock(state);
         if (run_selected_result) resolve_shot_result(state,content);
+        if (selected_recovery_file) recover_selected_file(state,content,*selected_recovery_file);
+        if (run_continue_selected) state = captain::continue_session_selected_recovery(state);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -477,9 +509,10 @@ int main(int argc, char** argv) {
                 if (!(input >> command)) continue;
                 if (command == "state" || command == "quit" || command == "resume" ||
                     command == "recover" || command == "continue-recovery" || command == "setup-control" ||
-                    command == "advance-control" || command == "resume-control-time" || command == "resume-shot-clock" || command == "resolve-shot-result") {
+                    command == "advance-control" || command == "resume-control-time" || command == "resume-shot-clock" || command == "resolve-shot-result" || command == "continue-selected-recovery") {
                     if (input >> extra) throw std::invalid_argument("Command takes no arguments");
                     if (command == "quit") break;
+                    if (command == "continue-selected-recovery") state = captain::continue_session_selected_recovery(state);
                     if (command == "resolve-shot-result") resolve_shot_result(state,content);
                     if (command == "resume-shot-clock") state = captain::resume_session_shot_clock(state);
                     if (command == "resume") resume(state, content);
@@ -516,9 +549,10 @@ int main(int argc, char** argv) {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected menu-input PRESSED");
                     menu_input(state, content, number(value));
                     show(state);
-                } else if (command == "advance" || command == "save" || command == "advance-world-file" || command == "shot-defenders-file") {
+                } else if (command == "advance" || command == "save" || command == "advance-world-file" || command == "shot-defenders-file" || command == "recover-selected-file") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");
                     if (command == "save") save(value, state);
+                    else if (command == "recover-selected-file") { recover_selected_file(state,content,value); show(state); }
                     else if (command == "shot-defenders-file") { shot_defenders_file(state, content, value); show(state); }
                     else if (command == "advance-world-file") { advance_world_file(state, content, value); show(state); }
                     else { advance(state, content, number(value)); show(state); }

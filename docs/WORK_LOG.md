@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** timed selected-shot contacts now enter terminal field dispatch. Direct captures return to player control; blocked balls, capture animations and restarts retain explicit pending boundaries. Pure shot/keeper calculations remain separate from the incomplete full-match loop.
-- **Next engine work:** connect selected recovery with its retained prefix and explicit action information, then defense animation/restart and nonterminal approach/flight/keeper routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Current milestone:** selected shots now run ordered contact timing, terminal result dispatch and blocked-ball recovery. Direct captures and ordinary recovered balls return to control setup. Animation, selected keeper/story/boundary routes and nonterminal flight remain pending.
+- **Next engine work:** connect defense animation and selected keeper/story/boundary restart handling, then nonterminal approach/flight/keeper routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -345,3 +345,26 @@ Daily website note updated separately; engine/private research remains local.
   selected recovery with saved prefix/action context, defense animation/restart,
   then nonterminal approach/flight/keeper routes. Overall completion unmeasured;
   full playable match and online match remain unfinished.
+
+## 2026-10-28 — selected blocked-ball recovery
+
+- Workspace resumed after transient unavailability; source checkpoint was e10a078.
+- Connected phase28 recovery with explicit full-prefix actions, including the
+  original first action5 preference for an unvisited suffix at randomE2<64.
+  Reused numeric zero-prefix recovery without repeating time, energy or rewards.
+- Added retained-prefix recovered-owner31 and boundary32. Side11 possession may
+  preserve the attacking selection; control setup clears it later. Ordinary
+  prepared continuation rejoins control; keeper/story cases remain safely pending.
+- Session11 marker B remains330bytes and reads versions1–10. CLI action files are
+  strict; repeated recovery rejects before applying jitter again.
+- Regression exposed missing new-phase validation, then passed after integration.
+  Full native/CLI/adapter/loopback/reference suite and production Make build passed
+  with clean compiler logs, using a same-source temporary core archive. CMake is
+  unavailable. Fresh independent review reported no material findings.
+- Four original/native recovery observations match324 prior represented bytes
+  after phase/version normalization; new progress metadata is excluded. Both
+  ordinary and suffix capture subsequently reached native control setup. See
+  NATIVE_SELECTED_RECOVERY.md for limits and private evidence paths.
+- Next: defense animation, selected keeper/story/boundary/restart handling, then
+  nonterminal shot approach/flight/keeper integration. Overall port unmeasured;
+  full playable match and online play remain unfinished.
