@@ -41,6 +41,7 @@ engine work; do not claim a browser render from source-only verification.
 
 - Linux C++17 + Make are verified. `make -j2 all` builds development programs;
   `make -j2 check` runs the core/CLI/adapter/loopback checks without ROMs.
+  Make reuses core objects/archive under build; no external archive workaround is needed.
 - CMake and optional SDL2 definitions exist; current cloud increments used Make.
   Native Windows builds and a complete graphical match remain unverified.
 - Research tools use tools/requirements.txt in a private Python environment.

@@ -1,30 +1,44 @@
+.DEFAULT_GOAL := all
 CXX ?= c++
 CPPFLAGS += -Iengine/include
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
-CORE = engine/src/action_strength.cpp engine/src/session.cpp engine/src/defender_contact.cpp engine/src/shot_power.cpp engine/src/goalkeeper.cpp
-CORE += engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_random.cpp
-CORE += engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp engine/src/defender_outcome.cpp
-CORE += engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
-CORE += engine/src/defender_selection.cpp
-CORE += engine/src/field_defender_preparation.cpp engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp engine/src/field_interruption.cpp
+CORE_SOURCES = engine/src/action_strength.cpp engine/src/session.cpp engine/src/defender_contact.cpp engine/src/shot_power.cpp engine/src/goalkeeper.cpp
+CORE_SOURCES += engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_random.cpp
+CORE_SOURCES += engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp engine/src/defender_outcome.cpp
+CORE_SOURCES += engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
+CORE_SOURCES += engine/src/defender_selection.cpp
+CORE_SOURCES += engine/src/field_defender_preparation.cpp engine/src/field_player_profile.cpp engine/src/prepared_defender_sequence.cpp engine/src/prepared_field_shot.cpp engine/src/prepared_attack.cpp engine/src/prepared_keeper.cpp engine/src/complete_prepared_shot.cpp engine/src/field_comparison_content.cpp engine/src/field_interruption.cpp
 RESEARCH = engine/src/research_protocol.cpp
-CORE += engine/src/shot_content.cpp
-CORE += engine/src/shot_scene.cpp
-CORE += engine/src/shot_approach.cpp
-CORE += engine/src/flight_contact.cpp
-CORE += engine/src/player_movement.cpp
-CORE += engine/src/movement_profile.cpp engine/src/field_targets.cpp engine/src/field_phase.cpp
-CORE += engine/src/field_state_io.cpp
-CORE += engine/src/terminal_flight_phase.cpp
-CORE += engine/src/match_clock.cpp engine/src/contact_prelude.cpp
-CORE += engine/src/phase_session.cpp engine/src/phase_session_io.cpp
-CORE += engine/src/experience.cpp
-CORE += engine/src/recovery_session.cpp
-CORE += engine/src/control_session.cpp
-CORE += engine/src/control_input.cpp
-CORE += engine/src/control_tick.cpp
-CORE += engine/src/action_menu.cpp engine/src/session_shot.cpp engine/src/staged_shot.cpp engine/src/selected_dispatch.cpp engine/src/capture_clearance.cpp engine/src/clearance_race.cpp engine/src/clearance_handoff.cpp engine/src/restart_route.cpp engine/src/restart_options.cpp
+CORE_SOURCES += engine/src/shot_content.cpp
+CORE_SOURCES += engine/src/shot_scene.cpp
+CORE_SOURCES += engine/src/shot_approach.cpp
+CORE_SOURCES += engine/src/flight_contact.cpp
+CORE_SOURCES += engine/src/player_movement.cpp
+CORE_SOURCES += engine/src/movement_profile.cpp engine/src/field_targets.cpp engine/src/field_phase.cpp
+CORE_SOURCES += engine/src/field_state_io.cpp
+CORE_SOURCES += engine/src/terminal_flight_phase.cpp
+CORE_SOURCES += engine/src/match_clock.cpp engine/src/contact_prelude.cpp
+CORE_SOURCES += engine/src/phase_session.cpp engine/src/phase_session_io.cpp
+CORE_SOURCES += engine/src/experience.cpp
+CORE_SOURCES += engine/src/recovery_session.cpp
+CORE_SOURCES += engine/src/control_session.cpp
+CORE_SOURCES += engine/src/control_input.cpp
+CORE_SOURCES += engine/src/control_tick.cpp
+CORE_SOURCES += engine/src/action_menu.cpp engine/src/session_shot.cpp engine/src/staged_shot.cpp engine/src/selected_dispatch.cpp engine/src/capture_clearance.cpp engine/src/clearance_race.cpp engine/src/clearance_handoff.cpp engine/src/restart_route.cpp engine/src/restart_options.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
+CORE_OBJECTS = $(patsubst engine/src/%.cpp,build/core/%.o,$(CORE_SOURCES))
+CORE = build/libcaptain-core.a
+
+build/core:
+	mkdir -p build/core
+
+build/core/%.o: engine/src/%.cpp $(HEADERS) | build/core
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) -c $< -o $@
+
+build/libcaptain-core.a: $(CORE_OBJECTS)
+	$(RM) $@
+	$(AR) rcs $@ $(CORE_OBJECTS)
+
 
 .PHONY: all check
 all: build/captain-prototype build/captain-shot-lab build/captain-field-lab build/captain-phase-session

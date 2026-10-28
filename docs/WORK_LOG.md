@@ -494,3 +494,26 @@ Daily website note updated separately; engine/private research remains local.
 - Next original step is script8→8410 status/clock→847F keeper status→ordinary
   actionC618/DCFD. Live scripts, actual shot flight, goal/keeper integration,
   complete matches and online play remain unfinished. Overall port unmeasured.
+
+
+## 2026-10-28 — reusable native build and next timing observation
+
+- Replaced Make's repeated per-program compilation of all core sources with52
+  reusable objects and build/libcaptain-core.a. Kept CORE override support and
+  explicitly retained all as the default target. No gameplay behavior changed.
+- Default make -j3 all and make -j3 check passed with clean diagnostics. A later
+  make -n all reports nothing to do. Logs: /tmp/cm-native-archive-build.log and
+  /tmp/cm-native-archive-suite.log. No temporary archive override was needed.
+- Next-step original-only reconnaissance starts at8410 after prepared script8,
+  reachesC618 with clock449→448, defender12 status0→6, elapsed0→1. Three disclosed
+  host frame acknowledgements occurred. Captures/report are private at
+  ../Captain-Majid-analysis/attack-prelude-recon-07goh9ab. This is not yet connected
+  to native phase43 and not proof of complete script/frame equivalence.
+- Arabic gameplay checkpoint note was pushed as public website commit1135e46;
+  commit-pinned published source matches local index.html. Browser rendering was
+  not checked. Engine work remains local/private.
+- Build review found no material regression. Addressed its archive-maintenance
+  concern by recreating the generated archive: inserted a temporary obsolete
+  object, rebuilt it, and verified exactly52current members remain. Production
+  build and full suite were rerun after that adjustment; see
+  /tmp/cm-archive-final-build.log and /tmp/cm-archive-final-suite.log.
