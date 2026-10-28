@@ -23,7 +23,7 @@ CORE += engine/src/recovery_session.cpp
 CORE += engine/src/control_session.cpp
 CORE += engine/src/control_input.cpp
 CORE += engine/src/control_tick.cpp
-CORE += engine/src/action_menu.cpp engine/src/session_shot.cpp
+CORE += engine/src/action_menu.cpp engine/src/session_shot.cpp engine/src/staged_shot.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 
 .PHONY: all check
@@ -110,7 +110,11 @@ build/field-interruption-tests: engine/tests/field_interruption_tests.cpp $(CORE
 build/session-shot-tests: engine/tests/session_shot_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/session_shot_tests.cpp $(CORE) -o $@
 
-check: build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+build/staged-shot-tests: engine/tests/staged_shot_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/staged_shot_tests.cpp $(CORE) -o $@
+
+check: build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+	./build/staged-shot-tests
 	./build/session-shot-tests
 	./build/field-interruption-tests
 	./build/field-comparison-content-tests

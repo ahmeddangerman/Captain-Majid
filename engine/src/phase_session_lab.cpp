@@ -3,6 +3,7 @@
 #include "captain/recovery_session.hpp"
 #include "captain/control_session.hpp"
 #include "captain/session_shot.hpp"
+#include "captain/staged_shot.hpp"
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
@@ -45,6 +46,11 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::attack_prepared: return "ordinary shot prepared";
     case captain::FieldSessionPhase::shot_field_complete: return "shot passed selected defenses; flight pending";
     case captain::FieldSessionPhase::shot_restart_pending: return "shot interruption; restart pending";
+    case captain::FieldSessionPhase::shot_defender_next: return "next selected shot defender";
+    case captain::FieldSessionPhase::shot_contact_added_time: return "shot contact added-time presentation pending";
+    case captain::FieldSessionPhase::shot_dispatch_clock: return "shot final dispatch clock pending";
+    case captain::FieldSessionPhase::shot_dispatch_added_time: return "shot dispatch added-time presentation pending";
+    case captain::FieldSessionPhase::shot_dispatch_ready: return "shot field result ready for dispatch";
     }
     return "invalid";
 }
@@ -61,6 +67,9 @@ void show(const captain::PhaseSessionState& state) {
               << " | cell " << unsigned(field.ball_cell) << " | elapsed " << unsigned(field.elapsed)
               << " | selected " << unsigned(field.selected_defenders)
               << " | random " << unsigned(field.random_first) << ',' << unsigned(field.random_second) << '\n';
+    if (state.shot_progress) std::cout << "Shot progress: cursor " << unsigned(state.shot_progress->cursor)
+        << " | result " << unsigned(state.shot_progress->result_code)
+        << " | defender " << unsigned(state.shot_progress->defender_id) << '\n';
     if (state.pending) std::cout << "Pending: " << unsigned(state.pending->result_code) << ' '
         << unsigned(state.pending->defender_id) << ' ' << unsigned(state.pending->defense_action)
         << ' ' << unsigned(state.pending->defense_subtype) << '\n';
@@ -292,6 +301,28 @@ void shot_defenders_file(captain::PhaseSessionState& state, const captain::ShotC
         << " | contact elapsed " << unsigned(result.terminal->prelude->elapsed_step) << '\n';
     if (result.restart) std::cout << "Restart route " << static_cast<unsigned>(result.restart->route) << " pending\n";
 }
+void staged_defense(captain::PhaseSessionState& state, const captain::ShotContent& content,
+                    const std::array<unsigned,4>& values) {
+    captain::validate_phase_session(state);
+    const auto cursor = state.shot_progress ? state.shot_progress->cursor : 0;
+    if (!state.scheduling || cursor >= state.current.field.selected_defenders)
+        throw std::invalid_argument("No selected defender remains");
+    captain::FieldDefenseChoice choice{};
+    choice.player_id = state.scheduling->selected_ids[cursor];
+    choice.action = static_cast<std::uint8_t>(values[0]);choice.subtype = static_cast<std::uint8_t>(values[1]);
+    choice.comparison.random_first = static_cast<std::uint8_t>(values[2]);
+    choice.comparison.random_second = static_cast<std::uint8_t>(values[3]);
+    const auto result = captain::step_session_shot_defender(state,choice,false,
+        content.field_players,content.defense,content.field_comparison,*content.contact);
+    state = result.state;
+    std::cout << "Selected defender stepped | clock " << state.current.clock.remaining
+              << " | result " << unsigned(state.shot_progress->result_code) << '\n';
+}
+void dispatch_shot(captain::PhaseSessionState& state, unsigned elapsed) {
+    const auto result = captain::dispatch_session_shot(state,static_cast<std::uint8_t>(elapsed));
+    state = result.state;
+    std::cout << "Final shot clock applied; dispatch handlers remain pending.\n";
+}
 void prepare_basic_shot(captain::PhaseSessionState& state, const captain::ShotContent& content) {
     if (!content.action_menu) throw std::invalid_argument("Shot preparation requires version9 menu content");
     const auto result = captain::prepare_session_basic_shot(state, content.field_players, content.attack);
@@ -309,7 +340,7 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
-                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --advance N] "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -318,7 +349,9 @@ int main(int argc, char** argv) {
         bool run_recovery = false, run_continue_recovery = false;
         bool run_setup_control = false;
         bool run_control_tick = false, resume_control_time = false;
-        bool run_open_action_menu = false, run_prepare_basic_shot = false;
+        bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false;
+        std::optional<std::array<unsigned,4>> staged_input;
+        std::optional<unsigned> dispatch_elapsed;
         std::optional<unsigned> code, defender, elapsed;
         std::optional<unsigned> menu_pressed;
         std::optional<std::array<unsigned, 2>> poll_input;
@@ -337,6 +370,17 @@ int main(int argc, char** argv) {
             else if (option == "--resume-control-time") resume_control_time = true;
             else if (option == "--open-action-menu") run_open_action_menu = true;
             else if (option == "--prepare-basic-shot") run_prepare_basic_shot = true;
+            else if (option == "--resume-shot-clock") resume_shot_clock = true;
+            else if (option == "--dispatch-shot") {
+                if (++i >= argc || dispatch_elapsed) throw std::invalid_argument("Expected one dispatch elapsed byte");
+                dispatch_elapsed = number(argv[i]);
+            }
+            else if (option == "--step-shot-defense") {
+                if (i + 4 >= argc || staged_input) throw std::invalid_argument("Expected four defense bytes");
+                std::array<unsigned,4> values{};
+                for (auto& value : values) value = number(argv[++i]);
+                staged_input = values;
+            }
             else if (option == "--shot-defenders-file") {
                 if (++i >= argc || shot_file) throw std::invalid_argument("Expected one shot defense file");
                 shot_file = argv[i];
@@ -379,7 +423,7 @@ int main(int argc, char** argv) {
             unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) > 1)
+            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -402,11 +446,14 @@ int main(int argc, char** argv) {
         if (menu_pressed) menu_input(state, content, *menu_pressed);
         if (run_prepare_basic_shot) prepare_basic_shot(state, content);
         if (shot_file) shot_defenders_file(state, content, *shot_file);
+        if (staged_input) staged_defense(state,content,*staged_input);
+        if (dispatch_elapsed) dispatch_shot(state,*dispatch_elapsed);
+        if (resume_shot_clock) state = captain::resume_session_shot_clock(state);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -415,9 +462,10 @@ int main(int argc, char** argv) {
                 if (!(input >> command)) continue;
                 if (command == "state" || command == "quit" || command == "resume" ||
                     command == "recover" || command == "continue-recovery" || command == "setup-control" ||
-                    command == "advance-control" || command == "resume-control-time") {
+                    command == "advance-control" || command == "resume-control-time" || command == "resume-shot-clock") {
                     if (input >> extra) throw std::invalid_argument("Command takes no arguments");
                     if (command == "quit") break;
+                    if (command == "resume-shot-clock") state = captain::resume_session_shot_clock(state);
                     if (command == "resume") resume(state, content);
                     if (command == "recover") recover(state, content);
                     if (command == "continue-recovery") continue_recovery(state);
@@ -437,6 +485,17 @@ int main(int argc, char** argv) {
                     if (command == "open-action-menu") open_action_menu(state, content);
                     else prepare_basic_shot(state, content);
                     show(state);
+                } else if (command == "step-shot-defense") {
+                    std::array<unsigned,4> values{};
+                    for (auto& entry : values) {
+                        if (!(input >> value)) throw std::invalid_argument("Expected four defense bytes");
+                        entry = number(value);
+                    }
+                    if (input >> extra) throw std::invalid_argument("Expected exactly four defense bytes");
+                    staged_defense(state,content,values);show(state);
+                } else if (command == "dispatch-shot") {
+                    if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected dispatch-shot ELAPSED");
+                    dispatch_shot(state,number(value));show(state);
                 } else if (command == "menu-input") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected menu-input PRESSED");
                     menu_input(state, content, number(value));

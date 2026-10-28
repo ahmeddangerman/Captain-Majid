@@ -12,7 +12,9 @@ enum class FieldSessionPhase : std::uint8_t {
     field_round_pending = 13, control_added_time = 14, field_contact_pending = 15,
     goal_area_action = 16, special_callback = 17, human_action_menu = 18,
     attack_choice_pending = 19, attack_prepared = 20,
-    shot_field_complete = 21, shot_restart_pending = 22
+    shot_field_complete = 21, shot_restart_pending = 22,
+    shot_defender_next = 23, shot_contact_added_time = 24, shot_dispatch_clock = 25,
+    shot_dispatch_added_time = 26, shot_dispatch_ready = 27
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;
@@ -36,6 +38,9 @@ struct ActionContext {
     std::uint8_t move_effect = 0, move_flags = 0;
     std::uint16_t power = 0;
 };
+struct ShotContactProgress {
+    std::uint8_t cursor = 0, result_code = 0, defender_id = 0, defense_action = 0, defense_subtype = 0;
+};
 struct PhaseSessionState {
     ContactPreludeState current;
     FieldSessionPhase phase = FieldSessionPhase::field;
@@ -45,6 +50,7 @@ struct PhaseSessionState {
     std::optional<ControlContext> control{};
     std::optional<SchedulingContext> scheduling{};
     std::optional<ActionContext> action{};
+    std::optional<ShotContactProgress> shot_progress{};
 };
 struct PhaseSessionResult {
     PhaseSessionState state;

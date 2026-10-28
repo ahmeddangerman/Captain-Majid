@@ -36,10 +36,12 @@ def shot_outcome_state(memory, initial_side, event):
 
 
 def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000,
-               max_frames=10000, until='field', ack_ppu_transfers=False, host_buttons=128):
+               max_frames=10000, until='field', ack_ppu_transfers=False, host_buttons=128, final_ram=None):
+    if final_ram is not None and not isinstance(final_ram, bytearray):
+        raise ValueError('Final RAM capture must be a caller-owned bytearray')
     if not isinstance(host_buttons, int) or not 0 <= host_buttons <= 255:
         raise ValueError('Fixed host button mask must be a byte')
-    watched = {0x61C, 0x61D, 0x612, 0x616, 0x617, 0xE2, 0xE3, 0x449, 0x44A, 0x498,
+    watched = {0x517, 0x61C, 0x61D, 0x612, 0x616, 0x617, 0xE2, 0xE3, 0x449, 0x44A, 0x498,
                0x28, 0x29, 0x441, 0x629, 0x635, 0x637, 0x600,
                *(0x300 + 12 * slot + offset for slot in (0, 11) for offset in (5, 6, 7)),
                *range(0x5F7, 0x600), *(0x300 + 12 * slot + 10 for slot in range(22))}
@@ -133,6 +135,8 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                 elif cpu.pc == 0x8646:
                     outcome_event = 'keeper_punch' if memory[0x43D] == 1 else 'keeper_catch'
         if boundary is not None:
+            if final_ram is not None:
+                final_ram[:] = memory.ram[:2048]
             memory.instruction = None
             return {'format': 'captain-selected-defender-loop-trace-v1',
                     'mode': until, 'scope': 'Constructed CPU/scheduler trace with host frame acknowledgements; '

@@ -7,7 +7,7 @@ This is the running reference for work between chat updates. Entries distinguish
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
 - **Current milestone:** the native phase lab reaches an ordinary action menu and prepares a basic shot. A reusable API now continues from already-prepared attack state through caller-supplied contacts, routes, flight, keeper and outcome calculations without a second stamina debit. The persistent phase session now connects selected shot defenses to terminal rewards/clock/recovery, with explicit saved pauses before flight and restart.
-- **Next engine work:** connect ordered nonterminal/dispatch timing at the saved shot-defense boundaries, then approach/flight and keeper outcomes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Next engine work:** connect the original selected-field dispatcher from the new timed boundary into possession/approach/flight and keeper outcomes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -298,3 +298,27 @@ attacker debit; repeated and trailing-row invocations rejected. Three original C
 observations and tool bytecode compilation completed. Reviewer findings were fixed
 with failing-then-passing regressions; no other material review findings reported.
 Daily website note updated separately; engine/private research remains local.
+
+## 2026-10-28 — ordered selected-shot clock progression
+
+- Added one-defender-at-a-time session progression with9095 status selection,
+  interruption-before-status ordering, retained random samples and clock/keeper
+  recovery before the next comparison. Final prefix/no-defender clock is an
+  explicit elapsed step; no attacker preparation/debit repeats.
+- Added phase23–27 and330-byte session9 progress. Both contact and final-clock
+  added-time pauses save/resume without replay; period-end refuses continuation.
+  This stops at original field dispatch, before rewards/possession/presentation.
+- Added strict staged CLI operations and final RAM capture to the original tracer.
+  Original pass/interruption observations match324 prior represented bytes after
+  phase/version normalization. New progress metadata is not ROM-compared. Capture
+  matches gameplay fields but differs in one facing byte written by the original
+  script parser; no full-state capture equivalence is claimed.
+- Regression failed with the unimplemented stub, then passed. Full native/CLI/
+  adapter/loopback/reference suite and production build returned0. To avoid the
+  Makefile repeatedly compiling all core sources, compiled those sources once
+  into `/tmp/cm-staged-core.a` and supplied CORE to Make; diagnostics were clean.
+- Fresh independent review found no material issues. Minor coverage gap deferred:
+  direct terminal-contact added-time save/resume (the shared failed-contact path
+  is covered). See NATIVE_ORDERED_SHOT_CLOCK.md for commands and evidence limits.
+- Next: original selected-field dispatcher routes and presentation side effects,
+  then approach/flight/keeper state. Overall port completion remains unmeasured.

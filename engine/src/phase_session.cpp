@@ -36,8 +36,39 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 22)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 27)
         throw std::invalid_argument("Unsupported phase session state");
+    const auto phase = static_cast<unsigned>(state.phase);
+    const bool staged = phase >= 23 && phase <= 27;
+    if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
+        throw std::invalid_argument("Staged shot phase requires exactly one progress context");
+    if (state.shot_progress) {
+        const auto& p = *state.shot_progress;
+        const auto count = state.current.field.selected_defenders;
+        if (!state.scheduling || !state.action || !state.recovery || !state.control || !state.experience ||
+            state.current.field.side != 0 || state.action->action != 0 || count > 5 ||
+            p.cursor > count || p.result_code > 4 ||
+            (p.defense_action != 0 && p.defense_action != 2) ||
+            (p.defense_subtype != 0 && p.defense_subtype != 128))
+            throw std::invalid_argument("Unsupported shot progress context");
+        if (p.cursor == 0) {
+            if (p.result_code || p.defender_id || p.defense_action || p.defense_subtype)
+                throw std::invalid_argument("Unused shot contact data must be zero");
+        } else if (p.defender_id != state.scheduling->selected_ids[p.cursor - 1])
+            throw std::invalid_argument("Shot cursor must retain the last selected defender");
+        if (state.phase == FieldSessionPhase::shot_defender_next && (p.cursor >= count || p.result_code >= 2))
+            throw std::invalid_argument("No next selected defender");
+        if (state.phase == FieldSessionPhase::shot_contact_added_time && p.cursor == 0)
+            throw std::invalid_argument("Contact clock pause requires a completed contact");
+        if ((state.phase == FieldSessionPhase::shot_dispatch_clock ||
+             state.phase == FieldSessionPhase::shot_dispatch_added_time ||
+             state.phase == FieldSessionPhase::shot_dispatch_ready) &&
+            p.result_code < 2 && p.cursor != count)
+            throw std::invalid_argument("Nonterminal dispatch requires the completed prefix");
+        if ((state.phase == FieldSessionPhase::shot_dispatch_clock ||
+             state.phase == FieldSessionPhase::shot_dispatch_added_time) && p.result_code >= 2)
+            throw std::invalid_argument("Terminal contact skips final dispatch clock");
+    }
     if ((state.phase == FieldSessionPhase::added_time) != bool(state.pending))
         throw std::invalid_argument("Added-time session needs exactly one pending terminal contact");
     if (state.pending) validate_contact(state.current.field, *state.pending);

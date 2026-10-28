@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if (version < '1' || version > '8')
+    if (version < '1' || version > '9')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -38,6 +38,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.phase = static_cast<FieldSessionPhase>(byte(input));
     if (version < '8' && static_cast<unsigned>(state.phase) > 20)
         throw std::invalid_argument("New shot phase requires session version8");
+    if (version < '9' && static_cast<unsigned>(state.phase) > 22)
+        throw std::invalid_argument("Staged shot phase requires session version9");
     const auto pending = byte(input);
     const PendingTerminalContact contact{byte(input), byte(input), byte(input), byte(input)};
     if (pending > 1) throw std::invalid_argument("Unsupported pending-contact flag");
@@ -107,6 +109,15 @@ PhaseSessionState load_phase_session(std::istream& input) {
                  action.auxiliary || action.move_effect || action.move_flags || action.power)
             throw std::invalid_argument("Nonzero unused action data");
     }
+    if (version >= '9') {
+        const auto present = byte(input);
+        if (present > 1) throw std::invalid_argument("Unsupported shot progress presence flag");
+        const ShotContactProgress progress{byte(input),byte(input),byte(input),byte(input),byte(input)};
+        if (present) state.shot_progress = progress;
+        else if (progress.cursor || progress.result_code || progress.defender_id ||
+                 progress.defense_action || progress.defense_subtype)
+            throw std::invalid_argument("Nonzero unused shot progress");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -117,7 +128,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, '8');
+    byte(output, '9');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -156,6 +167,10 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
          action.auxiliary, action.move_effect, action.move_flags}) byte(output, value);
     byte(output, static_cast<std::uint8_t>(action.power));
     byte(output, static_cast<std::uint8_t>(action.power >> 8));
+    byte(output, state.shot_progress ? 1 : 0);
+    const auto progress = state.shot_progress.value_or(ShotContactProgress{});
+    for (const auto value : {progress.cursor,progress.result_code,progress.defender_id,
+                            progress.defense_action,progress.defense_subtype}) byte(output,value);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }
