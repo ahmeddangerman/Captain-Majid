@@ -9,7 +9,7 @@
 | Original behavior research | Private CPU observations and many historical component comparisons; full frame/audio behavior remains outside the harness. | Supported gameplay phases have documented original inputs, outputs and timing boundaries. |
 | Native shot calculation | Development lab joins preparation, initial contacts, one later burst, keeper comparison and immediate outcomes in both directions. | Gameplay supplies the inputs from a coherent match rather than a resettable constructed scene. |
 | Movement | Native target-direction, speed profiles, formation/tactic targets and ordered field advancement implemented for staged interrupt-free inputs. Live frame/random scheduling and ball-flight progression remain pending. | Player and ball state advance coherently through action and possession transitions. |
-| Persistent match state | Phase-session lab joins rewards, contact/clock, recovery, control setup and logical button polling/controlled movement. Later clock/menu/AI continuations and live frame loop remain unfinished. Other restart/keeper/story pauses stay explicit. | Atomic roster/ball/clock/score/phase commits, save/replay snapshots and supported next actions. |
+| Persistent match state | Phase-session lab supports repeated ordinary walking cycles with clock, stamina, other players and nearby defender detection. Encounter/menu/AI/goal-area and special continuations remain incomplete; live frame loop and full-match state are unfinished. | Atomic roster/ball/clock/score/phase commits, save/replay snapshots and supported next actions. |
 | Playable match | Not implemented. | Two teams can start, finish and restart a complete match with supported rules and controls. |
 | Campaign and team AI | Not integrated. | Original team setup, progression, AI decisions and match scheduling work in native play. |
 | Game presentation and languages | Private content analysis and placeholder native window; no complete runtime graphics/music/text/cutscene system. | Arabic, Japanese and English game flows render and play correctly. |
@@ -21,7 +21,7 @@
 
 ## Current engineering sequence
 
-1. Connect the post-input clock step, menu/AI decisions and following stamina/field advancement; then extend explicit restart/keeper/story routes and remaining reward callers.
+1. Connect pending encounters and action/AI decisions to the prepared action calculations; extend goal-area, restart/keeper/story routes and remaining reward callers.
 2. Extend field snapshots into coherent match phases with clock/score, recovery and player actions.
 3. Integrate live ball-flight and frame/random scheduling with atomic state commits.
 4. Complete playable match, original presentation and desktop integration.

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese development data to a local CMJSHOT7 pack."""
+"""Export private Japanese development data to a local CMJSHOT8 pack."""
 import argparse
 import hashlib
 import struct
@@ -19,7 +19,7 @@ def export_data(rom):
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
-    data = bytearray(b'CMJSHOT7' + hashlib.sha256(rom[16:]).digest())
+    data = bytearray(b'CMJSHOT8' + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -106,6 +106,9 @@ def export_data(rom):
     data.extend(progression[0xBA4C:0xBA90])
     for profile in range(256):
         data.extend(stats[0xAFAE + 12 * profile + 2:0xAFAE + 12 * profile + 4])
+    for profile in range(256):
+        data.extend(stats[0xAFAE + 12 * profile:0xAFAE + 12 * profile + 2])
+    data.extend(stats[0x9F0E:0x9FCE])
     return bytes(data)
 
 

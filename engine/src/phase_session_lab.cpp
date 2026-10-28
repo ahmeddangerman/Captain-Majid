@@ -34,6 +34,11 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::control_clock_pending: return "control clock step pending";
     case captain::FieldSessionPhase::action_menu_pending: return "action menu pending";
     case captain::FieldSessionPhase::ai_cell_decision: return "opposing-carrier cell decision pending";
+    case captain::FieldSessionPhase::field_round_pending: return "field round pending";
+    case captain::FieldSessionPhase::control_added_time: return "control added-time presentation pending";
+    case captain::FieldSessionPhase::field_contact_pending: return "nearby field contact pending";
+    case captain::FieldSessionPhase::goal_area_action: return "goal-area action pending";
+    case captain::FieldSessionPhase::special_callback: return "special callback pending";
     }
     return "invalid";
 }
@@ -78,6 +83,14 @@ void show(const captain::PhaseSessionState& state) {
                   << " | display parameter " << unsigned(control.display_parameter)
                   << " | motion requested " << unsigned(control.motion_requested) << '\n';
     } else std::cout << "Control: context absent\n";
+    if (state.scheduling) {
+        const auto& schedule = *state.scheduling;
+        std::cout << "Scheduling: field cycle " << unsigned(schedule.field_cycle)
+                  << " | energy cycle " << unsigned(schedule.energy_cycle)
+                  << " | special flags " << unsigned(schedule.special_flags) << " | selected";
+        for (unsigned i = 0; i < field.selected_defenders; ++i) std::cout << ' ' << unsigned(schedule.selected_ids[i]);
+        std::cout << '\n';
+    } else std::cout << "Scheduling: context absent\n";
     for (unsigned slot = 1; slot <= 21; ++slot) {
         if (slot == 11) continue;
         const auto& actor = field.motion[captain::field_motion_index(static_cast<std::uint8_t>(slot))];
@@ -166,12 +179,57 @@ void poll_control(captain::PhaseSessionState& state, const captain::ShotContent&
         std::cout << "Presentation request " << static_cast<unsigned>(request.kind)
                   << " | id " << unsigned(request.id) << '\n';
 }
+void advance_control(captain::PhaseSessionState& state, const captain::ShotContent& content, bool resume_time) {
+    if (!content.world_step) throw std::invalid_argument("Control cycle requires version8 stamina content");
+    const auto result = resume_time
+        ? captain::resume_control_added_time(state, content.field_players, content.goalkeepers, *content.world_step)
+        : captain::advance_control_tick(state, content.field_players, content.goalkeepers, *content.world_step);
+    state = result.state;
+    if (result.clock) std::cout << "Control clock | display request " << result.clock->request_clock_display
+        << " | warning cue request " << result.clock->request_warning_cue << '\n';
+    else std::cout << "Prepared added-time continuation; no repeated clock/recovery.\n";
+    for (const auto& request : result.presentation)
+        std::cout << "Presentation request " << static_cast<unsigned>(request.kind) << " | id " << unsigned(request.id) << '\n';
+}
+void advance_world_inputs(captain::PhaseSessionState& state, const captain::ShotContent& content,
+                         const std::array<captain::LogicalButtons, 22>& inputs) {
+    if (!content.world_step || !content.control_movement)
+        throw std::invalid_argument("World round requires version8 speed content");
+    const auto result = captain::advance_control_field_round(state, content.field_players,
+        *content.movement, *content.control_movement, *content.world_step, inputs);
+    state = result.state;
+    std::cout << "World round | polls " << result.consumed_polls << " | moved " << result.moved_players
+              << " | decayed statuses " << result.decayed_statuses << '\n';
+    for (const auto& request : result.presentation)
+        std::cout << "Presentation request " << static_cast<unsigned>(request.kind) << " | id " << unsigned(request.id) << '\n';
+}
+void advance_world(captain::PhaseSessionState& state, const captain::ShotContent& content, unsigned held, unsigned pressed) {
+    std::array<captain::LogicalButtons, 22> inputs{};
+    inputs.fill({static_cast<std::uint8_t>(held), static_cast<std::uint8_t>(pressed)});
+    advance_world_inputs(state, content, inputs);
+}
+void advance_world_file(captain::PhaseSessionState& state, const captain::ShotContent& content, const std::string& path) {
+    std::ifstream input(path);
+    if (!input) throw std::invalid_argument("Unable to open world input file");
+    std::array<captain::LogicalButtons, 22> inputs{};
+    for (auto& buttons : inputs) {
+        unsigned held, pressed;
+        if (!(input >> held >> pressed) || held > 255 || pressed > 255)
+            throw std::invalid_argument("World input file requires22held/pressed byte pairs");
+        buttons = {static_cast<std::uint8_t>(held), static_cast<std::uint8_t>(pressed)};
+    }
+    input >> std::ws;
+    if (input.peek() != std::char_traits<char>::eof() || input.bad())
+        throw std::invalid_argument("Trailing or unreadable world input data");
+    advance_world_inputs(state, content, inputs);
+}
 }
 
 int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
-                     "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | --advance N] "
+                     "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
+                     "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -179,8 +237,11 @@ int main(int argc, char** argv) {
         bool interactive = false, run_resume = false, defense_options = false, rewarded = false;
         bool run_recovery = false, run_continue_recovery = false;
         bool run_setup_control = false;
+        bool run_control_tick = false, resume_control_time = false;
         std::optional<unsigned> code, defender, elapsed;
         std::optional<std::array<unsigned, 2>> poll_input;
+        std::optional<std::array<unsigned, 2>> world_input;
+        std::optional<std::string> world_file;
         unsigned action = 0, subtype = 0;
         std::string capture;
         for (int i = 3; i < argc; ++i) {
@@ -190,6 +251,18 @@ int main(int argc, char** argv) {
             else if (option == "--recover") run_recovery = true;
             else if (option == "--continue-recovery") run_continue_recovery = true;
             else if (option == "--setup-control") run_setup_control = true;
+            else if (option == "--advance-control") run_control_tick = true;
+            else if (option == "--resume-control-time") resume_control_time = true;
+            else if (option == "--advance-world-file") {
+                if (++i >= argc || world_file) throw std::invalid_argument("Expected one world input file");
+                world_file = argv[i];
+            }
+            else if (option == "--advance-world") {
+                if (i + 2 >= argc || world_input) throw std::invalid_argument("Expected one --advance-world HELD PRESSED");
+                const auto held = number(argv[++i]);
+                const auto pressed = number(argv[++i]);
+                world_input = std::array<unsigned, 2>{held, pressed};
+            }
             else if (option == "--poll-control") {
                 if (i + 2 >= argc || poll_input) throw std::invalid_argument("Expected one --poll-control HELD PRESSED");
                 const auto held = number(argv[++i]);
@@ -211,7 +284,8 @@ int main(int argc, char** argv) {
             } else throw std::invalid_argument("Unknown session option");
         }
         if (unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) +
-            unsigned(run_recovery) + unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) > 1)
+            unsigned(run_recovery) + unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
+            unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) + unsigned(bool(world_file)) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -227,11 +301,14 @@ int main(int argc, char** argv) {
         if (run_continue_recovery) continue_recovery(state);
         if (run_setup_control) setup_control(state);
         if (poll_input) poll_control(state, content, (*poll_input)[0], (*poll_input)[1]);
+        if (run_control_tick || resume_control_time) advance_control(state, content, resume_control_time);
+        if (world_input) advance_world(state, content, (*world_input)[0], (*world_input)[1]);
+        if (world_file) advance_world_file(state, content, *world_file);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -239,23 +316,28 @@ int main(int argc, char** argv) {
                 std::string command, value, extra;
                 if (!(input >> command)) continue;
                 if (command == "state" || command == "quit" || command == "resume" ||
-                    command == "recover" || command == "continue-recovery" || command == "setup-control") {
+                    command == "recover" || command == "continue-recovery" || command == "setup-control" ||
+                    command == "advance-control" || command == "resume-control-time") {
                     if (input >> extra) throw std::invalid_argument("Command takes no arguments");
                     if (command == "quit") break;
                     if (command == "resume") resume(state, content);
                     if (command == "recover") recover(state, content);
                     if (command == "continue-recovery") continue_recovery(state);
                     if (command == "setup-control") setup_control(state);
+                    if (command == "advance-control" || command == "resume-control-time")
+                        advance_control(state, content, command == "resume-control-time");
                     show(state);
-                } else if (command == "poll-control") {
+                } else if (command == "poll-control" || command == "advance-world") {
                     std::string pressed;
                     if (!(input >> value >> pressed) || (input >> extra))
                         throw std::invalid_argument("Expected poll-control HELD PRESSED");
-                    poll_control(state, content, number(value), number(pressed));
+                    if (command == "poll-control") poll_control(state, content, number(value), number(pressed));
+                    else advance_world(state, content, number(value), number(pressed));
                     show(state);
-                } else if (command == "advance" || command == "save") {
+                } else if (command == "advance" || command == "save" || command == "advance-world-file") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");
                     if (command == "save") save(value, state);
+                    else if (command == "advance-world-file") { advance_world_file(state, content, value); show(state); }
                     else { advance(state, content, number(value)); show(state); }
                 } else if (command == "contact" || command == "rewarded-contact") {
                     std::string id, defense, kind;

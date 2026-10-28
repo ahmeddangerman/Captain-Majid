@@ -21,6 +21,7 @@ target_sources(captain_core PRIVATE engine/src/experience.cpp)
 target_sources(captain_core PRIVATE engine/src/recovery_session.cpp)
 target_sources(captain_core PRIVATE engine/src/control_session.cpp)
 target_sources(captain_core PRIVATE engine/src/control_input.cpp)
+target_sources(captain_core PRIVATE engine/src/control_tick.cpp)
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
 

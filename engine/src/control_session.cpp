@@ -33,6 +33,7 @@ ControlSetupResult prepare_session_control(const PhaseSessionState& input) {
     state.current.clock.ball_mode = 128;
     control.travel_accumulator = 0;
     control.display_parameter = 2;
+    control.motion_requested = 0;
     // E233 writes0469, represented as the high byte of existing slot10.
     state.experience->totals[10] = static_cast<std::uint16_t>((state.experience->totals[10] & 255u) | 256u);
     control.decision_timer = 10;
@@ -40,6 +41,7 @@ ControlSetupResult prepare_session_control(const PhaseSessionState& input) {
     field.ball_x = x; field.ball_y = y; field.ball_cell = cell;
     recovery.ball_variant = 0;
     field.selected_defenders = 0;
+    if (state.scheduling) state.scheduling->selected_ids.fill(0);
     field.side = field.ball_owner < 11 ? 0 : 11;
     control.facing = field.side == 0 ? 64 : 0;
     if (field.side == 0) {

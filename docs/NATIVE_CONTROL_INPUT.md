@@ -81,3 +81,5 @@ Normal interactive usage loaded a version4 setup snapshot, decremented10→0 acr
 Production Make/CMake builds and one fresh whole-plan static review are recorded in the work log. No automated tests were added or run. Full clock/AI/menu continuations, stamina/other-player advancement, action selection, real controller integration and live frame/random scheduling remain unfinished.
 
 The fresh review found no material findings and corroborated the original button/timer/movement/stop-point bytes and existing evidence. It did not execute the implementation or reproduce the complete observation set.
+
+The later [ordinary control cycle](NATIVE_CONTROL_CYCLE.md) connects phase10 through clock/energy and field advancement, introducing content8/session6 while retaining this polling operation and old readers. The305-byte observations above describe the polling checkpoint.

@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if (version < '1' || version > '7')
+    if (version < '1' || version > '8')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -139,6 +139,11 @@ ShotContent load_shot_content(std::istream& input) {
     if (version >= '7') {
         content.control_movement = ControlMovementContent{};
         for (auto& speed : content.control_movement->carrier_speeds) speed = reader.word();
+    }
+    if (version >= '8') {
+        content.world_step = WorldStepContent{};
+        for (auto& speed : content.world_step->chase_speeds) speed = reader.word();
+        for (auto& maximum : content.world_step->stamina_curve) maximum = reader.word();
     }
     reader.end();
     return content;

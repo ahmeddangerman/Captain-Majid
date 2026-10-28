@@ -1,6 +1,7 @@
 #include "captain/phase_session_io.hpp"
 #include "captain/field_state_io.hpp"
 #include <array>
+#include <algorithm>
 #include <sstream>
 #include <stdexcept>
 
@@ -20,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if (version < '1' || version > '5')
+    if (version < '1' || version > '6')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -79,6 +80,17 @@ PhaseSessionState load_phase_session(std::istream& input) {
                  control.last_carrier_cell || control.travel_accumulator || control.display_parameter || control.motion_requested)
             throw std::invalid_argument("Nonzero unused control data");
     }
+    if (version >= '6') {
+        const auto present = byte(input);
+        if (present > 1) throw std::invalid_argument("Unsupported scheduling presence flag");
+        SchedulingContext schedule{};
+        schedule.field_cycle = byte(input); schedule.energy_cycle = byte(input); schedule.special_flags = byte(input);
+        for (auto& id : schedule.selected_ids) id = byte(input);
+        if (present) state.scheduling = schedule;
+        else if (schedule.field_cycle || schedule.energy_cycle || schedule.special_flags ||
+                 std::any_of(schedule.selected_ids.begin(), schedule.selected_ids.end(), [](auto id) { return id != 0; }))
+            throw std::invalid_argument("Nonzero unused scheduling data");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -89,7 +101,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, '5');
+    byte(output, '6');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -118,6 +130,10 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
          control.last_carrier_cell, static_cast<std::uint8_t>(control.travel_accumulator),
          static_cast<std::uint8_t>(control.travel_accumulator >> 8), control.display_parameter,
          control.motion_requested}) byte(output, value);
+    byte(output, state.scheduling ? 1 : 0);
+    const auto schedule = state.scheduling.value_or(SchedulingContext{});
+    byte(output, schedule.field_cycle); byte(output, schedule.energy_cycle); byte(output, schedule.special_flags);
+    for (const auto id : schedule.selected_ids) byte(output, id);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

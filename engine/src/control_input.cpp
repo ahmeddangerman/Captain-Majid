@@ -1,15 +1,14 @@
 #include "captain/control_input.hpp"
 #include "captain/defender_selection.hpp"
 #include <stdexcept>
+#include <utility>
 
 namespace captain {
-ControlPollResult poll_session_control(const PhaseSessionState& input,
-    std::uint8_t held, std::uint8_t pressed, const PlayerProfileMappings& primary,
-    const FieldPhaseContent& movement, const ControlMovementContent& control_content) {
+ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::uint8_t held, std::uint8_t pressed) {
     validate_phase_session(input);
-    if (input.phase != FieldSessionPhase::control_ready)
-        throw std::invalid_argument("Input poll requires control-ready phase");
-    ControlPollResult result{input};
+    if (input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::field_round_pending)
+        throw std::invalid_argument("Buttons require control-ready or field-round phase");
+    ControlButtonResult result{input};
     auto& state = result.state;
     auto& field = state.current.field;
     auto& control = *state.control;
@@ -18,6 +17,7 @@ ControlPollResult poll_session_control(const PhaseSessionState& input,
         state.current.clock.script_flags |= 64u;
         if (held & 64u) {
             field.selected_defenders = 0;
+            if (state.scheduling) state.scheduling->selected_ids.fill(0);
             state.current.clock.script_flags = 0;
             state.phase = FieldSessionPhase::action_menu_pending;
             result.menu_requested = true;
@@ -40,6 +40,20 @@ ControlPollResult poll_session_control(const PhaseSessionState& input,
                                    {ControlPresentationKind::display, 50}};
         }
     }
+    return result;
+}
+
+ControlPollResult poll_session_control(const PhaseSessionState& input,
+    std::uint8_t held, std::uint8_t pressed, const PlayerProfileMappings& primary,
+    const FieldPhaseContent& movement, const ControlMovementContent& control_content) {
+    if (input.phase != FieldSessionPhase::control_ready)
+        throw std::invalid_argument("Input poll requires control-ready phase");
+    auto buttons = apply_control_buttons(input, held, pressed);
+    ControlPollResult result{std::move(buttons.state), std::move(buttons.presentation), {}, 0, false, buttons.menu_requested};
+    if (result.menu_requested) return result;
+    auto& state = result.state;
+    auto& field = state.current.field;
+    auto& control = *state.control;
     if (control.decision_timer != 0) {
         --control.decision_timer;
         return result;

@@ -45,6 +45,8 @@ The [player-control setup](docs/NATIVE_CONTROL_SETUP.md) prepares either possess
 
 [Logical control polling](docs/NATIVE_CONTROL_INPUT.md) now accepts staged buttons, cycles defenders and moves the controlled player at the decision boundary. Current private exports use content7/session5. The calculation pauses before the following clock, menu or AI stage; a playable input/frame loop remains unfinished.
 
+[Ordinary control cycles](docs/NATIVE_CONTROL_CYCLE.md) now connect the clock, keeper recovery, stamina and ordered field updates back to control-ready, with explicit encounter/time/special pauses. Current exports use content8/session6. Repeated logical walking works in the lab; live presentation and remaining action/AI routes are unfinished.
+
 ```bash
 ./build/captain-prototype --replica
 ```

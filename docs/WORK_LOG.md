@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** persistent control setup now supports logical button polling, defender switching and controlled movement at the original decision boundary. The following clock/menu/AI stages remain explicit pauses.
-- **Next engine work:** post-input clock/menu/AI continuation, stamina/field advancement, recovery restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Current milestone:** repeated ordinary logical walking cycles join buttons, controlled movement, clock, keeper recovery, stamina, field players and nearby encounters. Pending action/AI/special routes are explicit.
+- **Next engine work:** encounter and action/AI decisions connected to prepared calculations; goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -217,3 +217,15 @@ Final checkpoint: Make/CMake production builds returned0 without warning/error l
 - Production builds and one fresh whole-plan review are being finalized. No automated tests added/run; full playable match remains unfinished and overall progress stays unmeasured.
 
 Final checkpoint: Make/CMake production builds returned0 with no warning/error lines. One fresh independent static review found no material findings after inspecting original input/movement bytes, the bounded codecs/guards and existing observation/persistent-usage records. No repository code/builds/tests were executed by the reviewer; no automated tests were added/run for this increment. Source saved locally; no public push or private data publication. Next resume point is phase10 clock progression and phase11/12 menu/AI decisions, followed by stamina/other-player updates and live frame/random scheduling.
+
+## 2026-10-28 — continuous work: ordinary control cycles
+
+- User renewed all-in continuous authorization; work continues across successive engine checkpoints while the session is available. Remaining usage is not observable. Resumed from local commit `46b01b9`; no public push or website changes.
+- Connected the post-input clock to keeper recovery, added-time/period boundaries, defending-keeper goal-area gate, human-side stamina regeneration/carrier drain and a22-poll ordered field round.
+- Field rounds share button handling, preserve postpoll controlled-defender choice, region/RNG/target/speed/status ordering, and select nearby defenders every fifth cycle. Menu interruption retains its processed prefix; contact/special/story routes remain explicit.
+- Added private content8 and314-byte session6 with optional scheduling/selected-prefix data; retained old readers and canonicalized unused selection slots. No original assets/data staged.
+- Twenty-six original boundary observations agree with current native represented state in manual hash inspection. Corrected two derived assumptions using original evidence: the goal-area gate reads defending-keeper stun, and full E233 refresh clears the newly represented cosmetic motion flag.
+- Normal native usage completes five walking cycles matching every original saved boundary: X91→109, clock452→447, then contact with defender16. No automated tests added/run. See [NATIVE_CONTROL_CYCLE.md](NATIVE_CONTROL_CYCLE.md).
+- Final production builds and fresh whole-plan review are in progress. After this checkpoint, continue into pending encounter/action flow rather than stopping for routine approval. Overall port completion remains unmeasured; no complete playable match yet.
+
+Checkpoint complete: Final Make/CMake production builds returned0 without warning/error lines. One fresh independent static review found no material findings and checked original order/energy/player-loop/interrupt bytes, bounded formats and atomic errors. Reviewer ran no builds/tests/simulation. No automated tests added/run. Source saved locally; continuing into encounter/action selection under the user's continuous authorization.

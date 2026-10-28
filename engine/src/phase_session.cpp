@@ -21,6 +21,7 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
         // Placement happened before the clock. Do not re-read the defender's
         // position after a deferred presentation; preserve that earlier write.
         state.current.field.selected_defenders = 0;
+        if (state.scheduling) state.scheduling->selected_ids.fill(0);
         terminal = {state.current.field, TerminalFlightNextPhase::ball_recovery, std::nullopt};
         state.phase = FieldSessionPhase::ball_recovery;
     } else {
@@ -35,7 +36,7 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 12)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 17)
         throw std::invalid_argument("Unsupported phase session state");
     if ((state.phase == FieldSessionPhase::added_time) != bool(state.pending))
         throw std::invalid_argument("Added-time session needs exactly one pending terminal contact");
@@ -45,7 +46,8 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Unsupported recovery opposing player");
     if (static_cast<unsigned>(state.phase) >= 5 && !state.recovery)
         throw std::invalid_argument("Recovery continuation needs captured recovery context");
-    if (static_cast<unsigned>(state.phase) >= 5 && state.current.field.selected_defenders != 0)
+    if (static_cast<unsigned>(state.phase) >= 5 && state.phase != FieldSessionPhase::field_contact_pending &&
+        state.current.field.selected_defenders != 0)
         throw std::invalid_argument("Recovery continuation requires zero selected defenders");
     if (static_cast<unsigned>(state.phase) >= 6) {
         field_motion_index(state.current.field.ball_owner);
@@ -60,6 +62,28 @@ void validate_phase_session(const PhaseSessionState& state) {
     if (static_cast<unsigned>(state.phase) >= 9 && state.current.field.side == 11 &&
         (state.control->controlled_player < 1 || state.control->controlled_player > 10))
         throw std::invalid_argument("Opposing control-ready state needs a side0 field defender");
+    if (static_cast<unsigned>(state.phase) >= 13 && !state.scheduling)
+        throw std::invalid_argument("Control-cycle continuation needs captured scheduling context");
+    if ((state.phase == FieldSessionPhase::field_round_pending || state.phase == FieldSessionPhase::control_added_time) &&
+        state.current.field.elapsed != 1)
+        throw std::invalid_argument("Control-cycle continuation requires elapsed1");
+    if (state.scheduling) {
+        const auto count = state.current.field.selected_defenders;
+        if (count > 5) throw std::invalid_argument("Selected defender prefix exceeds five slots");
+        for (unsigned i = 0; i < 5; ++i) {
+            if (i < count) field_motion_index(state.scheduling->selected_ids[i]);
+            else if (state.scheduling->selected_ids[i] != 0)
+                throw std::invalid_argument("Nonzero unused selected defender slot");
+        }
+    }
+    if (state.phase == FieldSessionPhase::field_contact_pending) {
+        const auto& field = state.current.field;
+        if (field.selected_defenders == 0 || field.selected_defenders > (field.side == 0 ? 5 : 4))
+            throw std::invalid_argument("Field-contact continuation needs a selected opposing prefix");
+        for (unsigned i = 0; i < field.selected_defenders; ++i)
+            if ((state.scheduling->selected_ids[i] < 11 ? 0 : 11) == field.side)
+                throw std::invalid_argument("Selected contact player must oppose possession");
+    }
 }
 
 PhaseSessionResult resolve_session_terminal(const PhaseSessionState& input,
