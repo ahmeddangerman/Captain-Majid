@@ -109,22 +109,10 @@ button { font: inherit; }
   grid-template-rows: auto 1fr auto;
   gap: 16px;
 }
-.detail-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;
-}
+.detail-top { display: flex; align-items: center; gap: 16px; }
 .detail-top h2 {
   margin: 0;
   font-size: clamp(19px, 2.4vw, 25px);
-}
-.status {
-  flex: 0 0 auto;
-  color: var(--muted);
-  font-size: 12px;
-  border: 1px solid #777;
-  padding: 0 8px;
 }
 .stage-detail p {
   align-self: start;
@@ -233,21 +221,19 @@ footer {
     <section class="roadmap" aria-label="مراحل المشروع">
       <nav class="stage-menu" aria-label="مراحل خارطة الطريق">
         <ol>
-          <li><button type="button" aria-pressed="true" data-title="إعادة البناء والترجمة" data-copy="بناء نسخة الحاسوب بترجمة جديدة قابلة للتوسّع، مع دعم العربية من اليمين إلى اليسار." data-status="قيد التطوير"><span class="cursor" aria-hidden="true"></span><span>إعادة البناء والترجمة</span></button></li>
-          <li><button type="button" aria-pressed="false" data-title="تحسينات جودة الحياة" data-copy="تحسينات عملية تجعل التجربة على الحاسوب أسهل، بعد استقرار أساس اللعب." data-status="مخطط"><span class="cursor" aria-hidden="true"></span><span>جودة الحياة</span></button></li>
-          <li><button type="button" aria-pressed="false" data-title="التعديلات والرسوم" data-copy="دعم استبدال الرسومات والموسيقى وإضافة المؤثرات البصرية." data-status="مخطط"><span class="cursor" aria-hidden="true"></span><span>التعديلات والرسوم</span></button></li>
-          <li><button type="button" aria-pressed="false" data-title="نسخ الحاسوب" data-copy="إطلاق نسختي Windows و Linux." data-status="مخطط"><span class="cursor" aria-hidden="true"></span><span>نسخ الحاسوب</span></button></li>
-          <li><button type="button" aria-pressed="false" data-title="اللعب الجماعي عبر الإنترنت" data-copy="اللعب مع الأصدقاء أولاً، ثم التوسع إلى البحث عن خصوم عشوائيين وعدد أكبر من اللاعبين." data-status="مخطط"><span class="cursor" aria-hidden="true"></span><span>اللعب الجماعي</span></button></li>
+          <li><button type="button" aria-pressed="true" data-title="نسخة محسّنة من الجزء الأصلي" data-copy="سيتم إصدار نسخة محسّنة للحاسوب والأجهزة المحمولة، بإضافات جديدة، مع الحفاظ على جوهر اللعبة اللي عشقناه وإحنا صغار."><span class="cursor" aria-hidden="true"></span><span>نسخة محسّنة من الجزء الأصلي</span></button></li>
+          <li><button type="button" aria-pressed="false" data-title="تحسينات إضافية" data-copy="سيكون هناك طور كلاسيكي يطابق اللعبة كما كانت سابقًا، بالإضافة إلى طور لتحسين اللعبة وتسهيلها."><span class="cursor" aria-hidden="true"></span><span>تحسينات إضافية</span></button></li>
+          <li><button type="button" aria-pressed="false" data-title="إمكانية إضافة تحسينات أكثر" data-copy="إمكانية إضافة تحسينات رسومية وصوتية وإضافات جديدة أخرى."><span class="cursor" aria-hidden="true"></span><span>إمكانية إضافة تحسينات أكثر</span></button></li>
+          <li><button type="button" aria-pressed="false" data-title="اللعب الجماعي" data-copy="إمكانية اللعب مع أصحابك أو خوض مباريات عشوائية عبر الإنترنت."><span class="cursor" aria-hidden="true"></span><span>اللعب الجماعي</span></button></li>
         </ol>
       </nav>
 
       <section class="stage-detail" id="stage-detail" aria-live="polite" aria-atomic="true">
         <div class="detail-top">
-          <h2 id="stage-title">إعادة البناء والترجمة</h2>
-          <span class="status" id="stage-status">قيد التطوير</span>
+          <h2 id="stage-title">نسخة محسّنة من الجزء الأصلي</h2>
         </div>
-        <p id="stage-copy">بناء نسخة الحاسوب بترجمة جديدة قابلة للتوسّع، مع دعم العربية من اليمين إلى اليسار.</p>
-        <span class="stage-count" dir="ltr"><bdi id="stage-current">١</bdi> / <bdi>٥</bdi></span>
+        <p id="stage-copy">سيتم إصدار نسخة محسّنة للحاسوب والأجهزة المحمولة، بإضافات جديدة، مع الحفاظ على جوهر اللعبة اللي عشقناه وإحنا صغار.</p>
+        <span class="stage-count" dir="ltr"><bdi id="stage-current">١</bdi> / <bdi>٤</bdi></span>
       </section>
     </section>
 
@@ -268,7 +254,6 @@ footer {
       <nav class="update-controls" aria-label="التنقل بين التحديثات اليومية">
         <button id="update-older" type="button" aria-label="عرض تحديث أقدم">◀ الأقدم</button>
         <span id="update-count" class="update-count" aria-live="polite">١ / ٣</span>
-        <button id="update-pause" type="button" aria-pressed="false">إيقاف التبديل</button>
         <button id="update-newer" type="button" aria-label="عرض تحديث أحدث">الأحدث ▶</button>
       </nav>
     </section>
@@ -278,9 +263,8 @@ footer {
 const buttons = Array.from(document.querySelectorAll(".stage-menu button"));
 const title = document.getElementById("stage-title");
 const copy = document.getElementById("stage-copy");
-const status = document.getElementById("stage-status");
 const currentStage = document.getElementById("stage-current");
-const digits = ["١", "٢", "٣", "٤", "٥"];
+const digits = ["١", "٢", "٣", "٤"];
 
 function selectStage(index, moveFocus = false) {
   const selected = (index + buttons.length) % buttons.length;
@@ -290,7 +274,6 @@ function selectStage(index, moveFocus = false) {
     if (active) {
       title.textContent = button.dataset.title;
       copy.textContent = button.dataset.copy;
-      status.textContent = button.dataset.status;
       currentStage.textContent = digits[i];
       if (moveFocus) button.focus();
     }
@@ -355,9 +338,7 @@ const updatePoints = document.getElementById("update-points");
 const updateCount = document.getElementById("update-count");
 const olderButton = document.getElementById("update-older");
 const newerButton = document.getElementById("update-newer");
-const pauseButton = document.getElementById("update-pause");
 let updateIndex = 0;
-let rotationPaused = false;
 
 function showUpdate(index) {
   updateIndex = (index + updates.length) % updates.length;
@@ -374,24 +355,15 @@ function showUpdate(index) {
   updateCount.textContent = `${["١", "٢", "٣"][updateIndex]} / ٣`;
 }
 
-function setRotationPaused(paused) {
-  rotationPaused = paused;
-  pauseButton.setAttribute("aria-pressed", String(paused));
-  pauseButton.textContent = paused ? "تشغيل التبديل" : "إيقاف التبديل";
-}
-
 olderButton.addEventListener("click", () => {
-  setRotationPaused(true);
   showUpdate(updateIndex + 1);
 });
 newerButton.addEventListener("click", () => {
-  setRotationPaused(true);
   showUpdate(updateIndex - 1);
 });
-pauseButton.addEventListener("click", () => setRotationPaused(!rotationPaused));
 
 window.setInterval(() => {
-  if (!rotationPaused && !document.hidden) showUpdate(updateIndex + 1);
+  if (!document.hidden) showUpdate(updateIndex + 1);
 }, 12000);
 
   </script>
