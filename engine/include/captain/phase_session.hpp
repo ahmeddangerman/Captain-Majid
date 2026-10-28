@@ -11,7 +11,8 @@ enum class FieldSessionPhase : std::uint8_t {
     control_ready = 9, control_clock_pending = 10, action_menu_pending = 11, ai_cell_decision = 12,
     field_round_pending = 13, control_added_time = 14, field_contact_pending = 15,
     goal_area_action = 16, special_callback = 17, human_action_menu = 18,
-    attack_choice_pending = 19, attack_prepared = 20
+    attack_choice_pending = 19, attack_prepared = 20,
+    shot_field_complete = 21, shot_restart_pending = 22
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

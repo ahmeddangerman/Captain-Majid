@@ -2,6 +2,7 @@
 #include "captain/shot_content.hpp"
 #include "captain/recovery_session.hpp"
 #include "captain/control_session.hpp"
+#include "captain/session_shot.hpp"
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
@@ -42,6 +43,8 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::human_action_menu: return "human action menu";
     case captain::FieldSessionPhase::attack_choice_pending: return "confirmed action pending";
     case captain::FieldSessionPhase::attack_prepared: return "ordinary shot prepared";
+    case captain::FieldSessionPhase::shot_field_complete: return "shot passed selected defenses; flight pending";
+    case captain::FieldSessionPhase::shot_restart_pending: return "shot interruption; restart pending";
     }
     return "invalid";
 }
@@ -251,6 +254,44 @@ void menu_input(captain::PhaseSessionState& state, const captain::ShotContent& c
         std::cout << "Presentation request " << static_cast<unsigned>(request.kind)
                   << " | id " << unsigned(request.id) << '\n';
 }
+void shot_defenders_file(captain::PhaseSessionState& state, const captain::ShotContent& content,
+                         const std::string& path) {
+    if (!content.experience) throw std::invalid_argument("Shot defenses need experience content");
+    captain::validate_phase_session(state);
+    if (state.phase != captain::FieldSessionPhase::attack_prepared)
+        throw std::invalid_argument("Shot defenses require an already prepared shot");
+    std::ifstream input(path);
+    if (!input) throw std::invalid_argument("Unable to open shot defense choices");
+    std::vector<captain::FieldDefenseChoice> choices;
+    // One row for each saved selected defender: action subtype random1 random2.
+    // No caller-supplied roster, player ID, power or comparison coefficients.
+    for (unsigned i = 0; i < state.current.field.selected_defenders; ++i) {
+        unsigned action, subtype, first, second;
+        if (!(input >> action >> subtype >> first >> second) ||
+            action > 255 || subtype > 255 || first > 255 || second > 255)
+            throw std::invalid_argument("Expected action subtype random1 random2 bytes per selected defender");
+        captain::FieldDefenseChoice choice{};
+        choice.player_id = state.scheduling->selected_ids[i];
+        choice.action = static_cast<std::uint8_t>(action);
+        choice.subtype = static_cast<std::uint8_t>(subtype);
+        choice.comparison.random_first = static_cast<std::uint8_t>(first);
+        choice.comparison.random_second = static_cast<std::uint8_t>(second);
+        choices.push_back(choice);
+    }
+    input >> std::ws;
+    if (input.peek() != std::char_traits<char>::eof() || input.bad())
+        throw std::invalid_argument("Trailing or unreadable shot defense data");
+    const auto result = captain::resolve_session_shot_defenders(state,choices,false,
+        content.field_players,content.defense,content.field_comparison,
+        *content.movement,*content.contact,*content.experience);
+    state = result.state;
+    std::cout << "Shot defenses | reached " << result.defenses.contacts.size()
+              << " | result " << unsigned(result.defenses.result_code)
+              << " | retained power " << state.action->power << '\n';
+    if (result.terminal) std::cout << "Terminal rewards " << result.terminal->rewards.size()
+        << " | contact elapsed " << unsigned(result.terminal->prelude->elapsed_step) << '\n';
+    if (result.restart) std::cout << "Restart route " << static_cast<unsigned>(result.restart->route) << " pending\n";
+}
 void prepare_basic_shot(captain::PhaseSessionState& state, const captain::ShotContent& content) {
     if (!content.action_menu) throw std::invalid_argument("Shot preparation requires version9 menu content");
     const auto result = captain::prepare_session_basic_shot(state, content.field_players, content.attack);
@@ -268,7 +309,7 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
-                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --advance N] "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -282,7 +323,7 @@ int main(int argc, char** argv) {
         std::optional<unsigned> menu_pressed;
         std::optional<std::array<unsigned, 2>> poll_input;
         std::optional<std::array<unsigned, 2>> world_input;
-        std::optional<std::string> world_file;
+        std::optional<std::string> world_file, shot_file;
         unsigned action = 0, subtype = 0;
         std::string capture;
         for (int i = 3; i < argc; ++i) {
@@ -296,6 +337,10 @@ int main(int argc, char** argv) {
             else if (option == "--resume-control-time") resume_control_time = true;
             else if (option == "--open-action-menu") run_open_action_menu = true;
             else if (option == "--prepare-basic-shot") run_prepare_basic_shot = true;
+            else if (option == "--shot-defenders-file") {
+                if (++i >= argc || shot_file) throw std::invalid_argument("Expected one shot defense file");
+                shot_file = argv[i];
+            }
             else if (option == "--menu-input") {
                 if (++i >= argc || menu_pressed) throw std::invalid_argument("Expected one --menu-input PRESSED");
                 menu_pressed = number(argv[i]);
@@ -334,7 +379,7 @@ int main(int argc, char** argv) {
             unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) > 1)
+            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -356,11 +401,12 @@ int main(int argc, char** argv) {
         if (run_open_action_menu) open_action_menu(state, content);
         if (menu_pressed) menu_input(state, content, *menu_pressed);
         if (run_prepare_basic_shot) prepare_basic_shot(state, content);
+        if (shot_file) shot_defenders_file(state, content, *shot_file);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -395,9 +441,10 @@ int main(int argc, char** argv) {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected menu-input PRESSED");
                     menu_input(state, content, number(value));
                     show(state);
-                } else if (command == "advance" || command == "save" || command == "advance-world-file") {
+                } else if (command == "advance" || command == "save" || command == "advance-world-file" || command == "shot-defenders-file") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");
                     if (command == "save") save(value, state);
+                    else if (command == "shot-defenders-file") { shot_defenders_file(state, content, value); show(state); }
                     else if (command == "advance-world-file") { advance_world_file(state, content, value); show(state); }
                     else { advance(state, content, number(value)); show(state); }
                 } else if (command == "contact" || command == "rewarded-contact") {

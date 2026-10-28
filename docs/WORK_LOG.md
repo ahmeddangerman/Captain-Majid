@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** the native phase lab reaches an ordinary action menu and prepares a basic shot. A reusable API now continues from already-prepared attack state through caller-supplied contacts, routes, flight, keeper and outcome calculations without a second stamina debit. The persistent phase session still stops at prepared-shot state.
-- **Next engine work:** connect explicit defender decisions and shot handoffs to persistent match state; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
+- **Current milestone:** the native phase lab reaches an ordinary action menu and prepares a basic shot. A reusable API now continues from already-prepared attack state through caller-supplied contacts, routes, flight, keeper and outcome calculations without a second stamina debit. The persistent phase session now connects selected shot defenses to terminal rewards/clock/recovery, with explicit saved pauses before flight and restart.
+- **Next engine work:** connect ordered nonterminal/dispatch timing at the saved shot-defense boundaries, then approach/flight and keeper outcomes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -258,3 +258,43 @@ Checkpoint complete: Final Make/CMake production builds returned0 without warnin
 - Defender/keeper choices, random bytes, post-loop gates and optional approach/flight remain explicit. This does not add defender AI, a session command, persistent score/restart state or a full playable shot loop.
 - `make -j2 all` completed with exit code0. No automated tests were added or run under the active developer instruction.
 - Next: connect explicit defense decisions and downstream shot handoffs to persistent match state without inferring scheduling or charging attack stamina twice. Overall port completion remains unmeasured.
+
+## 2026-10-28 — persistent selected shot defenses
+
+- Resumed from `13bc9d5` under the user's continuous-work authorization.
+- Added a session wrapper using saved post-cost roster, power/subtype and selected
+  defenders. Choices/random samples remain explicit, comparison tables and
+  interruption state derive from content/session. No attacker preparation/debit
+  is repeated. Nonterminal per-contact presentation/clock scheduling is not added.
+- Result2/3 joins existing rewarded terminal clock/recovery, including deferred
+  added-time possession. Result0/1 pauses at phase21 before flight; result4 at
+  phase22 before restart. Session8 keeps324bytes and legacy readers1–7.
+- The CLI accepts strictly bounded defense-choice files, including an empty file
+  for zero defenders. Invalid, reordered, duplicate and repeated operations reject.
+- Focused regression first failed against an unimplemented stub. Its synthetic
+  snapshot-offset and movement-content fixture errors were corrected. Initial
+  selected-defense checks then passed.
+- Fresh independent static review found two important issues: missing keeper-stun
+  reset and stale random bytes at terminal clock entry. Both gained regressions
+  observed failing before fixes. The fixes map all22 status fields and retain the
+  last reached contact's random samples; empty selection retains saved samples.
+- Ruling: use Make because CMake is unavailable in this executor. No CMake build
+  result is claimed. Production/focused/full-suite results follow below.
+- Next: saved approach/flight and keeper/outcome context, then remaining contact
+  scheduling/restarts, full match loop and online integration. Overall completion
+  remains unmeasured; no playable full match yet.
+
+Research follow-on: three new original CPU observations expose failed-defender and
+final-dispatch clock/status ordering; see SELECTED_CONTACT_TIMING_AUDIT.md. Native
+phase21/22 are calculation checkpoints, not equivalent original-dispatch saves.
+Nonterminal contacts before a later terminal result also need ordered scheduling.
+This is the immediate next engine task before resuming approach/flight. Private
+py65 was installed only under `/tmp/captain-research-deps` for these observations.
+
+Final evidence: `make -j2 check` and `make -j2 all` returned0; captured build
+logs contain no compiler warning/error lines. Manual CLI usage loaded the existing
+v7 prepared shot and saved/reloaded phase21/version8 at power45 without a second
+attacker debit; repeated and trailing-row invocations rejected. Three original CPU
+observations and tool bytecode compilation completed. Reviewer findings were fixed
+with failing-then-passing regressions; no other material review findings reported.
+Daily website note updated separately; engine/private research remains local.

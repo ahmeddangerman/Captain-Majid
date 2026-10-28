@@ -36,7 +36,7 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 20)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 22)
         throw std::invalid_argument("Unsupported phase session state");
     if ((state.phase == FieldSessionPhase::added_time) != bool(state.pending))
         throw std::invalid_argument("Added-time session needs exactly one pending terminal contact");
@@ -92,7 +92,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Unsupported captured action ID");
     if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || state.current.field.side != 0 || state.action->menu_route >= 6))
         throw std::invalid_argument("Human attacking menu requires captured action context and side0");
-    if (state.phase == FieldSessionPhase::attack_prepared && state.action->action != 0)
+    if (static_cast<unsigned>(state.phase) >= 20 && state.action->action != 0)
         throw std::invalid_argument("Only ordinary shots are supported at attack-prepared phase");
 }
 
@@ -101,7 +101,7 @@ PhaseSessionResult resolve_session_terminal(const PhaseSessionState& input,
     const FieldPhaseContent& movement, const ContactPreludeContent& prelude) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::field && input.phase != FieldSessionPhase::player_control &&
-        input.phase != FieldSessionPhase::ball_recovery)
+        input.phase != FieldSessionPhase::ball_recovery && input.phase != FieldSessionPhase::attack_prepared)
         throw std::invalid_argument("Session is waiting at a continuation boundary");
     validate_contact(input.current.field, contact);
     auto state = input;

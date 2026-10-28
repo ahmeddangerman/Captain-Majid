@@ -87,6 +87,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     keeper = {}
     approach = {}
     recovery = []
+    contact_preludes = []
     passed_keeper = False
     outcome_event = None
     terminal_flight = None
@@ -155,6 +156,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                     'attacker': attacker, 'keeper': keeper,
                     'approach': approach,
                     'keeper_recovery': recovery,
+                    'contact_preludes': contact_preludes,
                     'outcome': (shot_outcome_state(memory, initial_side, outcome_event)
                                 if until == 'outcome' and passed_keeper else None),
                     'terminal_flight': ({'entry': terminal_flight,
@@ -248,6 +250,13 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                                'cost': word(memory, 0x43F), 'weakened': bool(memory[0x3A] & 128)})
             elif cpu.pc == 0x8F4F:
                 keeper['adjustment'] = cpu.a
+        if bank == 26 and cpu.pc == 0x9095:
+            contact_preludes.append({'instruction': steps, 'defender': memory[0x442],
+                'defense_action': memory[0x43D], 'affect_defender': bool(cpu.p & cpu.CARRY),
+                'clock_before': word(memory, 0x5F7), 'extra_before': memory[0x5F9],
+                'elapsed_before': memory[0x5FF], 'result_code': memory[0x612],
+                'owner': memory[0x441], 'side': memory[0x5FB],
+                'random': [memory[0xE2],memory[0xE3]]})
         if bank == 26 and cpu.pc == 0x8306:
             checkpoints.append({'kind': 'defender_entry', 'index': memory[0x616],
                                 'power': word(memory, 0x61C)})

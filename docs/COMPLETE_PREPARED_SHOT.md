@@ -30,3 +30,5 @@ Random values, post-loop gates, recovery records and initial ball/score/keeper s
 ## Evidence boundary
 
 Native integration tests cover both sides' stamina rules over one roster, goal/catch/punch, stale fixture replacement, terminal and diverted keeper bypass, invalid owner/action, reached keeper errors and input preservation. Component ROM oracles remain separate. This is a joined calculation over constructed inputs, not an original full-match trace or playable match command. Distance effects, runtime content import, deterministic random scheduling, rewards/presentation, boundary restarts and canonical session commits remain further work.
+
+The phase-session integration now separately connects saved prepared shots to selected field defenses and terminal clock/recovery; see [NATIVE_SHOT_DEFENSE_SESSION.md](NATIVE_SHOT_DEFENSE_SESSION.md). Keeper/flight/score session commits remain pending.
