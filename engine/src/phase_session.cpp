@@ -40,6 +40,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     if ((state.phase == FieldSessionPhase::added_time) != bool(state.pending))
         throw std::invalid_argument("Added-time session needs exactly one pending terminal contact");
     if (state.pending) validate_contact(state.current.field, *state.pending);
+    if (state.experience) validate_experience_state(*state.experience);
 }
 
 PhaseSessionResult resolve_session_terminal(const PhaseSessionState& input,
@@ -78,5 +79,26 @@ PhaseSessionResult resume_session_terminal(const PhaseSessionState& post_present
     if (post_presentation.phase != FieldSessionPhase::added_time || !post_presentation.pending)
         throw std::invalid_argument("No added-time terminal contact to resume");
     return finish(post_presentation, *post_presentation.pending, primary, movement);
+}
+
+PhaseSessionResult resolve_session_rewarded_terminal(const PhaseSessionState& input,
+    PendingTerminalContact contact, const PlayerProfileMappings& primary,
+    const FieldPhaseContent& movement, const ContactPreludeContent& prelude,
+    const ExperienceContent& experience) {
+    validate_phase_session(input);
+    validate_contact(input.current.field, contact);
+    if (!input.experience) throw std::invalid_argument("Rewarded contact needs captured experience context");
+    auto state = input;
+    std::vector<ExperienceRewardResult> rewards;
+    const auto count = contact.result_code == 2 ? 2u : 1u;
+    for (unsigned i = 0; i < count; ++i) {
+        auto reward = award_player_experience(*state.experience,
+            state.current.field.roster[contact.defender_id].type, 2, experience);
+        state.experience = reward.state;
+        rewards.push_back(std::move(reward));
+    }
+    auto result = resolve_session_terminal(state, contact, primary, movement, prelude);
+    result.rewards = std::move(rewards);
+    return result;
 }
 }

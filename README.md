@@ -37,6 +37,8 @@ The [native field-phase laboratory](docs/NATIVE_FIELD_PHASE.md) adds persistent 
 
 The [native phase session](docs/NATIVE_CONTACT_CLOCK.md) extends that checkpoint with contact status/time, keeper recovery and match-clock events. Version5 private content and `.cmjsession` state support possession/recovery handoffs, explicit added-time pauses and period-end boundaries.
 
+The [terminal reward integration](docs/NATIVE_CONTACT_REWARDS.md) adds persistent named-player experience and an explicit rewarded contact operation. Current private exports use content version6 and session version2; older supported formats remain readable.
+
 ```bash
 ./build/captain-prototype --replica
 ```

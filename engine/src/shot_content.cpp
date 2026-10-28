@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if (version < '1' || version > '5')
+    if (version < '1' || version > '6')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -128,6 +128,13 @@ ShotContent load_shot_content(std::istream& input) {
         reader.bytes(content.contact->field_elapsed);
         reader.bytes(content.contact->keeper_elapsed);
         reader.bytes(content.contact->defender_status);
+    }
+    if (version >= '6') {
+        content.experience = ExperienceContent{};
+        reader.bytes(content.experience->campaign_offsets);
+        reader.bytes(content.experience->player_mappings);
+        reader.bytes(content.experience->reward_factors);
+        for (auto& base : content.experience->stage_bases) base = reader.word();
     }
     reader.end();
     return content;

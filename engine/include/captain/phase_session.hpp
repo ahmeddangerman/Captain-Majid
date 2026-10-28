@@ -1,6 +1,8 @@
 #pragma once
 #include "captain/contact_prelude.hpp"
 #include "captain/terminal_flight_phase.hpp"
+#include "captain/experience.hpp"
+#include <vector>
 
 namespace captain {
 enum class FieldSessionPhase : std::uint8_t {
@@ -13,11 +15,13 @@ struct PhaseSessionState {
     ContactPreludeState current;
     FieldSessionPhase phase = FieldSessionPhase::field;
     std::optional<PendingTerminalContact> pending{};
+    std::optional<ExperienceState> experience{};
 };
 struct PhaseSessionResult {
     PhaseSessionState state;
     std::optional<ContactPreludeResult> prelude{};
     std::optional<TerminalFlightPhaseResult> terminal{};
+    std::vector<ExperienceRewardResult> rewards{};
 };
 void validate_phase_session(const PhaseSessionState& state);
 // Input is after rewards/prior presentation, before original9095 status/time.
@@ -29,4 +33,10 @@ PhaseSessionResult resolve_session_terminal(const PhaseSessionState& input,
 // and any original wait. The development lab keeps otherwise frozen inputs.
 PhaseSessionResult resume_session_terminal(const PhaseSessionState& post_presentation,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement);
+// Entry before the terminal reward caller. Result2 invokes that caller twice;
+// result3 once. Resume never repeats these rewards.
+PhaseSessionResult resolve_session_rewarded_terminal(const PhaseSessionState& input,
+    PendingTerminalContact contact, const PlayerProfileMappings& primary,
+    const FieldPhaseContent& movement, const ContactPreludeContent& prelude,
+    const ExperienceContent& experience);
 }

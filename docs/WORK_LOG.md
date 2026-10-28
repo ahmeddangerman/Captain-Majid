@@ -6,8 +6,8 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** native contact status/clock and terminal handoffs, including explicit added-time and period-end boundaries, alongside player/formation advancement.
-- **Next engine work:** rewards, recovery/player-control progression, and live ball-flight/frame scheduling.
+- **Current milestone:** persistent named-player rewards joined to terminal status/clock/handoffs, explicit added-time and period-end boundaries, and player/formation advancement.
+- **Next engine work:** recovery/player-control progression, remaining reward callers, and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
 
@@ -170,3 +170,15 @@ Checkpoint evidence: Make/CMake production builds completed without warning/erro
 - See [NATIVE_CONTACT_CLOCK.md](NATIVE_CONTACT_CLOCK.md) for exact boundaries, format, evidence and remaining gaps. Whole-plan static review follows; work continues into rewards and recovery/control progression.
 
 Checkpoint review: One fresh independent static review found no material findings and checked original contact/clock branches, ordering, deferred continuations and bounded formats. Source is committed locally; no ROM/derived files or webpage changes are included. Work continues into rewards/recovery.
+
+## 2026-10-28 — terminal reward integration and handoff
+
+- Contact-clock/session source checkpoint is local commit `f611ecc`.
+- Added native named-player experience accounting from private replaceable mappings/factors. Original low-byte scaling and16-bit saturation are preserved; experience does not occupy coordinate fields or silently update levels.
+- Continuous original traces show one terminal reward grant for result3 and two for result2 through its shared recovery caller. The new explicit rewarded operation preserves those counts; added-time resume does not reapply them.
+- Private content version6 and289-byte session version2 carry optional campaign/experience context. Earlier versions remain readable, with absent context explicit. No private ROMs, RAM, packs or snapshots are staged.
+- Two represented289-byte final states from normal rewarded native commands match original exports in manual hash inspection. Nine direct original reward observations document gates/mappings/scaling/saturation. Interactive added-time resume retained its existing reward total.
+- Production Make/CMake builds completed. No automated tests were added or run. Fresh whole-plan review follows; then save this checkpoint locally in response to the user's instruction to finish the task.
+- Next resume point: integrate actual loose-ball recovery/player-control progression with phase-session state, then live ball-flight/frame/random scheduling. Full playable match and online match remain unfinished; overall port completion stays unmeasured.
+
+Final checkpoint: One fresh independent static review found no material findings, including original reward byte arithmetic and mapping, saturation, grant counts, resume behavior, backward formats and atomic session updates. Make/CMake production commands returned0 without diagnostics; no automated tests were added/run. Current task is complete as a local source checkpoint. No public push, website change or private game-data upload was performed.

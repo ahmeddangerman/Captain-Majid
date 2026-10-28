@@ -43,6 +43,12 @@ void show(const captain::PhaseSessionState& state) {
     if (state.pending) std::cout << "Pending: " << unsigned(state.pending->result_code) << ' '
         << unsigned(state.pending->defender_id) << ' ' << unsigned(state.pending->defense_action)
         << ' ' << unsigned(state.pending->defense_subtype) << '\n';
+    if (state.experience) {
+        std::cout << "Experience: campaign " << unsigned(state.experience->campaign)
+                  << " | stage " << unsigned(state.experience->opponent_stage) << " | totals";
+        for (const auto total : state.experience->totals) std::cout << ' ' << total;
+        std::cout << '\n';
+    } else std::cout << "Experience: context absent\n";
     for (unsigned slot = 1; slot <= 21; ++slot) {
         if (slot == 11) continue;
         const auto& actor = field.motion[captain::field_motion_index(static_cast<std::uint8_t>(slot))];
@@ -64,12 +70,19 @@ void save(const std::string& path, const captain::PhaseSessionState& state) {
     std::cout << "Saved " << bytes.size() << " bytes to " << path << '\n';
 }
 void contact(captain::PhaseSessionState& state, const captain::ShotContent& content,
-             unsigned code, unsigned defender, unsigned action, unsigned subtype) {
-    const auto result = captain::resolve_session_terminal(state, {
+             unsigned code, unsigned defender, unsigned action, unsigned subtype, bool rewarded = false) {
+    if (rewarded && !content.experience) throw std::invalid_argument("Rewarded contact requires version6 experience content");
+    const captain::PendingTerminalContact input{
         static_cast<std::uint8_t>(code), static_cast<std::uint8_t>(defender),
-        static_cast<std::uint8_t>(action), static_cast<std::uint8_t>(subtype)},
-        content.field_players, *content.movement, *content.contact);
+        static_cast<std::uint8_t>(action), static_cast<std::uint8_t>(subtype)};
+    const auto result = rewarded
+        ? captain::resolve_session_rewarded_terminal(state, input, content.field_players,
+            *content.movement, *content.contact, *content.experience)
+        : captain::resolve_session_terminal(state, input, content.field_players, *content.movement, *content.contact);
     state = result.state;
+    for (const auto& reward : result.rewards)
+        std::cout << "Reward: " << (reward.slot ? "slot " + std::to_string(*reward.slot) : "ignored type")
+                  << " | amount " << unsigned(reward.award) << " | saturated " << reward.saturated << '\n';
     std::cout << "Contact elapsed " << unsigned(result.prelude->elapsed_step)
               << " | clock display request " << result.prelude->clock.request_clock_display
               << " | warning cue request " << result.prelude->clock.request_warning_cue << '\n';
@@ -92,12 +105,13 @@ void advance(captain::PhaseSessionState& state, const captain::ShotContent& cont
 
 int main(int argc, char** argv) {
     if (argc < 3) {
-        std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE --defender ID | --resume | --advance N] "
+        std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
+                     "or [--resume | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
     try {
-        bool interactive = false, run_resume = false, defense_options = false;
+        bool interactive = false, run_resume = false, defense_options = false, rewarded = false;
         std::optional<unsigned> code, defender, elapsed;
         unsigned action = 0, subtype = 0;
         std::string capture;
@@ -105,11 +119,14 @@ int main(int argc, char** argv) {
             const std::string option = argv[i];
             if (option == "--interactive") interactive = true;
             else if (option == "--resume") run_resume = true;
-            else if (option == "--contact" || option == "--defender" || option == "--advance" ||
+            else if (option == "--contact" || option == "--rewarded-contact" || option == "--defender" || option == "--advance" ||
                      option == "--defense-action" || option == "--defense-subtype" || option == "--capture") {
                 if (++i >= argc) throw std::invalid_argument("Missing option value");
                 if (option == "--capture") capture = argv[i];
-                else if (option == "--contact") code = number(argv[i]);
+                else if (option == "--contact" || option == "--rewarded-contact") {
+                    if (code) throw std::invalid_argument("Choose one contact operation");
+                    code = number(argv[i]); rewarded = option == "--rewarded-contact";
+                }
                 else if (option == "--defender") defender = number(argv[i]);
                 else if (option == "--advance") elapsed = number(argv[i]);
                 else if (option == "--defense-action") { action = number(argv[i]); defense_options = true; }
@@ -126,13 +143,13 @@ int main(int argc, char** argv) {
         if (!content.movement || !content.contact) throw std::invalid_argument("Session requires version5 contact/movement content");
         auto state = captain::load_phase_session(snapshot);
         std::cout << "Captain Majid native phase session; development checkpoint, incomplete match.\n";
-        if (code) contact(state, content, *code, *defender, action, subtype);
+        if (code) contact(state, content, *code, *defender, action, subtype, rewarded);
         if (run_resume) resume(state, content);
         if (elapsed) advance(state, content, *elapsed);
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact CODE DEFENDER ACTION SUBTYPE, resume, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -148,11 +165,11 @@ int main(int argc, char** argv) {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected command and one value");
                     if (command == "save") save(value, state);
                     else { advance(state, content, number(value)); show(state); }
-                } else if (command == "contact") {
+                } else if (command == "contact" || command == "rewarded-contact") {
                     std::string id, defense, kind;
                     if (!(input >> value >> id >> defense >> kind) || (input >> extra))
                         throw std::invalid_argument("Expected contact CODE DEFENDER ACTION SUBTYPE");
-                    contact(state, content, number(value), number(id), number(defense), number(kind));
+                    contact(state, content, number(value), number(id), number(defense), number(kind), command == "rewarded-contact");
                     show(state);
                 } else throw std::invalid_argument("Unknown session command");
             } catch (const std::exception& error) { std::cout << "Error: " << error.what() << '\n'; }

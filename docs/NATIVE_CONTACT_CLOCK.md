@@ -65,6 +65,8 @@ Interactive commands: `state`, `contact CODE DEFENDER ACTION SUBTYPE`, `resume`,
 
 Readers reject bad versions, truncation, trailing data, invalid phase/contact relationships and nonzero unused pending padding. Phases are field0, player control1, ball recovery2, added time3, period end4. This still omits experience, score, match scripts, presentation tasks and other full-match state. It is not a network protocol or a supported user save format. ROMs, exported packs, RAM and session snapshots remain private and ignored by Git.
 
+Current writers now produce backward-readable session version2 with optional experience context; see [terminal rewards](NATIVE_CONTACT_REWARDS.md). The264-byte format and observations here describe the preceding clock-only checkpoint.
+
 ## Evidence and limits
 
 Observed nine original clock executions, including low-byte warning behavior, zero-delta handling, underflow, added-time and period-end branches. Original execution used the existing disclosed cooperative-task setup: host frame/input/display acknowledgements and one graphics descriptor per frame; no NMI, audio, PPU execution or real timing. The display call initially stalled without those acknowledgements; no original calls were skipped to obtain final observations.
