@@ -37,13 +37,13 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 66)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 68)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
     const bool area_setup=phase==65;
-    const bool area_menu=phase==66 || ((phase==18 || phase==19) && state.keeper_area);
+    const bool area_menu=(phase>=66 && phase<=68) || ((phase==18 || phase==19) && state.keeper_area);
     const bool area_state=area_setup || area_menu;
-    if(((phase==65 || phase==66) && !state.keeper_area) || (state.keeper_area && !area_state))
+    if(((phase>=65 && phase<=68) && !state.keeper_area) || (state.keeper_area && !area_state))
         throw std::invalid_argument("Keeper-area setup needs exactly one captured selection counter");
     if(state.keeper_area && (!state.action || !state.recovery || !state.scheduling ||
        state.keeper_area->selection_counter!=255 || !state.recovery->ball_variant ||
@@ -51,8 +51,18 @@ void validate_phase_session(const PhaseSessionState& state) {
        (state.current.field.ball_x>=80 && state.current.field.ball_x<176) ||
        state.action->menu_route!=(((state.current.field.ball_x<80 ? 0 : 11)==state.current.field.side)?2:1)))
         throw std::invalid_argument("Keeper-area setup requires its original area and route");
-    if(area_menu && (state.action->menu_route!=2 || (phase==66 ? state.current.field.side!=11 : state.current.field.side!=0)))
+    if(area_menu && (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
+    if(bool(state.area_defense)!=(phase==67))
+        throw std::invalid_argument("Initial area defense requires its captured choice arrays");
+    if(phase==67) {
+        if(!state.current.field.selected_defenders || state.current.field.selected_defenders>4 || state.action->cursor)
+            throw std::invalid_argument("Area defense initialization requires a nonempty prefix and cursor0");
+        for(unsigned i=0;i<4;++i)if(state.area_defense->actions[i]!=255 || state.area_defense->subtypes[i])
+            throw std::invalid_argument("Initial defense actions must be unselected with unused subtypes zero");
+    }
+    if(phase==68 && state.current.field.selected_defenders)
+        throw std::invalid_argument("Empty area defense completion requires no selected players");
     if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59))
         throw std::invalid_argument("Flight setup requires exactly one shot context");
     if (state.shot_flight && (state.shot_flight->destination >= 240 || state.shot_flight->counter != 255))

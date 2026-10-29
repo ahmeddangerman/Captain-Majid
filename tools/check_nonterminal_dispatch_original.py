@@ -17,12 +17,12 @@ from verify_action_strength import PAYLOAD_SHA256
 
 def checkpoint(ram, code, phase):
     data = bytearray(export_session(bytes(ram), 20))
-    data[10], data[258] = ord('l'), phase
+    data[10], data[258] = ord('m'), phase
     count = ram[0x600]
     progress = [count, code, ram[0x600+count] if count else 0,
                 ram[0x43D] if count else 0, ram[0x43E] if count else 0]
     data += bytes([1, *progress, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-    data += bytes(33)
+    data += bytes(43)
     return bytes(data)
 
 

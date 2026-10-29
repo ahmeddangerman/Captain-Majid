@@ -17,6 +17,8 @@ ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const Ac
 // Route2 only, after acknowledged area presentation; facing is captured explicitly.
 ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,
  std::uint8_t facing,const ActionMenuContent& content);
+// Captured0620 is needed because earlier menu states do not represent it.
+PhaseSessionState begin_keeper_area_defense(const PhaseSessionState& input,std::uint8_t blink);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,
                                       const ActionMenuContent& content);
 struct SessionAttackResult { PhaseSessionState state; PreparedAttackResult preparation; };

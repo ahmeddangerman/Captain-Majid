@@ -1200,3 +1200,20 @@ Daily website note updated separately; engine/private research remains local.
   scope now says defensive entry. No actual defensive input or AI choice claimed.
 - Full Make check/all pass without compiler diagnostics. Source/private evidence
   remain separate; continuing into original defensive-menu initialization.
+
+## 2026-10-29 — initial defensive choices and empty return
+
+- Added phase66→67 for nonempty prefixes: cursor0, four FF action slots, canonical
+  unused zero subtypes and explicitly captured0620 blink. Empty prefix returns68
+  without initialization or cursor changes. Stops before D390 presentation or
+  at8B8F area action entry. Real stub regression failed before passing.
+- Snapshot48m382bytes adds defensive presence/4actions/4subtypes/blink at372..381.
+  Old l phase66 inputs load; l cannot encode67/68. Comparison tools pad unused
+  metadata, and old j/k/l fixtures retain their original372byte sizes.
+- 27 controlled original comparisons match counts0/1/4, blink0/7/255 and flags
+ 0/128/211. Evidence: keeper-area-defense-init-first. Unread subtypes behind FF
+  are normalized; no preservation claim for those irrelevant stale raw bytes.
+  Roundtrip, legacy input, malformed/truncated/missing context and replay covered.
+  Defensive menu rendering/input and action execution remain next tasks.
+- Full Make check/all pass without compiler diagnostics. Private captured ROM data
+  remain separate from the source; continuing with defensive prompt preparation.

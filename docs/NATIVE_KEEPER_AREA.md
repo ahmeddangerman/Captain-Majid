@@ -94,3 +94,25 @@ when the opposing team has possession (it reads controller input and selected
 human defenders). Phase66 is named `keeper_area_defense_pending`. Earlier notes
 calling it AI entry were a label error; serialized phase66 and its stop address
 are unchanged. This checkpoint does not implement defensive inputs or AI actions.
+
+## Defensive initialization and empty-prefix return
+
+Snapshot48 (`m`,382bytes) adds optional defensive state: four action slots, four
+subtype slots and a captured blink counter. Phase67 represents initialization
+before D390 draws the defensive menu. Nonempty prefixes reset cursor0 and all
+four actions toFF; subtypes behind FF actions are canonical zeros because original
+code cannot read them before a new direction clears them. The prior0620 blink
+counter is supplied explicitly. Its previous value is not inferred from menu flags.
+
+With no selected defenders, original D37D returns immediately. Phase68 preserves
+cursor/menu fields and has no defensive context. It stops at8B8F before the area
+action route. CLI/interactive: `begin-keeper-area-defense BLINK` (leading `--`
+for the flag). Legacy l phase66 is readable; l cannot encode67/68. Missing,
+truncated and malformed context and replay reject.
+
+`check_keeper_area_defense_original.py` compared27 controlled cases: counts0/1/4,
+blink0/7/255 and prior flags0/128/211. Full represented state matches original
+menu execution to D390 initialization or8B8F empty return. Unread stale subtype
+bytes are explicitly normalized, not claimed as preserved raw RAM. Evidence:
+`keeper-area-defense-init-first`. Menu drawing, defensive input and area actions
+remain the next work. Host acknowledgements and hardware limits still apply.

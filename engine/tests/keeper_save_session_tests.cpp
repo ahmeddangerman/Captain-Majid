@@ -117,9 +117,9 @@ int main(){try{
        !bytes(own_confirmed).empty(),"Own-area human choice retains route context after confirmation");
  auto choice_bytes=bytes(own_confirmed);std::istringstream choice_stream(choice_bytes);
  check(bytes(load_phase_session(choice_stream))==choice_bytes,"Area confirmation roundtrip");
- auto prior_choice=choice_bytes;prior_choice[10]='k';
+ auto prior_choice=choice_bytes;prior_choice[10]='k';prior_choice.resize(372);
  rejects([&]{std::istringstream old(prior_choice);load_phase_session(old);});
- auto prior_menu=bytes(own_menu);prior_menu[10]='k';std::istringstream prior_menu_stream(prior_menu);
+ auto prior_menu=bytes(own_menu);prior_menu[10]='k';prior_menu.resize(372);std::istringstream prior_menu_stream(prior_menu);
  check(bytes(load_phase_session(prior_menu_stream))==bytes(own_menu),"Legacy k area menu loads");
  rejects([&]{prepare_session_basic_shot(own_confirmed,FieldPlayerProfiles{},FieldDefenseContent{});});
  auto defense_area=area_result;defense_area.current.field.side=11;defense_area.current.field.ball_owner=12;defense_area.control->controlled_player=1;
@@ -127,13 +127,44 @@ int main(){try{
  auto defense_menu=open_prepared_keeper_area_menu(defense_setup,0,ActionMenuContent{}).state;
  check(defense_menu.phase==FieldSessionPhase::keeper_area_defense_pending && defense_menu.action->cursor==211 && defense_menu.keeper_area,
        "Defensive entry preserves cursor and stops before choices");
+ auto empty_defense=begin_keeper_area_defense(defense_menu,7);
+ check(static_cast<unsigned>(empty_defense.phase)==68 && empty_defense.action->cursor==211 &&
+       !bytes(empty_defense).empty(),"Empty defensive prefix returns without initializing choices");
+ auto selected_defense=defense_menu;selected_defense.current.field.selected_defenders=1;
+ selected_defense.scheduling->selected_ids={1,0,0,0,0};
+ auto initialized_defense=begin_keeper_area_defense(selected_defense,7);
+ check(static_cast<unsigned>(initialized_defense.phase)==67 && initialized_defense.action->cursor==0 &&
+       !bytes(initialized_defense).empty(),"Nonempty defensive prefix initializes its choice state");
+ check(initialized_defense.area_defense && initialized_defense.area_defense->blink==7 &&
+       initialized_defense.area_defense->actions[3]==255 && initialized_defense.area_defense->subtypes[0]==0,
+       "Defense initialization stores captured blink and unselected canonical slots");
+ for(const auto& output:{empty_defense,initialized_defense}) {
+  auto saved=bytes(output);std::istringstream stream(saved);
+  check(bytes(load_phase_session(stream))==saved,"Defense entry roundtrip");
+  saved[10]='l';saved.resize(372);
+  rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+  rejects([&]{begin_keeper_area_defense(output,0);});
+ }
+ auto old_defense_entry=bytes(defense_menu);old_defense_entry[10]='l';old_defense_entry.resize(372);
+ std::istringstream old_defense_stream(old_defense_entry);
+ check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
+ auto initialized_bytes=bytes(initialized_defense);
+ for(unsigned size=372;size<382;++size) {
+  auto truncated=initialized_bytes;truncated.resize(size);
+  rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
+ }
+ for(auto offset:{372,373,377}) {
+  auto invalid=initialized_bytes;invalid[offset]=offset==372 ? 2 : 1;
+  rejects([&]{std::istringstream stream(invalid);load_phase_session(stream);});
+ }
+ auto missing_defense=initialized_defense;missing_defense.area_defense.reset();rejects([&]{validate_phase_session(missing_defense);});
  for(const auto& output:{own_menu,defense_menu}) {
   auto saved=bytes(output);std::istringstream input(saved);
   check(bytes(load_phase_session(input))==saved,"Prepared area menu roundtrip");
-  saved[10]='j';rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+  saved[10]='j';saved.resize(372);rejects([&]{std::istringstream old(saved);load_phase_session(old);});
   rejects([&]{open_prepared_keeper_area_menu(output,0,ActionMenuContent{});});
  }
- auto prior_setup=bytes(own_setup);prior_setup[10]='j';std::istringstream prior_setup_stream(prior_setup);
+ auto prior_setup=bytes(own_setup);prior_setup[10]='j';prior_setup.resize(372);std::istringstream prior_setup_stream(prior_setup);
  check(bytes(load_phase_session(prior_setup_stream))==bytes(own_setup),"Legacy j area setup loads");
  rejects([&]{open_prepared_keeper_area_menu(own_setup,17,ActionMenuContent{});});
  rejects([&]{open_prepared_keeper_area_menu(area_setup,64,ActionMenuContent{});});

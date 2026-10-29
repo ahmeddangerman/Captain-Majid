@@ -3,6 +3,18 @@
 #include <stdexcept>
 
 namespace captain {
+PhaseSessionState begin_keeper_area_defense(const PhaseSessionState& input,std::uint8_t blink) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_defense_pending || input.control->motion_requested)
+  throw std::invalid_argument("Area defense requires its completed menu entry");
+ auto state=input;
+ if(!state.current.field.selected_defenders)state.phase=FieldSessionPhase::keeper_area_choices_done;
+ else {
+  state.action->cursor=0;state.area_defense=KeeperAreaDefenseContext{};
+  state.area_defense->blink=blink;state.phase=FieldSessionPhase::keeper_area_defense_initial;
+ }
+ validate_phase_session(state);return state;
+}
 ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,std::uint8_t facing,const ActionMenuContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_prepared || input.action->menu_route!=2 ||

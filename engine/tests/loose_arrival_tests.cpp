@@ -21,7 +21,7 @@ int main(){try{
  const auto source=bytes(s);auto routed=continue_session_unopposed_arrival(s);
  check(static_cast<unsigned>(routed.phase)==51 && bytes(s)==source && routed.current.clock.remaining==448,"Loose arrival branch preserves numeric inputs");
  rejects([&]{continue_session_unopposed_arrival(routed);});
- auto encoded=bytes(routed);check(encoded.size()==372 && encoded[10]=='l',"Session47 layout");
+ auto encoded=bytes(routed);check(encoded.size()==382 && encoded[10]=='m',"Session48 layout");
  encoded[10]='K';rejects([&]{std::istringstream bad(encoded);load_phase_session(bad);});
  PlayerProfileMappings primary{};FieldPhaseContent movement{};movement.profiles.speeds.resize(1);movement.geometry.direction_thresholds.fill(65535);
  auto r=advance_session_shot_loose_recovery(routed,primary,movement);
