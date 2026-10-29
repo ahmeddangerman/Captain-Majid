@@ -23,7 +23,7 @@ int main(){try{
   goal.current.clock.remaining==448 && goal.experience->totals[0]==25 && bytes(s)==original,
   "Scorer rewarded once before celebration without possession/time mutation");
  check(goal.score && goal.score->left_goals==0 && goal.score->right_goals==4 && goal.score->kickoff==2,"Goal increments one score byte with wrap and retains kickoff");
- auto saved=bytes(goal);check(saved.size()==365 && saved[10]=='Q',"Scored goal snapshot26");std::istringstream stream(saved);
+ auto saved=bytes(goal);check(saved.size()==368 && saved[10]=='R',"Scored goal snapshot27");std::istringstream stream(saved);
  check(bytes(load_phase_session(stream))==saved,"Scored goal round-trip");
  auto legacy=original;legacy[10]='O';legacy.resize(361);std::istringstream old(legacy);check(bytes(load_phase_session(old))==original,"Legacy O decision remains readable");
  auto forbidden=saved;forbidden[10]='O';forbidden.resize(361);rejects([&]{std::istringstream i(forbidden);load_phase_session(i);});
@@ -45,7 +45,7 @@ int main(){try{
   handoff.current.clock.remaining==448 && !handoff.shot_flight && !handoff.ball_trajectory && !handoff.keeper_decision,
   "Post-goal restart flips side, clears keeper and prepares kickoff once");
  auto encoded=bytes(handoff);std::istringstream hs(encoded);check(bytes(load_phase_session(hs))==encoded,"Restart save round-trip");
- auto old_goal=bytes(goal);old_goal[10]='P';std::istringstream pg(old_goal);check(bytes(load_phase_session(pg))==bytes(goal),"Legacy P goal reads");
+ auto old_goal=bytes(goal);old_goal[10]='P';old_goal.resize(365);std::istringstream pg(old_goal);check(bytes(load_phase_session(pg))==bytes(goal),"Legacy P goal reads");
  auto old_restart=encoded;old_restart[10]='P';rejects([&]{std::istringstream i(old_restart);load_phase_session(i);});
  auto normal=goal;normal.current.clock.ball_mode=0;normal.current.field.keepers[1]={42,9,50,0};
  const auto normal_restart=continue_prepared_goal_restart(normal);

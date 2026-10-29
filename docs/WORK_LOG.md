@@ -843,3 +843,24 @@ Daily website note updated separately; engine/private research remains local.
   session. Raw22-slot API retains them explicitly; session integration must capture
   that state rather than silently discarding it. Actual reset, kickoff/UI and a full
   playable match remain unfinished; overall progress remains unmeasured.
+
+
+## 2026-10-29 — saved kickoff formation and keeper coordinates
+
+- Added phase60→61 at an explicitly prepared boundary after original earlier reset
+  and team selection. Selected side is explicit, original DAE9 sets owner=side+8,
+  DC07 places22 raw records and keeper Y high bytes are saved. The existing keeper
+  timer/duration/penalty aliases are handled as original X/Y bytes; previous Y high
+  bytes are overwritten by DC07 and need not be guessed. Score is retained.
+- Snapshot27R368bytes appends presence plus two keeper Y bytes; readers throughQ
+  remain supported. Tests cover both sides, aliases/fractions, Q legacy read,
+  malformed/truncated metadata, invalid inputs, replay and immutable source.
+- Real session test failed with stub then passed.64 original prepared DAE9..DAF5
+  comparisons match all represented bytes for both sides/all16 formation pairs
+  with randomized record words. Original CPU executes every instruction, with no
+  skipped calls. The CLI supports quoted private content paths; exporter output
+  matches original observed tables. Evidence: kickoff-session-first. Full Make
+  check/build pass; CMake unavailable.
+- Ruling: state is supplied after earlier original reset/team choice; those effects
+  are not silently simulated. Cost: live reset/menu, second original side field,
+  receiver/ball setup and playable kickoff are still pending. Overall unmeasured.
