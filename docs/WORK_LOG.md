@@ -1012,3 +1012,17 @@ Daily website note updated separately; engine/private research remains local.
   offset was corrected to existing339..343 layout; original RAM is authoritative.
   Numeric flight and selected defenders with keeper context remain next work.
 - Final Make check/all pass. Private ROM and derived inputs remain outside Git.
+
+## 2026-10-29 — numeric kickoff ball flight
+
+- Extended retained keeper coordinates to flight phases47–49, snapshot37b370bytes.
+  Real setup regression failed on old validation, then passed. Compatibility,
+  roundtrip, cell callback and arrival tests cover retained goalkeeper coordinates.
+- 16 original CPU flight sequences match456 complete represented boundaries,
+  using each native output as the next input. Captured original fractional ball
+  bytes are explicit input. Evidence: kickoff-flight-first, sourced from
+  kickoff-launch-flight-inputs. All16 examples reach keeper-bound arrival with
+  no queued field defenders; actual defender encounter coverage is not claimed.
+- Original numeric frame waits explicitly acknowledged; no NMI/PPU/audio or
+  task/random updates. Arrival resolution and keeper continuation remain next.
+- Final Make check/all pass; raw ROM and all generated observations stay private.

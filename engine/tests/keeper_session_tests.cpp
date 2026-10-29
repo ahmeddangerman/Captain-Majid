@@ -33,7 +33,7 @@ int main(){try{
   auto input=stunned;input.current.field.random_first=static_cast<std::uint8_t>(random);
   const auto result=resolve_session_stunned_keeper(input,{16,0});
   check(static_cast<unsigned>(result.phase)==55,"Stunned classification saved before display12");
-  const auto saved=bytes(result);check(saved.size()==370 && saved[10]=='a' && saved[355]==1 && saved[356]==0 &&
+  const auto saved=bytes(result);check(saved.size()==370 && saved[10]=='b' && saved[355]==1 && saved[356]==0 &&
    saved[357]==(random>=16 ? 0 : 1),"Saved result matches each original threshold boundary");
   std::istringstream stream(saved);check(bytes(load_phase_session(stream))==saved,"Keeper decision round-trip");
   check(result.current.field.random_first==random && result.current.clock.remaining==448 &&

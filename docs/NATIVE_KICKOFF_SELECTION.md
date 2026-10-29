@@ -217,3 +217,21 @@ and final clock, with cooperative frame acknowledgements; script8 is explicitly
 acknowledged before8410. Every represented byte matches through saved destination.
 Evidence: `kickoff-launch-final`. Other defender choices, exceptional clocks,
 full presentation and subsequent numeric flight are outside this checkpoint.
+
+## Saved numeric flight from kickoff (2026-10-29)
+
+Kickoff keeper coordinates now persist in phases47–49: flight setup, each numeric
+cell step, defender callback and arrival callback. Snapshot37 (`b`) retains370bytes
+and older readers, while previous version markers reject these new combinations.
+`tools/check_kickoff_flight_original.py` takes the saved destinations produced by
+the launch comparison and feeds each native save into the next operation.
+
+Sixteen original CPU comparisons match456 saved boundaries across all formation
+pairs. Fractional X/Y inputs are captured from original RAM and supplied explicitly;
+frame waits are acknowledged without NMI or task/random updates. Every cell and
+its callback match, preserving keeper Y. All sixteen observed flights are keeper
+bound and arrive with zero queued field defenders; this evidence does not claim
+an actual defender encounter. It stops before arrival resolution. Evidence:
+`kickoff-flight-first`; captured launch input evidence: `kickoff-launch-flight-inputs`.
+Tests also cover saved-flight compatibility and a constructed cell callback and
+arrival with retained keeper positions. No hardware/presentation parity claim.

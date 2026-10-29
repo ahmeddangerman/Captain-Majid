@@ -23,7 +23,7 @@ int main(){try{
   goal.current.clock.remaining==448 && goal.experience->totals[0]==25 && bytes(s)==original,
   "Scorer rewarded once before celebration without possession/time mutation");
  check(goal.score && goal.score->left_goals==0 && goal.score->right_goals==4 && goal.score->kickoff==2,"Goal increments one score byte with wrap and retains kickoff");
- auto saved=bytes(goal);check(saved.size()==370 && saved[10]=='a',"Scored goal snapshot36");std::istringstream stream(saved);
+ auto saved=bytes(goal);check(saved.size()==370 && saved[10]=='b',"Scored goal snapshot37");std::istringstream stream(saved);
  check(bytes(load_phase_session(stream))==saved,"Scored goal round-trip");
  auto legacy=original;legacy[10]='O';legacy.resize(361);std::istringstream old(legacy);check(bytes(load_phase_session(old))==original,"Legacy O decision remains readable");
  auto forbidden=saved;forbidden[10]='O';forbidden.resize(361);rejects([&]{std::istringstream i(forbidden);load_phase_session(i);});

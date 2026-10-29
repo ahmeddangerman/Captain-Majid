@@ -87,6 +87,7 @@ def main():
             compare(ram,45,['--continue-unopposed-attack',str(ram[0x43d])])
             report,ram=trace_approach(prg,ram)
             compare(ram,46,['--prepare-shot-approach'],report['loose_ball'])
+            (out/f'{name}-destination.bin').write_bytes(ram)
             results.append({'left':left,'right':right,'boundaries':index,'clock_instructions':steps,
                             'clock_host_frames':frames,'presentation_writes':writes,'destination':ram[0x638],'loose':report['loose_ball']})
     (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Prepared ordinary kickoff shot with no field defenders through destination. Native results feed next commands. Original82A0 includes script1 and final timing under disclosed host frame acknowledgements; script8 explicitly acknowledged. No actual NMI/audio/PPU, special moves, defenders or flight.'},indent=2)+'\n')

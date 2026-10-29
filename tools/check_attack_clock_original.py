@@ -15,7 +15,7 @@ from verify_action_strength import PAYLOAD_SHA256
 
 
 def checkpoint(ram, phase):
-    b = bytearray(export_session(bytes(ram), 20)); b[10], b[258] = ord('a'), phase
+    b = bytearray(export_session(bytes(ram), 20)); b[10], b[258] = ord('b'), phase
     count = ram[0x600]
     progress = [count, ram[0x612], ram[0x600+count], ram[0x43D], ram[0x43E]] if count else [0]*5
     b += bytes([1, *progress, 0, 0, 0, 0, 0, 0, 0, 0, 0])
