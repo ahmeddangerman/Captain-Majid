@@ -35,6 +35,7 @@ RecoverySessionResult recover(const PhaseSessionState& input,
         context.x_jitter_control = ball.x_jitter_control;
         if (!ball.inside_field) {
             state.phase = retained_prefix ? FieldSessionPhase::selected_boundary_restart : FieldSessionPhase::boundary_restart;
+            validate_phase_session(state);
             return result;
         }
     }
@@ -94,8 +95,6 @@ RecoverySessionResult advance_session_recovery(const PhaseSessionState& input,
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::ball_recovery || !input.recovery)
         throw std::invalid_argument("Recovery requires ball-recovery phase and captured context");
-    if (input.kickoff_formation)
-        throw std::invalid_argument("Kickoff rebound recovery still needs its original presentation/jitter comparison");
     if (input.current.field.selected_defenders != 0)
         throw std::invalid_argument("Connected recovery requires zero selected defenders");
     return recover(input,{},false,true,primary,movement);

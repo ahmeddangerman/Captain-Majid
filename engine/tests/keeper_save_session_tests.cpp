@@ -60,8 +60,15 @@ int main(){try{
   punched.state.current.field.ball_cell==233,"Punch commits placement/elapsed and preserves the prior cell during prepared recovery");
  auto punch_recovery=punched.state;punch_recovery.current.field.ball_x=156;punch_recovery.current.field.ball_y=124;
  PlayerProfileMappings primary{};FieldPhaseContent movement{};movement.profiles.speeds.resize(1);movement.geometry.direction_thresholds.fill(65535);
- auto unsupported_rebound=kickoff_rebound;unsupported_rebound.current.field.ball_x=156;
- rejects([&]{advance_session_recovery(unsupported_rebound,primary,movement);});
+ auto prepared_rebound=kickoff_rebound;prepared_rebound.current.field.ball_x=156;
+ prepared_rebound.control->motion_requested=2;
+ auto rebound_owner=advance_session_recovery(prepared_rebound,primary,movement).state;
+ check(rebound_owner.phase==FieldSessionPhase::recovered_owner && rebound_owner.kickoff_formation &&
+       rebound_owner.control->motion_requested==2,"Rebound jitter recovery keeps its original animation state");
+ auto outside_rebound=prepared_rebound;outside_rebound.current.field.ball_x=0;outside_rebound.current.field.ball_y=0;
+ const auto outside_bytes=bytes(outside_rebound);
+ rejects([&]{advance_session_recovery(outside_rebound,primary,movement);});
+ check(bytes(outside_rebound)==outside_bytes,"Unsupported kickoff boundary exit leaves the source intact");
  auto kickoff_punch=punch_recovery;kickoff_punch.kickoff_formation=KickoffFormationContext{{124,132}};
  kickoff_punch.control->motion_requested=2;
  auto kickoff_recovered=advance_session_keeper_punch_recovery(kickoff_punch,primary,movement).state;

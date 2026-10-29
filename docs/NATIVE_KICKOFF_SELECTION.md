@@ -331,3 +331,20 @@ match original player movement and recipient selection through8C31. Evidence:
 `kickoff-punch-recovery-final`. These are constructed non-goal-result inputs on
 captured kickoff positions, not proof of naturally arising saves. Further control,
 keeper-area/story continuation and real presentation remain unfinished.
+
+## Controlled rebound recovery (2026-10-29)
+
+The existing phase2 recovery operation now accepts retained kickoff coordinates
+for an interior jitter/movement/recipient result at phase6. Snapshot43 remains
+unchanged because both input and output combinations are already supported.
+Original rebound inputs retain the prior animation flag2 in the checked cases;
+the punch path's explicit animation clear must not be applied to this operation.
+
+`check_kickoff_save_handoffs_original.py --punch-recovery --rebound-recovery`
+compares128 constructed non-goal handlers,64 rebound recoveries and16 punch
+recoveries:208 full-state comparisons. Evidence: `kickoff-rebound-recovery-first`.
+The pending rebound guard regression failed before support, then passed. Unsupported
+out-of-field kickoff exits validate before returning and reject without mutation;
+a real regression showed the old early return could expose an invalid state.
+Keeper-result inputs remain constructed, and subsequent control/keeper-area/story
+continuation is still outside this checkpoint.

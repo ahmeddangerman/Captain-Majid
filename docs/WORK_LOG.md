@@ -1110,3 +1110,20 @@ Daily website note updated separately; engine/private research remains local.
   is constructed input; following control/keeper-area/story remain pending.
 - Final Make check/all pass without compiler diagnostics. Private generated
   content and ROM remain outside Git; source-only public daily note updated.
+
+## 2026-10-29 — controlled rebound jitter recovery
+
+- Restored py65 under private analysis/python-deps after temporary execution files
+  disappeared. Fresh Make check/all confirmed the committed punch checkpoint;
+  regenerated verification logs are kept under analysis rather than /tmp.
+- Enabled retained keeper Y through existing rebound jitter recovery2→6. Original
+  rebound motion flag remains2 in tested inputs, distinct from punch acknowledgement.
+  Real regression failed on the deliberate guard before passing with support.
+- 128 controlled non-goal handlers plus64 rebound and16 punch recoveries match
+  full original state (208 comparisons). Evidence: kickoff-rebound-recovery-first.
+  Constructed result inputs, disclosed host acknowledgements and hardware limits
+  still apply. No new snapshot version was needed.
+- Validated early boundary exits: unsupported keeper-context phase5 rejects without
+  source mutation. Regression failed when the validation was removed and passed
+  after restoration. Actual next control/keeper-area/story phases remain pending.
+- Final Make check/all pass for rebound recovery. Private content stays outside Git.
