@@ -6,7 +6,7 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** persistent shot approach, fractional flight, empty arrival, keeper decisions and non-goal rebound/catch/punch handoffs are connected at prepared boundaries. A full playable match, goals/restarts, queued arrival encounters, keeper control and live presentation/frame scheduling remain unfinished.
+- **Current milestone:** persistent shot approach, fractional flight, empty arrival, keeper decisions, rebound/catch/punch handoffs and score/scorer reward registration are connected at prepared boundaries. A full playable match, goal presentation/celebration/restarts, queued arrival encounters, keeper control and live presentation/frame scheduling remain unfinished.
 - **Next engine work:** connect selected keeper/story/boundary restarts and nonterminal approach/flight/keeper/goal routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
@@ -790,3 +790,9 @@ Daily website note updated separately; engine/private research remains local.
   pass for each owner2/3 (144total). Evidence: scored-goal-final and
   scored-goal-owner3-green. Persistent scorer-type assertion prevents recurrence.
   O1 assertion build retains previously logged GCC optional-vector diagnostics.
+
+- Closing checkpoint: engine source is private/local through c2fbd94; Arabic daily
+  note published separately as website-only main8fc4c2e. Pinned GitHub raw source
+  matches local index.html; no browser/Pages rendering claim. Next original987B
+  research shows it includes post-goal presentation/menu and sets062D ball mode0;
+  do not skip that UI silently when adding85BF keeper-cleanup/kickoff continuation.
