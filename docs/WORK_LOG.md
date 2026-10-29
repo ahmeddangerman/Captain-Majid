@@ -1039,3 +1039,16 @@ Daily website note updated separately; engine/private research remains local.
   actual keeper choice/comparison and outcome are still pending with this context.
   Host frame acknowledgements remain explicit; no full hardware/match claim.
 - Final Make check/all pass; ROM and private generated evidence remain outside Git.
+
+## 2026-10-29 — prepared kickoff normal keeper comparison
+
+- Retained keeper Y through phase56; snapshot39d370bytes reads previous formats.
+  Real comparison regression failed on old guard, then passed; decision roundtrip,
+  legacy c setup, forbidden old marker and replay rejection covered.
+- Extended original flight verifier with explicit keeper-choice input after
+  acknowledged presentation. 128 comparisons (4actions×2subtypes×16formations)
+  match; with preceding flight/entry there are616 matched boundaries. All128
+  original results are0 for these actual inputs. Do not claim save/rebound outcome
+  coverage. Evidence: kickoff-keeper-decisions-first. Goal registration and
+  outcome/presentation remain next work; no hardware/full-match claim.
+- Final Make check/all pass. Source and private generated content stay separate.

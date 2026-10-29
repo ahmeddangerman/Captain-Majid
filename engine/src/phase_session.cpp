@@ -71,7 +71,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool keeper_possession=phase==57;
     const bool goal_restart=phase==60;
     const bool kickoff_placed=phase>=61 && phase<=64;
-    const bool kickoff_shot=phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53;
+    const bool kickoff_shot=phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53 || phase==56;
     if((kickoff_placed && !state.kickoff_formation) ||
        (!kickoff_placed && !(phase>=9 && phase<=13) && !(phase>=18 && phase<=20) && !kickoff_shot && state.kickoff_formation))
         throw std::invalid_argument("Kickoff formation phase needs captured keeper positions");

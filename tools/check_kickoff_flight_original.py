@@ -9,6 +9,7 @@ from py65.devices.mpu6502 import MPU
 from trace_field_script import ObservedCartridge
 from flight_checkpoint import flight_checkpoint
 from check_keeper_entry_original import keeper_checkpoint
+from check_keeper_comparison_original import observe_keeper_comparison
 from verify_action_strength import PAYLOAD_SHA256
 
 
@@ -21,7 +22,7 @@ def until(cpu, targets):
 
 
 def snapshot(ram, phase, loose):
-    data=bytearray(keeper_checkpoint(ram,phase) if phase==53 else flight_checkpoint(ram,phase,loose))
+    data=bytearray(keeper_checkpoint(ram,phase) if phase in (53,56) else flight_checkpoint(ram,phase,loose))
     data[361:365]=bytes([1,ram[0x28],ram[0x29],ram[0x629]])
     data[365:368]=bytes([1,ram[0x308],ram[0x38c]])
     return bytes(data)
@@ -31,7 +32,10 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','pack','projection','launch_dir','output_dir'):p.add_argument(name,type=Path)
     p.add_argument('--keeper-entry',action='store_true')
-    a=p.parse_args();rom=a.rom.read_bytes()
+    p.add_argument('--keeper-choice',action='store_true')
+    a=p.parse_args()
+    if a.keeper_choice and not a.keeper_entry:p.error('Keeper choice requires keeper entry')
+    rom=a.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
     out=a.output_dir.resolve()
     if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private output must stay outside checkout')
@@ -70,6 +74,7 @@ def main():
             until(cpu,{0xe773})
             compare(47,['--resolve-ball-cell'])
         else:raise RuntimeError('Flight did not arrive within100cells')
+        decisions=[]
         if a.keeper_entry:
             if loose or m[0x600]:raise RuntimeError('Keeper entry requires unopposed keeper-bound arrival')
             until(cpu,{0xdd1c})
@@ -77,8 +82,19 @@ def main():
             until(cpu,{0x8509,0x8900})
             if cpu.pc!=0x8509:raise RuntimeError('Expected normal keeper')
             compare(53,['--prepare-keeper-entry'])
-        cases.append({'left':entry['left'],'right':entry['right'],'boundaries':index,'cells':cells,'loose':loose,'keeper_entry':a.keeper_entry})
-    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Native saved destination feeds flight setup and each cell/callback; all represented bytes match original CPU, including accumulated defenders and keeper Y. Original numeric frame waits explicitly acknowledged with no NMI/PPU/audio or task/random updates. Fractional input bytes captured from original RAM, not invented. Optional empty-arrival routing and normal keeper setup stop before the keeper presentation; keeper action and outcomes excluded.'},indent=2)+'\n')
+            if a.keeper_choice:
+                prepared_source=source;prepared_ram=bytes(m.ram[:2048])
+                for action in range(4):
+                    for subtype in (0,128):
+                        original_input=bytearray(prepared_ram)
+                        original_input[0x43d],original_input[0x43e]=action,subtype
+                        final,instructions=observe_keeper_comparison(rom[16:262160],original_input)
+                        source=prepared_source;m.ram[:2048]=final
+                        compare(56,['--resolve-prepared-keeper',str(action),str(subtype),str(final[0x2b])])
+                        decisions.append({'action':action,'subtype':subtype,'result':final[0x612],
+                                          'instructions':instructions})
+        cases.append({'left':entry['left'],'right':entry['right'],'boundaries':index,'cells':cells,'loose':loose,'keeper_entry':a.keeper_entry,'keeper_decisions':decisions})
+    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Native saved destination feeds flight setup and each cell/callback; all represented bytes match original CPU, including accumulated defenders and keeper Y. Original numeric frame waits explicitly acknowledged with no NMI/PPU/audio or task/random updates. Fractional input bytes captured from original RAM, not invented. Optional empty-arrival routing and normal keeper setup stop before the keeper presentation; optional prepared keeper comparison supplies action/subtype after explicitly acknowledged keeper presentation; stops before display9 and outcomes.'},indent=2)+'\n')
     print(f'{len(cases)} kickoff flight sequences match: {out}')
 
 if __name__=='__main__':main()

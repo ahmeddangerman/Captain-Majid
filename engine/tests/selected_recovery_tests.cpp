@@ -39,7 +39,7 @@ int main(){
   r.state.current.field.side==11 && r.request_possession_sound,"Unvisited action5 suffix receives ball");
  const auto& owner=r.state.current.field.motion[field_motion_index(13)];
  check(owner.x==((120<<8)|23) && owner.y==((100<<8)|45),"Recipient fractional coordinates preserved");
- auto encoded=bytes(r.state);check(encoded.size()==370 && encoded[10]=='c',"Session38 format");
+ auto encoded=bytes(r.state);check(encoded.size()==370 && encoded[10]=='d',"Session39 format");
  std::istringstream saved(encoded);check(bytes(load_phase_session(saved))==encoded,"Side11 recovered-owner snapshot");
  encoded[10]='A';rejects([&]{std::istringstream bad(encoded);load_phase_session(bad);});
  resumed=continue_session_selected_recovery(r.state);check(resumed.current.field.selected_defenders==2,"Prepared tail retains prefix");

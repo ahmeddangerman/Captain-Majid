@@ -33,7 +33,7 @@ int main(){try{
   auto input=stunned;input.current.field.random_first=static_cast<std::uint8_t>(random);
   const auto result=resolve_session_stunned_keeper(input,{16,0});
   check(static_cast<unsigned>(result.phase)==55,"Stunned classification saved before display12");
-  const auto saved=bytes(result);check(saved.size()==370 && saved[10]=='c' && saved[355]==1 && saved[356]==0 &&
+  const auto saved=bytes(result);check(saved.size()==370 && saved[10]=='d' && saved[355]==1 && saved[356]==0 &&
    saved[357]==(random>=16 ? 0 : 1),"Saved result matches each original threshold boundary");
   std::istringstream stream(saved);check(bytes(load_phase_session(stream))==saved,"Keeper decision round-trip");
   check(result.current.field.random_first==random && result.current.clock.remaining==448 &&
@@ -56,6 +56,17 @@ int main(){try{
  for(auto& moves:content.keeper.moves)moves={{0,0,10,0}};
  content.keeper_range=255;content.keeper_offset=128;content.keeper_thresholds={200,180,100,0};
  auto before=normal;before.action->power=100;
+ auto kickoff_before=before;kickoff_before.kickoff_formation=KickoffFormationContext{{124,132}};
+ auto kickoff_decision=resolve_prepared_session_keeper(kickoff_before,0,0,4,content);
+ check(kickoff_decision.phase==FieldSessionPhase::keeper_decided && kickoff_decision.kickoff_formation &&
+       !bytes(kickoff_decision).empty(),"Kickoff keeper comparison preserves saved coordinates");
+ auto kickoff_bytes=bytes(kickoff_decision);std::istringstream kickoff_stream(kickoff_bytes);
+ check(bytes(load_phase_session(kickoff_stream))==kickoff_bytes,"Kickoff keeper decision roundtrip");
+ auto old_kickoff=kickoff_bytes;old_kickoff[10]='c';
+ rejects([&]{std::istringstream i(old_kickoff);load_phase_session(i);});
+ auto prior_setup=bytes(kickoff_before);prior_setup[10]='c';std::istringstream prior_setup_stream(prior_setup);
+ check(bytes(load_phase_session(prior_setup_stream))==bytes(kickoff_before),"Legacy c kickoff keeper setup loads");
+ rejects([&]{resolve_prepared_session_keeper(kickoff_decision,0,0,4,content);});
  const auto decision=resolve_prepared_session_keeper(before,0,0,4,content);
  check(decision.keeper_decision->result_code==1,"Keeper score/adjustment classifies comparison");
  check(static_cast<unsigned>(decision.phase)==56,"Ready keeper comparison persists before presentation9");

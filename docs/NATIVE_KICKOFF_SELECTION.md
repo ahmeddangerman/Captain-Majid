@@ -251,3 +251,19 @@ match488 represented boundaries including the two new handoffs. Evidence:
 all arrive with zero field defenders and a normal keeper. Stunned setup, keeper
 choice/comparison and outcomes remain unsupported with kickoff coordinate context.
 Frame waits retain the disclosed host acknowledgement policy.
+
+## Prepared normal keeper comparison (2026-10-29)
+
+Snapshot39 (`d`,370bytes) carries kickoff keeper coordinates into phase56 after
+`--resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM`. The caller explicitly
+supplies a keeper choice after acknowledging its presentation. The original852F
+routine executes stat loading, stamina adjustment, comparison and story override
+before8599/presentation9; these calculations are reused by the native session.
+
+The flight verifier's `--keeper-entry --keeper-choice` options compare128 keeper
+choices (all4 actions, subtypes0/128, all16 formation pairs), together with the
+preceding numeric flight. All616 represented boundaries match. Evidence:
+`kickoff-keeper-decisions-first`. All128 comparisons produce original result0 for
+these actual shot/keeper inputs. This is goal-result evidence only; it does not
+prove catches, punches or rebounds from this kickoff path. Actual presentation,
+stunned keeper, outcome handlers and complete matches remain unfinished.
