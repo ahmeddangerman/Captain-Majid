@@ -12,6 +12,8 @@ struct RecoverySessionResult {
 };
 // Supported original8BDF..8C31 sequence; selected-defender count must be zero.
 // Uses staged inputs without synthesizing frame/NMI randomness.
+RecoverySessionResult advance_session_keeper_punch_recovery(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement);
 RecoverySessionResult advance_session_shot_loose_recovery(const PhaseSessionState& input,
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement);
 RecoverySessionResult advance_session_recovery(const PhaseSessionState& input,

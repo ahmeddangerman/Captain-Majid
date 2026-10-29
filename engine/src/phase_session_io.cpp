@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I' && version != 'J' && version != 'K' && version != 'L' && version != 'M' && version != 'N')
+    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I' && version != 'J' && version != 'K' && version != 'L' && version != 'M' && version != 'N' && version != 'O')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -62,6 +62,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Shot flight setup requires session version19");
     if (version < 'K' && static_cast<unsigned>(state.phase) > 46)
         throw std::invalid_argument("Numeric ball flight requires session version20");
+    if (version < 'O' && static_cast<unsigned>(state.phase) > 56)
+        throw std::invalid_argument("Keeper save handoff requires session version24");
     if (version < 'N' && static_cast<unsigned>(state.phase) > 55)
         throw std::invalid_argument("Keeper comparison requires session version23");
     if (version < 'M' && static_cast<unsigned>(state.phase) > 52)
@@ -204,7 +206,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'N');
+    byte(output, 'O');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));

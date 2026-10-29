@@ -10,6 +10,7 @@ from trace_field_script import ObservedCartridge
 from flight_checkpoint import flight_checkpoint
 from check_keeper_entry_original import keeper_checkpoint
 from check_keeper_comparison_original import observe_keeper_comparison
+from check_keeper_saves_original import observe_keeper_save, post_save_checkpoint
 from export_phase_session import export_session
 from trace_ball_recovery_phase import trace_recovery
 from verify_action_strength import PAYLOAD_SHA256
@@ -38,11 +39,12 @@ def main():
     def native(source,operation,dest):
         subprocess.run([binary,pack,str(source),*operation,'--capture',str(dest)],capture_output=True,check=True,timeout=30)
     cases=[]
-    for name,x,y,dest,zero in [('loose-with-defenders',120,100,221,False),('keeper-bound',160,96,233,True),('loose-free',80,100,161,True),('keeper-ready-free',160,96,233,True),('keeper-stunned-free',160,96,233,True)]:
+    for name,x,y,dest,zero in [('loose-with-defenders',120,100,221,False),('keeper-bound',160,96,233,True),('loose-free',80,100,161,True),('keeper-ready-free',160,96,233,True),('keeper-stunned-free',160,96,233,True),('keeper-catch-free',160,96,233,True),('keeper-punch-free',160,96,233,True)]:
         ram=bytearray(base);ram[0x634:0x638]=((x<<8)|64).to_bytes(2,'little')+((y<<8)|192).to_bytes(2,'little')
         ram[0x5FE]=((x-48)//8)*12+(y-80)//8;ram[0x638]=dest;ram[0x61A]=255;ram[0x61B]=0;ram[0x617]=0;ram[0x43C]=0;ram[0xE2]=1;ram[0xE3]=0
         if zero:ram[0x600:0x606]=bytes(6);ram[0x612]=0
         if name.startswith("keeper-") and name.endswith("free"):ram[0x38E]=int(name=="keeper-stunned-free")
+        if name in ("keeper-catch-free","keeper-punch-free"):ram[0x61C:0x61E]=bytes(2)
         # Freeze candidates in the first visited cell; positions are explicit input.
         probe,cp=original(ram);until(cp,{0xE773});cp.pc=0xE778;until(cp,{0xE7B4,0xE7CC})
         for slot in range(12,22):
@@ -72,7 +74,7 @@ def main():
             report,recovered=trace_recovery(rom[16:262160],bytes(m.ram[:2048]),skip_jitter=True)
             (out/'loose-free-recovery.json').write_text(json.dumps(report,indent=2)+'\n')
             dest=out/'loose-free-recovered.cmjsession';native(routed,['--recover-shot-loose'],dest)
-            expected=bytearray(export_session(recovered,6));expected[10]=ord('N');expected+=bytes(37)
+            expected=bytearray(export_session(recovered,6));expected[10]=ord('O');expected+=bytes(37)
             if dest.read_bytes()!=expected:raise RuntimeError('Complete loose recovery mismatch')
             controlled=out/'loose-free-control.cmjsession';native(dest,['--continue-recovery'],controlled)
             ready_control=out/'loose-free-control-ready.cmjsession';native(controlled,['--setup-control'],ready_control)
@@ -88,12 +90,29 @@ def main():
             result['keeper_prepared_phase']=phase
             if phase==53:
                 # Explicit prepared keeper choice boundary: no display2/menu effects.
-                ram_for_keeper=bytearray(m.ram[:2048]);ram_for_keeper[0x43D]=0;ram_for_keeper[0x43E]=0
+                ram_for_keeper=bytearray(m.ram[:2048]);ram_for_keeper[0x43D]=int(name=="keeper-punch-free");ram_for_keeper[0x43E]=0
                 keeper_final,instructions=observe_keeper_comparison(rom[16:262160],ram_for_keeper)
                 keeper_saved=out/(name+'-keeper-decided.cmjsession')
-                native(prepared,['--resolve-prepared-keeper','0','0',str(ram_for_keeper[0x2B])],keeper_saved)
+                native(prepared,['--resolve-prepared-keeper',str(ram_for_keeper[0x43D]),'0',str(ram_for_keeper[0x2B])],keeper_saved)
                 if keeper_saved.read_bytes()!=keeper_checkpoint(keeper_final,56):raise RuntimeError('Complete prepared keeper comparison mismatch')
                 result['keeper_result']=keeper_final[0x612];result['keeper_comparison_instructions']=instructions
+                if keeper_final[0x612]>=2:
+                    # Explicit post-display9 handler; actual rewards/status/ownership run.
+                    save_final,save_phase,save_instructions=observe_keeper_save(rom[16:262160],keeper_final)
+                    handoff=out/(name+'-save-handoff.cmjsession');native(keeper_saved,['--resolve-keeper-save'],handoff)
+                    if handoff.read_bytes()!=post_save_checkpoint(save_final,save_phase):raise RuntimeError('Joined keeper save handoff mismatch')
+                    result['save_handoff_phase']=save_phase;result['save_handler_instructions']=save_instructions
+                    if save_phase==58:
+                        recovery_report,recovered=trace_recovery(rom[16:262160],save_final,skip_jitter=True)
+                        recovered_save=out/(name+'-punch-recovered.cmjsession');native(handoff,['--recover-keeper-punch'],recovered_save)
+                        if recovered_save.read_bytes()!=post_save_checkpoint(recovered,6):raise RuntimeError('Joined punch recovery mismatch')
+                        result['punch_recovery_matches']=True
+                        continued=out/(name+'-punch-continued.cmjsession');native(recovered_save,['--continue-recovery'],continued)
+                        result['native_recovery_continuation_phase']=continued.read_bytes()[258]
+                        if continued.read_bytes()[258]==1:
+                            controlled=out/(name+'-punch-control-ready.cmjsession');native(continued,['--setup-control'],controlled)
+                            if controlled.read_bytes()[258]!=9:raise RuntimeError('Punch recovery did not rejoin native control-ready')
+                            result['native_control_ready']=True
             if phase==54:
                 until(cpu,{0x8917})
                 thresholds=rom[16+26*8192+0x928:16+26*8192+0x92A]
@@ -101,7 +120,7 @@ def main():
                 if decided.read_bytes()!=keeper_checkpoint(bytes(m.ram[:2048]),55):raise RuntimeError('Complete stunned keeper decision mismatch')
                 result['stunned_result']=m[0x612]
         cases.append(result)
-    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Full numeric destination flight with original cell selection and native save/reload every step. Explicit frozen frame acknowledgements; no live NMI/task/input updates or queued arrival encounter/keeper comparison/outcome callback. Two free keeper cases also match keeper setup, plus the stunned random decision before presentation12 and explicitly prepared normal choice/comparison before presentation9. Free loose case additionally compares prepared post-display recovery and checks native control-ready. Display45 and native control setup are not claimed part of this original trajectory equality.'},indent=2)+'\n')
+    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Full numeric destination flight with original cell selection and native save/reload every step. Explicit frozen frame acknowledgements; no live NMI/task/input updates or queued arrival encounters. Free keeper cases also match keeper setup, stunned decision before presentation12, prepared normal choice/comparison before presentation9, and non-goal save/reward handlers after acknowledged display9, including punch recovery. Free loose case additionally compares prepared post-display recovery and checks native control-ready. Display45 and native control setup are not claimed part of this original trajectory equality.'},indent=2)+'\n')
     print(f'{len(cases)} complete prepared numeric flights match at every saved cell/callback: {out}')
 
 

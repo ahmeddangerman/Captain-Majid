@@ -6,7 +6,7 @@ This is the running reference for work between chat updates. Entries distinguish
 
 - **Full port: currently unmeasured.** The repeated7% guess has been retired following the user's correction. See [completion checkpoints](PORT_STATUS.md); historical entries below retain what was reported at the time. There is no playable match yet.
 - **Available:** native shot calculations, private content loading, resettable shot lab, persistent field/clock phase-session labs, and an optional SDL2 scene with placeholder graphics.
-- **Current milestone:** selected-shot/control/recovery and ordinary clearance handoffs are connected. Interrupted shots now select field or opposing goal-area restart setup. Actual restart setup, keeper/story and remaining shot/goal routes remain pending.
+- **Current milestone:** persistent shot approach, fractional flight, empty arrival, keeper decisions and non-goal rebound/catch/punch handoffs are connected at prepared boundaries. A full playable match, goals/restarts, queued arrival encounters, keeper control and live presentation/frame scheduling remain unfinished.
 - **Next engine work:** connect selected keeper/story/boundary restarts and nonterminal approach/flight/keeper/goal routes; then continue goal-area/restart/keeper/story progression and live ball-flight/frame scheduling.
 - **Next major milestone:** coherent persistent match state and supported phase transitions, with explicit simulation randomness for future online play.
 - **Suggested model:** Sol 6.1 High for original-code tracing and C++ integration. This is a judgment about the task, not a benchmark result.
@@ -727,3 +727,38 @@ Daily website note updated separately; engine/private research remains local.
 - Fresh review found no material defect. Expanded the session oracle to254cases
   with raw type64, defense subtype128 and contexts0/4; all pass. Final default
   Make suite/build pass cleanly; CMake unavailable. Engine remains private.
+
+
+## 2026-10-29 — persistent keeper saves and recovery handoffs
+
+- Added prepared56 result2/3 save resolution: raw keeper experience selector3 once,
+  timer/penalty, rebound2 recovery, catch57 keeper ownership and punch58 no-jitter
+  recovery. Resolved flight/decision contexts clear. Typed57 permits only own
+  keeper11/side11/prefix1; field-player ownership validation remains strict.
+- Punch58 explicitly retains elapsed1 and stored earlier ball cell. Native8BE5
+  wrapper advances field recovery into generic6 for either side without duplicate
+  jitter/cleanup/clock/reward. Correction in focused test: ball cell stays stale
+  through recovery, as original comparisons show; later control setup refreshes it.
+- Both real adapter and punch recovery tests failed with unimplemented stubs then
+  passed.128 original non-goal handlers match represented save bytes, including
+  reward saturation, raw keeper types1/33/64, timer wrap, penalty gates and punch
+  directions/signs. Actual original reward/status/ownership/sound helper instructions
+  execute unchanged, no calls skipped. Selected prepared punch recoveries match.
+- Seven complete prepared numeric flights match each saved cell/callback, including
+  normal keeper comparison and rebound/catch/punch handoffs plus punch recovery.
+  Evidence: keeper-saves-final and full-flight-keeper-saves-final. Presentation9,
+  keeper control and live audio/render/frame scheduling remain explicit limits.
+- Snapshot24O retains361bytes/readers1..N. No score/goal capture inferred: guarded
+  non-goal value helper does not use or commit score/kickoff placeholders. Goal/
+  special turnover handling and persistent scoreboard remain next work.
+- Review found an existing phase>=52 guard dereferencing absent flight contexts
+  in new57/58. Default optimized tests masked the invalid access. Fresh full-core
+  assertion build aborted on optional engagement (real RED); narrowed guard52..56,
+  same assertion test passes GREEN. Final default Make check/all and original
+  128handlers/7joined flights pass after fix. Eleven prepared punch recoveries
+  match; joined punch also reaches native control-ready (separately checked,
+  not claimed original live presentation equivalence).
+- AssertionO1 build retains three pre-existing GCC maybe-uninitialized warnings in
+  finish's optional-vector move, also seen before fix; defaultO2 suite/build are
+  clean. Deferred diagnostic investigation; no demonstrated gameplay fault there.
+  CMake unavailable. No other material review findings. Engine code stays private.

@@ -42,7 +42,7 @@ int main() {
     require(static_cast<unsigned>(r.state.phase) == 21 && r.defenses.result_code == 0 &&
         r.state.action->power == 1 && r.state.current.field.roster[3].stamina == 123,
         "Empty selection advances without preparing/debiting attacker");
-    auto encoded = bytes(r.state); require(encoded.size() == 361 && encoded[10] == 'N', "Session23 layout");
+    auto encoded = bytes(r.state); require(encoded.size() == 361 && encoded[10] == 'O', "Session24 layout");
     std::istringstream saved(encoded); require(bytes(load_phase_session(saved)) == encoded, "Session14 roundtrip");
     auto legacy = encoded; legacy[10] = '7';
     rejects([&] { std::istringstream old(legacy); load_phase_session(old); });

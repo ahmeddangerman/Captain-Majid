@@ -69,6 +69,14 @@ RecoverySessionResult recover(const PhaseSessionState& input,
 }
 
 }
+RecoverySessionResult advance_session_keeper_punch_recovery(const PhaseSessionState& input,
+ const PlayerProfileMappings& primary,const FieldPhaseContent& movement) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_punch_recovery)
+  throw std::invalid_argument("Keeper punch recovery requires prepared no-jitter handoff");
+ auto state=input;state.phase=FieldSessionPhase::ball_recovery;
+ return recover(state,{},false,false,primary,movement,FieldSessionPhase::recovered_owner);
+}
 RecoverySessionResult advance_session_shot_loose_recovery(const PhaseSessionState& input,
  const PlayerProfileMappings& primary,const FieldPhaseContent& movement) {
  validate_phase_session(input);
