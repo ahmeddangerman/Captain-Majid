@@ -31,6 +31,8 @@ ControlTickResult after_clock(PhaseSessionState state, const FieldPlayerProfiles
     const auto forward_x = field.side == 0 ? field.ball_x : static_cast<std::uint8_t>(0u - field.ball_x);
     const auto& defending_keeper = field.keepers[field.side == 0 ? 1 : 0];
     if (defending_keeper.stun == 0 && forward_x >= 196 && field.ball_y >= 116 && field.ball_y < 140) {
+        if (state.kickoff_formation)
+            throw std::invalid_argument("Kickoff keeper positions are not yet supported at goal-area action");
         state.current.clock.ball_mode = 0; state.current.clock.script_flags = 0;
         state.phase = FieldSessionPhase::goal_area_action;
         return {std::move(state)};
@@ -77,6 +79,8 @@ ControlTickResult advance_control_tick(const PhaseSessionState& input,
     const auto clock = advance_match_clock(state.current.clock, 1, state.current.field.random_first);
     state.current.clock = clock.state;
     if (clock.continuation != ClockContinuation::ready) {
+        if (state.kickoff_formation)
+            throw std::invalid_argument("Kickoff keeper positions are not yet supported at clock presentation");
         state.phase = clock.continuation == ClockContinuation::period_end
             ? FieldSessionPhase::period_end : FieldSessionPhase::control_added_time;
         return {std::move(state), clock};

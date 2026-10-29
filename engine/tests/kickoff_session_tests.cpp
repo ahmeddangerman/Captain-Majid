@@ -59,7 +59,12 @@ int main(){try{using namespace captain;
  auto old_control=control_bytes;old_control[10]='U';
  rejects([&]{std::istringstream i(old_control);load_phase_session(i);});
  auto past_control=control_ready;past_control.phase=FieldSessionPhase::field_round_pending;
- rejects([&]{validate_phase_session(past_control);});
+ past_control.current.field.elapsed=1;
+ check(!bytes(past_control).empty(),"Saved kickoff keeper positions persist at the field-round boundary");
+ auto round_bytes=bytes(past_control);std::istringstream round_stream(round_bytes);
+ check(bytes(load_phase_session(round_stream))==round_bytes,"Kickoff field-round snapshot roundtrips");
+ auto old_round=round_bytes;old_round[10]='W';
+ rejects([&]{std::istringstream i(old_round);load_phase_session(i);});
  auto menu=apply_control_buttons(control_ready,64,0).state;
  check(menu.phase==FieldSessionPhase::action_menu_pending && menu.kickoff_formation &&
        !bytes(menu).empty(),"Kickoff control can save an action-menu request with keeper positions");

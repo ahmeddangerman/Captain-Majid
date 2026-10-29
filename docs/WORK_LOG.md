@@ -933,3 +933,16 @@ Daily website note updated separately; engine/private research remains local.
   frame acknowledgements, no actual NMI/PPU/audio. Evidence: kickoff-poll-final.
   The 32 control-setup comparisons were reverified in snapshot32. Later clock,
   menu/AI continuations with saved keeper positions are still guarded.
+
+## 2026-10-29 — ordinary kickoff clock/energy
+
+- Saved goalkeeper coordinates now survive phase10→13 via ordinary control clock,
+  keeper recovery and energy updates. Snapshot33X allows the new keeper-context
+  phase13; prior formats still load. Unsupported goal-area/added-time/period-end
+  paths reject atomically instead of returning a state with unsupported context.
+- Phase13 serialization regression failed on the earlier guard, then passed.
+  Original E1E7 comparisons for both sides/all16 formation pairs matched all
+  represented bytes in32 ordinary cases. Evidence: kickoff-clock-first. Earlier
+  80 control-poll comparisons pass in the new format: kickoff-poll-snapshot33.
+  Original display36 assumed acknowledged; no actual NMI/audio/PPU. The field
+  round and exceptional clock routes still require original comparison.

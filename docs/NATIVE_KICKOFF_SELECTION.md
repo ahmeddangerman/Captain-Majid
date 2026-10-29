@@ -110,8 +110,7 @@ This is not yet a playable kickoff or match.
 Saved keeper coordinates can now accompany phases9–12: repeated input polling,
 action menu request, clock pending and AI cell decision. Snapshot32 (`W`) retains
 the 370-byte layout and reads version31 phase9; previous versions cannot encode
-these newly supported combinations. Other later phases remain guarded until their
-keeper-coordinate behavior is observed.
+these newly supported combinations. Later phases remain guarded except the ordinary clock handoff described below.
 
 `tools/check_kickoff_poll_original.py` compared 80 prepared original E14A polls
 against native saved snapshots: both sides, three decision timers, directional and
@@ -120,3 +119,18 @@ Results cover 38 waiting, 28 clock, 4 menu and 10 AI-cell boundaries, with all
 represented bytes including keeper Y matched. Original host frame acknowledgements
 are disclosed; kickoff display36 is acknowledged and PPU/NMI/audio are not run.
 Evidence: `kickoff-poll-final`. This is still not a full playable match.
+
+## Ordinary kickoff clock and energy handoff (2026-10-29)
+
+After an ordinary kickoff input reaches phase10, `--advance-control` now retains
+keeper coordinates through the normal clock, recovery and energy calculations
+into phase13, before the field round. Snapshot33 (`X`) keeps the 370-byte layout,
+while rejecting earlier versions claiming phase13 with keeper coordinates.
+
+Thirty-two original comparisons cover both sides and all formation pairs after
+an idle decision. They match all represented snapshot bytes through E1E7 to the
+field-round boundary, including goalkeeper bytes. Input/display and host timing
+boundaries are as described above; evidence: `kickoff-clock-first`. Goal-area,
+added time and period-end paths explicitly reject keeper-context progression,
+as does the following field round, until these paths are observed and supported.
+The observer's acknowledgements are not full presentation or hardware emulation.
