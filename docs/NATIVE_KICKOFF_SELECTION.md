@@ -195,3 +195,25 @@ use; no actual NMI/PPU/audio or original kickoff display is run. These sequences
 start at prepared control setup and stop before defender selection/flight. Other
 actions, special-move choice and shot resolution with this keeper context remain
 outside this checkpoint; this is not evidence of a complete playable match.
+
+## Unopposed shot timing, movement and destination (2026-10-29)
+
+A kickoff shot with no nearby field defender now retains keeper coordinates
+through phase27 (timed dispatch),43 (attack presentation),45 (approach ready)
+and46 (saved destination). Snapshot36 (`a`) keeps370bytes and reads older versions;
+Z cannot claim these new keeper-context combinations. Lowercase `a` follows Z
+as the next explicitly accepted format marker.
+
+The initial unopposed kickoff dispatch captures completed script1 effects:
+`$0517=0` and `$0532=2`. Original watched writes identify ED0F/ED32 and bank24:8701.
+These two bytes were missing in the native transition and produced a real ROM
+comparison failure; a regression now covers them. Presentation is acknowledged,
+not rendered. The ordinary no-defender clock, ordered field movement, subsequent
+attack clock and destination calculation then reuse existing native calculations.
+
+`tools/check_kickoff_shot_launch_original.py` compares16 chained sequences (all
+formation pairs) at four boundaries each. Original82A0 executes initial script1
+and final clock, with cooperative frame acknowledgements; script8 is explicitly
+acknowledged before8410. Every represented byte matches through saved destination.
+Evidence: `kickoff-launch-final`. Other defender choices, exceptional clocks,
+full presentation and subsequent numeric flight are outside this checkpoint.

@@ -69,6 +69,12 @@ StagedShotResult dispatch_session_shot(const PhaseSessionState& input,std::uint8
         !(input.phase == FieldSessionPhase::attack_prepared && input.current.field.selected_defenders == 0))
         throw std::invalid_argument("Shot is not waiting for the final dispatch clock");
     auto state=input;
+    if (input.kickoff_formation && input.phase==FieldSessionPhase::attack_prepared) {
+        // Completed original initial shot script1: ED0F/ED32 and bank24:8701.
+        // Prepared presentation acknowledgement, without a native render clock.
+        state.control->facing=0;
+        state.control->motion_requested=2;
+    }
     if (!state.shot_progress) {
         state.shot_progress=ShotContactProgress{};state.control->last_carrier_cell=0;
     }

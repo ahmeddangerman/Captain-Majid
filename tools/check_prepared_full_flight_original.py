@@ -76,7 +76,7 @@ def main():
             report,recovered=trace_recovery(rom[16:262160],bytes(m.ram[:2048]),skip_jitter=True)
             (out/'loose-free-recovery.json').write_text(json.dumps(report,indent=2)+'\n')
             dest=out/'loose-free-recovered.cmjsession';native(routed,['--recover-shot-loose'],dest)
-            expected=bytearray(export_session(recovered,6));expected[10]=ord('Z');expected+=bytes(46)
+            expected=bytearray(export_session(recovered,6));expected[10]=ord('a');expected+=bytes(46)
             if dest.read_bytes()!=expected:raise RuntimeError('Complete loose recovery mismatch')
             controlled=out/'loose-free-control.cmjsession';native(dest,['--continue-recovery'],controlled)
             ready_control=out/'loose-free-control-ready.cmjsession';native(controlled,['--setup-control'],ready_control)

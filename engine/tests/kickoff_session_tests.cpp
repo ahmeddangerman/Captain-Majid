@@ -2,6 +2,7 @@
 #include "captain/control_session.hpp"
 #include "captain/control_input.hpp"
 #include "captain/action_menu.hpp"
+#include "captain/staged_shot.hpp"
 #include "captain/phase_session_io.hpp"
 #include <sstream>
 #include <iostream>
@@ -87,6 +88,19 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(prepared_stream))==prepared_bytes,"Kickoff prepared-shot snapshot roundtrip");
  auto old_prepared=prepared_bytes;old_prepared[10]='Y';
  rejects([&]{std::istringstream i(old_prepared);load_phase_session(i);});
+ prepared.current.clock.remaining=500;
+ auto timed=dispatch_session_shot(prepared,1).state;
+ check(timed.phase==FieldSessionPhase::shot_dispatch_ready && timed.current.clock.remaining==499 &&
+       timed.kickoff_formation && !bytes(timed).empty(),"Kickoff unopposed shot keeps goalkeeper positions after clock");
+ check(timed.control->facing==0 && timed.control->motion_requested==2,
+       "Kickoff unopposed shot captures completed initial presentation effects");
+ auto timed_bytes=bytes(timed);std::istringstream timed_stream(timed_bytes);
+ check(bytes(load_phase_session(timed_stream))==timed_bytes,"Kickoff timed shot roundtrip");
+ auto old_timed=timed_bytes;old_timed[10]='Z';
+ rejects([&]{std::istringstream i(old_timed);load_phase_session(i);});
+ auto legacy_prepared=bytes(prepared);legacy_prepared[10]='Z';std::istringstream legacy_z(legacy_prepared);
+ check(bytes(load_phase_session(legacy_z))==bytes(prepared),"Legacy Z kickoff prepared shot loads");
+ rejects([&]{dispatch_session_shot(timed,1);});
  auto old_opened=opened_bytes;old_opened[10]='X';
  rejects([&]{std::istringstream i(old_opened);load_phase_session(i);});
  check(menu.phase==FieldSessionPhase::action_menu_pending && menu.kickoff_formation &&

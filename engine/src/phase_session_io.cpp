@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z'))
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && version!='a')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -237,6 +237,9 @@ PhaseSessionState load_phase_session(std::istream& input) {
     if(version < 'Z' && (state.phase==FieldSessionPhase::attack_choice_pending ||
        state.phase==FieldSessionPhase::attack_prepared) && state.kickoff_formation)
         throw std::invalid_argument("Kickoff shot preparation requires session version35");
+    const auto phase=static_cast<unsigned>(state.phase);
+    if(version < 'a' && (phase==27 || phase==43 || phase==45 || phase==46) && state.kickoff_formation)
+        throw std::invalid_argument("Kickoff shot approach requires session version36");
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -247,7 +250,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'Z');
+    byte(output, 'a');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));

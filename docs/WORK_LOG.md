@@ -996,3 +996,19 @@ Daily website note updated separately; engine/private research remains local.
 - Final Make check/all pass with no compiler diagnostics. Routine Arabic daily
   note updated separately on website main; source verification is not a browser
   rendering claim. Source/ROM-derived private data remain separate.
+
+## 2026-10-29 — kickoff unopposed shot through destination
+
+- Retained keeper Y at27/43/45/46; snapshot36a370bytes explicitly follows Z and
+  retains prior readers. No-field-defender kickoff shot joins final clock,
+  ordered field movement, prepared attacking clock and saved destination.
+- ROM comparison exposed two missing initial script1 effects (facing64→0,
+  motion0→2). Watched original writes ED0F/ED32/bank24:8701 confirm source;
+  regression failed before fixing the completed-presentation capture. Original
+  observer includes script1 under host acknowledgements; script8 explicitly
+  acknowledged later. No native rendering/frame-frequency claim.
+- 16 formation-pair sequences match64 represented boundaries through destination.
+  Evidence: kickoff-launch-final. Comparison helper's initial wrong flight-context
+  offset was corrected to existing339..343 layout; original RAM is authoritative.
+  Numeric flight and selected defenders with keeper context remain next work.
+- Final Make check/all pass. Private ROM and derived inputs remain outside Git.
