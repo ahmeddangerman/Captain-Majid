@@ -920,3 +920,16 @@ Daily website note updated separately; engine/private research remains local.
 - Deliberate boundary: following phase9 actions with saved keeper Y are rejected
   until their original effects are traced. Earlier reset/team choice, live kickoff,
   complete match and full presentation remain unfinished; progress unmeasured.
+
+## 2026-10-29 — kickoff control polling with keeper positions
+
+- Allowed saved keeper Y context through control phases9–12 (wait, clock, action
+  menu and AI cell boundary), while keeping later phases guarded. Snapshot32W
+  maintains the same layout and validates legacy version31 kickoff phase9.
+- Focused saved-menu regression failed on the old validator then passed. 80
+  original poll comparisons cover both sides, wait/timer and multiple input
+  combinations including AI cell change: 38 wait, 28 clock, 4 menu, 10 AI;
+  all represented bytes match. Original display36 assumed acknowledged; host
+  frame acknowledgements, no actual NMI/PPU/audio. Evidence: kickoff-poll-final.
+  The 32 control-setup comparisons were reverified in snapshot32. Later clock,
+  menu/AI continuations with saved keeper positions are still guarded.

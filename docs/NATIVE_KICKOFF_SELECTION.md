@@ -101,6 +101,22 @@ private `kickoff-control-original-first` and `kickoff-control-native-first`.
 Original display36 is assumed acknowledged. Subsequent control setup uses the
 observer's disclosed frame acknowledgements, with no actual NMI, PPU or audio.
 The earlier reset and side selection are still prepared inputs. The preserved
-keeper context is deliberately supported only at phase9 and kickoff phases;
-subsequent session actions reject it until their goalkeeper effects are traced.
+keeper context is carried through the supported control poll boundaries described
+below; later session actions remain restricted until their effects are traced.
 This is not yet a playable kickoff or match.
+
+## Kickoff control poll (2026-10-29)
+
+Saved keeper coordinates can now accompany phases9–12: repeated input polling,
+action menu request, clock pending and AI cell decision. Snapshot32 (`W`) retains
+the 370-byte layout and reads version31 phase9; previous versions cannot encode
+these newly supported combinations. Other later phases remain guarded until their
+keeper-coordinate behavior is observed.
+
+`tools/check_kickoff_poll_original.py` compared 80 prepared original E14A polls
+against native saved snapshots: both sides, three decision timers, directional and
+button inputs, plus deliberately changed prior cell for the opposing AI route.
+Results cover 38 waiting, 28 clock, 4 menu and 10 AI-cell boundaries, with all
+represented bytes including keeper Y matched. Original host frame acknowledgements
+are disclosed; kickoff display36 is acknowledged and PPU/NMI/audio are not run.
+Evidence: `kickoff-poll-final`. This is still not a full playable match.

@@ -1,5 +1,6 @@
 #include "captain/kickoff_session.hpp"
 #include "captain/control_session.hpp"
+#include "captain/control_input.hpp"
 #include "captain/phase_session_io.hpp"
 #include <sstream>
 #include <iostream>
@@ -57,8 +58,16 @@ int main(){try{using namespace captain;
        "Kickoff control state roundtrips without mutating its input");
  auto old_control=control_bytes;old_control[10]='U';
  rejects([&]{std::istringstream i(old_control);load_phase_session(i);});
- auto past_control=control_ready;past_control.phase=FieldSessionPhase::control_clock_pending;
+ auto past_control=control_ready;past_control.phase=FieldSessionPhase::field_round_pending;
  rejects([&]{validate_phase_session(past_control);});
+ auto menu=apply_control_buttons(control_ready,64,0).state;
+ check(menu.phase==FieldSessionPhase::action_menu_pending && menu.kickoff_formation &&
+       !bytes(menu).empty(),"Kickoff control can save an action-menu request with keeper positions");
+ auto menu_bytes=bytes(menu);std::istringstream menu_stream(menu_bytes);
+ check(bytes(load_phase_session(menu_stream))==menu_bytes,"Kickoff action-menu request roundtrips");
+ auto v_menu=menu_bytes;v_menu[10]='V';rejects([&]{std::istringstream i(v_menu);load_phase_session(i);});
+ auto legacy_control=control_bytes;legacy_control[10]='V';std::istringstream legacy_v(legacy_control);
+ check(bytes(load_phase_session(legacy_v))==control_bytes,"Version V kickoff control remains readable");
  auto t_legacy=ball_bytes;t_legacy[10]='T';std::istringstream legacy_t(t_legacy);
  check(bytes(load_phase_session(legacy_t))==ball_bytes,"Legacy T ball state loads");
  auto t_new=handoff_bytes;t_new[10]='T';rejects([&]{std::istringstream i(t_new);load_phase_session(i);});
