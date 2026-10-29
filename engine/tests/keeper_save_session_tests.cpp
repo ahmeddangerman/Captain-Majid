@@ -138,6 +138,23 @@ int main(){try{
  check(initialized_defense.area_defense && initialized_defense.area_defense->blink==7 &&
        initialized_defense.area_defense->actions[3]==255 && initialized_defense.area_defense->subtypes[0]==0,
        "Defense initialization stores captured blink and unselected canonical slots");
+ AreaDefenseMenuContent defense_content{};defense_content.titles[2]=42;
+ auto prompt=open_keeper_area_defense_prompt(initialized_defense,defense_content);
+ check(static_cast<unsigned>(prompt.state.phase)==69 && prompt.presentation.size()==3 &&
+       prompt.presentation[0].id==18 && prompt.presentation[1].id==29 && prompt.presentation[1].slot==0 &&
+       prompt.presentation[2].id==42 && !bytes(prompt.state).empty(),"Defense prompt emits count, indexed blank icon and private title");
+ auto four_defenders=initialized_defense;four_defenders.current.field.selected_defenders=4;
+ four_defenders.scheduling->selected_ids={1,2,3,4,0};
+ auto four_prompt=open_keeper_area_defense_prompt(four_defenders,defense_content);
+ check(four_prompt.presentation.size()==6 && four_prompt.presentation[0].id==21 &&
+       four_prompt.presentation[4].slot==3,"Defensive prompt retains each icon slot");
+ auto prompt_bytes=bytes(prompt.state);std::istringstream prompt_stream(prompt_bytes);
+ check(bytes(load_phase_session(prompt_stream))==prompt_bytes,"Defensive prompt roundtrip");
+ auto old_prompt=prompt_bytes;old_prompt[10]='m';
+ rejects([&]{std::istringstream old(old_prompt);load_phase_session(old);});
+ auto old_initial=bytes(initialized_defense);old_initial[10]='m';std::istringstream old_initial_stream(old_initial);
+ check(bytes(load_phase_session(old_initial_stream))==bytes(initialized_defense),"Legacy m initial defense loads");
+ rejects([&]{open_keeper_area_defense_prompt(prompt.state,defense_content);});
  for(const auto& output:{empty_defense,initialized_defense}) {
   auto saved=bytes(output);std::istringstream stream(saved);
   check(bytes(load_phase_session(stream))==saved,"Defense entry roundtrip");

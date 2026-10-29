@@ -116,3 +116,27 @@ menu execution to D390 initialization or8B8F empty return. Unread stale subtype
 bytes are explicitly normalized, not claimed as preserved raw RAM. Evidence:
 `keeper-area-defense-init-first`. Menu drawing, defensive input and area actions
 remain the next work. Host acknowledgements and hardware limits still apply.
+
+## Initial defensive prompt and private content
+
+Snapshot49 (`n`,382bytes) saves phase69 after the initial defensive prompt, before
+its input wait. The native operation emits a count display, one blank sprite29
+per defender with explicit slot0..3, and the selected-player title. Its saved
+match/choice state is otherwise retained. `ControlPresentationRequest` now carries
+an optional slot index default0 so multiple defensive icons remain identifiable.
+CLI/interactive command: `open-keeper-area-defense` (flag form starts `--`).
+
+Private content10 (`CMJSHOTA`) appends15bytes to the previous pack: three defensive
+subject labels and three four-direction rows. The native reader still accepts
+versions1..9; prompt opening requires the new private section. The exporter uses
+the approved ROM and writes the new format. The canonical pack is20,081bytes;
+removing the new section and restoring header9 exactly matches the prior v9 pack.
+No table bytes or generated pack are distributed with source.
+
+`check_keeper_area_defense_original.py --prompt` matches27 initialization cases
+and18 nonempty prompts, including complete saved state and ordered slot-aware
+requests. Original8B73 runs through menu/initialization to D3A6. Evidence:
+`keeper-area-defense-prompt-first`. Bad/truncated/trailing menu content and missing
+v10 content reject; prompt replay rejects. Save roundtrip and legacy m initialization
+are covered. This is prepared drawing requests, not native rendering or defensive
+input execution. Earlier hardware/acknowledgement limits continue to apply.

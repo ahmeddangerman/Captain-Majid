@@ -7,6 +7,7 @@ enum class ControlPresentationKind : std::uint8_t { display, script, field_map, 
 struct ControlPresentationRequest {
     ControlPresentationKind kind;
     std::uint8_t id;
+    std::uint8_t slot=0;
 };
 struct ControlSetupResult {
     PhaseSessionState state;

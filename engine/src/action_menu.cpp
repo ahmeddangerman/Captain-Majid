@@ -3,6 +3,18 @@
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult open_keeper_area_defense_prompt(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_defense_initial)
+  throw std::invalid_argument("Defensive prompt requires initialized choices");
+ ActionMenuResult result{input};const auto count=input.current.field.selected_defenders;
+ result.presentation.push_back({ControlPresentationKind::display,static_cast<std::uint8_t>(17+count)});
+ for(unsigned slot=0;slot<count;++slot)
+  result.presentation.push_back({ControlPresentationKind::sprite,29,static_cast<std::uint8_t>(slot)});
+ result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
+ result.state.phase=FieldSessionPhase::keeper_area_defense_ready;
+ validate_phase_session(result.state);return result;
+}
 PhaseSessionState begin_keeper_area_defense(const PhaseSessionState& input,std::uint8_t blink) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defense_pending || input.control->motion_requested)

@@ -31,9 +31,10 @@ struct ShotContent {
     std::optional<ControlMovementContent> control_movement{};
     std::optional<WorldStepContent> world_step{};
     std::optional<ActionMenuContent> action_menu{};
+    std::optional<AreaDefenseMenuContent> area_defense_menu{};
 };
 
-// Development CMJSHOT1..9 content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..9/A content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

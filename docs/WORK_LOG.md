@@ -1217,3 +1217,23 @@ Daily website note updated separately; engine/private research remains local.
   Defensive menu rendering/input and action execution remain next tasks.
 - Full Make check/all pass without compiler diagnostics. Private captured ROM data
   remain separate from the source; continuing with defensive prompt preparation.
+
+## 2026-10-29 — defensive prompt requests and private menu content
+
+- Added initialized67→69 prompt boundary, snapshot49n382bytes. Emits count label,
+  blank sprite29 for each explicit slot and private selected-player subject label.
+  Typed presentation requests gain default0 slot; earlier callers remain valid.
+  Real stub regression failed before implementation. Roundtrip/legacy m input,
+  forbidden m output, replay and four-icon slot checks pass.
+- Added private CMJSHOTA content10:15bytes of defensive titles/direction rows,
+  with strict action-ID validation and older1..9 readers retained. Exported private
+  canonical20,081byte pack; stripping15bytes/restoring9 header exactly matches the
+  earlier v9 payload. No ROM/derived pack is committed. Missing private menu data
+  rejects instead of inventing labels.
+- Original observer extended through D390 prompt to D3A6. 27 initializations and18
+  prompt outputs match full represented state/slot-aware requests, including old
+  blink/flags variants. Evidence: keeper-area-defense-prompt-first. Truncated,
+  trailing, invalid action data and legacy pack misuse reject. Presentation uses
+  explicit host acknowledgements; no renderer/NMI/audio or defensive input claim.
+- Full Make check/all pass without compiler diagnostics. Interactive prompt save
+  matches flag output. Source and private ROM/content/evidence stay separate.

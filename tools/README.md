@@ -123,3 +123,10 @@ The setup checkpoint introduced304-byte `CMJSESSION4` with optional control cont
 The polling checkpoint introduced `CMJSHOT7` (selector32 carrier speeds) and305-byte `CMJSESSION5` (control motion flag), retaining old readers. `captain-phase-session --poll-control HELD PRESSED` performs one staged post-yield poll; the interactive command has the same name. The observer's exclusive `--poll-control HELD PRESSED` mode records matching original boundaries. See [NATIVE_CONTROL_INPUT.md](../docs/NATIVE_CONTROL_INPUT.md).
 
 Current exports use `CMJSHOT9` (action-menu tables) and324-byte `CMJSESSION7` (optional action/menu context), retaining older readers. `--open-action-menu`, `--menu-input PRESSED` and `--prepare-basic-shot` connect a side0 encounter/menu to an explicitly prepared ordinary shot. The bounded observer is `trace_action_menu.py ROM RAM REPORT OUTPUT_RAM [--mode open|poll|basic-shot] [--pressed BYTE]`. See [NATIVE_ACTION_MENU.md](../docs/NATIVE_ACTION_MENU.md) and [NATIVE_CONTROL_CYCLE.md](../docs/NATIVE_CONTROL_CYCLE.md).
+
+The defensive prompt checkpoint exports `CMJSHOTA` (private content10), appending
+15 defensive-menu label/direction bytes after content9. The canonical pack is
+20,081bytes; legacy1..9 readers remain. The session format49/n is382bytes and
+includes captured defensive choices/blink state. See
+[NATIVE_KEEPER_AREA.md](../docs/NATIVE_KEEPER_AREA.md) for prepared presentation
+limits, ROM comparison tools and the new CLI commands. All packs remain private.

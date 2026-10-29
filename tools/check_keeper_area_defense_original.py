@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Compare initial human defensive-choice state in route2 keeper-area play."""
-import argparse, hashlib, json, subprocess
+import argparse, hashlib, json, re, subprocess
 from pathlib import Path
 from check_keeper_entry_original import observe
 from check_keeper_saves_original import observe_keeper_save
@@ -12,7 +12,7 @@ from verify_action_strength import PAYLOAD_SHA256
 
 def defense_snapshot(ram,phase):
     data=bytearray(snapshot(ram,phase));data[370:372]=bytes([1,ram[0x61a]])
-    if phase==67:
+    if phase in (67,69):
         # Old subtypes cannot be read while action==FF; direction selection clears
         # the subtype before use. Canonicalize these semantically unused bytes.
         data[372:382]=bytes([1,*ram[0x60b:0x60f],0,0,0,0,ram[0x620]])
@@ -22,6 +22,7 @@ def defense_snapshot(ram,phase):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
+    p.add_argument('--prompt',action='store_true')
     a=p.parse_args();rom=a.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
     out=a.output_dir.resolve()
@@ -50,8 +51,31 @@ def main():
                 if run.returncode:raise RuntimeError(run.stderr)
                 actual,expected=target.read_bytes(),defense_snapshot(after,phase)
                 if actual!=expected:raise RuntimeError(f'{name} mismatch {[(i,x,y) for i,(x,y) in enumerate(zip(actual,expected)) if x!=y]}')
-                results.append({'count':count,'blink':blink,'flags':flags,'phase':phase,'instructions':report['instructions']})
-    (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Original full route2 menu observed to defensive entry and replayed to D390 initial state or 8B8F empty return; numeric state/represented bytes compared. Old subtypes behind FF actions canonicalized zero as unread until cleared. Blink captured explicitly; host frame acknowledgements, no actual NMI/PPU/audio, no defense input yet.'},indent=2)+'\n')
+                prompt_checked=False
+                if a.prompt and phase==67:
+                    prompt_report,prompt_after=trace_keeper_area_menu(prg,raw,defense_prompt=True)
+                    if prompt_report['boundary']!='defense_prompt':raise RuntimeError('Expected defensive prompt')
+                    prompt_target=out/f'{name}-prompt.cmjsession'
+                    prompt_run=subprocess.run([binary,str(a.pack.resolve()),str(target),'--open-keeper-area-defense','--capture',str(prompt_target)],capture_output=True,text=True,timeout=30)
+                    if prompt_run.returncode:raise RuntimeError(prompt_run.stderr)
+                    if prompt_target.read_bytes()!=defense_snapshot(prompt_after,69):raise RuntimeError('Defensive prompt state mismatch')
+                    expected_requests=prompt_report['presentation_requests'][len(report['presentation_requests']):]
+                    actual_requests=[{'kind':int(k),'id':int(v),'slot':int(slot)} for k,v,slot in re.findall(r'Presentation request (\d+) \| id (\d+) \| slot (\d+)',prompt_run.stdout)]
+                    if actual_requests!=expected_requests:raise RuntimeError(f'Defensive prompt requests {actual_requests} != {expected_requests}')
+                    if subprocess.run([binary,str(a.pack.resolve()),str(prompt_target),'--open-keeper-area-defense'],capture_output=True,timeout=30).returncode==0:raise RuntimeError('Prompt replay accepted')
+                    prompt_checked=True
+                results.append({'count':count,'blink':blink,'flags':flags,'phase':phase,'instructions':report['instructions'],'prompt_checked':prompt_checked})
+    if a.prompt:
+        packed=a.pack.read_bytes()
+        if packed[:8]!=b'CMJSHOTA':raise RuntimeError('Prompt verification needs version10 pack')
+        old=bytearray(packed[:-15]);old[7]=ord('9')
+        invalid=bytearray(packed);invalid[-1]=7
+        for index,bad in enumerate((packed[:-1],packed+b'\0',bytes(invalid),bytes(old))):
+            bad_pack=out/f'rejected{index}.cmjpack';bad_pack.write_bytes(bad)
+            bad_output=out/f'rejected{index}.cmjsession'
+            rejected=subprocess.run([binary,str(bad_pack),str(target),'--open-keeper-area-defense','--capture',str(bad_output)],capture_output=True,timeout=30)
+            if rejected.returncode==0 or bad_output.exists():raise RuntimeError('Bad/missing private menu content accepted')
+    (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Original full route2 menu observed to defensive entry and replayed to D390 initial state or 8B8F empty return; numeric state/represented bytes compared. Old subtypes behind FF actions canonicalized zero as unread until cleared. Blink captured explicitly; host frame acknowledgements, no actual NMI/PPU/audio, optional prompt compares slot-aware presentation requests and complete state to D3A6. Version10 content required; bad/truncated/trailing/legacy content rejects. No defense input yet.'},indent=2)+'\n')
     print(f'{len(results)} defensive initialization comparisons match: {out}')
 
 if __name__=='__main__':main()
