@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I' && version != 'J' && version != 'K' && version != 'L' && version != 'M' && version != 'N' && version != 'O' && version != 'P' && version != 'Q' && version != 'R')
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'S'))
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -62,6 +62,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Shot flight setup requires session version19");
     if (version < 'K' && static_cast<unsigned>(state.phase) > 46)
         throw std::invalid_argument("Numeric ball flight requires session version20");
+    if (version < 'S' && static_cast<unsigned>(state.phase) > 61)
+        throw std::invalid_argument("Kickoff receiver requires session version28");
     if (version < 'R' && static_cast<unsigned>(state.phase) > 60)
         throw std::invalid_argument("Kickoff formation requires session version27");
     if (version < 'Q' && static_cast<unsigned>(state.phase) > 59)
@@ -214,6 +216,12 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if(present)state.kickoff_formation=KickoffFormationContext{{left,right}};
         else if(left || right)throw std::invalid_argument("Nonzero unused kickoff formation");
     }
+    if(version >= 'S') {
+        const auto present=byte(input),receiver=byte(input);
+        if(present>1)throw std::invalid_argument("Invalid kickoff receiver presence");
+        if(present)state.kickoff_receiver=receiver;
+        else if(receiver)throw std::invalid_argument("Nonzero unused kickoff receiver");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -224,7 +232,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'R');
+    byte(output, 'S');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -297,6 +305,8 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     byte(output,state.kickoff_formation ? 1 : 0);
     byte(output,state.kickoff_formation ? state.kickoff_formation->keeper_y[0] : 0);
     byte(output,state.kickoff_formation ? state.kickoff_formation->keeper_y[1] : 0);
+    byte(output,state.kickoff_receiver ? 1 : 0);
+    byte(output,state.kickoff_receiver.value_or(0));
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

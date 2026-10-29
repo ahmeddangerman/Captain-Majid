@@ -864,3 +864,18 @@ Daily website note updated separately; engine/private research remains local.
 - Ruling: state is supplied after earlier original reset/team choice; those effects
   are not silently simulated. Cost: live reset/menu, second original side field,
   receiver/ball setup and playable kickoff are still pending. Overall unmeasured.
+
+## 2026-10-29 — saved kickoff receiver selection
+
+- Added phase61→62, saving the selected receiver while preserving the current
+  carrier, formation, keeper coordinates and other session state. Explicit
+  random byte and five candidate slots; no implicit ball positioning or display.
+- Snapshot28S370bytes adds receiver presence/value; legacy R formation snapshots
+  load, older versions reject new phase. Regression checks cover roundtrip,
+  malformed/truncated data, invalid slots and replay without mutating input.
+- Focused test failed with an unimplemented stub, then passed. All 512 combinations
+  of side and random value matched original DAF5..DB0B with every instruction
+  executed; compared the complete represented snapshots. Private evidence:
+  kickoff-receiver-session-first. Earlier reset/side choice, ball placement,
+  presentation and live kickoff remain outside this comparison.
+- Overall completion is unmeasured; there is no complete playable match.

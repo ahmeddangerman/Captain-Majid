@@ -29,3 +29,24 @@ The original earlier reset and formation setup, displayed goal/menu, player
 positions, and full kickoff continuation have not been connected or verified by
 these calculations. The game is not yet a complete playable match. CMake definitions
 are updated but this executor lacks CMake.
+
+## Saved receiver handoff (2026-10-29)
+
+After the prepared formation is placed, `prepare_session_kickoff_receiver`
+selects the original receiver using an explicit random byte and five supplied
+candidate slots. Phase62 saves the receiver separately; the current carrier and
+ball position remain unchanged. This stops before original DB0B ball positioning
+and DB0E presentation, so neither is assumed to have happened. The earlier reset
+and side selection remain outside this prepared boundary.
+
+Snapshot28 (`S`, 370 bytes) appends a presence byte and receiver byte. Readers
+accept older snapshots including version27; version27 cannot encode phase62.
+The development CLI accepts `--prepare-kickoff-receiver RANDOM C1 C2 C3 C4 C5`.
+The caller must obtain content from the approved private ROM or other authorized
+source; neither the ROM nor derived content is distributed here.
+
+`tools/check_kickoff_receiver_session_original.py` runs the original
+DAF5..DB0B instructions for both sides and every random byte, then compares
+all represented serialized session bytes with the native transition. The 512
+cases use previously prepared formations; this does not verify a complete
+kickoff or a playable match. Private evidence: `kickoff-receiver-session-first`.

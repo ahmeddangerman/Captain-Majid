@@ -1,6 +1,17 @@
 #include "captain/kickoff_session.hpp"
+#include "captain/kickoff_selection.hpp"
 #include <stdexcept>
 namespace captain {
+PhaseSessionState prepare_session_kickoff_receiver(const PhaseSessionState& input,std::uint8_t random,const std::array<std::uint8_t,5>& candidates) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::kickoff_formation_placed)
+  throw std::invalid_argument("Receiver selection requires a placed kickoff formation");
+ auto state=input;
+ state.kickoff_receiver=select_kickoff_receiver(state.current.field.side,random,candidates);
+ state.phase=FieldSessionPhase::kickoff_receiver_selected;
+ validate_phase_session(state);
+ return state;
+}
 PhaseSessionState prepare_session_kickoff_formation(const PhaseSessionState& input,std::uint8_t selected_side,const KickoffFormationContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::goal_kickoff_pending || (selected_side!=0 && selected_side!=11))

@@ -27,6 +27,24 @@ int main(){try{using namespace captain;
  check(placed.current.field.motion[0].x==0x3467 && placed.current.field.motion[0].y==0x5439 &&
   placed.score->left_goals==3 && bytes(s)==original,"Formation preserves fractions, score and input");
  auto saved=bytes(placed);std::istringstream stream(saved);check(bytes(load_phase_session(stream))==saved,"Kickoff formation roundtrip");
+ const std::array<std::uint8_t,5> candidates{5,6,7,9,10};
+ auto receiver=prepare_session_kickoff_receiver(placed,7,candidates);
+ check(static_cast<unsigned>(receiver.phase)==62 && receiver.kickoff_receiver && *receiver.kickoff_receiver==7 &&
+       receiver.current.field.ball_owner==8 && bytes(placed)==saved,"Receiver is saved without changing the current carrier");
+ auto receiver_bytes=bytes(receiver);std::istringstream receiver_stream(receiver_bytes);
+ check(bytes(load_phase_session(receiver_stream))==receiver_bytes,"Kickoff receiver roundtrip");
+ auto r_legacy=saved;r_legacy[10]='R';r_legacy.resize(368);std::istringstream legacy_r(r_legacy);
+ check(bytes(load_phase_session(legacy_r))==saved,"Legacy R formation loads");
+ auto r_new=receiver_bytes;r_new[10]='R';r_new.resize(368);
+ rejects([&]{std::istringstream i(r_new);load_phase_session(i);});
+ for(unsigned n=368;n<370;++n){auto truncated=receiver_bytes;truncated.resize(n);rejects([&]{std::istringstream i(truncated);load_phase_session(i);});}
+ auto invalid_receiver=receiver;invalid_receiver.kickoff_receiver=11;rejects([&]{validate_phase_session(invalid_receiver);});
+ invalid_receiver=receiver;invalid_receiver.kickoff_receiver.reset();rejects([&]{validate_phase_session(invalid_receiver);});
+ rejects([&]{prepare_session_kickoff_receiver(receiver,0,candidates);});
+ auto invalid_candidates=candidates;invalid_candidates[0]=0;
+ rejects([&]{prepare_session_kickoff_receiver(placed,0,invalid_candidates);});
+ auto bad_receiver=receiver_bytes;bad_receiver[368]=2;rejects([&]{std::istringstream i(bad_receiver);load_phase_session(i);});
+ bad_receiver=saved;bad_receiver[369]=1;rejects([&]{std::istringstream i(bad_receiver);load_phase_session(i);});
  auto old=original;old[10]='Q';old.resize(365);std::istringstream legacy(old);
  check(bytes(load_phase_session(legacy))==original,"Legacy Q kickoff state still loads");
  auto old_new=saved;old_new[10]='Q';old_new.resize(365);rejects([&]{std::istringstream i(old_new);load_phase_session(i);});
