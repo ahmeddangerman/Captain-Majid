@@ -796,3 +796,19 @@ Daily website note updated separately; engine/private research remains local.
   matches local index.html; no browser/Pages rendering claim. Next original987B
   research shows it includes post-goal presentation/menu and sets062D ball mode0;
   do not skip that UI silently when adding85BF keeper-cleanup/kickoff continuation.
+
+
+## 2026-10-29 — prepared post-goal kickoff handoff
+
+- Added phase59→60 after explicitly acknowledged goal presentations and post-goal
+  menu with captured ball mode0. Switches side, clears defending keeper timer/
+  penalty/stun, retains penalty duration and score, sets kickoff4, preserves the
+  original keeper prefix and saves the prior scorer until actual kickoff setup.
+- Real focused regression failed with the unimplemented stub, then passed. Full
+  Make check/build pass. Twelve original85BF..85DD prepared comparisons match
+  all represented bytes; no original instructions skipped. Private evidence:
+  post-goal-first-comparison. Snapshot26Q365bytes retains readers throughP.
+- The original presentation/menu and actual kickoff setup remain unfinished.
+  Overall port progress is unmeasured; no complete playable match exists yet.
+- The user authorized pushing engine code to public GitHub branch work; main
+  remains the website. ROMs, patches and derived private inputs remain outside Git.

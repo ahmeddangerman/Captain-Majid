@@ -37,7 +37,7 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 59)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 60)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
     if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59))
@@ -69,6 +69,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Stunned keeper decision needs one valid result/cursor context");
     const bool keeper_selected=phase==53 || phase==56 || (phase==59 && !state.current.field.keepers[1].stun);
     const bool keeper_possession=phase==57;
+    const bool goal_restart=phase==60;
     if(phase>=53 && phase<=56) {
         const auto& f=state.current.field;
         const auto keeper=f.side^11u;
@@ -92,6 +93,12 @@ void validate_phase_session(const PhaseSessionState& state) {
        (state.current.field.selected_defenders && (!state.scheduling || state.scheduling->selected_ids[0]!=11)) ||
        (state.current.field.keepers[1].stun && (state.keeper_decision->defense_action || state.keeper_decision->defense_subtype || state.keeper_decision->effect))))
         throw std::invalid_argument("Goal celebration needs a scored keeper result and matching normal/stunned prefix");
+    if(goal_restart && (!state.score || state.score->kickoff!=4 || state.current.clock.ball_mode!=0 ||
+       state.current.field.side!=11 || state.current.field.ball_owner<1 || state.current.field.ball_owner>10 ||
+       state.current.field.elapsed || state.current.field.selected_defenders>1 || !state.scheduling || !state.recovery ||
+       state.recovery->opposing_player!=11 || state.current.field.keepers[1].timer || state.current.field.keepers[1].penalty ||
+       state.current.field.keepers[1].stun || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=11)))
+        throw std::invalid_argument("Post-goal kickoff requires switched side, saved score and cleared keeper");
     const bool restart_options = phase >= 40 && phase <= 42;
     if (bool(state.restart_options) != restart_options)
         throw std::invalid_argument("Restart options require exactly one menu context");
@@ -107,7 +114,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool clearance = state.phase == FieldSessionPhase::capture_clearance_flight || race_pending;
     const bool transitional_clearance = state.phase == FieldSessionPhase::capture_clearance_flight ||
         state.phase == FieldSessionPhase::clearance_race_timeout || state.phase == FieldSessionPhase::clearance_recovery_ready;
-    const bool post_possession = state.phase == FieldSessionPhase::selected_recovered_owner || clearance || keeper_possession;
+    const bool post_possession = state.phase == FieldSessionPhase::selected_recovered_owner || clearance || keeper_possession || goal_restart;
     if (bool(state.clearance_flight) != clearance)
         throw std::invalid_argument("Clearance flight phase requires exactly one setup context");
     if (transitional_clearance && (state.current.field.side != 11 || state.current.field.ball_owner == 0 || state.current.field.ball_owner >= 11))
@@ -183,7 +190,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Recovery continuation requires zero selected defenders");
     if (static_cast<unsigned>(state.phase) >= 6 && state.phase != FieldSessionPhase::selected_boundary_restart) {
         if(!keeper_possession) field_motion_index(state.current.field.ball_owner);
-        if (!transitional_clearance && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
+        if (!transitional_clearance && !goal_restart && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;
         if (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176)
@@ -203,7 +210,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         const auto count = state.current.field.selected_defenders;
         if (count > 5) throw std::invalid_argument("Selected defender prefix exceeds five slots");
         for (unsigned i = 0; i < 5; ++i) {
-            if (i < count && !keeper_selected && !keeper_possession) field_motion_index(state.scheduling->selected_ids[i]);
+            if (i < count && !keeper_selected && !keeper_possession && !goal_restart) field_motion_index(state.scheduling->selected_ids[i]);
             else if (i < count) { /* Keeper prefix checked above; not a field-motion slot. */ }
             else if (state.scheduling->selected_ids[i] != 0)
                 throw std::invalid_argument("Nonzero unused selected defender slot");

@@ -16,4 +16,14 @@ PhaseSessionState prepare_session_scored_goal(const PhaseSessionState& input,Mat
  state.score=baseline;state.phase=FieldSessionPhase::goal_celebration_pending;
  validate_phase_session(state);return state;
 }
+PhaseSessionState continue_prepared_goal_restart(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::goal_celebration_pending || input.current.clock.ball_mode!=0)
+  throw std::invalid_argument("Post-goal restart requires acknowledged presentations/menu and ball mode zero");
+ auto state=input;state.current.field.side=11;
+ auto& keeper=state.current.field.keepers[1];keeper.timer=0;keeper.penalty=0;keeper.stun=0;
+ state.score->kickoff=4;state.shot_flight.reset();state.ball_trajectory.reset();state.keeper_decision.reset();
+ state.phase=FieldSessionPhase::goal_kickoff_pending;validate_phase_session(state);return state;
+}
+
 }

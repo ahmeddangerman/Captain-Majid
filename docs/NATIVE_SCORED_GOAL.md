@@ -53,3 +53,19 @@ assertion failed on a separate owner3 input (RED), the fixture now computes
 scored-goal-owner3-green). The source has a persistent current-owner assertion.
 The assertionO1 build retains the previously recorded unrelated GCC optional-vector
 move diagnostics; defaultO2 diagnostics remain clean.
+
+## Prepared post-goal kickoff handoff
+
+`--continue-prepared-goal-restart` accepts59 after the caller explicitly supplies
+state following goal presentations and the post-goal menu, including ball mode0.
+Original85BF..85DD switches possession side to11, clears defending keeper timer,
+penalty and stun (not penalty duration), and sets kickoff4. The new saved phase60
+retains the score and selected keeper prefix, while clearing obsolete shot contexts.
+The previous scorer remains ball owner until the later kickoff setup. Replay and
+invalid menu/phase input reject. Snapshot26Q remains365bytes; prior readers remain.
+
+Twelve constructed original comparisons match every represented state byte across
+normal/stunned keepers and status boundaries, with every85BF..85DD instruction
+executed. Evidence: private post-goal-first-comparison. Full Make suite/build pass.
+This is a prepared boundary: presentation, the post-goal menu and actual kickoff
+setup are not implemented or claimed equivalent to live play.

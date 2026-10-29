@@ -19,9 +19,9 @@ of Captain Tsubasa II, not a complete playable PC port.
 
 ## Source and private data
 
-- Engine work is on local branch work. Keep it private. Public GitHub main at
-  ahmeddangerman/Captain-Majid hosts the promotional website. Do not push engine
-  work there or change repository visibility without explicit authorization.
+- Engine work is on branch work and the user authorized pushing it to the public
+  GitHub work branch. Public main hosts the promotional website. Do not push engine
+  work to main or change repository visibility without explicit authorization.
 - ROMs, patches, derived packs, RAM, observations and session files belong in
   ../Captain-Majid-analysis, outside this Git checkout. Never commit them.
 - The external English translation/disassembly repo was inspected as background;
