@@ -556,3 +556,18 @@ Daily website note updated separately; engine/private research remains local.
   are needed for flight. Preserve these explicitly; no zero-fraction assumption or
   player-boundary clamp. Next: numeric ball trajectory and cell callbacks, then
   keeper/goal integration. Overall completion unmeasured; full match unfinished.
+
+
+## 2026-10-29 — exact ball velocity projection
+
+- Added pure CE4A/CE4D signed16-bit ball velocity projection with replaceable
+ 64-word quarter-wave content. Preserves quadrant/sign/index and horizontal+64
+ wrap; independent from player movement/clamping. No session/gameplay writes.
+- Real regression failed with stub then passed quadrant boundaries, zero and
+ signed-minimum wrap. Full default Make suite/build pass cleanly; fresh review
+ found no material issue. CMake unavailable.
+- Exhaustive original CPU/native comparison matches both axes for all256direction
+ bytes. Repeatable checker and scope in NATIVE_BALL_VELOCITY.md; private evidence
+ ball-velocity-repeatable. No skipped original instructions, calls or frames.
+- Next: E778 ball coordinate advancement until next cell, preserving fractions
+ and explicit cell/arrival callbacks. Overall port remains unmeasured.
