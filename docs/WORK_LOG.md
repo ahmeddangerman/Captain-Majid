@@ -537,3 +537,22 @@ Daily website note updated separately; engine/private research remains local.
 - Commands, boundaries and remaining limits in NATIVE_ATTACK_CLOCK.md. Next:
   originalDCFD shot distance/destination, then flight/keeper/goal integration.
   Overall port remains unmeasured; no complete playable match or online match.
+
+
+## 2026-10-29 — saved shot distance/destination
+
+- Continued phase45 through originalDCFD..DD08 using the existing approach math.
+  Saved phase46 counter255, distance, destination and loose/keeper route; only the
+  original random-byte shift changes prior represented state. Ball coordinates
+  and current cell remain distinct from the destination. Session19J344bytes,
+  readers1..18, strict malformed/unused/truncated contexts and replay rejection.
+- Real regression failed before implementation; full default Make suite/build
+  then passed clean. Review found no material issue; added its malformed-tail and
+  whole-state preservation regressions, also passing. CMake unavailable.
+- Six original/native observations match324prior represented bytes and independent
+  counter/distance/destination/carry, without skipped calls or frames. Repeatable
+  command in NATIVE_SESSION_APPROACH.md; evidence shot-approach-repeatable.
+- E73E reconnaissance shows fractional ball coordinates and smooth signed velocity
+  are needed for flight. Preserve these explicitly; no zero-fraction assumption or
+  player-boundary clamp. Next: numeric ball trajectory and cell callbacks, then
+  keeper/goal integration. Overall completion unmeasured; full match unfinished.

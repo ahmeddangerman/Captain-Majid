@@ -16,6 +16,7 @@ and goal/save calculations exist separately. Restart/keeper/story, nonterminal
 shot/goal integration, live frame/RNG/presentation and online matches remain work.
 
 Latest detailed references:
+- NATIVE_SESSION_APPROACH.md for saved shot destination before flight
 - NATIVE_ATTACK_CLOCK.md for selected/unopposed post-presentation timing
 - NATIVE_NONTERMINAL_DISPATCH.md for passed-defense/unopposed attacking entry
 - NATIVE_RESTART_OPTIONS.md for prepared shared restart options and saved UI state

@@ -36,9 +36,13 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 45)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 46)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
+    if (bool(state.shot_flight) != (phase == 46))
+        throw std::invalid_argument("Flight setup requires exactly one shot context");
+    if (state.shot_flight && (state.shot_flight->destination >= 240 || state.shot_flight->counter != 255))
+        throw std::invalid_argument("Unsupported initial shot flight context");
     const bool restart_options = phase >= 40 && phase <= 42;
     if (bool(state.restart_options) != restart_options)
         throw std::invalid_argument("Restart options require exactly one menu context");
@@ -70,7 +74,7 @@ void validate_phase_session(const PhaseSessionState& state) {
              state.current.field.ball_owner != r.active_candidate && state.current.field.ball_owner != r.opposing_candidate))
             throw std::invalid_argument("Unsupported clearance race handoff");
     }
-    const bool staged = phase >= 23 && phase <= 45;
+    const bool staged = phase >= 23 && phase <= 46;
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     if (state.shot_progress) {
@@ -92,7 +96,7 @@ void validate_phase_session(const PhaseSessionState& state) {
             (phase>=38 && phase<=42 && p.result_code!=4) ||
             (phase >= 28 && phase<=42 && p.cursor == 0))
             throw std::invalid_argument("Selected handoff phase does not match its terminal result");
-        if (phase >= 43 && phase <= 45 &&
+        if (phase >= 43 && phase <= 46 &&
             (p.result_code >= 2 || p.cursor != count))
             throw std::invalid_argument("Attacking presentation requires a completed nonterminal prefix");
         if (phase >= 44 && (state.control->last_carrier_cell ||

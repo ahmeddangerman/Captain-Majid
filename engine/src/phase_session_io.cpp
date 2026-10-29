@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I')
+    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I' && version != 'J')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -58,6 +58,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Nonterminal dispatch requires session version17");
     if (version < 'I' && static_cast<unsigned>(state.phase) > 43)
         throw std::invalid_argument("Attack clock requires session version18");
+    if (version < 'J' && static_cast<unsigned>(state.phase) > 45)
+        throw std::invalid_argument("Shot flight setup requires session version19");
     const auto pending = byte(input);
     const PendingTerminalContact contact{byte(input), byte(input), byte(input), byte(input)};
     if (pending > 1) throw std::invalid_argument("Unsupported pending-contact flag");
@@ -156,6 +158,12 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (present) state.restart_options = RestartOptionsContext{goal != 0,cursor};
         else if (goal || cursor) throw std::invalid_argument("Nonzero unused restart options");
     }
+    if (version >= 'J') {
+        const auto present=byte(input), distance=byte(input), destination=byte(input), counter=byte(input), loose=byte(input);
+        if(present>1 || loose>1) throw std::invalid_argument("Unsupported flight setup flags");
+        if(present) state.shot_flight=ShotFlightContext{distance,destination,counter,loose!=0};
+        else if(distance || destination || counter || loose) throw std::invalid_argument("Nonzero unused shot flight context");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -166,7 +174,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'I');
+    byte(output, 'J');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -217,6 +225,11 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     byte(output,state.restart_options ? 1 : 0);
     byte(output,state.restart_options && state.restart_options->goal_area ? 1 : 0);
     byte(output,state.restart_options ? state.restart_options->cursor : 0);
+    byte(output,state.shot_flight ? 1 : 0);
+    byte(output,state.shot_flight ? state.shot_flight->distance : 0);
+    byte(output,state.shot_flight ? state.shot_flight->destination : 0);
+    byte(output,state.shot_flight ? state.shot_flight->counter : 0);
+    byte(output,state.shot_flight && state.shot_flight->loose_ball ? 1 : 0);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }
