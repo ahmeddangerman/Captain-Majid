@@ -812,3 +812,19 @@ Daily website note updated separately; engine/private research remains local.
   Overall port progress is unmeasured; no complete playable match exists yet.
 - The user authorized pushing engine code to public GitHub branch work; main
   remains the website. ROMs, patches and derived private inputs remain outside Git.
+
+
+## 2026-10-29 — kickoff team and receiver calculations
+
+- Original kickoff DB4B..DB61 can choose a side from opponent team and random;
+  team3 always chooses side0. Native pure selection reproduces that rule. Later
+  DAF5..DB0B selects one of five caller-supplied receiver slots, with values5..7
+  wrapping once. Both original setup phases remain separate from the saved session.
+- Two real focused tests failed with stubs, then passed. Original CPU comparisons
+  match all65,536 team/random combinations and512 receiver inputs for both sides,
+  with all original instructions in each numeric segment executed. Evidence:
+  kickoff-selections-final. Original formation/reset, post-goal menu, positions,
+  presentation and live kickoff are not included; no match-completion claim.
+- The full Make suite/build pass. Code is pushed to GitHub work; ROM and derived
+  data stay outside Git. Overall progress remains unmeasured. Next: trace original
+  formation/reset and connect kickoff selection to a coherent persistent session.
