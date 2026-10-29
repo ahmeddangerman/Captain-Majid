@@ -905,3 +905,18 @@ Daily website note updated separately; engine/private research remains local.
   full represented snapshots. Evidence: kickoff-handoff-first. 256 previous ball
   comparisons reverified with new snapshot version. Display itself is not run,
   and its effects are caller-supplied; full kickoff/match remain unfinished.
+
+## 2026-10-29 — prepared kickoff into control setup
+
+- Connected phase64 to existing E0DF..E145 control setup with saved keeper Y
+  carried into phase9 and receiver metadata consumed. Snapshot31V keeps layout,
+  supports phase9 keeper coordinates, and older version readers stay supported.
+- Focused test first rejected the previously unsupported kickoff phase, then
+  passed after integration. 32 original observations/comparisons cover both sides
+  and all sixteen formation pairs, including complete represented snapshots;
+  goalkeeper Y is unchanged in these cases. Evidence: kickoff-control-original-first
+  and kickoff-control-native-first. The original display36 is acknowledged rather
+  than executed; control displays use disclosed host acknowledgements.
+- Deliberate boundary: following phase9 actions with saved keeper Y are rejected
+  until their original effects are traced. Earlier reset/team choice, live kickoff,
+  complete match and full presentation remain unfinished; progress unmeasured.

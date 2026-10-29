@@ -1,4 +1,5 @@
 #include "captain/kickoff_session.hpp"
+#include "captain/control_session.hpp"
 #include "captain/phase_session_io.hpp"
 #include <sstream>
 #include <iostream>
@@ -46,6 +47,18 @@ int main(){try{using namespace captain;
        "Acknowledged kickoff display transfers carrier and resets controlled player");
  auto handoff_bytes=bytes(handoff);std::istringstream handoff_stream(handoff_bytes);
  check(bytes(load_phase_session(handoff_stream))==handoff_bytes,"Kickoff handoff roundtrip");
+ auto control_ready=prepare_session_control(handoff).state;
+ check(control_ready.phase==FieldSessionPhase::control_ready && control_ready.current.field.ball_owner==7 &&
+       control_ready.kickoff_formation && !control_ready.kickoff_receiver &&
+       control_ready.kickoff_formation->keeper_y==handoff.kickoff_formation->keeper_y,
+       "Kickoff control setup retains goalkeeper positions and consumes receiver context");
+ auto control_bytes=bytes(control_ready);std::istringstream control_stream(control_bytes);
+ check(bytes(load_phase_session(control_stream))==control_bytes && bytes(handoff)==handoff_bytes,
+       "Kickoff control state roundtrips without mutating its input");
+ auto old_control=control_bytes;old_control[10]='U';
+ rejects([&]{std::istringstream i(old_control);load_phase_session(i);});
+ auto past_control=control_ready;past_control.phase=FieldSessionPhase::control_clock_pending;
+ rejects([&]{validate_phase_session(past_control);});
  auto t_legacy=ball_bytes;t_legacy[10]='T';std::istringstream legacy_t(t_legacy);
  check(bytes(load_phase_session(legacy_t))==ball_bytes,"Legacy T ball state loads");
  auto t_new=handoff_bytes;t_new[10]='T';rejects([&]{std::istringstream i(t_new);load_phase_session(i);});

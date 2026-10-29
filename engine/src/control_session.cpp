@@ -5,7 +5,7 @@
 namespace captain {
 ControlSetupResult prepare_session_control(const PhaseSessionState& input) {
     validate_phase_session(input);
-    if (input.phase != FieldSessionPhase::player_control || !input.control ||
+    if ((input.phase != FieldSessionPhase::player_control && input.phase != FieldSessionPhase::kickoff_control_pending) || !input.control ||
         !input.recovery || !input.experience)
         throw std::invalid_argument("Control setup requires a player-control handoff and captured contexts");
     const auto owner_index = field_motion_index(input.current.field.ball_owner);
@@ -65,6 +65,7 @@ ControlSetupResult prepare_session_control(const PhaseSessionState& input) {
     }
     status_requests(field.side);
     state.phase = FieldSessionPhase::control_ready;
+    state.kickoff_receiver.reset();
     validate_phase_session(state);
     return result;
 }

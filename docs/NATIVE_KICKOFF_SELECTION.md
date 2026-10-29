@@ -84,3 +84,23 @@ prior controlled-player bytes. Each original instruction DB13..DB1E executes and
 all represented snapshot bytes are compared. The display itself, its effects,
 stack reset and E0DF control setup were not executed; the caller supplies the
 post-display state. Evidence: `kickoff-handoff-first`.
+
+## Prepared kickoff into control setup (2026-10-29)
+
+`prepare_session_control` now accepts phase64 after the explicitly acknowledged
+kickoff display. It reuses the existing E0DF..E145 setup and carries the two saved
+keeper Y bytes into phase9; receiver context is consumed because ownership is set.
+Snapshot31 (`V`) retains the 370-byte format and allows captured keeper coordinates
+at phase9; older versions remain readable and cannot encode that combination.
+
+Thirty-two prepared original observations cover both sides and all four formation
+choices for each team. Their E0DF..E145 outputs match all represented native
+snapshot bytes, including saved goalkeeper Y. `trace_kickoff_control_original.py`
+and `check_kickoff_control_original.py` record the observations and comparison in
+private `kickoff-control-original-first` and `kickoff-control-native-first`.
+Original display36 is assumed acknowledged. Subsequent control setup uses the
+observer's disclosed frame acknowledgements, with no actual NMI, PPU or audio.
+The earlier reset and side selection are still prepared inputs. The preserved
+keeper context is deliberately supported only at phase9 and kickoff phases;
+subsequent session actions reject it until their goalkeeper effects are traced.
+This is not yet a playable kickoff or match.
