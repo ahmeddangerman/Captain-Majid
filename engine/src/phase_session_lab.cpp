@@ -83,7 +83,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::shot_flight_pending: return "shot flight setup ready; scheduling pending";
     case captain::FieldSessionPhase::ball_already_arrived: return "ball was already at destination; return without arrival callback";
     case captain::FieldSessionPhase::shot_loose_recovery: return "loose flight presentation/recovery pending";
-    case captain::FieldSessionPhase::keeper_area_ai_pending: return "keeper-area AI choice pending";
+    case captain::FieldSessionPhase::keeper_area_defense_pending: return "keeper-area defensive choices pending";
     case captain::FieldSessionPhase::keeper_area_prepared: return "keeper-area route prepared; interaction menu pending";
     case captain::FieldSessionPhase::kickoff_control_pending: return "kickoff carrier set; control setup pending";
     case captain::FieldSessionPhase::kickoff_ball_placed: return "kickoff ball placed; presentation pending";

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Observe prepared route2 keeper-area menu entry before human or AI choice."""
+"""Observe prepared route2 keeper-area menu entry before attacking or defensive choices."""
 from py65.devices.mpu6502 import MPU
 from trace_field_script import ObservedCartridge
 
@@ -18,7 +18,7 @@ def trace_keeper_area_menu(prg, ram):
     for step in range(500000):
         bank=memory.bank_at(cpu.pc)
         if bank==30 and cpu.pc in (0xd5e5,0xd36e):
-            return {'boundary':'human_menu' if cpu.pc==0xd5e5 else 'ai_choice',
+            return {'boundary':'human_menu' if cpu.pc==0xd5e5 else 'defensive_choice',
                     'instructions':step,'frames':frames,'writes':memory.writes,'presentation_requests':requests},bytes(memory.ram[:2048])
         if bank==26 and cpu.pc==0x8b86:requests.append({'kind':1,'id':cpu.a})
         if bank==30:

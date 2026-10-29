@@ -51,8 +51,8 @@ Next: trace8B73 presentation/story/menu boundaries and the following action rout
 `open_prepared_keeper_area_menu` continues phase65 with own-area route2 only.
 It recomputes nearby opposing field players using radius10, retains the variant
 and route, and captures completed menu presentation effects. Side0 reaches the
-existing human menu phase18; side11 reaches new phase66 before the AI choice.
-The human cursor resets to0; the AI-entry cursor is preserved.
+existing human menu phase18; side11 reaches new phase66 before human defensive choices.
+The human cursor resets to0; the defensive-entry cursor is preserved.
 
 The original final facing depends on animation state that the native renderer
 has not implemented. The API therefore requires an explicit observed facing0/64.
@@ -62,15 +62,35 @@ keeper warning priority, overlay clear and human route2 title/background order.
 These are requests and prepared acknowledgements, not executed native graphics.
 
 Snapshot46 (`k`,372bytes) permits KeeperAreaContext in phase18/66 and reads the
-prior j phase65. Prior j cannot encode the new menu/AI combinations. Context,
+prior j phase65. Prior j cannot encode the new attack/defense menu combinations. Context,
 area, possession, route and presence validation remain strict. Route1, original
-story/presentation effects beyond this prepared scope, AI choice, and subsequent
+story/presentation effects beyond this prepared scope, defensive choices, and subsequent
 action execution remain unfinished.
 
 `check_keeper_area_menu_original.py` matches24 controlled cases across both sides,
 near/far players, random values, normal/penalized/stunned warning conditions and
 stale menu/control fields. Complete represented bytes and typed presentation
-request order match original8B73 to D5E5 (human) or D36E (AI entry). The final
+request order match original8B73 to D5E5 (human) or D36E (defensive entry). The final
 facing value is explicitly supplied, not independently reproduced. Evidence:
 `keeper-area-menu-first`. Focused regression failed with the stub before passing;
 roundtrip, legacy j setup, forbidden j menu, facing/replay/route checks pass.
+
+## Human own-area selection and confirmation
+
+Snapshot47 (`l`,372bytes) retains area context at confirmed human choice phase19.
+Existing `--menu-input` supports route2 directions, inactive confirmation, blinking,
+combined input and confirmation without discarding keeper/area metadata. Prior k
+menus remain readable; prior k cannot claim the new area-context phase19.
+
+`check_keeper_area_menu_original.py --polls` matched all256 pressed bytes in both
+inactive and active selection states:512 complete snapshots and sprite requests.
+There are280 waiting/menu states and232 confirmations; confirmed original action
+IDs are1/4/6. Evidence: `keeper-area-choices-first`. The24 menu-opening comparisons
+are included. These choices stop before execution; ordinary-shot preparation stays
+rejected for route2.
+
+Correction to earlier terminology: D36E is the human defensive-choice handler
+when the opposing team has possession (it reads controller input and selected
+human defenders). Phase66 is named `keeper_area_defense_pending`. Earlier notes
+calling it AI entry were a label error; serialized phase66 and its stop address
+are unchanged. This checkpoint does not implement defensive inputs or AI actions.

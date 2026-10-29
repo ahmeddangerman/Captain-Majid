@@ -28,7 +28,7 @@ ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,s
   result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
   result.presentation.push_back({ControlPresentationKind::display,content.backgrounds[2]});
   state.action->cursor=0;state.phase=FieldSessionPhase::human_action_menu;
- } else state.phase=FieldSessionPhase::keeper_area_ai_pending;
+ } else state.phase=FieldSessionPhase::keeper_area_defense_pending;
  validate_phase_session(state);return result;
 }
 ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const ActionMenuContent& content) {

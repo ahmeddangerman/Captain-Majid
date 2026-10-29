@@ -1182,3 +1182,21 @@ Daily website note updated separately; engine/private research remains local.
   or subsequent action execution claim. Next: route2 human selection/confirmation.
 - Full Make check/all pass without compiler diagnostics. Source-only public notes
   remain on main; ROM and derived evidence remain outside Git.
+
+## 2026-10-29 — human own-area choices and defensive-entry correction
+
+- Retained area context at human confirmation19; snapshot47l372bytes reads prior
+  k menus but rejects old k confirmed-area output. Focused regression failed on
+  the old phase-context guard before passing. Roundtrip, legacy input and route2
+  ordinary-shot rejection covered.
+- 512 original poll comparisons (all256pressed bytes×inactive/active seeds) match
+  complete snapshots and sprite requests:280 menu states,232 confirmations,
+  original chosen actions1/4/6. Evidence: keeper-area-choices-first, including24
+  opening cases. Action execution remains pending; final facing during opening
+  is still explicit observed presentation input.
+- Tracing D36E beyond entry showed controller polling and human defender choice,
+  correcting the earlier AI label. Renamed phase66 to keeper_area_defense_pending;
+  its serialized value and original boundary are unchanged. Documentation/tool
+  scope now says defensive entry. No actual defensive input or AI choice claimed.
+- Full Make check/all pass without compiler diagnostics. Source/private evidence
+  remain separate; continuing into original defensive-menu initialization.

@@ -112,12 +112,22 @@ int main(){try{
  check(own_menu.phase==FieldSessionPhase::human_action_menu && own_menu.action->menu_route==2 &&
        own_menu.keeper_area && own_menu.control->facing==64 && !bytes(own_menu).empty(),
        "Prepared own-area menu retains its route and captured facing");
- auto ai_area=area_result;ai_area.current.field.side=11;ai_area.current.field.ball_owner=12;ai_area.control->controlled_player=1;
- auto ai_setup=prepare_session_keeper_area(ai_area);ai_setup.action->cursor=211;
- auto ai_menu=open_prepared_keeper_area_menu(ai_setup,0,ActionMenuContent{}).state;
- check(ai_menu.phase==FieldSessionPhase::keeper_area_ai_pending && ai_menu.action->cursor==211 && ai_menu.keeper_area,
-       "Area AI entry preserves cursor and stops before choice");
- for(const auto& output:{own_menu,ai_menu}) {
+ auto own_confirmed=poll_human_action_menu(own_menu,129,ActionMenuContent{}).state;
+ check(own_confirmed.phase==FieldSessionPhase::attack_choice_pending && own_confirmed.keeper_area &&
+       !bytes(own_confirmed).empty(),"Own-area human choice retains route context after confirmation");
+ auto choice_bytes=bytes(own_confirmed);std::istringstream choice_stream(choice_bytes);
+ check(bytes(load_phase_session(choice_stream))==choice_bytes,"Area confirmation roundtrip");
+ auto prior_choice=choice_bytes;prior_choice[10]='k';
+ rejects([&]{std::istringstream old(prior_choice);load_phase_session(old);});
+ auto prior_menu=bytes(own_menu);prior_menu[10]='k';std::istringstream prior_menu_stream(prior_menu);
+ check(bytes(load_phase_session(prior_menu_stream))==bytes(own_menu),"Legacy k area menu loads");
+ rejects([&]{prepare_session_basic_shot(own_confirmed,FieldPlayerProfiles{},FieldDefenseContent{});});
+ auto defense_area=area_result;defense_area.current.field.side=11;defense_area.current.field.ball_owner=12;defense_area.control->controlled_player=1;
+ auto defense_setup=prepare_session_keeper_area(defense_area);defense_setup.action->cursor=211;
+ auto defense_menu=open_prepared_keeper_area_menu(defense_setup,0,ActionMenuContent{}).state;
+ check(defense_menu.phase==FieldSessionPhase::keeper_area_defense_pending && defense_menu.action->cursor==211 && defense_menu.keeper_area,
+       "Defensive entry preserves cursor and stops before choices");
+ for(const auto& output:{own_menu,defense_menu}) {
   auto saved=bytes(output);std::istringstream input(saved);
   check(bytes(load_phase_session(input))==saved,"Prepared area menu roundtrip");
   saved[10]='j';rejects([&]{std::istringstream old(saved);load_phase_session(old);});

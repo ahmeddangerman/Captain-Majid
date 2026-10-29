@@ -26,7 +26,7 @@ int main(){try{
  auto initial=s;s=r.state;rejects(run);rejects([&]{resume_session_attack_clock(s);});s=initial;
  s.current.clock.remaining=1;s.current.clock.extra_time=5;r=run();
  check(static_cast<unsigned>(r.state.phase)==44,"Attack added time pauses");
- auto encoded=bytes(r.state);check(encoded.size()==372 && encoded[10]=='k',"Session46 format");
+ auto encoded=bytes(r.state);check(encoded.size()==372 && encoded[10]=='l',"Session47 format");
  std::istringstream saved(encoded);s=load_phase_session(saved);rejects(run);
  s=resume_session_attack_clock(s);check(static_cast<unsigned>(s.phase)==45 &&
   s.current.field.elapsed==1 && s.current.clock.extra_time==5,"Resume does not repeat prelude");
