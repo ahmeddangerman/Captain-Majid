@@ -36,7 +36,7 @@ def shot_outcome_state(memory, initial_side, event):
 
 
 def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000,
-               max_frames=10000, until='field', ack_ppu_transfers=False, host_buttons=128, final_ram=None, dispatch_only=False, clearance_only=False, race_only=False, race_tail=None):
+               max_frames=10000, until='field', ack_ppu_transfers=False, host_buttons=128, final_ram=None, dispatch_only=False, clearance_only=False, race_only=False, race_tail=None, attack_tail=False):
     if final_ram is not None and not isinstance(final_ram, bytearray):
         raise ValueError('Final RAM capture must be a caller-owned bytearray')
     if not isinstance(host_buttons, int) or not 0 <= host_buttons <= 255:
@@ -58,8 +58,11 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
         raise ValueError('Clearance mode needs captured field result3/action0')
     if dispatch_only and (until != 'field' or memory[0x612] not in (0,1,2,3,4)):
         raise ValueError('Dispatch-only mode needs field mode and selected result0..4')
+    if attack_tail and (dispatch_only or clearance_only or race_only or race_tail or until != 'field' or
+                        memory[0x43B] != 0 or memory[0x617] != 0):
+        raise ValueError('Attack tail needs prepared selected field action0 and no active keeper')
     shot_mode = until != 'field'
-    minimum = 0 if shot_mode or dispatch_only else 1
+    minimum = 0 if shot_mode or dispatch_only or attack_tail else 1
     if not minimum <= memory[0x600] <= 5:
         raise ValueError(f'This entry requires {minimum}..5 selected defenders')
     if memory[0x5FB] not in (0, 11) or memory[0x43B] >= 5:
@@ -87,6 +90,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
     memory.registers[6:8] = [26, 27]
     cpu = MPU(memory=memory)
     entry = (0xDF0D if race_tail == 'winner' else 0xDED4) if race_tail else 0xDE96 if race_only else 0xE678 if clearance_only else 0x83F5 if dispatch_only else 0x829D if shot_mode else 0x82F4
+    if attack_tail: entry = 0x8410
     cpu.pc, cpu.sp, cpu.p = entry, 0x50, cpu.UNUSED
     if race_tail == 'winner':
         # DF0D expects the original pending script at stack150 and Y coordinate in A.
@@ -119,6 +123,9 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
             elif cpu.pc == 0xDED4: boundary = 'clearance_race_timeout'
         if clearance_only and bank == 30 and cpu.pc == 0xDE96:
             boundary = 'capture_clearance_flight_setup'
+        if attack_tail and bank == 30:
+            boundary = {0xC618: 'shot_approach_entry', 0xD214: 'attack_added_time',
+                        0xDA98: 'period_end'}.get(cpu.pc)
         if dispatch_only:
             if bank == 26 and cpu.pc == 0x8408: boundary = 'selected_attack_presentation'
             elif bank == 26 and cpu.pc == 0x8BDF: boundary = 'selected_ball_recovery_handoff'

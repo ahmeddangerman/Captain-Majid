@@ -517,3 +517,23 @@ Daily website note updated separately; engine/private research remains local.
   object, rebuilt it, and verified exactly52current members remain. Production
   build and full suite were rerun after that adjustment; see
   /tmp/cm-archive-final-build.log and /tmp/cm-archive-final-suite.log.
+
+
+## 2026-10-29 — prepared attacking clock and unopposed continuation
+
+- Continued phase43 after explicitly acknowledged script8 through8410/9095 and
+  inactive847F toC618 shot approach. Uses original defender status/clock arithmetic;
+  no extra reward, energy debit, movement or owner change. Active selected keepers
+  and nonordinary menus remain pending. Added save phases44/45, session18I339bytes,
+  readers1..17. Added-time resume changes phase only; period-end remains terminal.
+- Extended unopposed shots using explicit captured043D action and existing0442
+  defender context; missing/extra action rejects instead of guessing. Both selected
+  and unopposed regressions failed before implementation, then passed. Full Make
+  suite/build passed, clean compiler diagnostics; CMake unavailable.
+- Seven repeatable original/native cases match324prior represented bytes, with
+  native metadata checked separately. Prepared frame/display acknowledgements are
+  disclosed; no claim of script8 or live frame/render equivalence. Save/resume and
+  replay checks pass. Evidence: attack-clock-repeatable in private analysis.
+- Commands, boundaries and remaining limits in NATIVE_ATTACK_CLOCK.md. Next:
+  originalDCFD shot distance/destination, then flight/keeper/goal integration.
+  Overall port remains unmeasured; no complete playable match or online match.
