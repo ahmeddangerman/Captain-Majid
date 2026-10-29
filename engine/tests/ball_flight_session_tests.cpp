@@ -1,4 +1,5 @@
 #include "captain/ball_flight_session.hpp"
+#include "captain/keeper_session.hpp"
 #include "captain/phase_session_io.hpp"
 #include <sstream>
 #include <iostream>
@@ -30,15 +31,30 @@ int main(){try{
  check(kickoff_cell.phase==FieldSessionPhase::ball_cell_callback && kickoff_cell.kickoff_formation &&
        !bytes(resolve_session_ball_cell(kickoff_cell)).empty(),"Kickoff flight survives cell and defender callback");
  kickoff.shot_flight->destination=122;
+ kickoff.shot_flight->loose_ball=false;
  auto kickoff_arrival=advance_prepared_session_ball_cell(begin_prepared_session_ball_flight(kickoff,64,192,g,v)).state;
  check(kickoff_arrival.phase==FieldSessionPhase::ball_arrival_callback && kickoff_arrival.kickoff_formation &&
        !bytes(kickoff_arrival).empty(),"Kickoff flight saves arrival before encounter resolution");
+ auto kickoff_keeper=continue_session_unopposed_arrival(kickoff_arrival);
+ check(kickoff_keeper.phase==FieldSessionPhase::shot_keeper_entry && kickoff_keeper.kickoff_formation,
+       "Kickoff arrival routes to goalkeeper with retained coordinates");
+ auto kickoff_setup=prepare_session_keeper_entry(kickoff_keeper);
+ check(kickoff_setup.phase==FieldSessionPhase::keeper_presentation_pending &&
+       kickoff_setup.current.field.selected_defenders==1 && kickoff_setup.scheduling->selected_ids[0]==11 &&
+       !bytes(kickoff_setup).empty(),"Kickoff arrival prepares the normal keeper before presentation");
+ auto keeper_bytes=bytes(kickoff_setup);std::istringstream keeper_stream(keeper_bytes);
+ check(bytes(load_phase_session(keeper_stream))==keeper_bytes,"Kickoff keeper setup roundtrip");
+ auto prior_keeper=keeper_bytes;prior_keeper[10]='b';
+ rejects([&]{std::istringstream i(prior_keeper);load_phase_session(i);});
+ auto old_arrival=bytes(kickoff_arrival);old_arrival[10]='b';std::istringstream old_arrival_stream(old_arrival);
+ check(bytes(load_phase_session(old_arrival_stream))==bytes(kickoff_arrival),"Legacy b kickoff arrival loads");
+ rejects([&]{prepare_session_keeper_entry(kickoff_setup);});
  const auto source=bytes(s);auto ready=begin_prepared_session_ball_flight(s,64,192,g,v);
  check(static_cast<unsigned>(ready.phase)==47 && !ready.shot_progress && ready.current.field.selected_defenders==0 &&
   ready.scheduling->selected_ids[0]==0 && ready.current.field.elapsed==0 && ready.ball_trajectory->vx==256 &&
   ready.ball_trajectory->vy==0 && ready.ball_trajectory->x==((120<<8)|64) && ready.current.clock.remaining==448 &&
   bytes(s)==source,"Saved numeric flight setup preserves fractions and clears original prefix/elapsed");
- auto encoded=bytes(ready);check(encoded.size()==370 && encoded[10]=='b',"Session37 layout");
+ auto encoded=bytes(ready);check(encoded.size()==370 && encoded[10]=='c',"Session38 layout");
  std::istringstream saved(encoded);ready=load_phase_session(saved);
  auto r=advance_prepared_session_ball_cell(ready);
  check(static_cast<unsigned>(r.state.phase)==48 && r.step.additions==8 &&

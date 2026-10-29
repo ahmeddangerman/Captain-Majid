@@ -1026,3 +1026,16 @@ Daily website note updated separately; engine/private research remains local.
 - Original numeric frame waits explicitly acknowledged; no NMI/PPU/audio or
   task/random updates. Arrival resolution and keeper continuation remain next.
 - Final Make check/all pass; raw ROM and all generated observations stay private.
+
+## 2026-10-29 — kickoff flight to normal goalkeeper entry
+
+- Added retained keeper coordinates at52/53; snapshot38c370bytes supports legacy
+  readers and rejects older markers claiming the new combinations. Regression
+  failed on arrival guard before passing; roundtrip, legacy input and replay
+  rejection covered. Actual keeper setup selects11 and preserves both keeper Y.
+- Extended original flight comparison through empty arrival and normal keeper
+  setup without skipped original calls. 16 sequences match488 boundaries up to
+ 8509 before presentation. Evidence: kickoff-keeper-entry-first. Stunned keeper,
+  actual keeper choice/comparison and outcome are still pending with this context.
+  Host frame acknowledgements remain explicit; no full hardware/match claim.
+- Final Make check/all pass; ROM and private generated evidence remain outside Git.

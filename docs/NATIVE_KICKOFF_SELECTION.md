@@ -235,3 +235,19 @@ an actual defender encounter. It stops before arrival resolution. Evidence:
 `kickoff-flight-first`; captured launch input evidence: `kickoff-launch-flight-inputs`.
 Tests also cover saved-flight compatibility and a constructed cell callback and
 arrival with retained keeper positions. No hardware/presentation parity claim.
+
+## Empty arrival and normal keeper setup (2026-10-29)
+
+Kickoff keeper coordinates persist through phase52 empty-arrival routing and
+phase53 normal goalkeeper setup. Snapshot38 (`c`) keeps370bytes and reads older
+versions; b cannot claim these new combinations. `--continue-flight-arrival`
+and `--prepare-keeper-entry` retain the saved shot and select the opposing keeper
+without executing its presentation or action menu.
+
+The flight comparison's `--keeper-entry` option runs every original instruction
+through empty arrival to DD1C and normal setup to8509. All16 formation-pair flights
+match488 represented boundaries including the two new handoffs. Evidence:
+`kickoff-keeper-entry-first`. Inputs use the real captured kickoff placements;
+all arrive with zero field defenders and a normal keeper. Stunned setup, keeper
+choice/comparison and outcomes remain unsupported with kickoff coordinate context.
+Frame waits retain the disclosed host acknowledgement policy.

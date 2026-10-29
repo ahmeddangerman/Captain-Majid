@@ -8,6 +8,7 @@ import subprocess
 from py65.devices.mpu6502 import MPU
 from trace_field_script import ObservedCartridge
 from flight_checkpoint import flight_checkpoint
+from check_keeper_entry_original import keeper_checkpoint
 from verify_action_strength import PAYLOAD_SHA256
 
 
@@ -20,7 +21,7 @@ def until(cpu, targets):
 
 
 def snapshot(ram, phase, loose):
-    data=bytearray(flight_checkpoint(ram,phase,loose))
+    data=bytearray(keeper_checkpoint(ram,phase) if phase==53 else flight_checkpoint(ram,phase,loose))
     data[361:365]=bytes([1,ram[0x28],ram[0x29],ram[0x629]])
     data[365:368]=bytes([1,ram[0x308],ram[0x38c]])
     return bytes(data)
@@ -29,6 +30,7 @@ def snapshot(ram, phase, loose):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','pack','projection','launch_dir','output_dir'):p.add_argument(name,type=Path)
+    p.add_argument('--keeper-entry',action='store_true')
     a=p.parse_args();rom=a.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
     out=a.output_dir.resolve()
@@ -68,8 +70,15 @@ def main():
             until(cpu,{0xe773})
             compare(47,['--resolve-ball-cell'])
         else:raise RuntimeError('Flight did not arrive within100cells')
-        cases.append({'left':entry['left'],'right':entry['right'],'boundaries':index,'cells':cells,'loose':loose})
-    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Native saved destination feeds flight setup and each cell/callback; all represented bytes match original CPU, including accumulated defenders and keeper Y. Original numeric frame waits explicitly acknowledged with no NMI/PPU/audio or task/random updates. Fractional input bytes captured from original RAM, not invented. Stops before arrival encounter resolution.'},indent=2)+'\n')
+        if a.keeper_entry:
+            if loose or m[0x600]:raise RuntimeError('Keeper entry requires unopposed keeper-bound arrival')
+            until(cpu,{0xdd1c})
+            compare(52,['--continue-flight-arrival'])
+            until(cpu,{0x8509,0x8900})
+            if cpu.pc!=0x8509:raise RuntimeError('Expected normal keeper')
+            compare(53,['--prepare-keeper-entry'])
+        cases.append({'left':entry['left'],'right':entry['right'],'boundaries':index,'cells':cells,'loose':loose,'keeper_entry':a.keeper_entry})
+    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Native saved destination feeds flight setup and each cell/callback; all represented bytes match original CPU, including accumulated defenders and keeper Y. Original numeric frame waits explicitly acknowledged with no NMI/PPU/audio or task/random updates. Fractional input bytes captured from original RAM, not invented. Optional empty-arrival routing and normal keeper setup stop before the keeper presentation; keeper action and outcomes excluded.'},indent=2)+'\n')
     print(f'{len(cases)} kickoff flight sequences match: {out}')
 
 if __name__=='__main__':main()
