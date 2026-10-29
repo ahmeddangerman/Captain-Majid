@@ -23,6 +23,14 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
  }
  state.ball_trajectory=t;validate_phase_session(state);return state;
 }
+PhaseSessionState continue_session_unopposed_arrival(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if((input.phase!=FieldSessionPhase::ball_arrival_callback && input.phase!=FieldSessionPhase::ball_already_arrived) ||
+    input.current.field.selected_defenders)
+  throw std::invalid_argument("Arrival still has pending defender encounters or is not complete");
+ auto state=input;state.phase=input.shot_flight->loose_ball ? FieldSessionPhase::shot_loose_recovery : FieldSessionPhase::shot_keeper_entry;
+ validate_phase_session(state);return state;
+}
 PhaseSessionState resolve_session_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::ball_cell_callback)

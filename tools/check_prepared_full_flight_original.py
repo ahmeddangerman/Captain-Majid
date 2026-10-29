@@ -8,6 +8,8 @@ from pathlib import Path
 from py65.devices.mpu6502 import MPU
 from trace_field_script import ObservedCartridge
 from flight_checkpoint import flight_checkpoint
+from export_phase_session import export_session
+from trace_ball_recovery_phase import trace_recovery
 from verify_action_strength import PAYLOAD_SHA256
 
 
@@ -23,7 +25,9 @@ def main():
     out.mkdir(parents=True,exist_ok=False);binary=str(a.binary.resolve());pack=str(a.pack.resolve());projection=str(a.projection.resolve())
     def original(ram):
         m=ObservedCartridge(rom[16:262160],bytes(ram),None,set());m.registers[6:8]=[26,27]
-        cpu=MPU(memory=m);cpu.pc=0xE73E;cpu.sp=0xFD;cpu.p=cpu.UNUSED;return m,cpu
+        cpu=MPU(memory=m);cpu.pc=0xE73E;cpu.sp=0xFC;cpu.p=cpu.UNUSED
+        m[0x1FD],m[0x1FE],m[0x1FF]=0x10,0xDD,cpu.UNUSED|int(ram[0x43C]==0 and ram[0x635]<128)
+        return m,cpu
     def until(cpu,targets):
         for count in range(2_000_000):
             if cpu.pc in targets:return count
@@ -32,14 +36,14 @@ def main():
     def native(source,operation,dest):
         subprocess.run([binary,pack,str(source),*operation,'--capture',str(dest)],capture_output=True,check=True,timeout=30)
     cases=[]
-    for name,x,y,dest,zero in [('loose-with-defenders',120,100,221,False),('keeper-bound',160,96,233,True)]:
+    for name,x,y,dest,zero in [('loose-with-defenders',120,100,221,False),('keeper-bound',160,96,233,True),('loose-free',80,100,161,True)]:
         ram=bytearray(base);ram[0x634:0x638]=((x<<8)|64).to_bytes(2,'little')+((y<<8)|192).to_bytes(2,'little')
-        ram[0x5FE]=((x-48)//8)*12+(y-80)//8;ram[0x638]=dest;ram[0x61A]=255;ram[0x61B]=0;ram[0x617]=0;ram[0xE2]=1;ram[0xE3]=0
+        ram[0x5FE]=((x-48)//8)*12+(y-80)//8;ram[0x638]=dest;ram[0x61A]=255;ram[0x61B]=0;ram[0x617]=0;ram[0x43C]=0;ram[0xE2]=1;ram[0xE3]=0
         if zero:ram[0x600:0x606]=bytes(6);ram[0x612]=0
         # Freeze candidates in the first visited cell; positions are explicit input.
         probe,cp=original(ram);until(cp,{0xE773});cp.pc=0xE778;until(cp,{0xE7B4,0xE7CC})
         for slot in range(12,22):
-            r=0x300+12*slot;ram[r+6]=probe[0x635];ram[r+8]=probe[0x637];ram[r+10]=int(slot==12)
+            r=0x300+12*slot;ram[r+6]=200 if name=="loose-free" else probe[0x635];ram[r+8]=84 if name=="loose-free" else probe[0x637];ram[r+10]=int(slot==12)
         m,cpu=original(ram);until(cpu,{0xE773})
         source=out/(name+'-entry.cmjsession');source.write_bytes(flight_checkpoint(ram,46,x<128));(out/(name+'-entry.bin')).write_bytes(ram)
         ready=out/(name+'-ready.cmjsession');native(source,['--begin-ball-flight',projection,'64','192'],ready)
@@ -56,8 +60,23 @@ def main():
             ready=out/(name+f'-{cell}-continued.cmjsession');native(stepped,['--resolve-ball-cell'],ready)
             if ready.read_bytes()!=flight_checkpoint(bytes(m.ram[:2048]),47,x<128):raise RuntimeError(f'{name}callback{cell} mismatch')
         else:raise RuntimeError('Prepared flight did not arrive within100cell callbacks')
-        (out/(name+'-final.bin')).write_bytes(m.ram[:2048]);cases.append({'case':name,'boundaries':boundaries,'final_selected':list(m.ram[0x601:0x601+m[0x600]]),'match':True})
-    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Full numeric destination flight with original cell selection and native save/reload every step. Explicit frozen frame acknowledgements; no live NMI/task/input updates or arrival encounter/keeper/outcome callback.'},indent=2)+'\n')
+        (out/(name+'-final.bin')).write_bytes(m.ram[:2048])
+        result={'case':name,'boundaries':boundaries,'final_selected':list(m.ram[0x601:0x601+m[0x600]]),'match':True}
+        if name=='loose-free':
+            until(cpu,{0xDD14,0xDD1C})  # empty8835 callback, return and saved carry branch
+            routed=out/'loose-free-routed.cmjsession';native(stepped,['--continue-flight-arrival'],routed)
+            if cpu.pc!=0xDD14 or routed.read_bytes()!=flight_checkpoint(bytes(m.ram[:2048]),51,True):raise RuntimeError('Complete loose return mismatch')
+            report,recovered=trace_recovery(rom[16:262160],bytes(m.ram[:2048]),skip_jitter=True)
+            (out/'loose-free-recovery.json').write_text(json.dumps(report,indent=2)+'\n')
+            dest=out/'loose-free-recovered.cmjsession';native(routed,['--recover-shot-loose'],dest)
+            expected=bytearray(export_session(recovered,6));expected[10]=ord('L');expected+=bytes(31)
+            if dest.read_bytes()!=expected:raise RuntimeError('Complete loose recovery mismatch')
+            controlled=out/'loose-free-control.cmjsession';native(dest,['--continue-recovery'],controlled)
+            ready_control=out/'loose-free-control-ready.cmjsession';native(controlled,['--setup-control'],ready_control)
+            if ready_control.read_bytes()[258]!=9:raise RuntimeError('Loose flight did not rejoin native control-ready state')
+            result['native_control_ready']=True;result['recovery_matches']=True
+        cases.append(result)
+    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Full numeric destination flight with original cell selection and native save/reload every step. Explicit frozen frame acknowledgements; no live NMI/task/input updates or queued arrival encounter/keeper/outcome callback. Free loose case additionally compares prepared post-display recovery and checks native control-ready. Display45 and native control setup are not claimed part of this original trajectory equality.'},indent=2)+'\n')
     print(f'{len(cases)} complete prepared numeric flights match at every saved cell/callback: {out}')
 
 

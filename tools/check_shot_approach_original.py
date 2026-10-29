@@ -22,11 +22,13 @@ def main():
     out.mkdir(parents=True,exist_ok=False);binary=str(a.binary.resolve());pack=str(a.pack.resolve());results=[]
     for name,x,y,random,zero in [('loose',120,100,101,False),('threshold127',127,100,100,False),
             ('threshold128',128,100,101,False),('keeper-even',160,96,100,False),
-            ('keeper-odd',180,159,101,False),('unopposed',160,100,101,True)]:
-        ram=bytearray(base);ram[0x635]=x;ram[0x637]=y;ram[0xE2]=random;ram[0x617]=0
+            ('keeper-odd',180,159,101,False),('unopposed',160,100,101,True),('subtype128',120,100,101,False)]:
+        ram=bytearray(base);ram[0x635]=x;ram[0x637]=y;ram[0xE2]=random;ram[0x617]=0;ram[0x43C]=128 if name=="subtype128" else 0
         if zero:ram[0x600:0x606]=bytes(6);ram[0x612]=0
         entry=out/(name+'-entry.cmjsession');entry.write_bytes(checkpoint(ram,45));(out/(name+'-entry.bin')).write_bytes(ram)
-        report,final=trace_approach(rom[16:262160],bytes(ram));(out/(name+'-final.bin')).write_bytes(final)
+        report,final=trace_approach(rom[16:262160],bytes(ram));
+        if report['loose_ball']!=(x<128 and name!='subtype128'):raise RuntimeError('Fixture does not exercise its intended ground/aerial route')
+        (out/(name+'-final.bin')).write_bytes(final)
         (out/(name+'.json')).write_text(json.dumps(report,indent=2)+'\n')
         expected=bytearray(checkpoint(final,46));expected[339:344]=bytes([1,report['distance'],report['destination'],report['counter'],int(report['loose_ball'])])
         dest=out/(name+'-native.cmjsession')

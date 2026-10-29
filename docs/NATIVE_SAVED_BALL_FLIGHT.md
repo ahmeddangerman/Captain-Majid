@@ -84,3 +84,42 @@ PYTHONPATH=tools python3 tools/check_prepared_full_flight_original.py \
  /private/Japanese-base.nes /private/japanese-cycle-v9.cmjpack \
  /private/phase46-entry.bin /private/ball.cmjball /private/new-flight-output
 ```
+
+
+## Empty arrival and prepared loose-ball possession
+
+Phases49 (after empty800C) and50 (early return, no800C) now support
+`--continue-flight-arrival` when the defender queue is empty. The saved carry
+routes to51 before loose-ball display45, or52 before keeper pointer/status dispatch.
+A nonempty queue rejects atomically: arrival encounters cannot be silently skipped.
+
+After an explicitly acknowledged display45, `--recover-shot-loose` enters original
+8BE5 recovery. It skips jitter and special-owner cleanup, clears flight contexts,
+and saves recovered ownership at generic phase6 for either side. Existing recovery
+continuation then routes to player control, keeper or story. This is a prepared
+numeric handoff; display45 and its possible scheduling effects are not executed.
+
+Snapshot21L keeps355bytes; readers1..20 remain.51/52 requireL and empty count;
+loose flag must match branch. Flight/trajectory contexts now persist through52.
+The side11 recovery uses phase6 (not the clearance-specific37), preserving valid
+subsequent control state without requiring unrelated clearance/race metadata.
+
+Four original DD11 branches and three prepared8BE5 recoveries match, including
+opposing possession and goal-area routing. Three whole prepared numeric flights
+match each cell/callback; the free loose route also matches prepared recovery and
+reaches native control-ready state. Frozen frame inputs, unexecuted presentation
+and queued encounters remain explicit limits. Corrected ground subtype fixtures
+are used; see NATIVE_SESSION_APPROACH.md. Evidence: loose-arrival-both-sides,
+full-flight-loose-recovery-corrected and approach-final-subtype-guard.
+
+```
+PYTHONPATH=tools python3 tools/check_loose_arrival_original.py \
+ /private/Japanese-base.nes /private/japanese-cycle-v9.cmjpack \
+ /private/phase49-entry.bin /private/new-arrival-output
+```
+
+Native regressions cover both possession sides, no second jitter, replay, oldK
+reader, pending defender rejection, both routes and save validation. Full default
+Make suite and production build pass; CMake remains unavailable. Fresh review found
+no material issue; its requested side11 persistent regression was added and passes.
+Next: keeper entry52 and queued arrival encounters, then live scheduling/goal flow.

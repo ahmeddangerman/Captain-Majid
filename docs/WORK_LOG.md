@@ -646,3 +646,32 @@ Daily website note updated separately; engine/private research remains local.
   per-frame task/input state and stop before arrival encounters; no live-match
   claim. Evidence: full-prepared-flight-repeatable. Full callback Make suite and
   production build passed cleanly. Next is arrival8835/keeper/goal continuation.
+
+
+## 2026-10-29 — empty arrival and loose-ball possession
+
+- Added empty arrival49/early-return50 dispatch to51 loose presentation boundary or
+  52 keeper entry; queued defenders reject atomically. Prepared loose recovery
+  enters8BE5 without a second jitter/special-owner cleanup, clears flight contexts
+  and saves generic recovered owner6. Either side continues to valid control or
+  keeper/story routing. Snapshot21L355bytes retains readers1..20.
+- Real branch/recovery tests failed before implementation, then passed. Side11
+  possession regression requested in fresh review also passes. Full default Make
+  suite/build pass cleanly (cm-loose-final-suite/build.log). CMake unavailable.
+- Four original DD11 branches and three prepared8BE5 recoveries match, including
+  side11 possession. Three whole frozen numeric trajectories match each cell and
+  callback; free loose route also matches prepared recovery and native control-ready
+  continuation. Evidence: loose-arrival-both-sides and
+  full-flight-loose-recovery-corrected. Display45 is explicitly not executed or
+  claimed equivalent; live scheduling and arrival encounters remain unfinished.
+- Correction: earlier approach-repeatable loose/threshold fixture retained aerial
+  subtype128. Its numerical comparisons matched but its labels overstated ground
+  branch coverage. New canonical cases explicitly set subtype0; a seventh explicit
+  aerial case and expected-loose assertion now pass. Evidence:
+  approach-final-subtype-guard. Historical reports retained without rewriting.
+- Ruling: reuse shared recovery with an explicit generic phase6 output for this
+  caller, retaining clearance37 default for existing callers — original8BE5 is a
+  generic owner handoff; using37 would require unrelated clearance metadata and
+  reject opposing-side saves. Cost if caller semantics change: revise output route.
+- Next: prepared keeper entry52, queued arrival encounters, keeper/goal continuation
+  and live frame/input/presentation toward a complete match. Overall unmeasured.

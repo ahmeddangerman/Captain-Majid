@@ -37,14 +37,14 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 50)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 52)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
-    if (bool(state.shot_flight) != (phase >= 46 && phase <= 50))
+    if (bool(state.shot_flight) != (phase >= 46 && phase <= 52))
         throw std::invalid_argument("Flight setup requires exactly one shot context");
     if (state.shot_flight && (state.shot_flight->destination >= 240 || state.shot_flight->counter != 255))
         throw std::invalid_argument("Unsupported initial shot flight context");
-    const bool trajectory=phase>=47 && phase<=50;
+    const bool trajectory=phase>=47 && phase<=52;
     if(bool(state.ball_trajectory)!=trajectory)
         throw std::invalid_argument("Numeric flight requires exactly one trajectory context");
     if(state.ball_trajectory) {
@@ -52,14 +52,16 @@ void validate_phase_session(const PhaseSessionState& state) {
         if(!state.recovery || !state.scheduling || t.flags || t.direction!=state.recovery->x_jitter_control ||
             (t.x>>8)!=f.ball_x || (t.y>>8)!=f.ball_y ||
             field_cell_at(f.ball_x,f.ball_y)!=f.ball_cell || f.elapsed ||
-            (phase==50 && f.selected_defenders) ||
+            ((phase==50 || phase==51 || phase==52) && f.selected_defenders) ||
             (phase==47 && (!t.vx && !t.vy)) ||
             (phase==47 && f.ball_cell==state.shot_flight->destination) ||
             (phase==48 && f.ball_cell==state.shot_flight->destination) ||
-            ((phase==49 || phase==50) && f.ball_cell!=state.shot_flight->destination) ||
+            (phase>=49 && f.ball_cell!=state.shot_flight->destination) ||
             (phase==50 && (t.vx || t.vy)))
             throw std::invalid_argument("Unsupported numeric flight boundary");
     }
+    if((phase==51 && !state.shot_flight->loose_ball) || (phase==52 && state.shot_flight->loose_ball))
+        throw std::invalid_argument("Flight return phase does not match saved loose/keeper route");
     const bool restart_options = phase >= 40 && phase <= 42;
     if (bool(state.restart_options) != restart_options)
         throw std::invalid_argument("Restart options require exactly one menu context");

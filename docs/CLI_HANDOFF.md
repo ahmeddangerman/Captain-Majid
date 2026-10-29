@@ -16,7 +16,7 @@ and goal/save calculations exist separately. Restart/keeper/story, nonterminal
 shot/goal integration, live frame/RNG/presentation and online matches remain work.
 
 Latest detailed references:
-- NATIVE_SAVED_BALL_FLIGHT.md for saved fractional flight and callback boundaries
+- NATIVE_SAVED_BALL_FLIGHT.md for saved fractional flight, callback boundaries and empty-arrival loose possession
 - NATIVE_BALL_STEP.md and NATIVE_BALL_VELOCITY.md for verified numeric flight pieces
 - NATIVE_SESSION_APPROACH.md for saved shot destination before flight
 - NATIVE_ATTACK_CLOCK.md for selected/unopposed post-presentation timing

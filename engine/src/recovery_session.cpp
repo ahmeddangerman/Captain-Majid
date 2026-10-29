@@ -16,7 +16,8 @@ void validate_selected_actions(const PhaseSessionState& input, const std::vector
 }
 RecoverySessionResult recover(const PhaseSessionState& input,
     const std::vector<RecoveryDefender>& selected, bool retained_prefix, bool jitter,
-    const PlayerProfileMappings& primary, const FieldPhaseContent& movement) {
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
+    FieldSessionPhase no_jitter_output=FieldSessionPhase::clearance_recovered_owner) {
     RecoverySessionResult result{input};
     auto& state = result.state;
     auto& field = state.current.field;
@@ -61,12 +62,21 @@ RecoverySessionResult recover(const PhaseSessionState& input,
     context.attack_subtype = recovered.attack_subtype;
     if (context.ball_variant == 0)
         context.ball_variant = static_cast<std::uint8_t>((field.random_first & 1u) + 1u);
-    state.phase = !jitter ? FieldSessionPhase::clearance_recovered_owner :
+    state.phase = !jitter ? no_jitter_output :
         retained_prefix ? FieldSessionPhase::selected_recovered_owner : FieldSessionPhase::recovered_owner;
     validate_phase_session(state);
     return result;
 }
 
+}
+RecoverySessionResult advance_session_shot_loose_recovery(const PhaseSessionState& input,
+ const PlayerProfileMappings& primary,const FieldPhaseContent& movement) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::shot_loose_recovery)
+  throw std::invalid_argument("Loose recovery requires prepared post-presentation shot entry");
+ auto prepared=input;prepared.shot_flight.reset();prepared.ball_trajectory.reset();
+ prepared.phase=FieldSessionPhase::ball_recovery;
+ return recover(prepared,{},false,false,primary,movement,FieldSessionPhase::recovered_owner);
 }
 RecoverySessionResult advance_session_recovery(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement) {

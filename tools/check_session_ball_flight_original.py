@@ -38,7 +38,7 @@ def main():
            ('fractional-arrival',127,100,255,192,122,False),('already-arrived',196,124,64,192,221,False)]
     for name,x,y,lx,ly,dest,zero in cases:
         ram=bytearray(base);ram[0x634:0x638]=((x<<8)|lx).to_bytes(2,'little')+((y<<8)|ly).to_bytes(2,'little')
-        ram[0x5FE]=((x-48)//8)*12+(y-80)//8;ram[0x638]=dest;ram[0x61A]=255;ram[0x61B]=0;ram[0x617]=0
+        ram[0x5FE]=((x-48)//8)*12+(y-80)//8;ram[0x638]=dest;ram[0x61A]=255;ram[0x61B]=0;ram[0x617]=0;ram[0x43C]=0
         if zero:ram[0x600:0x606]=bytes(6);ram[0x612]=0
         already=ram[0x5FE]==dest
         if already:ram[0x639:0x63D]=bytes([0x34,0x12,0xDC,0xFE])

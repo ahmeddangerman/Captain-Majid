@@ -33,8 +33,8 @@ def trace_recovery(prg, ram, continue_handoff=False, max_instructions=2_000_000,
     if world_inputs is not None and (len(world_inputs) != 22 or any(len(pair) != 2 or any(
             not isinstance(v, int) or not 0 <= v <= 255 for v in pair) for pair in world_inputs)):
         raise ValueError('Field round requires22held/pressed pairs')
-    if skip_jitter and (not selected_recovery or continue_handoff or prepare_control or control_input is not None or control_tick or world_inputs is not None or resume_control_time):
-        raise ValueError('No-jitter entry requires selected recovery mode')
+    if skip_jitter and (continue_handoff or prepare_control or control_input is not None or control_tick or world_inputs is not None or resume_control_time):
+        raise ValueError('No-jitter entry supports a bounded recovery-only observation')
     if selected_recovery:
         if prepare_control or control_input is not None or control_tick or world_inputs is not None or resume_control_time:
             raise ValueError('Selected recovery observation only supports recovery/prepared handoff modes')

@@ -31,7 +31,7 @@ def main():
             ('retained4',4,1,0,False),('full',5,1,0,False),('sample255',0,0,0,False),
             ('sample254',0,0,1,False),('stunned',0,1,0,True)]:
         ram=bytearray(base);ram[0x600]=prior;ram[0x601:0x606]=bytes([12+i if i<prior else 0 for i in range(5)])
-        ram[0xE2],ram[0xE3]=first,second
+        ram[0xE2],ram[0xE3]=first,second;ram[0x43C]=0
         for slot in range(12,22):
             record=0x300+slot*12;ram[record+6]=ram[0x635];ram[record+8]=ram[0x637];ram[record+10]=int(stun and slot in (12,14))
         entry=out/(name+'-entry.cmjsession');entry.write_bytes(encode(ram,48));(out/(name+'-entry.bin')).write_bytes(ram)

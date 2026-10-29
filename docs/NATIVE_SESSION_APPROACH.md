@@ -18,8 +18,9 @@ and production build pass with clean diagnostics. Fresh review found no material
 issue; added its requested malformed-tail and complete-state-preservation checks,
 which also pass. CMake definitions updated but executor lacks CMake.
 
-Six original/native cases match324prior represented bytes plus independent061A,
-062B,0638 and carry: loose,127/128threshold, keeper even/odd and unopposed.
+Seven corrected original/native cases match324prior represented bytes plus
+independent061A,062B,0638 and carry: ground loose,127/128threshold, keeper
+even/odd, unopposed and explicit aerial subtype128.
 Native context presence is excluded from ROM-memory claims. The bounded observer
 executes all original calls beforeDD08, with no skipped calls or frame/display
 acknowledgements. Reproduce using private files:
@@ -30,7 +31,11 @@ PYTHONPATH=tools python3 tools/check_shot_approach_original.py \
  /private/phase45-entry.bin /private/new-output-directory
 ```
 
-Evidence: ../Captain-Majid-analysis/shot-approach-repeatable. Previous post-script
+Evidence: ../Captain-Majid-analysis/approach-final-subtype-guard.
+Correction: the earlier shot-approach-repeatable fixture retained aerial subtype128
+in cases labelled ground/loose. Numeric equality was real but those labels did not
+prove the loose branch. The new fixture explicitly sets ground subtype0, adds the
+aerial case separately and asserts the expected loose flag before accepting output. Previous post-script
 attack timing is documented in NATIVE_ATTACK_CLOCK.md. Approach checks do not
 establish equivalence for unimplemented earlier scripts or later live flight.
 

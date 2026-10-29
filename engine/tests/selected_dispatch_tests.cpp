@@ -33,7 +33,7 @@ int main(){
   r.state.current.field.roster[2].stamina==123 && r.movement.players.size()==19,
   "Dispatch advances movement without clock or attacker debit");
  check(bytes(s)==before,"Input preserved");
- auto encoded=bytes(r.state);check(encoded.size()==355 && encoded[10]=='K',"Session20 format");
+ auto encoded=bytes(r.state);check(encoded.size()==355 && encoded[10]=='L',"Session21 format");
  std::istringstream saved(encoded);check(bytes(load_phase_session(saved))==encoded,"Dispatch snapshot roundtrip");
  encoded[10]='9';rejects([&]{std::istringstream old(encoded);load_phase_session(old);});
  auto initial=s;s=r.state;rejects(run);s=initial;
