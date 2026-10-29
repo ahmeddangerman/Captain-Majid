@@ -16,6 +16,7 @@ and goal/save calculations exist separately. Restart/keeper/story, nonterminal
 shot/goal integration, live frame/RNG/presentation and online matches remain work.
 
 Latest detailed references:
+- NATIVE_KICKOFF_FORMATION.md for verified kickoff formation placement
 - NATIVE_KICKOFF_SELECTION.md for original kickoff team/receiver calculations
 - NATIVE_SCORED_GOAL.md for persistent score/scorer reward before goal presentation
 - NATIVE_KEEPER_SAVES.md for non-goal keeper handoffs and punch recovery

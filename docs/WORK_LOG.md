@@ -828,3 +828,18 @@ Daily website note updated separately; engine/private research remains local.
 - The full Make suite/build pass. Code is pushed to GitHub work; ROM and derived
   data stay outside Git. Overall progress remains unmeasured. Next: trace original
   formation/reset and connect kickoff selection to a coherent persistent session.
+
+
+## 2026-10-29 — original kickoff formation placement
+
+- Added native DC07 formation placement for all22 raw player coordinate pairs,
+  explicit on-ball/off-ball content, four formations each side and both possession
+  directions. Preserves fractional bytes and original keeper Y-low clearing.
+- Focused regression failed with stub then passed.128 bounded original comparisons
+  match every X/Y word: both sides, all16 formation combinations and four randomized
+  original coordinate sets. Every DC07 instruction executes; no frame/presentation
+  claim. Evidence: kickoff-formation-final. Full Make suite/build pass cleanly.
+- Keeper coordinate Y high bytes are not represented by the existing persistent
+  session. Raw22-slot API retains them explicitly; session integration must capture
+  that state rather than silently discarding it. Actual reset, kickoff/UI and a full
+  playable match remain unfinished; overall progress remains unmeasured.

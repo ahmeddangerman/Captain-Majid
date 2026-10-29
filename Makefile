@@ -20,7 +20,7 @@ CORE_SOURCES += engine/src/terminal_flight_phase.cpp
 CORE_SOURCES += engine/src/match_clock.cpp engine/src/contact_prelude.cpp
 CORE_SOURCES += engine/src/phase_session.cpp engine/src/phase_session_io.cpp
 CORE_SOURCES += engine/src/experience.cpp
-CORE_SOURCES += engine/src/recovery_session.cpp engine/src/keeper_session.cpp engine/src/keeper_save_session.cpp engine/src/goal_session.cpp engine/src/kickoff_selection.cpp
+CORE_SOURCES += engine/src/recovery_session.cpp engine/src/keeper_session.cpp engine/src/keeper_save_session.cpp engine/src/goal_session.cpp engine/src/kickoff_selection.cpp engine/src/kickoff_formation.cpp
 CORE_SOURCES += engine/src/control_session.cpp
 CORE_SOURCES += engine/src/control_input.cpp
 CORE_SOURCES += engine/src/control_tick.cpp
@@ -178,7 +178,11 @@ build/goal-session-tests: engine/tests/goal_session_tests.cpp $(CORE) $(HEADERS)
 build/kickoff-selection-tests: engine/tests/kickoff_selection_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/kickoff_selection_tests.cpp $(CORE) -o $@
 
-check: build/kickoff-selection-tests build/goal-session-tests build/keeper-save-session-tests build/keeper-session-tests build/loose-arrival-tests build/ball-flight-session-tests build/ball-step-tests build/ball-velocity-tests build/approach-session-tests build/attack-clock-tests build/restart-options-tests build/restart-route-tests build/clearance-handoff-tests build/clearance-race-tests build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+build/kickoff-formation-tests: engine/tests/kickoff_formation_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/kickoff_formation_tests.cpp $(CORE) -o $@
+
+check: build/kickoff-formation-tests build/kickoff-selection-tests build/goal-session-tests build/keeper-save-session-tests build/keeper-session-tests build/loose-arrival-tests build/ball-flight-session-tests build/ball-step-tests build/ball-velocity-tests build/approach-session-tests build/attack-clock-tests build/restart-options-tests build/restart-route-tests build/clearance-handoff-tests build/clearance-race-tests build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+	./build/kickoff-formation-tests
 	./build/kickoff-selection-tests
 	./build/goal-session-tests
 	./build/keeper-save-session-tests
