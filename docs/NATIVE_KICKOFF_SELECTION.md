@@ -313,3 +313,21 @@ Evidence: `kickoff-save-handoffs-first`; inputs: `kickoff-entry-save-inputs`.
 These are outcome-handler checks, not evidence that these shots naturally produce
 non-goal results. Keeper display9 is explicitly acknowledged; subsequent rebound,
 keeper-play and punch recovery are outside this checkpoint.
+
+## Controlled punch recovery to a field player (2026-10-29)
+
+Snapshot43 (`h`,370bytes) retains keeper Y at phase6 after punch recovery. The
+existing no-jitter movement/recipient calculation is reused. The prepared kickoff
+path also captures completion of the earlier shot animation: original bank31:EC3E
+clears `$0532` from2 to0 during its cooperative recovery wait. A real comparison
+caught this missing byte; a regression verifies the clear and input immutability.
+The native implementation acknowledges that presentation completion without a
+renderer. Rebound recovery is explicitly rejected with this context until its
+separate presentation/jitter path is compared; it still saves at phase2.
+
+`check_kickoff_save_handoffs_original.py --punch-recovery` repeats128 controlled
+non-goal outcome comparisons and adds16 no-jitter punch recoveries. Full snapshots
+match original player movement and recipient selection through8C31. Evidence:
+`kickoff-punch-recovery-final`. These are constructed non-goal-result inputs on
+captured kickoff positions, not proof of naturally arising saves. Further control,
+keeper-area/story continuation and real presentation remain unfinished.

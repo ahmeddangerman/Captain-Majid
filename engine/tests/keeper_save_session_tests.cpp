@@ -60,6 +60,22 @@ int main(){try{
   punched.state.current.field.ball_cell==233,"Punch commits placement/elapsed and preserves the prior cell during prepared recovery");
  auto punch_recovery=punched.state;punch_recovery.current.field.ball_x=156;punch_recovery.current.field.ball_y=124;
  PlayerProfileMappings primary{};FieldPhaseContent movement{};movement.profiles.speeds.resize(1);movement.geometry.direction_thresholds.fill(65535);
+ auto unsupported_rebound=kickoff_rebound;unsupported_rebound.current.field.ball_x=156;
+ rejects([&]{advance_session_recovery(unsupported_rebound,primary,movement);});
+ auto kickoff_punch=punch_recovery;kickoff_punch.kickoff_formation=KickoffFormationContext{{124,132}};
+ kickoff_punch.control->motion_requested=2;
+ auto kickoff_recovered=advance_session_keeper_punch_recovery(kickoff_punch,primary,movement).state;
+ check(kickoff_recovered.phase==FieldSessionPhase::recovered_owner && kickoff_recovered.kickoff_formation &&
+       !bytes(kickoff_recovered).empty(),"Keeper punch recovery retains kickoff coordinates");
+ check(kickoff_recovered.control->motion_requested==0 && kickoff_punch.control->motion_requested==2,
+       "Prepared punch recovery captures animation acknowledgement without input mutation");
+ auto recovered_bytes=bytes(kickoff_recovered);std::istringstream recovered_stream(recovered_bytes);
+ check(bytes(load_phase_session(recovered_stream))==recovered_bytes,"Kickoff punch recovered-owner roundtrip");
+ auto old_recovered=recovered_bytes;old_recovered[10]='g';
+ rejects([&]{std::istringstream i(old_recovered);load_phase_session(i);});
+ auto old_punch=bytes(kickoff_punch);old_punch[10]='g';std::istringstream old_punch_stream(old_punch);
+ check(bytes(load_phase_session(old_punch_stream))==bytes(kickoff_punch),"Legacy g kickoff punch handoff loads");
+ rejects([&]{advance_session_keeper_punch_recovery(kickoff_recovered,primary,movement);});
  const auto recovered=advance_session_keeper_punch_recovery(punch_recovery,primary,movement);
  check(recovered.state.phase==FieldSessionPhase::recovered_owner && recovered.state.current.field.ball_x==156 &&
   recovered.state.current.field.ball_y==124 && recovered.state.current.field.ball_cell==233 &&

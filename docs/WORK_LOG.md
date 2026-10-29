@@ -1094,3 +1094,19 @@ Daily website note updated separately; engine/private research remains local.
 - Final Make check/all pass without compiler diagnostics. Arabic daily summary
   updated on website main separately; no browser rendering claim. Private ROM,
   observations, derived content and state remain outside source control.
+
+## 2026-10-29 — controlled punch recovery with keeper coordinates
+
+- Extended saved keeper Y to recovered field-owner phase6, snapshot43h370bytes.
+  Punch-recovery regression failed under the old phase guard, then passed.
+  Recovered save roundtrip, legacy g punch handoff, old g output rejection and
+  replay rejection covered. Rebound jitter recovery explicitly remains guarded.
+- Original comparison found native motion flag2 versus original0. Traced original
+  write to bank31:EC3E during cooperative recovery wait; regression reproduced
+  missing animation acknowledgement, then passed with copied-state clear. No
+  rendering or NMI implementation is implied by this prepared presentation effect.
+- 128 controlled non-goal handlers and16 punch recoveries match all represented
+  bytes (144 comparisons). Evidence: kickoff-punch-recovery-final. Keeper result2/3
+  is constructed input; following control/keeper-area/story remain pending.
+- Final Make check/all pass without compiler diagnostics. Private generated
+  content and ROM remain outside Git; source-only public daily note updated.

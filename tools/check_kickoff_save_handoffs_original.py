@@ -11,6 +11,7 @@ from pathlib import Path
 import subprocess
 from check_keeper_saves_original import observe_keeper_save, post_save_checkpoint
 from check_keeper_entry_original import keeper_checkpoint
+from trace_ball_recovery_phase import trace_recovery
 from verify_action_strength import PAYLOAD_SHA256
 
 
@@ -24,6 +25,7 @@ def snapshot(ram, phase):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','pack','keeper_dir','output_dir'):p.add_argument(name,type=Path)
+    p.add_argument('--punch-recovery',action='store_true')
     a=p.parse_args();rom=a.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
     out=a.output_dir.resolve()
@@ -46,8 +48,18 @@ def main():
                     if actual!=expected:raise RuntimeError(f'{name}: {[(i,x,y) for i,(x,y) in enumerate(zip(actual,expected)) if x!=y]}')
                     replay=subprocess.run([binary,str(a.pack.resolve()),str(target),'--resolve-keeper-save'],capture_output=True,timeout=30)
                     if replay.returncode==0:raise RuntimeError('Keeper reward/outcome replay accepted')
-                    results.append({'left':left,'right':right,'input_result':result,'action':action,'phase':phase,'instructions':steps})
-    (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Constructed result2/3 and action inputs after acknowledged keeper comparison/display9, based on original kickoff positions. All represented outcome bytes match original861C/8646 handlers. No goal classification proof, no following recovery, no actual display/NMI/audio/PPU.'},indent=2)+'\n')
+                    recovered=False
+                    if a.punch_recovery and phase==58:
+                        report,recovery=trace_recovery(rom[16:262160],final,skip_jitter=True)
+                        if report['boundary']!='recovered_owner_handoff':raise RuntimeError('Expected recovered field player')
+                        recovered_target=out/f'{name}-recovered.cmjsession'
+                        run=subprocess.run([binary,str(a.pack.resolve()),str(target),'--recover-keeper-punch','--capture',str(recovered_target)],capture_output=True,text=True,timeout=30)
+                        if run.returncode:raise RuntimeError(run.stderr)
+                        actual_recovery=recovered_target.read_bytes();wanted_recovery=snapshot(recovery,6)
+                        if actual_recovery!=wanted_recovery:raise RuntimeError(f'Punch recovery snapshot mismatch {[(i,x,y) for i,(x,y) in enumerate(zip(actual_recovery,wanted_recovery)) if x!=y]}')
+                        recovered=True
+                    results.append({'left':left,'right':right,'input_result':result,'action':action,'phase':phase,'instructions':steps,'punch_recovered':recovered})
+    (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Constructed result2/3 and action inputs after acknowledged keeper comparison/display9, based on original kickoff positions. All represented outcome bytes match original861C/8646 handlers. No goal classification proof, optional punch recovery includes original movement/recipient selection without a second jitter, no actual display/NMI/audio/PPU.'},indent=2)+'\n')
     print(f'{len(results)} controlled keeper save handoffs match: {out}')
 
 if __name__=='__main__':main()

@@ -75,6 +75,9 @@ RecoverySessionResult advance_session_keeper_punch_recovery(const PhaseSessionSt
  if(input.phase!=FieldSessionPhase::keeper_punch_recovery)
   throw std::invalid_argument("Keeper punch recovery requires prepared no-jitter handoff");
  auto state=input;state.phase=FieldSessionPhase::ball_recovery;
+ // Prepared completion of the earlier shot animation; original EC3E clears0532
+ // during the cooperative recovery wait. This does not implement its renderer.
+ if(state.kickoff_formation)state.control->motion_requested=0;
  return recover(state,{},false,false,primary,movement,FieldSessionPhase::recovered_owner);
 }
 RecoverySessionResult advance_session_shot_loose_recovery(const PhaseSessionState& input,
@@ -91,6 +94,8 @@ RecoverySessionResult advance_session_recovery(const PhaseSessionState& input,
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::ball_recovery || !input.recovery)
         throw std::invalid_argument("Recovery requires ball-recovery phase and captured context");
+    if (input.kickoff_formation)
+        throw std::invalid_argument("Kickoff rebound recovery still needs its original presentation/jitter comparison");
     if (input.current.field.selected_defenders != 0)
         throw std::invalid_argument("Connected recovery requires zero selected defenders");
     return recover(input,{},false,true,primary,movement);
