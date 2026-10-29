@@ -19,11 +19,22 @@ int main(){try{
  s.current.clock.remaining=448;for(auto& p:s.current.field.roster)p={1,0,123};
  ShotContent content{};content.experience=ExperienceContent{};content.experience->reward_factors.fill(64);content.experience->stage_bases.fill(100);
  const auto original=bytes(s);const auto goal=prepare_session_scored_goal(s,{255,4,2},content);
+ auto kickoff_input=s;kickoff_input.kickoff_formation=KickoffFormationContext{{124,132}};
+ auto kickoff_goal=prepare_session_scored_goal(kickoff_input,{1,0,4},content);
+ check(kickoff_goal.score->left_goals==2 && kickoff_goal.kickoff_formation && !bytes(kickoff_goal).empty(),
+       "Kickoff goal registration retains goalkeeper coordinates");
+ auto kickoff_bytes=bytes(kickoff_goal);std::istringstream kickoff_stream(kickoff_bytes);
+ check(bytes(load_phase_session(kickoff_stream))==kickoff_bytes,"Kickoff scored goal roundtrip");
+ auto prior_goal=kickoff_bytes;prior_goal[10]='d';
+ rejects([&]{std::istringstream i(prior_goal);load_phase_session(i);});
+ auto old_decision=bytes(kickoff_input);old_decision[10]='d';std::istringstream prior_decision(old_decision);
+ check(bytes(load_phase_session(prior_decision))==bytes(kickoff_input),"Legacy d kickoff keeper decision loads");
+ rejects([&]{prepare_session_scored_goal(kickoff_goal,{2,0,4},content);});
  check(static_cast<unsigned>(goal.phase)==59 && goal.current.field.side==0 && goal.current.field.ball_owner==2 &&
   goal.current.clock.remaining==448 && goal.experience->totals[0]==25 && bytes(s)==original,
   "Scorer rewarded once before celebration without possession/time mutation");
  check(goal.score && goal.score->left_goals==0 && goal.score->right_goals==4 && goal.score->kickoff==2,"Goal increments one score byte with wrap and retains kickoff");
- auto saved=bytes(goal);check(saved.size()==370 && saved[10]=='d',"Scored goal snapshot39");std::istringstream stream(saved);
+ auto saved=bytes(goal);check(saved.size()==370 && saved[10]=='e',"Scored goal snapshot40");std::istringstream stream(saved);
  check(bytes(load_phase_session(stream))==saved,"Scored goal round-trip");
  auto legacy=original;legacy[10]='O';legacy.resize(361);std::istringstream old(legacy);check(bytes(load_phase_session(old))==original,"Legacy O decision remains readable");
  auto forbidden=saved;forbidden[10]='O';forbidden.resize(361);rejects([&]{std::istringstream i(forbidden);load_phase_session(i);});

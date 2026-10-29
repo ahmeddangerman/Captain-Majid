@@ -10,6 +10,7 @@ from trace_field_script import ObservedCartridge
 from flight_checkpoint import flight_checkpoint
 from check_keeper_entry_original import keeper_checkpoint
 from check_keeper_comparison_original import observe_keeper_comparison
+from check_scored_goal_original import observe_scored_goal
 from verify_action_strength import PAYLOAD_SHA256
 
 
@@ -22,7 +23,7 @@ def until(cpu, targets):
 
 
 def snapshot(ram, phase, loose):
-    data=bytearray(keeper_checkpoint(ram,phase) if phase in (53,56) else flight_checkpoint(ram,phase,loose))
+    data=bytearray(keeper_checkpoint(ram,phase) if phase in (53,56,59) else flight_checkpoint(ram,phase,loose))
     data[361:365]=bytes([1,ram[0x28],ram[0x29],ram[0x629]])
     data[365:368]=bytes([1,ram[0x308],ram[0x38c]])
     return bytes(data)
@@ -33,8 +34,10 @@ def main():
     for name in ('rom','pack','projection','launch_dir','output_dir'):p.add_argument(name,type=Path)
     p.add_argument('--keeper-entry',action='store_true')
     p.add_argument('--keeper-choice',action='store_true')
+    p.add_argument('--goal',action='store_true')
     a=p.parse_args()
     if a.keeper_choice and not a.keeper_entry:p.error('Keeper choice requires keeper entry')
+    if a.goal and not a.keeper_choice:p.error('Goal registration requires keeper choice')
     rom=a.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
     out=a.output_dir.resolve()
@@ -91,10 +94,16 @@ def main():
                         final,instructions=observe_keeper_comparison(rom[16:262160],original_input)
                         source=prepared_source;m.ram[:2048]=final
                         compare(56,['--resolve-prepared-keeper',str(action),str(subtype),str(final[0x2b])])
+                        if a.goal:
+                            if final[0x612]!=0:raise RuntimeError('Goal comparison requires goal result0')
+                            baseline=[final[x] for x in (0x28,0x29,0x629)]
+                            scored,goal_instructions=observe_scored_goal(rom[16:262160],final)
+                            m.ram[:2048]=scored
+                            compare(59,['--prepare-scored-goal',*map(str,baseline)])
                         decisions.append({'action':action,'subtype':subtype,'result':final[0x612],
-                                          'instructions':instructions})
+                                          'instructions':instructions,'goal_registered':a.goal})
         cases.append({'left':entry['left'],'right':entry['right'],'boundaries':index,'cells':cells,'loose':loose,'keeper_entry':a.keeper_entry,'keeper_decisions':decisions})
-    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Native saved destination feeds flight setup and each cell/callback; all represented bytes match original CPU, including accumulated defenders and keeper Y. Original numeric frame waits explicitly acknowledged with no NMI/PPU/audio or task/random updates. Fractional input bytes captured from original RAM, not invented. Optional empty-arrival routing and normal keeper setup stop before the keeper presentation; optional prepared keeper comparison supplies action/subtype after explicitly acknowledged keeper presentation; stops before display9 and outcomes.'},indent=2)+'\n')
+    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Native saved destination feeds flight setup and each cell/callback; all represented bytes match original CPU, including accumulated defenders and keeper Y. Original numeric frame waits explicitly acknowledged with no NMI/PPU/audio or task/random updates. Fractional input bytes captured from original RAM, not invented. Optional empty-arrival routing and normal keeper setup stop before the keeper presentation; optional prepared keeper comparison supplies action/subtype after explicitly acknowledged keeper presentation; keeper display9 explicitly acknowledged before optional score/reward registration, stopping before celebration. No actual presentation is executed.'},indent=2)+'\n')
     print(f'{len(cases)} kickoff flight sequences match: {out}')
 
 if __name__=='__main__':main()

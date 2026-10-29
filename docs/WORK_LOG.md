@@ -1052,3 +1052,18 @@ Daily website note updated separately; engine/private research remains local.
   coverage. Evidence: kickoff-keeper-decisions-first. Goal registration and
   outcome/presentation remain next work; no hardware/full-match claim.
 - Final Make check/all pass. Source and private generated content stay separate.
+
+## 2026-10-29 — saved goal from the kickoff shot
+
+- Retained goalkeeper Y through score/scorer reward phase59. Snapshot40e370bytes
+  reads earlier formats; old d decisions load, old d goal-with-context rejects.
+  Regression failed on prior guard, then passed. Goal roundtrip and replay rejection
+  cover saved state. Existing goal logic/reward arithmetic is reused.
+- 128 goal registrations match original85AC..85F0 in the chained flight/keeper
+  verifier; total744 represented boundaries across16 flights and128 keeper branches.
+  Evidence: kickoff-scored-goals-first. Inputs all classify as original result0;
+  save/rebound coverage is not implied. Display9 is explicitly acknowledged,
+  and goal celebration/menu, original rendering/NMI/audio and full matches remain
+  unfinished. No ROM/private generated content is included in Git.
+- Final Make check/all pass without compiler diagnostics. Public Arabic daily
+  note updated separately on main; no browser rendering verification claimed.

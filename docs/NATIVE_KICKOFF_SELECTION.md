@@ -267,3 +267,19 @@ preceding numeric flight. All616 represented boundaries match. Evidence:
 these actual shot/keeper inputs. This is goal-result evidence only; it does not
 prove catches, punches or rebounds from this kickoff path. Actual presentation,
 stunned keeper, outcome handlers and complete matches remain unfinished.
+
+## Goal registration from the kickoff shot (2026-10-29)
+
+Snapshot40 (`e`,370bytes) retains kickoff keeper coordinates at phase59, after the
+keeper goal result is registered. `--prepare-scored-goal` applies the scorer reward
+and increments the captured score once, stopping before celebration. Previous
+d-format keeper decisions remain readable and cannot encode this new combination.
+
+`--keeper-entry --keeper-choice --goal` adds128 goal registrations to the chained
+flight comparison. All744 represented boundaries across16 formation-pair flights
+and their keeper branches match original CPU state. Goal registration executes
+original85AC..85F0 after explicitly acknowledging keeper display9; it stops before
+the goal presentation and post-goal menu. Evidence: `kickoff-scored-goals-first`.
+Every observed keeper result is0 in these cases; save/rebound outcomes are not
+covered. Presentation acknowledgements and numeric frame assumptions still apply;
+this is a prepared simulation path to a saved goal, not a complete playable match.
