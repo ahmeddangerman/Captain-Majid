@@ -171,3 +171,27 @@ may be polled while remaining in phase18.
 Both comparison tools retain the disclosed prepared display36 and host-frame
 acknowledgements. Neither runs real NMI/PPU/audio or the earlier kickoff reset.
 ROM, private packs, observations and saved states remain outside source control.
+
+## Confirming the menu and preparing an ordinary shot (2026-10-29)
+
+Saved kickoff goalkeeper coordinates now survive phase19 (confirmed menu choice)
+and phase20 (ordinary shot prepared). Existing menu and shot APIs are reused;
+`--menu-input` followed by `--prepare-basic-shot` can continue the saved kickoff
+menu without discarding goalkeeper positions. Snapshot35 (`Z`) retains370bytes,
+reads version34 menu snapshots, and requires the new version for these two
+combinations. Earlier format markers cannot claim the new supported state.
+
+`tools/check_kickoff_shot_choice_original.py` compares64 chained native sequences
+with original observations: all16 formation pairs, direct/late menu entry, and
+combined versus staged selection/confirmation. All320 saved boundaries match,
+including inactive confirmation, repeated directional choice, flash bookkeeping,
+power, stamina and keeper coordinates. Observed ordinary shots cost80 stamina
+and have power38 for these inputs. Attempting to prepare the saved shot again
+is rejected in all64 cases. Evidence: `kickoff-shot-choice-final`.
+
+The original shot observer explicitly supplies ordinary subtype0/variant0 and a
+synthetic return after preparation. Cooperative host acknowledgements remain in
+use; no actual NMI/PPU/audio or original kickoff display is run. These sequences
+start at prepared control setup and stop before defender selection/flight. Other
+actions, special-move choice and shot resolution with this keeper context remain
+outside this checkpoint; this is not evidence of a complete playable match.

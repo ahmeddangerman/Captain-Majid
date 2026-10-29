@@ -976,3 +976,23 @@ Daily website note updated separately; engine/private research remains local.
   reset, exceptional clock paths and a full playable match remain unfinished.
 - Final Make check/all completed with no compiler diagnostics. Source-only Arabic
   daily note update accompanies the engine checkpoint; no browser rendering claim.
+
+## 2026-10-29 — kickoff menu confirmation and ordinary shot preparation
+
+- Enabled retained kickoff keeper coordinates in phases19/20, connecting the
+  existing menu-confirmation and basic-shot operations to saved kickoff menus.
+  Snapshot35Z370bytes retains readers throughY; legacy Y menu loads, Y claiming
+  new confirmed/prepared keeper context rejects. Regression failed on old guard
+  before passing; roundtrip/compatibility checks cover both new boundaries.
+- 64 native sequences match320 represented original boundaries: all16 formation
+  pairs, direct/late menu requests and combined/staged shot choices. Actual raw
+  stamina cost80 and power38 match for these inputs, with goalkeeper coordinates
+  retained. Repeating preparation rejects in all64 cases. Native output feeds
+  the next command throughout. Evidence: kickoff-shot-choice-final.
+- Original observer supplies explicit ordinary subtype0/variant0 with synthetic
+  return after preparation and disclosed host frame acknowledgements. No actual
+  kickoff display/NMI/PPU/audio is executed. Special moves, other actions and
+  later defender/flight steps with keeper context remain pending; no full match.
+- Final Make check/all pass with no compiler diagnostics. Routine Arabic daily
+  note updated separately on website main; source verification is not a browser
+  rendering claim. Source/ROM-derived private data remain separate.

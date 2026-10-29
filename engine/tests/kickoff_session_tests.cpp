@@ -73,6 +73,20 @@ int main(){try{using namespace captain;
        "Kickoff action menu preserves keeper coordinates");
  auto opened_bytes=bytes(opened);std::istringstream opened_stream(opened_bytes);
  check(bytes(load_phase_session(opened_stream))==opened_bytes,"Kickoff action menu roundtrip");
+ auto confirmed=poll_human_action_menu(opened,129,ActionMenuContent{}).state;
+ check(confirmed.phase==FieldSessionPhase::attack_choice_pending && confirmed.action->action==0 &&
+       confirmed.kickoff_formation && !bytes(confirmed).empty(),"Kickoff menu confirmation keeps keeper positions");
+ auto confirmed_bytes=bytes(confirmed);std::istringstream confirmed_stream(confirmed_bytes);
+ check(bytes(load_phase_session(confirmed_stream))==confirmed_bytes,"Kickoff confirmation roundtrip");
+ auto old_confirmed=confirmed_bytes;old_confirmed[10]='Y';
+ rejects([&]{std::istringstream i(old_confirmed);load_phase_session(i);});
+ auto legacy_menu=opened_bytes;legacy_menu[10]='Y';std::istringstream legacy_y(legacy_menu);
+ check(bytes(load_phase_session(legacy_y))==opened_bytes,"Legacy Y kickoff menu still loads");
+ auto prepared=confirmed;prepared.phase=FieldSessionPhase::attack_prepared;
+ auto prepared_bytes=bytes(prepared);std::istringstream prepared_stream(prepared_bytes);
+ check(bytes(load_phase_session(prepared_stream))==prepared_bytes,"Kickoff prepared-shot snapshot roundtrip");
+ auto old_prepared=prepared_bytes;old_prepared[10]='Y';
+ rejects([&]{std::istringstream i(old_prepared);load_phase_session(i);});
  auto old_opened=opened_bytes;old_opened[10]='X';
  rejects([&]{std::istringstream i(old_opened);load_phase_session(i);});
  check(menu.phase==FieldSessionPhase::action_menu_pending && menu.kickoff_formation &&

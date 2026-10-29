@@ -47,7 +47,7 @@ def main():
             (out/(name+'-recovery.json')).write_text(json.dumps(report,indent=2)+'\n');(out/(name+'-final.bin')).write_bytes(final)
             dest=out/(name+'-recovered.cmjsession')
             subprocess.run([binary,pack,str(routed),'--recover-shot-loose','--capture',str(dest)],capture_output=True,check=True,timeout=30)
-            expected=bytearray(export_session(final,6));expected[10]=ord('Y');expected+=bytes(46)
+            expected=bytearray(export_session(final,6));expected[10]=ord('Z');expected+=bytes(46)
             actual=dest.read_bytes()
             if actual!=expected:raise RuntimeError(f'{name}recovery mismatch{[(i,x,y)for i,(x,y)in enumerate(zip(actual,expected))if x!=y]}')
             if subprocess.run([binary,pack,str(dest),'--recover-shot-loose'],capture_output=True).returncode==0:raise RuntimeError('Recovery replay accepted')
