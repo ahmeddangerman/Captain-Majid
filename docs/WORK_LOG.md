@@ -571,3 +571,24 @@ Daily website note updated separately; engine/private research remains local.
  ball-velocity-repeatable. No skipped original instructions, calls or frames.
 - Next: E778 ball coordinate advancement until next cell, preserving fractions
  and explicit cell/arrival callbacks. Overall port remains unmeasured.
+
+
+## 2026-10-29 — numeric ball coordinate/cell advancement
+
+- Added prepared E778 numeric ball loop: repeated same-frame16-bit additions,
+  new-cell boundary, destination high-byte snap with fraction retention, and
+  original outside-field forced destination. Already-at-destination is untouched.
+  Coherent interior inputs required; stationary nonarrival rejects instead of
+  hanging. Full cycle bound protects constructed calls. Live frame/callback and
+  fractional session-state integration remain separate and unfinished.
+- Real regression failed with stub then passed. Full default Make suite/build
+  pass cleanly. Seventy original/native cases match both coordinates, cell,
+  addition count, callback boundary and outside flag. No original calls or frames
+  are skipped in this numeric comparison. Fresh review found no material issue.
+  CMake unavailable. Evidence/command in
+  NATIVE_BALL_STEP.md; private ball-step-repeatable report.
+- Repeated earlier nonterminal4cases and attack clock7cases against finalJ saves;
+  all pass. Added29October Arabic daily entry with concise summary/bullets; earlier
+  dates remain manually selectable and approved roadmap/design preserved.
+- Next: saved fractional trajectory, per-cell defender/frame callbacks and final
+  keeper/goal integration toward one complete match. Overall port unmeasured.
