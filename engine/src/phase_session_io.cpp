@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'j'))
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'k'))
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -36,6 +36,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.current.clock.script_flags = byte(input); state.current.clock.ball_mode = byte(input);
     state.current.shared_recovery_flags = byte(input); state.current.shared_recovery_timer = byte(input);
     state.phase = static_cast<FieldSessionPhase>(byte(input));
+    if(version<'k' && static_cast<unsigned>(state.phase)>65)
+        throw std::invalid_argument("Keeper-area AI entry requires session version46");
     if(version<'j' && static_cast<unsigned>(state.phase)>64)
         throw std::invalid_argument("Keeper-area setup requires session version45");
     if (version < '8' && static_cast<unsigned>(state.phase) > 20)
@@ -234,6 +236,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if(present)state.keeper_area=KeeperAreaContext{counter};
         else if(counter)throw std::invalid_argument("Nonzero unused keeper-area counter");
     }
+    if(version<'k' && state.phase==FieldSessionPhase::human_action_menu && state.keeper_area)
+        throw std::invalid_argument("Keeper-area menu requires session version46");
     if(version < 'V' && state.phase == FieldSessionPhase::control_ready && state.kickoff_formation)
         throw std::invalid_argument("Kickoff control setup requires session version31");
     if(version < 'W' && static_cast<unsigned>(state.phase)>=10 && static_cast<unsigned>(state.phase)<=12 && state.kickoff_formation)
@@ -274,7 +278,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'j');
+    byte(output, 'k');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));

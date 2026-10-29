@@ -1,5 +1,6 @@
 #include "captain/keeper_save_session.hpp"
 #include "captain/recovery_session.hpp"
+#include "captain/action_menu.hpp"
 #include "captain/phase_session_io.hpp"
 #include <sstream>
 #include <iostream>
@@ -105,6 +106,27 @@ int main(){try{
  auto outside_area=area_result;outside_area.current.field.ball_x=120;
  rejects([&]{prepare_session_keeper_area(outside_area);});
  rejects([&]{prepare_session_keeper_area(area_setup);});
+ auto own_area=area_result;own_area.current.field.ball_x=56;own_area.current.field.ball_cell=17;
+ auto own_setup=prepare_session_keeper_area(own_area);
+ auto own_menu=open_prepared_keeper_area_menu(own_setup,64,ActionMenuContent{}).state;
+ check(own_menu.phase==FieldSessionPhase::human_action_menu && own_menu.action->menu_route==2 &&
+       own_menu.keeper_area && own_menu.control->facing==64 && !bytes(own_menu).empty(),
+       "Prepared own-area menu retains its route and captured facing");
+ auto ai_area=area_result;ai_area.current.field.side=11;ai_area.current.field.ball_owner=12;ai_area.control->controlled_player=1;
+ auto ai_setup=prepare_session_keeper_area(ai_area);ai_setup.action->cursor=211;
+ auto ai_menu=open_prepared_keeper_area_menu(ai_setup,0,ActionMenuContent{}).state;
+ check(ai_menu.phase==FieldSessionPhase::keeper_area_ai_pending && ai_menu.action->cursor==211 && ai_menu.keeper_area,
+       "Area AI entry preserves cursor and stops before choice");
+ for(const auto& output:{own_menu,ai_menu}) {
+  auto saved=bytes(output);std::istringstream input(saved);
+  check(bytes(load_phase_session(input))==saved,"Prepared area menu roundtrip");
+  saved[10]='j';rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+  rejects([&]{open_prepared_keeper_area_menu(output,0,ActionMenuContent{});});
+ }
+ auto prior_setup=bytes(own_setup);prior_setup[10]='j';std::istringstream prior_setup_stream(prior_setup);
+ check(bytes(load_phase_session(prior_setup_stream))==bytes(own_setup),"Legacy j area setup loads");
+ rejects([&]{open_prepared_keeper_area_menu(own_setup,17,ActionMenuContent{});});
+ rejects([&]{open_prepared_keeper_area_menu(area_setup,64,ActionMenuContent{});});
  for(const auto& output:{kickoff_control,area_result}) {
   auto saved=bytes(output);std::istringstream input(saved);
   check(bytes(load_phase_session(input))==saved,"Recovery continuation roundtrip");

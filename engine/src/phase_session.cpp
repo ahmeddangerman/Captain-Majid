@@ -37,18 +37,22 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 65)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 66)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
     const bool area_setup=phase==65;
-    if(bool(state.keeper_area)!=area_setup)
+    const bool area_menu=phase==66 || (phase==18 && state.keeper_area);
+    const bool area_state=area_setup || area_menu;
+    if(((phase==65 || phase==66) && !state.keeper_area) || (state.keeper_area && !area_state))
         throw std::invalid_argument("Keeper-area setup needs exactly one captured selection counter");
-    if(area_setup && (!state.action || !state.recovery || !state.scheduling ||
+    if(state.keeper_area && (!state.action || !state.recovery || !state.scheduling ||
        state.keeper_area->selection_counter!=255 || !state.recovery->ball_variant ||
        state.current.field.ball_y<96 || state.current.field.ball_y>=160 ||
        (state.current.field.ball_x>=80 && state.current.field.ball_x<176) ||
        state.action->menu_route!=(((state.current.field.ball_x<80 ? 0 : 11)==state.current.field.side)?2:1)))
         throw std::invalid_argument("Keeper-area setup requires its original area and route");
+    if(area_menu && (state.action->menu_route!=2 || (phase==66 ? state.current.field.side!=11 : state.current.field.side!=0)))
+        throw std::invalid_argument("Prepared own-area menu requires its matching human or AI side");
     if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59))
         throw std::invalid_argument("Flight setup requires exactly one shot context");
     if (state.shot_flight && (state.shot_flight->destination >= 240 || state.shot_flight->counter != 255))
@@ -80,7 +84,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool keeper_possession=phase==57;
     const bool goal_restart=phase==60;
     const bool kickoff_placed=phase>=61 && phase<=64;
-    const bool kickoff_shot=phase==1 || phase==2 || phase==6 || phase==7 || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53 || (phase>=56 && phase<=60) || area_setup;
+    const bool kickoff_shot=phase==1 || phase==2 || phase==6 || phase==7 || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53 || (phase>=56 && phase<=60) || area_state;
     if((kickoff_placed && !state.kickoff_formation) ||
        (!kickoff_placed && !(phase>=9 && phase<=13) && !(phase>=18 && phase<=20) && !kickoff_shot && state.kickoff_formation))
         throw std::invalid_argument("Kickoff formation phase needs captured keeper positions");
@@ -262,7 +266,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         (static_cast<unsigned>(state.phase) >= 19 ||
          (state.phase == FieldSessionPhase::human_action_menu && (state.action->cursor & 128u))))
         throw std::invalid_argument("Unsupported captured action ID");
-    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && !post_possession && !area_setup) || state.action->menu_route >= 6))
+    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && !post_possession && !area_state) || state.action->menu_route >= 6))
         throw std::invalid_argument("Human attacking menu requires captured action context and side0");
     if (static_cast<unsigned>(state.phase) >= 20 && state.action->action != 0)
         throw std::invalid_argument("Only ordinary shots are supported at attack-prepared phase");

@@ -1164,3 +1164,21 @@ Daily website note updated separately; engine/private research remains local.
 - Interactive keeper-area command matches the flag-based saved output. Final
   lab rebuild and earlier full Make check complete without compiler diagnostics.
   Daily Arabic note is updated separately on main with source-only verification.
+
+## 2026-10-29 — prepared own-area menu and AI entry
+
+- Added route2 menu entry from65: radius10 field scan replaces earlier exact-cell
+  prefix, keeper warnings/overlay/human route2 display requests, captured common
+  presentation bytes and side0 cursor reset. Side0 reaches18; side11 reaches66
+  before original D36E choice. Final animation facing0/64 is an explicit observed
+  input because that renderer state is not implemented; no guessed facing rule.
+- Snapshot46k372bytes permits area metadata at18/66 and reads j65. Real regression
+  failed with stub then passed; both side saves/old marker rejection, legacy j
+  setup, bad facing/route and replay covered. Route1 remains unsupported here.
+- 24 controlled original menu cases match full represented snapshots and ordered
+  presentation requests, including warning priority, stale fields and nearby
+  player caps. Evidence: keeper-area-menu-first. Original uses disclosed host
+  frame acknowledgements; facing supplied explicitly. No NMI/PPU/audio, AI choice
+  or subsequent action execution claim. Next: route2 human selection/confirmation.
+- Full Make check/all pass without compiler diagnostics. Source-only public notes
+  remain on main; ROM and derived evidence remain outside Git.

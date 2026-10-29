@@ -45,3 +45,32 @@ i input, forbidden old output, malformed/truncated context, invalid area and rep
 checks pass. Full Make check/build pass. ROM and generated evidence remain private.
 
 Next: trace8B73 presentation/story/menu boundaries and the following action route.
+
+## Prepared route2 menu entry
+
+`open_prepared_keeper_area_menu` continues phase65 with own-area route2 only.
+It recomputes nearby opposing field players using radius10, retains the variant
+and route, and captures completed menu presentation effects. Side0 reaches the
+existing human menu phase18; side11 reaches new phase66 before the AI choice.
+The human cursor resets to0; the AI-entry cursor is preserved.
+
+The original final facing depends on animation state that the native renderer
+has not implemented. The API therefore requires an explicit observed facing0/64.
+CLI: `--open-prepared-keeper-area-menu FACING`; interactive mode uses the same
+command without the leading dashes. Typed requests preserve original script63,
+keeper warning priority, overlay clear and human route2 title/background order.
+These are requests and prepared acknowledgements, not executed native graphics.
+
+Snapshot46 (`k`,372bytes) permits KeeperAreaContext in phase18/66 and reads the
+prior j phase65. Prior j cannot encode the new menu/AI combinations. Context,
+area, possession, route and presence validation remain strict. Route1, original
+story/presentation effects beyond this prepared scope, AI choice, and subsequent
+action execution remain unfinished.
+
+`check_keeper_area_menu_original.py` matches24 controlled cases across both sides,
+near/far players, random values, normal/penalized/stunned warning conditions and
+stale menu/control fields. Complete represented bytes and typed presentation
+request order match original8B73 to D5E5 (human) or D36E (AI entry). The final
+facing value is explicitly supplied, not independently reproduced. Evidence:
+`keeper-area-menu-first`. Focused regression failed with the stub before passing;
+roundtrip, legacy j setup, forbidden j menu, facing/replay/route checks pass.

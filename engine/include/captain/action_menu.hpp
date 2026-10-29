@@ -14,6 +14,9 @@ struct ActionMenuResult {
     bool confirmed = false;
 };
 ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
+// Route2 only, after acknowledged area presentation; facing is captured explicitly.
+ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,
+ std::uint8_t facing,const ActionMenuContent& content);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,
                                       const ActionMenuContent& content);
 struct SessionAttackResult { PhaseSessionState state; PreparedAttackResult preparation; };

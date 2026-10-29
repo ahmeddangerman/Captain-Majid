@@ -1,7 +1,36 @@
 #include "captain/action_menu.hpp"
+#include "captain/defender_selection.hpp"
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,std::uint8_t facing,const ActionMenuContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_prepared || input.action->menu_route!=2 ||
+    (facing!=0 && facing!=64))
+  throw std::invalid_argument("Prepared area menu requires own-area route2 and captured facing0/64");
+ ActionMenuResult result{input};auto& state=result.state;auto& field=state.current.field;
+ DefenderSelectionInput scan{field.side,field.ball_x,field.ball_y,10,{}};
+ for(unsigned i=0;i<field.motion.size();++i) {
+  const auto& m=field.motion[i];scan.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};
+ }
+ const auto selected=select_field_defenders(scan);
+ field.selected_defenders=static_cast<std::uint8_t>(selected.size());state.scheduling->selected_ids.fill(0);
+ for(unsigned i=0;i<selected.size();++i)state.scheduling->selected_ids[i]=selected[i];
+ result.presentation.push_back({ControlPresentationKind::script,63});
+ state.current.clock.ball_mode=0;state.action->auxiliary=0;
+ const auto& keeper=field.keepers[field.side==0?1:0];
+ if(keeper.stun)result.presentation.push_back({ControlPresentationKind::script,64});
+ else if(keeper.penalty>=24)result.presentation.push_back({ControlPresentationKind::script,65});
+ result.presentation.push_back({ControlPresentationKind::clear_overlay,0});
+ state.control->facing=facing;state.control->display_parameter=0;state.control->motion_requested=0;
+ state.experience->totals[10]=static_cast<std::uint16_t>((state.experience->totals[10]&255u)|256u);
+ if(field.side==0) {
+  result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
+  result.presentation.push_back({ControlPresentationKind::display,content.backgrounds[2]});
+  state.action->cursor=0;state.phase=FieldSessionPhase::human_action_menu;
+ } else state.phase=FieldSessionPhase::keeper_area_ai_pending;
+ validate_phase_session(state);return result;
+}
 ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const ActionMenuContent& content) {
     validate_phase_session(input);
     if ((input.phase != FieldSessionPhase::action_menu_pending && input.phase != FieldSessionPhase::field_contact_pending) ||
