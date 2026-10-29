@@ -29,7 +29,7 @@ int main(){
  check(r.state.current.clock.remaining==449 && r.state.experience->totals[0]==7 &&
   r.state.current.field.roster[2].stamina==123 && r.state.current.field.selected_defenders==1 &&
   r.request_side_music && r.requested_task==2 && bytes(s)==before,"Inputs/costs/prefix preserved with explicit presentation requests");
- auto encoded=bytes(r.state);check(encoded.size()==370 && encoded[10]=='e',"Session40 format");
+ auto encoded=bytes(r.state);check(encoded.size()==370 && encoded[10]=='f',"Session41 format");
  std::istringstream saved(encoded);check(bytes(load_phase_session(saved))==encoded,"Clearance side/owner mismatch snapshot roundtrip");
  encoded[10]='B';rejects([&]{std::istringstream old(encoded);load_phase_session(old);});
  auto legacy=before;legacy.resize(330);legacy[10]='B';std::istringstream old_entry(legacy);

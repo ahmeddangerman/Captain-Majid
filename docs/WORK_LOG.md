@@ -1067,3 +1067,15 @@ Daily website note updated separately; engine/private research remains local.
   unfinished. No ROM/private generated content is included in Git.
 - Final Make check/all pass without compiler diagnostics. Public Arabic daily
   note updated separately on main; no browser rendering verification claimed.
+
+## 2026-10-29 — prepared post-goal restart with kickoff coordinates
+
+- Preserved goalkeeper Y at60; snapshot41f370bytes retains prior readers and
+  rejects old markers claiming this new combination. Regression failed before
+  guard support; restart roundtrip, legacy e scored goal and replay rejection
+  covered. Existing side switch/keeper cleanup preserves score and raw keeper Y.
+- Original85BF..85DD compared for128 post-goal handoffs in chained verifier;
+  total872 boundaries match. Evidence: kickoff-postgoal-first. This explicitly
+  assumes completed celebration/menu and captured ball mode0, and does not run
+  those presentations or the next kickoff's earlier reset/team selection.
+- Final Make check/all pass. ROM and all generated private evidence stay outside Git.

@@ -283,3 +283,16 @@ the goal presentation and post-goal menu. Evidence: `kickoff-scored-goals-first`
 Every observed keeper result is0 in these cases; save/rebound outcomes are not
 covered. Presentation acknowledgements and numeric frame assumptions still apply;
 this is a prepared simulation path to a saved goal, not a complete playable match.
+
+## Prepared post-goal restart with retained coordinates (2026-10-29)
+
+Snapshot41 (`f`,370bytes) preserves kickoff keeper coordinates at phase60,
+following `--continue-prepared-goal-restart`. The caller explicitly acknowledges
+goal celebration/menu completion with captured ball mode0 before this operation.
+It reuses original85BF..85DD side/keeper cleanup and kickoff status handling.
+
+The flight verifier's `--post-goal` option checks128 post-goal handoffs after
+registered goals; all872 represented boundaries match across the16 flights and
+128 keeper branches. Evidence: `kickoff-postgoal-first`. Celebration/menu effects
+are supplied at a prepared boundary, not executed. Earlier reset/team selection
+for the next kickoff, complete presentation and a live match remain unfinished.

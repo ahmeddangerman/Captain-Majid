@@ -26,7 +26,7 @@ int main(){try{
  auto expected=s;expected.phase=r.state.phase;expected.shot_flight=r.state.shot_flight;
  expected.current.field.random_first=r.state.current.field.random_first;
  check(bytes(expected)==bytes(r.state),"Approach changes no other represented state including ball cell");
- auto encoded=bytes(r.state);check(encoded.size()==370 && encoded[10]=='e',"Session40 layout");
+ auto encoded=bytes(r.state);check(encoded.size()==370 && encoded[10]=='f',"Session41 layout");
  std::istringstream saved(encoded);check(bytes(load_phase_session(saved))==encoded,"Flight setup snapshot");
  rejects([&]{prepare_session_shot_approach(r.state,c);});
  auto corrupt=s;corrupt.shot_flight=ShotFlightContext{};rejects([&]{bytes(corrupt);});
