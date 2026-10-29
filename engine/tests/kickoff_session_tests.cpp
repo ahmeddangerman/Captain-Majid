@@ -39,6 +39,21 @@ int main(){try{using namespace captain;
        bytes(receiver)==receiver_bytes,"Ball starts at current carrier, before presentation and receiver transfer");
  auto ball_bytes=bytes(ball);std::istringstream ball_stream(ball_bytes);
  check(bytes(load_phase_session(ball_stream))==ball_bytes,"Kickoff ball roundtrip");
+ auto handoff=continue_prepared_session_kickoff(ball);
+ check(static_cast<unsigned>(handoff.phase)==64 && handoff.current.field.ball_owner==7 &&
+       handoff.control->controlled_player==1 && handoff.current.field.ball_x==52 &&
+       handoff.current.field.ball_y==84 && bytes(ball)==ball_bytes,
+       "Acknowledged kickoff display transfers carrier and resets controlled player");
+ auto handoff_bytes=bytes(handoff);std::istringstream handoff_stream(handoff_bytes);
+ check(bytes(load_phase_session(handoff_stream))==handoff_bytes,"Kickoff handoff roundtrip");
+ auto t_legacy=ball_bytes;t_legacy[10]='T';std::istringstream legacy_t(t_legacy);
+ check(bytes(load_phase_session(legacy_t))==ball_bytes,"Legacy T ball state loads");
+ auto t_new=handoff_bytes;t_new[10]='T';rejects([&]{std::istringstream i(t_new);load_phase_session(i);});
+ auto invalid_handoff=handoff;invalid_handoff.control->controlled_player=2;
+ rejects([&]{validate_phase_session(invalid_handoff);});
+ invalid_handoff=handoff;invalid_handoff.current.field.ball_owner=8;
+ rejects([&]{validate_phase_session(invalid_handoff);});
+ rejects([&]{continue_prepared_session_kickoff(handoff);});
  auto s_legacy=receiver_bytes;s_legacy[10]='S';std::istringstream legacy_s(s_legacy);
  check(bytes(load_phase_session(legacy_s))==receiver_bytes,"Legacy S receiver loads");
  auto s_new=ball_bytes;s_new[10]='S';rejects([&]{std::istringstream i(s_new);load_phase_session(i);});

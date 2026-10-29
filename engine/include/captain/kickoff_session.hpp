@@ -8,4 +8,6 @@ PhaseSessionState prepare_session_kickoff_formation(const PhaseSessionState& inp
 PhaseSessionState prepare_session_kickoff_receiver(const PhaseSessionState& input,
  std::uint8_t random,const std::array<std::uint8_t,5>& candidates);
 PhaseSessionState prepare_session_kickoff_ball(const PhaseSessionState& input);
+// Caller acknowledges completion of original display36 before this handoff.
+PhaseSessionState continue_prepared_session_kickoff(const PhaseSessionState& input);
 }

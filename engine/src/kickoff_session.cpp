@@ -3,6 +3,17 @@
 #include "captain/defender_selection.hpp"
 #include <stdexcept>
 namespace captain {
+PhaseSessionState continue_prepared_session_kickoff(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::kickoff_ball_placed)
+  throw std::invalid_argument("Kickoff handoff requires ball placement and acknowledged presentation");
+ auto state=input;
+ state.current.field.ball_owner=*state.kickoff_receiver;
+ state.control->controlled_player=1;
+ state.phase=FieldSessionPhase::kickoff_control_pending;
+ validate_phase_session(state);
+ return state;
+}
 PhaseSessionState prepare_session_kickoff_ball(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::kickoff_receiver_selected)

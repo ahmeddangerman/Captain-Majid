@@ -893,3 +893,15 @@ Daily website note updated separately; engine/private research remains local.
   stay unchanged but are absent from the saved model. Evidence:
   kickoff-ball-session-interior. Earlier reset, presentation and receiver handoff
   still need work; overall completion remains unmeasured.
+
+## 2026-10-29 — prepared kickoff possession handoff
+
+- Added phase63→64 after explicit caller acknowledgement of display36. Original
+  DB13..DB1E assigns the saved receiver as owner and resets controlled player
+  `$05FD` to1; ball position and kickoff formation context remain saved. Stops
+  before stack reset and E0DF control setup. Snapshot30U370bytes reads through T.
+- Focused test failed with stub then passed. 40 original CPU comparisons cover
+  both sides, all five original receivers and four old control bytes, comparing
+  full represented snapshots. Evidence: kickoff-handoff-first. 256 previous ball
+  comparisons reverified with new snapshot version. Display itself is not run,
+  and its effects are caller-supplied; full kickoff/match remain unfinished.

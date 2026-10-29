@@ -68,3 +68,19 @@ represented in the session and are not claimed as native parity. State validatio
 currently restricts this kickoff handoff to positions inside the field. Earlier
 reset, presentation, ownership transfer and live gameplay remain unimplemented.
 Private evidence: `kickoff-ball-session-interior`.
+
+## Prepared post-display possession handoff (2026-10-29)
+
+`continue_prepared_session_kickoff` accepts phase63 only after the caller has
+explicitly acknowledged the original display36. It models DB13..DB1E: copy the
+saved receiver to the ball owner and set controlled-player byte `$05FD` to1.
+Phase64 is immediately before the original stack reset/jump to control setup;
+the ball remains at its previous starting coordinates. Snapshot30 (`U`) adds
+this phase and keeps the same 370-byte layout. Version29 snapshots still load.
+The CLI command is `--continue-prepared-kickoff`.
+
+Forty ROM comparisons cover both teams, all five original receiver slots and four
+prior controlled-player bytes. Each original instruction DB13..DB1E executes and
+all represented snapshot bytes are compared. The display itself, its effects,
+stack reset and E0DF control setup were not executed; the caller supplies the
+post-display state. Evidence: `kickoff-handoff-first`.
