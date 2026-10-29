@@ -30,12 +30,26 @@ def main():
         cell=((x//256-48)//8)*12+((y//256-80)//8)
         vx,vy=rng.choice([(256,128),(65535,0),(65024,512),(0,512),(2048,64512)])
         dest=rng.randrange(240);cases.append((x,y,vx,vy,cell,dest))
+    # Also exercise native projection composed with stepping for all direction bytes.
+    projection=ObservedCartridge(rom[16:262160],bytes(2048),None,set());project_cpu=MPU(memory=projection)
+    words=[projection[0xFB4C+2*i]+256*projection[0xFB4D+2*i] for i in range(64)]
+    def project(pc,angle):
+        project_cpu.pc,project_cpu.sp,project_cpu.a,project_cpu.p=pc,0xFD,angle,project_cpu.UNUSED
+        projection[0x1FE],projection[0x1FF]=255,1
+        for _ in range(100):
+            if project_cpu.pc==0x200:return project_cpu.x+256*project_cpu.y
+            project_cpu.step()
+        raise RuntimeError('Original projection instruction bound')
+    directions=[256]*len(cases)
+    for angle in range(256):
+        vx,vy=project(0xCE4A,angle),project(0xCE4D,angle)
+        cases.append((120*256+64,100*256+192,vx,vy,110,(angle*17)%240));directions.append(angle)
     driver=out/'native-ball-step.cpp';driver.write_text('''#include "captain/ball_step.hpp"
 #include <iostream>
-int main(){unsigned x,y,vx,vy,c,d;while(std::cin>>x>>y>>vx>>vy>>c>>d){auto r=captain::advance_ball_to_next_cell({static_cast<unsigned short>(x),static_cast<unsigned short>(y),{static_cast<unsigned short>(vx),static_cast<unsigned short>(vy)},static_cast<unsigned char>(c),static_cast<unsigned char>(d)});std::cout<<r.x<<' '<<r.y<<' '<<unsigned(r.cell)<<' '<<r.additions<<' '<<unsigned(r.event)<<' '<<r.forced_destination<<'\\n';}}
+int main(){captain::BallVelocityContent table{};for(auto& v:table.quarter_wave){unsigned n;if(!(std::cin>>n)||n>65535)return 2;v=n;}unsigned x,y,vx,vy,c,d,angle;while(std::cin>>x>>y>>vx>>vy>>c>>d>>angle){if(angle<256){auto v=captain::calculate_ball_velocity(angle,table);vx=v.x;vy=v.y;}auto r=captain::advance_ball_to_next_cell({static_cast<unsigned short>(x),static_cast<unsigned short>(y),{static_cast<unsigned short>(vx),static_cast<unsigned short>(vy)},static_cast<unsigned char>(c),static_cast<unsigned char>(d)});std::cout<<r.x<<' '<<r.y<<' '<<unsigned(r.cell)<<' '<<r.additions<<' '<<unsigned(r.event)<<' '<<r.forced_destination<<'\\n';}}
 ''')
     binary=out/'native-ball-step';subprocess.run([a.compiler,'-std=c++17','-I'+str(root/'engine/include'),str(driver),str(root/'build/libcaptain-core.a'),'-o',str(binary)],capture_output=True,check=True,timeout=30)
-    native=subprocess.run([str(binary)],input='\n'.join(' '.join(map(str,c)) for c in cases),text=True,capture_output=True,check=True,timeout=30).stdout.splitlines()
+    native=subprocess.run([str(binary)],input=' '.join(map(str,words))+'\n'+'\n'.join(' '.join(map(str,(*c,angle))) for c,angle in zip(cases,directions)),text=True,capture_output=True,check=True,timeout=30).stdout.splitlines()
     if len(native)!=len(cases):raise RuntimeError('Native result count mismatch')
     reports=[]
     for number,((x,y,vx,vy,cell,dest),line) in enumerate(zip(cases,native)):
@@ -55,7 +69,7 @@ int main(){unsigned x,y,vx,vy,c,d;while(std::cin>>x>>y>>vx>>vy>>c>>d){auto r=cap
         original=(m[0x634]+256*m[0x635],m[0x636]+256*m[0x637],m[0x5FE],additions,event,int(forced))
         actual=tuple(map(int,line.split()))
         if original!=actual:raise RuntimeError(f'case{number} {cases[number]}: original{original}, native{actual}')
-        reports.append({'case':number,'input':cases[number],'output':original,'instructions':steps,'match':True})
+        reports.append({'case':number,'native_direction':directions[number] if directions[number]<256 else None,'input':cases[number],'output':original,'instructions':steps,'match':True})
     (out/'verification.json').write_text(json.dumps({'cases':reports,'scope':'Prepared E778 supplied velocity/fraction inputs; already-arrived startsE746. Stops before cell/arrival callbacks. No skipped calls, frames or rendering.'},indent=2)+'\n')
     print(f'{len(cases)} original/native numeric ball steps match: {out}')
 

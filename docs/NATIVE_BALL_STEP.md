@@ -17,8 +17,9 @@ this pure helper. Fractional state still needs integration into session flight.
 Real regressions failed with the unimplemented stub, then passed repeated subcell
 addition, fractional negative borrow, snap preservation, outside fallback, no-op
 arrival and invalid/stationary inputs. Full Make suite/build pass cleanly. CMake
-updated but unavailable in executor. Fresh static review found no material issues. Seventy original/native cases (six explicit
-adversarial cases and64deterministic constructed inputs) match x/y, current cell,
+updated but unavailable in executor. Fresh static review found no material issues. 326 original/native cases (six explicit
+adversarial cases,64deterministic constructed inputs and all256directions using
+the native velocity projection composed with stepping) match x/y, current cell,
 addition count, callback boundary and forced-destination flag:
 
 ```

@@ -592,3 +592,19 @@ Daily website note updated separately; engine/private research remains local.
   dates remain manually selectable and approved roadmap/design preserved.
 - Next: saved fractional trajectory, per-cell defender/frame callbacks and final
   keeper/goal integration toward one complete match. Overall port unmeasured.
+
+
+## 2026-10-29 — composed trajectory verification
+
+- Extended the ball-step oracle to feed approved projection content into native
+  direction projection and then numeric stepping. All256direction cases match
+  original composed projection/coordinate output; combined326cases pass. Private
+  evidence ball-step-composed. This tests the math connection, not live callbacks.
+- Added repeatable E73E setup comparison: existing native direction geometry and
+  ball velocity projection together match seven original prepared setup cases.
+  Original count/elapsed resets are observed but not yet native session behavior.
+  Evidence ball-setup-repeatable; tool check_ball_setup_original.py.
+- Updated29October note to326numeric movement comparisons; earlier dates and
+  manual navigation preserved. Native next step remains saved fractional flight
+  initialization and first-cell/arrival callback boundaries, with no guessed low
+  coordinate bytes. No new playable-match or renderer claim.
