@@ -19,7 +19,7 @@ from verify_action_strength import PAYLOAD_SHA256
 
 def post_save_checkpoint(ram,phase):
     raw=bytearray(ram);raw[0x600:0x606]=bytes(6)
-    data=bytearray(export_session(raw,0));data[10]=ord('i');data[258]=phase;data+=bytes(46)
+    data=bytearray(export_session(raw,0));data[10]=ord('j');data[258]=phase;data+=bytes(48)
     count=ram[0x600];data[28]=count;data[309:314]=ram[0x601:0x601+count]+bytes(5-count)
     return bytes(data)
 

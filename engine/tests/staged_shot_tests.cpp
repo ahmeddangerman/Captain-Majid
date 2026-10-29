@@ -47,7 +47,7 @@ int main() {
  // Pause after first failed contact and save its exact cursor; second remains unvisited.
  s=initial;s.current.clock.remaining=1;s.current.clock.extra_time=5;c.player_id=12;
  r=step();check(static_cast<unsigned>(r.state.phase)==24,"Failed contact added-time pause");
- auto encoded=encode(r.state);check(encoded.size()==370 && encoded[10]=='i',"Session44 layout");
+ auto encoded=encode(r.state);check(encoded.size()==372 && encoded[10]=='j',"Session45 layout");
  std::istringstream stored(encoded);s=load_phase_session(stored);
  check(encode(s)==encoded,"Paused shot roundtrip");rejects(step);
  s=resume_session_shot_clock(s);c.player_id=13;r=step();

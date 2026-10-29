@@ -1,8 +1,31 @@
 #include "captain/recovery_session.hpp"
+#include "captain/defender_selection.hpp"
 #include <stdexcept>
 #include <utility>
 
 namespace captain {
+PhaseSessionState prepare_session_keeper_area(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ const auto& f=input.current.field;
+ if(input.phase!=FieldSessionPhase::keeper_interaction || !input.action || !input.scheduling ||
+    input.action->action || f.ball_y<96 || f.ball_y>=160 || (f.ball_x>=80 && f.ball_x<176))
+  throw std::invalid_argument("Keeper-area setup requires an ordinary recovered ball in the goal area");
+ auto state=input;auto& field=state.current.field;
+ if(!state.recovery->ball_variant)state.recovery->ball_variant=(field.random_first&1u)+1;
+ state.action->menu_route=(field.ball_x<80 ? 0 : 11)==field.side ? 2 : 1;
+ field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
+ FlightDefenderSelectionInput selection{};
+ selection.possession_side=field.side;selection.ball_cell=field.ball_cell;
+ selection.random_first=field.random_first;selection.random_second=field.random_second;selection.threshold=255;
+ for(unsigned i=0;i<field.motion.size();++i) {
+  const auto& m=field.motion[i];selection.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};
+ }
+ const auto selected=select_flight_defenders(selection);
+ field.selected_defenders=static_cast<std::uint8_t>(selected.size());
+ for(unsigned i=0;i<selected.size();++i)state.scheduling->selected_ids[i]=selected[i];
+ state.keeper_area=KeeperAreaContext{};state.phase=FieldSessionPhase::keeper_area_prepared;
+ validate_phase_session(state);return state;
+}
 namespace {
 void validate_selected_actions(const PhaseSessionState& input, const std::vector<RecoveryDefender>& selected) {
     const auto& progress = *input.shot_progress;

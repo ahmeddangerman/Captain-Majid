@@ -33,7 +33,7 @@ int main(){try{
   auto input=stunned;input.current.field.random_first=static_cast<std::uint8_t>(random);
   const auto result=resolve_session_stunned_keeper(input,{16,0});
   check(static_cast<unsigned>(result.phase)==55,"Stunned classification saved before display12");
-  const auto saved=bytes(result);check(saved.size()==370 && saved[10]=='i' && saved[355]==1 && saved[356]==0 &&
+  const auto saved=bytes(result);check(saved.size()==372 && saved[10]=='j' && saved[355]==1 && saved[356]==0 &&
    saved[357]==(random>=16 ? 0 : 1),"Saved result matches each original threshold boundary");
   std::istringstream stream(saved);check(bytes(load_phase_session(stream))==saved,"Keeper decision round-trip");
   check(result.current.field.random_first==random && result.current.clock.remaining==448 &&
@@ -62,9 +62,9 @@ int main(){try{
        !bytes(kickoff_decision).empty(),"Kickoff keeper comparison preserves saved coordinates");
  auto kickoff_bytes=bytes(kickoff_decision);std::istringstream kickoff_stream(kickoff_bytes);
  check(bytes(load_phase_session(kickoff_stream))==kickoff_bytes,"Kickoff keeper decision roundtrip");
- auto old_kickoff=kickoff_bytes;old_kickoff[10]='c';
+ auto old_kickoff=kickoff_bytes;old_kickoff[10]='c';old_kickoff.resize(370);
  rejects([&]{std::istringstream i(old_kickoff);load_phase_session(i);});
- auto prior_setup=bytes(kickoff_before);prior_setup[10]='c';std::istringstream prior_setup_stream(prior_setup);
+ auto prior_setup=bytes(kickoff_before);prior_setup[10]='c';prior_setup.resize(370);std::istringstream prior_setup_stream(prior_setup);
  check(bytes(load_phase_session(prior_setup_stream))==bytes(kickoff_before),"Legacy c kickoff keeper setup loads");
  rejects([&]{resolve_prepared_session_keeper(kickoff_decision,0,0,4,content);});
  const auto decision=resolve_prepared_session_keeper(before,0,0,4,content);

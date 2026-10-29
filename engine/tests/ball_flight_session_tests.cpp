@@ -23,9 +23,9 @@ int main(){try{
        !bytes(kickoff_flight).empty(),"Kickoff keeper positions persist into numeric flight");
  auto flight_bytes=bytes(kickoff_flight);std::istringstream flight_stream(flight_bytes);
  check(bytes(load_phase_session(flight_stream))==flight_bytes,"Kickoff numeric flight roundtrip");
- auto old_flight=flight_bytes;old_flight[10]='a';
+ auto old_flight=flight_bytes;old_flight[10]='a';old_flight.resize(370);
  rejects([&]{std::istringstream i(old_flight);load_phase_session(i);});
- auto legacy_kickoff=bytes(kickoff);legacy_kickoff[10]='a';std::istringstream old_kickoff(legacy_kickoff);
+ auto legacy_kickoff=bytes(kickoff);legacy_kickoff[10]='a';legacy_kickoff.resize(370);std::istringstream old_kickoff(legacy_kickoff);
  check(bytes(load_phase_session(old_kickoff))==bytes(kickoff),"Legacy a kickoff destination still loads");
  auto kickoff_cell=advance_prepared_session_ball_cell(kickoff_flight).state;
  check(kickoff_cell.phase==FieldSessionPhase::ball_cell_callback && kickoff_cell.kickoff_formation &&
@@ -44,9 +44,9 @@ int main(){try{
        !bytes(kickoff_setup).empty(),"Kickoff arrival prepares the normal keeper before presentation");
  auto keeper_bytes=bytes(kickoff_setup);std::istringstream keeper_stream(keeper_bytes);
  check(bytes(load_phase_session(keeper_stream))==keeper_bytes,"Kickoff keeper setup roundtrip");
- auto prior_keeper=keeper_bytes;prior_keeper[10]='b';
+ auto prior_keeper=keeper_bytes;prior_keeper[10]='b';prior_keeper.resize(370);
  rejects([&]{std::istringstream i(prior_keeper);load_phase_session(i);});
- auto old_arrival=bytes(kickoff_arrival);old_arrival[10]='b';std::istringstream old_arrival_stream(old_arrival);
+ auto old_arrival=bytes(kickoff_arrival);old_arrival[10]='b';old_arrival.resize(370);std::istringstream old_arrival_stream(old_arrival);
  check(bytes(load_phase_session(old_arrival_stream))==bytes(kickoff_arrival),"Legacy b kickoff arrival loads");
  rejects([&]{prepare_session_keeper_entry(kickoff_setup);});
  const auto source=bytes(s);auto ready=begin_prepared_session_ball_flight(s,64,192,g,v);
@@ -54,7 +54,7 @@ int main(){try{
   ready.scheduling->selected_ids[0]==0 && ready.current.field.elapsed==0 && ready.ball_trajectory->vx==256 &&
   ready.ball_trajectory->vy==0 && ready.ball_trajectory->x==((120<<8)|64) && ready.current.clock.remaining==448 &&
   bytes(s)==source,"Saved numeric flight setup preserves fractions and clears original prefix/elapsed");
- auto encoded=bytes(ready);check(encoded.size()==370 && encoded[10]=='i',"Session44 layout");
+ auto encoded=bytes(ready);check(encoded.size()==372 && encoded[10]=='j',"Session45 layout");
  std::istringstream saved(encoded);ready=load_phase_session(saved);
  auto r=advance_prepared_session_ball_cell(ready);
  check(static_cast<unsigned>(r.state.phase)==48 && r.step.additions==8 &&

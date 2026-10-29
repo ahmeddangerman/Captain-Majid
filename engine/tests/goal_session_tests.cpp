@@ -25,9 +25,9 @@ int main(){try{
        "Kickoff goal registration retains goalkeeper coordinates");
  auto kickoff_bytes=bytes(kickoff_goal);std::istringstream kickoff_stream(kickoff_bytes);
  check(bytes(load_phase_session(kickoff_stream))==kickoff_bytes,"Kickoff scored goal roundtrip");
- auto prior_goal=kickoff_bytes;prior_goal[10]='d';
+ auto prior_goal=kickoff_bytes;prior_goal[10]='d';prior_goal.resize(370);
  rejects([&]{std::istringstream i(prior_goal);load_phase_session(i);});
- auto old_decision=bytes(kickoff_input);old_decision[10]='d';std::istringstream prior_decision(old_decision);
+ auto old_decision=bytes(kickoff_input);old_decision[10]='d';old_decision.resize(370);std::istringstream prior_decision(old_decision);
  check(bytes(load_phase_session(prior_decision))==bytes(kickoff_input),"Legacy d kickoff keeper decision loads");
  rejects([&]{prepare_session_scored_goal(kickoff_goal,{2,0,4},content);});
  auto kickoff_restart=continue_prepared_goal_restart(kickoff_goal);
@@ -36,16 +36,16 @@ int main(){try{
        !bytes(kickoff_restart).empty(),"Prepared goal restart retains the kickoff goalkeeper coordinates");
  auto restart_bytes=bytes(kickoff_restart);std::istringstream restart_stream(restart_bytes);
  check(bytes(load_phase_session(restart_stream))==restart_bytes,"Kickoff post-goal restart roundtrip");
- auto prior_restart=restart_bytes;prior_restart[10]='e';
+ auto prior_restart=restart_bytes;prior_restart[10]='e';prior_restart.resize(370);
  rejects([&]{std::istringstream i(prior_restart);load_phase_session(i);});
- auto prior_scored=kickoff_bytes;prior_scored[10]='e';std::istringstream prior_scored_stream(prior_scored);
+ auto prior_scored=kickoff_bytes;prior_scored[10]='e';prior_scored.resize(370);std::istringstream prior_scored_stream(prior_scored);
  check(bytes(load_phase_session(prior_scored_stream))==kickoff_bytes,"Legacy e kickoff scored goal loads");
  rejects([&]{continue_prepared_goal_restart(kickoff_restart);});
  check(static_cast<unsigned>(goal.phase)==59 && goal.current.field.side==0 && goal.current.field.ball_owner==2 &&
   goal.current.clock.remaining==448 && goal.experience->totals[0]==25 && bytes(s)==original,
   "Scorer rewarded once before celebration without possession/time mutation");
  check(goal.score && goal.score->left_goals==0 && goal.score->right_goals==4 && goal.score->kickoff==2,"Goal increments one score byte with wrap and retains kickoff");
- auto saved=bytes(goal);check(saved.size()==370 && saved[10]=='i',"Scored goal snapshot44");std::istringstream stream(saved);
+ auto saved=bytes(goal);check(saved.size()==372 && saved[10]=='j',"Scored goal snapshot45");std::istringstream stream(saved);
  check(bytes(load_phase_session(stream))==saved,"Scored goal round-trip");
  auto legacy=original;legacy[10]='O';legacy.resize(361);std::istringstream old(legacy);check(bytes(load_phase_session(old))==original,"Legacy O decision remains readable");
  auto forbidden=saved;forbidden[10]='O';forbidden.resize(361);rejects([&]{std::istringstream i(forbidden);load_phase_session(i);});

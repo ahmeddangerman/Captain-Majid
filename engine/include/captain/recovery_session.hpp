@@ -28,4 +28,6 @@ PhaseSessionState continue_session_selected_recovery(const PhaseSessionState& in
 // Explicit prepared continuation after ownership writes. Unknown goalkeeper,
 // restart and story handling remain typed boundaries; waits do not run here.
 PhaseSessionState continue_session_recovery(const PhaseSessionState& post_presentation);
+// Numeric area setup before the original8B73 presentation/menu.
+PhaseSessionState prepare_session_keeper_area(const PhaseSessionState& input);
 }

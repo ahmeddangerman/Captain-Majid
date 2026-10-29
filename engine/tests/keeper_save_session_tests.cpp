@@ -32,10 +32,10 @@ int main(){try{
   auto output=resolve_session_keeper_save(input,content).state;auto saved=bytes(output);
   std::istringstream saved_stream(saved);check(bytes(load_phase_session(saved_stream))==saved,"Kickoff save handoff roundtrip");
   check(output.kickoff_formation->keeper_y==input.kickoff_formation->keeper_y,"Keeper coordinates retained after save");
-  auto prior=saved;prior[10]='f';rejects([&]{std::istringstream i(prior);load_phase_session(i);});
+  auto prior=saved;prior[10]='f';prior.resize(370);rejects([&]{std::istringstream i(prior);load_phase_session(i);});
   rejects([&]{resolve_session_keeper_save(output,content);});
  }
- auto prior_decision=bytes(kickoff);prior_decision[10]='f';std::istringstream prior_stream(prior_decision);
+ auto prior_decision=bytes(kickoff);prior_decision[10]='f';prior_decision.resize(370);std::istringstream prior_stream(prior_decision);
  check(bytes(load_phase_session(prior_stream))==bytes(kickoff),"Legacy f kickoff keeper decision loads");
  check(rebound.event==ShotEvent::rebound && rebound.state.phase==FieldSessionPhase::ball_recovery &&
   rebound.state.current.field.selected_defenders==0 && rebound.state.current.field.keepers[1].timer==1 &&
@@ -83,19 +83,41 @@ int main(){try{
  auto area_result=continue_session_recovery(keeper_area);
  check(area_result.phase==FieldSessionPhase::keeper_interaction && area_result.kickoff_formation,
        "Recovered kickoff ball pauses at keeper-area interaction");
+ auto area_setup=prepare_session_keeper_area(area_result);
+ check(static_cast<unsigned>(area_setup.phase)==65 && area_setup.action->menu_route==1 &&
+       area_setup.kickoff_formation && !bytes(area_setup).empty(),"Keeper-area setup saves its opposing-side menu route");
+ const auto area_bytes=bytes(area_setup);std::istringstream area_stream(area_bytes);
+ check(bytes(load_phase_session(area_stream))==area_bytes,"Keeper-area setup roundtrip");
+ auto old_area=area_bytes;old_area[10]='i';old_area.resize(370);
+ rejects([&]{std::istringstream old(old_area);load_phase_session(old);});
+ auto old_area_entry=bytes(area_result);old_area_entry[10]='i';old_area_entry.resize(370);
+ std::istringstream old_area_stream(old_area_entry);
+ check(bytes(load_phase_session(old_area_stream))==bytes(area_result),"Legacy i keeper-area entry loads");
+ for(unsigned length=370;length<372;++length) {
+  auto truncated=area_bytes;truncated.resize(length);
+  rejects([&]{std::istringstream input(truncated);load_phase_session(input);});
+ }
+ auto invalid_area=area_bytes;invalid_area[370]=2;
+ rejects([&]{std::istringstream input(invalid_area);load_phase_session(input);});
+ invalid_area=area_bytes;invalid_area[371]=0;
+ rejects([&]{std::istringstream input(invalid_area);load_phase_session(input);});
+ auto missing_area=area_setup;missing_area.keeper_area.reset();rejects([&]{validate_phase_session(missing_area);});
+ auto outside_area=area_result;outside_area.current.field.ball_x=120;
+ rejects([&]{prepare_session_keeper_area(outside_area);});
+ rejects([&]{prepare_session_keeper_area(area_setup);});
  for(const auto& output:{kickoff_control,area_result}) {
   auto saved=bytes(output);std::istringstream input(saved);
   check(bytes(load_phase_session(input))==saved,"Recovery continuation roundtrip");
-  saved[10]='h';rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+  saved[10]='h';saved.resize(370);rejects([&]{std::istringstream old(saved);load_phase_session(old);});
  }
  auto pending_story=kickoff_recovered;pending_story.recovery->game_mode=4;
  pending_story.current.field.roster[pending_story.current.field.ball_owner].type=2;
  rejects([&]{continue_session_recovery(pending_story);});
  auto recovered_bytes=bytes(kickoff_recovered);std::istringstream recovered_stream(recovered_bytes);
  check(bytes(load_phase_session(recovered_stream))==recovered_bytes,"Kickoff punch recovered-owner roundtrip");
- auto old_recovered=recovered_bytes;old_recovered[10]='g';
+ auto old_recovered=recovered_bytes;old_recovered[10]='g';old_recovered.resize(370);
  rejects([&]{std::istringstream i(old_recovered);load_phase_session(i);});
- auto old_punch=bytes(kickoff_punch);old_punch[10]='g';std::istringstream old_punch_stream(old_punch);
+ auto old_punch=bytes(kickoff_punch);old_punch[10]='g';old_punch.resize(370);std::istringstream old_punch_stream(old_punch);
  check(bytes(load_phase_session(old_punch_stream))==bytes(kickoff_punch),"Legacy g kickoff punch handoff loads");
  rejects([&]{advance_session_keeper_punch_recovery(kickoff_recovered,primary,movement);});
  const auto recovered=advance_session_keeper_punch_recovery(punch_recovery,primary,movement);

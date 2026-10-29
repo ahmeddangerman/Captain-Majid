@@ -1142,3 +1142,25 @@ Daily website note updated separately; engine/private research remains local.
   handling remain next integration work.
 - Final Make check/all pass without compiler diagnostics. Raw ROM/private data
   remain outside Git. Public daily summary is maintained separately on main.
+
+## 2026-10-29 — prepared keeper-area interaction setup
+
+- Added phase7→65 numeric8B4A..8B73 setup: preserve/generate variant, route1/2
+  based on area/possession, clear prefix, counter255 and exact-cell field scan.
+  Captures new KeeperAreaContext; optional kickoff keeper Y remains retained.
+  CLI/interactive prepare-keeper-area support the operation before its menu.
+- Snapshot45j372bytes adds presence/counter at370/371. Readers throughi remain;
+  phase65 requires context255 and consistent area/route. Old positive fixtures
+  are truncated to their actual prior lengths, and original comparison writers
+  now pad the two unused new bytes for older phases.
+- Real focused test failed with stub then passed. 64 recovered rebound-area
+  setups match all original bytes (keeper-area-original-first);24 constructed
+  cases cover both possession sides/areas/variants and selection counts0/4/5
+  with exact scan order (keeper-area-routes-first). Every original setup call
+  executes. Fixture non-goal results remain constructed inputs; no menu, rendering,
+  audio/NMI or complete-match claim. Detailed reference: NATIVE_KEEPER_AREA.md.
+- Roundtrip, legacy i area entry, forbidden i phase65, truncated/bad/missing new
+  metadata, invalid area and replay checks pass. Full Make check/all pass.
+- Interactive keeper-area command matches the flag-based saved output. Final
+  lab rebuild and earlier full Make check complete without compiler diagnostics.
+  Daily Arabic note is updated separately on main with source-only verification.
