@@ -37,6 +37,6 @@ establish equivalence for unimplemented earlier scripts or later live flight.
 Next observed E73E flight clears selected count/elapsed, uses fractional ball
 coordinates634/636, calculates direction and signed velocity, advances the ball
 until a cell change, then invokes cell/arrival callbacks. Fractional coordinates
-are not yet in the saved flight context; do not silently initialize them to zero
+now have an explicit saved trajectory context (NATIVE_SAVED_BALL_FLIGHT.md); do not silently initialize them to zero
 or reuse player boundary clamping for ball flight. The native full frame/contact/
 keeper pipeline remains unfinished.

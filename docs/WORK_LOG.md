@@ -608,3 +608,41 @@ Daily website note updated separately; engine/private research remains local.
   manual navigation preserved. Native next step remains saved fractional flight
   initialization and first-cell/arrival callback boundaries, with no guessed low
   coordinate bytes. No new playable-match or renderer claim.
+
+
+## 2026-10-29 — saved fractional flight and first-cell boundaries
+
+- Connected phase46 numeric setup using explicit fractional input, direction and
+  private projection content; clears original prefix/elapsed, removes selected
+  progress and saves full16-bit coordinates/velocity. Phase47 waits for explicit
+  frame acknowledgement; numeric advancement stops48 before cell callback or49
+  before arrival callback. Phase50 preserves original already-arrived early return
+  without callback/snap. Session20K355bytes, readers1..19.
+- Setup/unit regression failed before implementation. Already-arrived callback
+  distinction separately failed RED before phase50 fix. Default Make suite/build
+  pass cleanly. Fresh review caught unsigned stream negative-wrap parsing; actual
+  CLI accepted -4294967295 as1 (RED), fixed with complete-token from_chars and
+  malformed-content regression. Post-review suite and focused checks pass.
+- Six original/native scenarios (eleven setup/body boundaries) match prior state
+  and trajectory fields. Explicit post-wait entry does not emulate live frames or
+  callbacks. Ruling: phase50 unused velocity normalizes0 because preflight does
+  not capture original stale slots; oracle supplies nonzero stale values and does
+  not claim equality for that metadata. Cost if future code needs stale velocity:
+  capture before flight instead of reading normalized metadata.
+- Added private CMJBALL1 exporter and strict CLI content/input handling, atomic
+  replay, quoted interactive path/save, trajectory-tail validation and oldJ read.
+  Evidence/commands: NATIVE_SAVED_BALL_FLIGHT.md and saved-ball-flight-reviewed.
+  Prior clock7cases and approach6cases pass against finalK. Engine source private.
+- Next:800F per-cell defender callbacks and800C arrival behavior, real frame/task
+  scheduling, keeper/goal flow. Overall completion unmeasured; full match unfinished.
+
+- Extended the same flight increment through original87E1: native cell callback
+  appends eligible defenders while preserving prior entries/duplicates and capacity,
+  then resumes47. Real regression failed before implementation and passed after.
+  Seven original callback cases pass, including saturated and nonempty prefixes,
+  borrow sample255/254 and stunned candidates. Review found no material issue.
+- Two complete prepared numeric flights now match original at every native saved
+  cell/callback to arrival, including queued defender accumulation. They freeze
+  per-frame task/input state and stop before arrival encounters; no live-match
+  claim. Evidence: full-prepared-flight-repeatable. Full callback Make suite and
+  production build passed cleanly. Next is arrival8835/keeper/goal continuation.

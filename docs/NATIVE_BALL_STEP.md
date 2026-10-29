@@ -12,7 +12,7 @@ Only coherent interior current cell/coordinates and destination0..239 are
 supported. A stationary nonarrival rejects rather than looping forever;65536
 additions bound a complete16-bit coordinate cycle. Inputs are copied and errors
 are atomic. No current session snapshot or live frame/callback is committed by
-this pure helper. Fractional state still needs integration into session flight.
+this pure helper. Fractional state now connects through the first callback boundary; see NATIVE_SAVED_BALL_FLIGHT.md.
 
 Real regressions failed with the unimplemented stub, then passed repeated subcell
 addition, fractional negative borrow, snap preservation, outside fallback, no-op

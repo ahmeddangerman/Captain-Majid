@@ -28,7 +28,7 @@ def main():
         entry=out/(name+'-entry.cmjsession');entry.write_bytes(checkpoint(ram,45));(out/(name+'-entry.bin')).write_bytes(ram)
         report,final=trace_approach(rom[16:262160],bytes(ram));(out/(name+'-final.bin')).write_bytes(final)
         (out/(name+'.json')).write_text(json.dumps(report,indent=2)+'\n')
-        expected=bytearray(checkpoint(final,46));expected[-5:]=bytes([1,report['distance'],report['destination'],report['counter'],int(report['loose_ball'])])
+        expected=bytearray(checkpoint(final,46));expected[339:344]=bytes([1,report['distance'],report['destination'],report['counter'],int(report['loose_ball'])])
         dest=out/(name+'-native.cmjsession')
         subprocess.run([binary,pack,str(entry),'--prepare-shot-approach','--capture',str(dest)],capture_output=True,check=True,timeout=30)
         actual=dest.read_bytes()

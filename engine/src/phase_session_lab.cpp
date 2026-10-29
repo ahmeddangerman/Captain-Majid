@@ -12,6 +12,8 @@
 #include "captain/restart_options.hpp"
 #include "captain/attack_clock.hpp"
 #include "captain/approach_session.hpp"
+#include "captain/ball_flight_session.hpp"
+#include <iomanip>
 #include <charconv>
 #include <cstdio>
 #include <filesystem>
@@ -75,6 +77,10 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::attack_clock_added_time: return "attack added-time presentation pending";
     case captain::FieldSessionPhase::shot_approach_ready: return "ordinary shot approach ready";
     case captain::FieldSessionPhase::shot_flight_pending: return "shot flight setup ready; scheduling pending";
+    case captain::FieldSessionPhase::ball_already_arrived: return "ball was already at destination; return without arrival callback";
+    case captain::FieldSessionPhase::ball_advance_ready: return "numeric ball flight ready; frame acknowledgement pending";
+    case captain::FieldSessionPhase::ball_cell_callback: return "ball entered next cell; callback pending";
+    case captain::FieldSessionPhase::ball_arrival_callback: return "ball arrived; callback pending";
     case captain::FieldSessionPhase::restart_options: return "prepared restart options";
     case captain::FieldSessionPhase::restart_tactics: return "restart tactical UI pending";
     case captain::FieldSessionPhase::restart_options_done: return "restart options done; caller pending";
@@ -94,6 +100,8 @@ void show(const captain::PhaseSessionState& state) {
               << " | cell " << unsigned(field.ball_cell) << " | elapsed " << unsigned(field.elapsed)
               << " | selected " << unsigned(field.selected_defenders)
               << " | random " << unsigned(field.random_first) << ',' << unsigned(field.random_second) << '\n';
+    if(state.ball_trajectory) std::cout << "Trajectory: " << state.ball_trajectory->x << ',' << state.ball_trajectory->y
+        << " | velocity " << state.ball_trajectory->vx << ',' << state.ball_trajectory->vy << '\n';
     if(state.restart_options) std::cout << "Restart options: goal area " << state.restart_options->goal_area
         << " | cursor " << unsigned(state.restart_options->cursor) << '\n';
     if(state.clearance_race) std::cout << "Race: remaining " << unsigned(state.clearance_race->remaining)
@@ -438,6 +446,24 @@ void prepare_basic_shot(captain::PhaseSessionState& state, const captain::ShotCo
               << " | subtype " << unsigned(result.preparation.action_power.subtype)
               << " | move " << unsigned(result.preparation.preparation.move_effect) << '\n';
 }
+
+void begin_ball_flight(captain::PhaseSessionState& state,const captain::ShotContent& content,
+ const std::string& file,unsigned low_x,unsigned low_y) {
+ std::ifstream in(file);std::string magic,extra;
+ if(!(in>>magic) || magic!="CMJBALL1")throw std::invalid_argument("Expected private CMJBALL1 projection content");
+ captain::BallVelocityContent velocity{};
+ for(auto& word:velocity.quarter_wave){
+  std::string token;unsigned value=0;
+  if(!(in>>token))throw std::invalid_argument("Expected64projection words");
+  const auto parsed=std::from_chars(token.data(),token.data()+token.size(),value);
+  if(parsed.ec!=std::errc{} || parsed.ptr!=token.data()+token.size() || value>65535)
+   throw std::invalid_argument("Expected unsigned projection word0..65535");
+  word=value;
+ }
+ if(in>>extra)throw std::invalid_argument("Trailing ball projection content");
+ if(in.bad())throw std::invalid_argument("Unable to read ball projection content");
+ state=captain::begin_prepared_session_ball_flight(state,low_x,low_y,content.movement->geometry,velocity);
+}
 }
 
 int main(int argc, char** argv) {
@@ -445,7 +471,7 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
-                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --prepare-shot-approach | --continue-unopposed-attack ACTION | --continue-prepared-attack | --resume-attack-clock | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --begin-ball-flight FILE LOWX LOWY | --resolve-ball-cell | --advance-ball-cell | --prepare-shot-approach | --continue-unopposed-attack ACTION | --continue-prepared-attack | --resume-attack-clock | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -454,7 +480,9 @@ int main(int argc, char** argv) {
         bool run_recovery = false, run_continue_recovery = false;
         bool run_setup_control = false;
         bool run_control_tick = false, resume_control_time = false;
-        bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false, run_continue_clearance = false, run_restart_route = false, run_restart_options = false, run_attack_clock = false, run_resume_attack = false, run_approach = false;
+        bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false, run_continue_clearance = false, run_restart_route = false, run_restart_options = false, run_attack_clock = false, run_resume_attack = false, run_approach = false, run_ball_step=false, run_ball_cell=false;
+        std::optional<std::string> flight_file;
+        std::array<unsigned,2> flight_fractions{};
         std::optional<std::array<unsigned,2>> restart_input;
         std::optional<std::string> selected_recovery_file, clearance_file, race_file;
         std::optional<std::array<unsigned,4>> staged_input;
@@ -485,6 +513,12 @@ int main(int argc, char** argv) {
                 if (++i>=argc || unopposed_attack) throw std::invalid_argument("Expected one unopposed defending action");
                 unopposed_attack=number(argv[i]);
             }
+            else if (option == "--begin-ball-flight") {
+                if(i+3>=argc || flight_file)throw std::invalid_argument("Expected begin-ball-flight FILE LOWX LOWY");
+                flight_file=argv[++i];flight_fractions[0]=number(argv[++i]);flight_fractions[1]=number(argv[++i]);
+            }
+            else if (option == "--resolve-ball-cell") run_ball_cell=true;
+            else if (option == "--advance-ball-cell") run_ball_step=true;
             else if (option == "--prepare-shot-approach") run_approach=true;
             else if (option == "--continue-prepared-attack") run_attack_clock = true;
             else if (option == "--resume-attack-clock") run_resume_attack = true;
@@ -559,7 +593,7 @@ int main(int argc, char** argv) {
             unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) > 1)
+            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -592,6 +626,9 @@ int main(int argc, char** argv) {
         if (race_file) clearance_race_file(state,content,*race_file);
         if (run_continue_clearance) state=captain::continue_session_clearance(state);
         if (unopposed_attack) state=captain::continue_prepared_session_attack(state,*content.contact,*unopposed_attack).state;
+        if(flight_file)begin_ball_flight(state,content,*flight_file,flight_fractions[0],flight_fractions[1]);
+        if(run_ball_cell)state=captain::resolve_session_ball_cell(state);
+        if(run_ball_step)state=captain::advance_prepared_session_ball_cell(state).state;
         if (run_approach) {
             if (!content.approach) throw std::invalid_argument("Missing shot approach content");
             state=captain::prepare_session_shot_approach(state,*content.approach).state;
@@ -605,7 +642,7 @@ int main(int argc, char** argv) {
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, clearance-race-file FILE, continue-clearance, prepare-shot-approach, continue-unopposed-attack ACTION, continue-prepared-attack, resume-attack-clock, route-selected-restart, open-prepared-restart-options, restart-options-input HELD PRESSED, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, clearance-race-file FILE, continue-clearance, begin-ball-flight FILE LOWX LOWY, resolve-ball-cell, advance-ball-cell, prepare-shot-approach, continue-unopposed-attack ACTION, continue-prepared-attack, resume-attack-clock, route-selected-restart, open-prepared-restart-options, restart-options-input HELD PRESSED, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -614,9 +651,11 @@ int main(int argc, char** argv) {
                 if (!(input >> command)) continue;
                 if (command == "state" || command == "quit" || command == "resume" ||
                     command == "recover" || command == "continue-recovery" || command == "setup-control" ||
-                    command == "advance-control" || command == "resume-control-time" || command == "resume-shot-clock" || command == "resolve-shot-result" || command == "continue-selected-recovery" || command == "continue-clearance" || command == "route-selected-restart" || command == "open-prepared-restart-options" || command == "continue-prepared-attack" || command == "resume-attack-clock" || command == "prepare-shot-approach") {
+                    command == "advance-control" || command == "resume-control-time" || command == "resume-shot-clock" || command == "resolve-shot-result" || command == "continue-selected-recovery" || command == "continue-clearance" || command == "route-selected-restart" || command == "open-prepared-restart-options" || command == "continue-prepared-attack" || command == "resume-attack-clock" || command == "prepare-shot-approach" || command == "advance-ball-cell" || command == "resolve-ball-cell") {
                     if (input >> extra) throw std::invalid_argument("Command takes no arguments");
                     if (command == "quit") break;
+                    if(command=="resolve-ball-cell")state=captain::resolve_session_ball_cell(state);
+                    if(command=="advance-ball-cell")state=captain::advance_prepared_session_ball_cell(state).state;
                     if (command == "prepare-shot-approach") {
                         if(!content.approach) throw std::invalid_argument("Missing shot approach content");
                         state=captain::prepare_session_shot_approach(state,*content.approach).state;
@@ -636,6 +675,10 @@ int main(int argc, char** argv) {
                     if (command == "advance-control" || command == "resume-control-time")
                         advance_control(state, content, command == "resume-control-time");
                     show(state);
+                } else if (command == "begin-ball-flight") {
+                    std::string file,lx,ly;
+                    if(!(input>>std::quoted(file)>>lx>>ly)||(input>>extra))throw std::invalid_argument("Expected begin-ball-flight FILE LOWX LOWY");
+                    begin_ball_flight(state,content,file,number(lx),number(ly));show(state);
                 } else if (command == "continue-unopposed-attack") {
                     if (!(input >> value) || (input >> extra)) throw std::invalid_argument("Expected continue-unopposed-attack ACTION");
                     state=captain::continue_prepared_session_attack(state,*content.contact,number(value)).state;

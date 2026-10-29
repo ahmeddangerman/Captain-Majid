@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I' && version != 'J')
+    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I' && version != 'J' && version != 'K')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -60,6 +60,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Attack clock requires session version18");
     if (version < 'J' && static_cast<unsigned>(state.phase) > 45)
         throw std::invalid_argument("Shot flight setup requires session version19");
+    if (version < 'K' && static_cast<unsigned>(state.phase) > 46)
+        throw std::invalid_argument("Numeric ball flight requires session version20");
     const auto pending = byte(input);
     const PendingTerminalContact contact{byte(input), byte(input), byte(input), byte(input)};
     if (pending > 1) throw std::invalid_argument("Unsupported pending-contact flag");
@@ -164,6 +166,15 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if(present) state.shot_flight=ShotFlightContext{distance,destination,counter,loose!=0};
         else if(distance || destination || counter || loose) throw std::invalid_argument("Nonzero unused shot flight context");
     }
+    if(version >= 'K') {
+        const auto present=byte(input);if(present>1)throw std::invalid_argument("Invalid trajectory presence");
+        std::array<std::uint16_t,4> words{};
+        for(auto& word:words){const auto low=byte(input);word=static_cast<std::uint16_t>(low|(unsigned(byte(input))<<8));}
+        const auto direction=byte(input),flags=byte(input);
+        if(present)state.ball_trajectory=BallTrajectoryContext{words[0],words[1],words[2],words[3],direction,flags};
+        else if(words[0] || words[1] || words[2] || words[3] || direction || flags)
+            throw std::invalid_argument("Nonzero unused trajectory context");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -174,7 +185,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'J');
+    byte(output, 'K');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -230,6 +241,10 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     byte(output,state.shot_flight ? state.shot_flight->destination : 0);
     byte(output,state.shot_flight ? state.shot_flight->counter : 0);
     byte(output,state.shot_flight && state.shot_flight->loose_ball ? 1 : 0);
+    byte(output,state.ball_trajectory ? 1 : 0);
+    const auto trajectory=state.ball_trajectory.value_or(BallTrajectoryContext{});
+    for(auto word:{trajectory.x,trajectory.y,trajectory.vx,trajectory.vy}){byte(output,word&255);byte(output,word>>8);}
+    byte(output,trajectory.direction);byte(output,trajectory.flags);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }
