@@ -1,7 +1,22 @@
 #include "captain/kickoff_session.hpp"
 #include "captain/kickoff_selection.hpp"
+#include "captain/defender_selection.hpp"
 #include <stdexcept>
 namespace captain {
+PhaseSessionState prepare_session_kickoff_ball(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::kickoff_receiver_selected)
+  throw std::invalid_argument("Ball placement requires a selected kickoff receiver");
+ auto state=input;
+ auto& field=state.current.field;
+ const auto& owner=field.motion[field_motion_index(field.ball_owner)];
+ field.ball_x=static_cast<std::uint8_t>(owner.x>>8);
+ field.ball_y=static_cast<std::uint8_t>(owner.y>>8);
+ field.ball_cell=field_cell_at(field.ball_x,field.ball_y);
+ state.phase=FieldSessionPhase::kickoff_ball_placed;
+ validate_phase_session(state);
+ return state;
+}
 PhaseSessionState prepare_session_kickoff_receiver(const PhaseSessionState& input,std::uint8_t random,const std::array<std::uint8_t,5>& candidates) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::kickoff_formation_placed)

@@ -21,7 +21,7 @@ int main(){try{
   ready.scheduling->selected_ids[0]==0 && ready.current.field.elapsed==0 && ready.ball_trajectory->vx==256 &&
   ready.ball_trajectory->vy==0 && ready.ball_trajectory->x==((120<<8)|64) && ready.current.clock.remaining==448 &&
   bytes(s)==source,"Saved numeric flight setup preserves fractions and clears original prefix/elapsed");
- auto encoded=bytes(ready);check(encoded.size()==370 && encoded[10]=='S',"Session28 layout");
+ auto encoded=bytes(ready);check(encoded.size()==370 && encoded[10]=='T',"Session29 layout");
  std::istringstream saved(encoded);ready=load_phase_session(saved);
  auto r=advance_prepared_session_ball_cell(ready);
  check(static_cast<unsigned>(r.state.phase)==48 && r.step.additions==8 &&

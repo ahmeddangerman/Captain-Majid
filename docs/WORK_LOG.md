@@ -879,3 +879,17 @@ Daily website note updated separately; engine/private research remains local.
   kickoff-receiver-session-first. Earlier reset/side choice, ball placement,
   presentation and live kickoff remain outside this comparison.
 - Overall completion is unmeasured; there is no complete playable match.
+
+## 2026-10-29 — saved kickoff ball placement
+
+- Added phase62→63: original DB0B/E6EC copies integer ball position from the
+  existing side+8 carrier and computes the cell before kickoff presentation.
+  Receiver remains saved and ownership is not transferred prematurely. Snapshot29T
+  retains the same size and legacy readers; phase63 is rejected by older formats.
+- Focused test failed on stub, then passed. 256 original comparisons cover both
+  sides and 128 interior positions each, with complete represented snapshots and
+  every original instruction executed. Out-of-field coordinates are rejected by
+  existing session validation and are not claimed. Original fractional ball bytes
+  stay unchanged but are absent from the saved model. Evidence:
+  kickoff-ball-session-interior. Earlier reset, presentation and receiver handoff
+  still need work; overall completion remains unmeasured.

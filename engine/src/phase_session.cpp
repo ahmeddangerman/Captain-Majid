@@ -37,7 +37,7 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 62)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 63)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
     if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59))
@@ -70,13 +70,20 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool keeper_selected=phase==53 || phase==56 || (phase==59 && !state.current.field.keepers[1].stun);
     const bool keeper_possession=phase==57;
     const bool goal_restart=phase==60;
-    const bool kickoff_placed=phase==61 || phase==62;
+    const bool kickoff_placed=phase>=61 && phase<=63;
     if(bool(state.kickoff_formation)!=kickoff_placed)
         throw std::invalid_argument("Kickoff formation phase needs captured keeper positions");
-    if (bool(state.kickoff_receiver)!=(phase==62) ||
+    if (bool(state.kickoff_receiver)!=(phase==62 || phase==63) ||
         (state.kickoff_receiver && (*state.kickoff_receiver<=state.current.field.side ||
          *state.kickoff_receiver>state.current.field.side+10)))
         throw std::invalid_argument("Kickoff receiver requires a field player on the selected side");
+    if (phase==63) {
+        const auto& field=state.current.field;
+        const auto& owner=field.motion[field_motion_index(field.ball_owner)];
+        if(field.ball_x!=(owner.x>>8) || field.ball_y!=(owner.y>>8) ||
+           field.ball_cell!=field_cell_at(field.ball_x,field.ball_y))
+            throw std::invalid_argument("Kickoff ball must be at the initial carrier");
+    }
     if(kickoff_placed && (!state.score || state.score->kickoff!=4 || !state.scheduling ||
        state.current.field.ball_owner!=state.current.field.side+8 || state.current.field.elapsed ||
        state.current.field.selected_defenders>1 || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=11)))

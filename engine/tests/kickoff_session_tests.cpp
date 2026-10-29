@@ -33,6 +33,17 @@ int main(){try{using namespace captain;
        receiver.current.field.ball_owner==8 && bytes(placed)==saved,"Receiver is saved without changing the current carrier");
  auto receiver_bytes=bytes(receiver);std::istringstream receiver_stream(receiver_bytes);
  check(bytes(load_phase_session(receiver_stream))==receiver_bytes,"Kickoff receiver roundtrip");
+ auto ball=prepare_session_kickoff_ball(receiver);
+ check(static_cast<unsigned>(ball.phase)==63 && ball.current.field.ball_x==52 && ball.current.field.ball_y==84 &&
+       ball.current.field.ball_cell==0 && ball.current.field.ball_owner==8 && *ball.kickoff_receiver==7 &&
+       bytes(receiver)==receiver_bytes,"Ball starts at current carrier, before presentation and receiver transfer");
+ auto ball_bytes=bytes(ball);std::istringstream ball_stream(ball_bytes);
+ check(bytes(load_phase_session(ball_stream))==ball_bytes,"Kickoff ball roundtrip");
+ auto s_legacy=receiver_bytes;s_legacy[10]='S';std::istringstream legacy_s(s_legacy);
+ check(bytes(load_phase_session(legacy_s))==receiver_bytes,"Legacy S receiver loads");
+ auto s_new=ball_bytes;s_new[10]='S';rejects([&]{std::istringstream i(s_new);load_phase_session(i);});
+ auto invalid_ball=ball;invalid_ball.current.field.ball_cell=1;rejects([&]{validate_phase_session(invalid_ball);});
+ rejects([&]{prepare_session_kickoff_ball(ball);});
  auto r_legacy=saved;r_legacy[10]='R';r_legacy.resize(368);std::istringstream legacy_r(r_legacy);
  check(bytes(load_phase_session(legacy_r))==saved,"Legacy R formation loads");
  auto r_new=receiver_bytes;r_new[10]='R';r_new.resize(368);

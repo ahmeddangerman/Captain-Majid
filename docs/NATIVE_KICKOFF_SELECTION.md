@@ -50,3 +50,21 @@ DAF5..DB0B instructions for both sides and every random byte, then compares
 all represented serialized session bytes with the native transition. The 512
 cases use previously prepared formations; this does not verify a complete
 kickoff or a playable match. Private evidence: `kickoff-receiver-session-first`.
+
+## Saved initial ball placement (2026-10-29)
+
+After receiver selection, `prepare_session_kickoff_ball` executes the represented
+DB0B/E6EC behavior: copy the current carrier's integer coordinates to the ball
+and calculate its field cell. The current carrier remains side+8; the separately
+selected receiver becomes owner only after the still-unimplemented presentation.
+Session phase63 saves the result before presentation36. Snapshot29 (`T`) retains
+the 370-byte layout, adds phase63, and reads older versions including `S`.
+The CLI operation is `--prepare-kickoff-ball`.
+
+Original ROM comparison covers 256 saved transitions: both sides and 128 interior
+positions each, including edges. Every instruction through DB0E and the called
+routine executes. The original retains fractional ball bytes; these are not yet
+represented in the session and are not claimed as native parity. State validation
+currently restricts this kickoff handoff to positions inside the field. Earlier
+reset, presentation, ownership transfer and live gameplay remain unimplemented.
+Private evidence: `kickoff-ball-session-interior`.

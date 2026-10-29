@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'S'))
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'T'))
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -62,6 +62,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Shot flight setup requires session version19");
     if (version < 'K' && static_cast<unsigned>(state.phase) > 46)
         throw std::invalid_argument("Numeric ball flight requires session version20");
+    if (version < 'T' && static_cast<unsigned>(state.phase) > 62)
+        throw std::invalid_argument("Kickoff ball requires session version29");
     if (version < 'S' && static_cast<unsigned>(state.phase) > 61)
         throw std::invalid_argument("Kickoff receiver requires session version28");
     if (version < 'R' && static_cast<unsigned>(state.phase) > 60)
@@ -232,7 +234,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'S');
+    byte(output, 'T');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
