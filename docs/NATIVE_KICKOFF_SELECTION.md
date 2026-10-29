@@ -145,3 +145,29 @@ snapshot, including goalkeeper positions. Evidence: `kickoff-field-round-first`;
 reproduce with `tools/check_kickoff_field_round_original.py`. The same prepared
 and host acknowledgement limits above apply. This does not establish parity for
 other inputs, contact, story, menu interruptions, or a complete live match.
+
+## Chained directional cycles and menu opening (2026-10-29)
+
+`tools/check_kickoff_cycles_original.py` starts at the prepared kickoff control
+boundary and feeds each saved native result into the next native command. It does
+not re-export original RAM between native steps. Across both sides, all sixteen
+formation pairs and eight input patterns, 256 sequences matched 6,448 boundaries:
+4,960 waiting polls, 496 clock entries, 496 field-round entries, 480 returns to
+control and 16 late menu requests. Patterns include four directions, diagonal,
+opposing direction bits, defender cycling and a menu request at the seventh
+field poll. Runs stop after two rounds or at a menu/AI boundary. Evidence:
+`kickoff-cycles-first`. These bounded sequences do not prove full matches.
+
+`--open-action-menu` now accepts the saved goalkeeper coordinates from these
+kickoff sessions. Snapshot34 (`Y`, still370bytes) allows those coordinates at
+phase18 and retains older readers; earlier formats cannot encode that combination.
+The menu-opening regression failed under the old guard, then passed. Native menu
+outputs match all represented original bytes in32 cases: all formation pairs,
+with direct and late field-round requests. Evidence: `kickoff-menu-first`, via
+`tools/check_kickoff_menu_original.py`. Confirmation and subsequent attack phases
+with this keeper context remain outside this checkpoint. Existing menu directions
+may be polled while remaining in phase18.
+
+Both comparison tools retain the disclosed prepared display36 and host-frame
+acknowledgements. Neither runs real NMI/PPU/audio or the earlier kickoff reset.
+ROM, private packs, observations and saved states remain outside source control.

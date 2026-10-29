@@ -1,6 +1,7 @@
 #include "captain/kickoff_session.hpp"
 #include "captain/control_session.hpp"
 #include "captain/control_input.hpp"
+#include "captain/action_menu.hpp"
 #include "captain/phase_session_io.hpp"
 #include <sstream>
 #include <iostream>
@@ -66,6 +67,14 @@ int main(){try{using namespace captain;
  auto old_round=round_bytes;old_round[10]='W';
  rejects([&]{std::istringstream i(old_round);load_phase_session(i);});
  auto menu=apply_control_buttons(control_ready,64,0).state;
+ auto opened=open_human_action_menu(menu,ActionMenuContent{}).state;
+ check(opened.phase==FieldSessionPhase::human_action_menu && opened.kickoff_formation &&
+       opened.kickoff_formation->keeper_y==menu.kickoff_formation->keeper_y && !bytes(opened).empty(),
+       "Kickoff action menu preserves keeper coordinates");
+ auto opened_bytes=bytes(opened);std::istringstream opened_stream(opened_bytes);
+ check(bytes(load_phase_session(opened_stream))==opened_bytes,"Kickoff action menu roundtrip");
+ auto old_opened=opened_bytes;old_opened[10]='X';
+ rejects([&]{std::istringstream i(old_opened);load_phase_session(i);});
  check(menu.phase==FieldSessionPhase::action_menu_pending && menu.kickoff_formation &&
        !bytes(menu).empty(),"Kickoff control can save an action-menu request with keeper positions");
  auto menu_bytes=bytes(menu);std::istringstream menu_stream(menu_bytes);

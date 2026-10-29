@@ -72,7 +72,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool goal_restart=phase==60;
     const bool kickoff_placed=phase>=61 && phase<=64;
     if((kickoff_placed && !state.kickoff_formation) ||
-       (!kickoff_placed && !(phase>=9 && phase<=13) && state.kickoff_formation))
+       (!kickoff_placed && !(phase>=9 && phase<=13) && phase!=18 && state.kickoff_formation))
         throw std::invalid_argument("Kickoff formation phase needs captured keeper positions");
     if (bool(state.kickoff_receiver)!=(phase>=62 && phase<=64) ||
         (state.kickoff_receiver && (*state.kickoff_receiver<=state.current.field.side ||

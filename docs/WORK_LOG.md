@@ -957,3 +957,22 @@ Daily website note updated separately; engine/private research remains local.
   and host frame acknowledgements. Other field inputs, contact, menu/story
   interruptions, exceptional clock branches, real presentation and live matches
   require further work. No additional gameplay behavior was invented.
+
+## 2026-10-29 — chained kickoff movement and menu opening
+
+- Verified 256 native sequences from prepared kickoff control setup with every
+  native output feeding the next operation, across both teams/all16 formation
+  pairs/eight directional and button patterns. All6,448 represented boundaries
+  match original observations, covering496 field-round entries,480 returns to
+  control and16 late menu requests. Evidence: kickoff-cycles-first. The sequence
+  stops after two rounds or at menu/AI boundaries; no complete-match claim.
+- Enabled saved keeper coordinates in phase18 for direct/late action-menu opening.
+  Snapshot34Y retains370bytes and legacy readers. Regression failed at the old
+  validation guard, then passed; roundtrip and old-format rejection covered.
+  32 original menu-opening comparisons match all represented bytes. Evidence:
+  kickoff-menu-first. Keeper context after menu confirmation remains guarded.
+- Original display36 remains explicitly acknowledged; host frame acknowledgements
+  do not reproduce NMI, PPU, audio or real presentation timing. Earlier kickoff
+  reset, exceptional clock paths and a full playable match remain unfinished.
+- Final Make check/all completed with no compiler diagnostics. Source-only Arabic
+  daily note update accompanies the engine checkpoint; no browser rendering claim.
