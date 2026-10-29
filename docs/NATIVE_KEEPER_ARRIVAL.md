@@ -53,3 +53,47 @@ PYTHONPATH=tools python3 tools/check_prepared_full_flight_original.py \
 Default Make suite and production build pass with clean diagnostics. Fresh review
 found no material defect and independently probed forged prefixes and CLI guards.
 CMake definitions updated; CMake is unavailable in this executor.
+
+## Prepared normal keeper comparison
+
+`--resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM` continues53 after an
+explicitly acknowledged keeper-choice presentation. Inputs supply the choice and
+original team byte002B; no menu/input/presentation effects are guessed. Existing
+private keeper profiles/moves, prepared skill/energy logic, variation/comparison,
+and story override produce56 before display9. Saved power, random, clock, ball
+and scoring stay unchanged. Side0 deliberately skips keeper stamina debit in this
+original caller. Comparison uses saved621 context,062B distance, defending keeper
+record/timer/penalty, and raw primary type for critical threshold. Story uses raw
+attack subtype and saved446, not a masked/mapped substitute.
+
+Snapshot23N adds defense action, modified subtype and move effect after the earlier
+presence/cursor/result tail:361bytes. Normal56 requires one opposing keeper,
+zero stun, result0..3 and cursor0. Stunned55 keeps its extra move metadata zero;
+oldM358 entry/decision readers remain supported and default that metadata to zero.
+M rejects new phase56. Malformed, truncated, unused and invalid result/action tails
+reject; errors and replay do not mutate source state.
+
+The new adapter test failed with its stub then passed.254 original comparisons
+cover all four keeper actions, raw types1/33/64/64, random critical boundaries, powers
+0/100/65535, timer/penalty and story/subtype cases. Every original instruction from
+852F to8599 executes, including actual stat-loader8, energy, comparison and story;
+no calls are skipped. The earlier choice presentation is outside this prepared
+entry. All represented bytes, including new effect/modified subtype, match.
+Evidence: keeper-comparison-expanded/verification.json. The five whole prepared
+flight comparisons also join the free normal flight to this decision using the
+same explicit choice boundary: full-flight-keeper-comparison. Prior4status and256
+stunned decisions pass again with N saves (keeper-entry-N-regression).
+
+```
+PYTHONPATH=tools python3 tools/check_keeper_comparison_original.py \
+ /private/Japanese-base.nes /private/japanese-cycle-v9.cmjpack \
+ /private/normal-keeper-entry.bin /private/new-keeper-comparison-output
+```
+
+Goal/save/punch/rebound handlers, their rewards, possession/restart commitments,
+presentation and live-frame timing are still separate next steps. Stored result
+classification is not a scored goal or a complete playable match.
+
+Review found no material defect. Session oracle coverage was expanded to include
+raw type64, nonzero defense subtype128 and saved menu contexts0/4 (254total).
+Final default Make suite/build passed cleanly; CMake remains unavailable.

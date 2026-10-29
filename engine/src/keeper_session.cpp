@@ -26,4 +26,27 @@ PhaseSessionState resolve_session_stunned_keeper(const PhaseSessionState& input,
  state.phase=FieldSessionPhase::stunned_keeper_decided;
  validate_phase_session(state);return state;
 }
+PhaseSessionState resolve_prepared_session_keeper(const PhaseSessionState& input,
+ std::uint8_t action,std::uint8_t subtype,std::uint8_t opponent_team,const ShotContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_presentation_pending)
+  throw std::invalid_argument("Prepared keeper comparison requires the saved normal keeper entry");
+ const auto& field=input.current.field;const auto keeper=static_cast<std::uint8_t>(field.side^11u);
+ const auto& p=field.roster[keeper];const auto& status=field.keepers[field.side==0?1:0];
+ const GoalkeeperInput comparison{input.action->power,
+  {0,field.random_first,field.random_second,content.keeper_range,content.keeper_offset,
+   false,false,input.action->menu_route,keeper,subtype},0,status.timer,
+  input.shot_flight->distance,status.penalty,content.keeper_thresholds};
+ const auto prepared=prepare_goalkeeper({{keeper,p.type,static_cast<std::uint8_t>(p.stamina),
+  static_cast<std::uint8_t>(p.stamina>>8),p.level},field.side,action,subtype,
+  input.action->action,input.recovery->attack_subtype,false,comparison},
+  content.goalkeepers,content.keeper);
+ const auto story=apply_keeper_story_override({prepared.comparison.result_code,field.side,
+  opponent_team,input.recovery->game_mode,input.recovery->attack_subtype,field.random_first});
+ auto state=input;state.current.field.roster[keeper].stamina=prepared.energy.stamina;
+ state.keeper_decision=KeeperDecisionContext{0,story.result_code,action,
+  prepared.comparison.subtype,prepared.preparation.move_effect};
+ state.phase=FieldSessionPhase::keeper_decided;validate_phase_session(state);return state;
+}
+
 }

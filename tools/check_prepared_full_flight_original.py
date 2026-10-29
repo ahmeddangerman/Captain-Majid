@@ -9,6 +9,7 @@ from py65.devices.mpu6502 import MPU
 from trace_field_script import ObservedCartridge
 from flight_checkpoint import flight_checkpoint
 from check_keeper_entry_original import keeper_checkpoint
+from check_keeper_comparison_original import observe_keeper_comparison
 from export_phase_session import export_session
 from trace_ball_recovery_phase import trace_recovery
 from verify_action_strength import PAYLOAD_SHA256
@@ -71,7 +72,7 @@ def main():
             report,recovered=trace_recovery(rom[16:262160],bytes(m.ram[:2048]),skip_jitter=True)
             (out/'loose-free-recovery.json').write_text(json.dumps(report,indent=2)+'\n')
             dest=out/'loose-free-recovered.cmjsession';native(routed,['--recover-shot-loose'],dest)
-            expected=bytearray(export_session(recovered,6));expected[10]=ord('M');expected+=bytes(34)
+            expected=bytearray(export_session(recovered,6));expected[10]=ord('N');expected+=bytes(37)
             if dest.read_bytes()!=expected:raise RuntimeError('Complete loose recovery mismatch')
             controlled=out/'loose-free-control.cmjsession';native(dest,['--continue-recovery'],controlled)
             ready_control=out/'loose-free-control-ready.cmjsession';native(controlled,['--setup-control'],ready_control)
@@ -85,6 +86,14 @@ def main():
             prepared=out/(name+'-prepared.cmjsession');native(routed,['--prepare-keeper-entry'],prepared)
             if prepared.read_bytes()!=keeper_checkpoint(bytes(m.ram[:2048]),phase):raise RuntimeError('Complete keeper setup mismatch')
             result['keeper_prepared_phase']=phase
+            if phase==53:
+                # Explicit prepared keeper choice boundary: no display2/menu effects.
+                ram_for_keeper=bytearray(m.ram[:2048]);ram_for_keeper[0x43D]=0;ram_for_keeper[0x43E]=0
+                keeper_final,instructions=observe_keeper_comparison(rom[16:262160],ram_for_keeper)
+                keeper_saved=out/(name+'-keeper-decided.cmjsession')
+                native(prepared,['--resolve-prepared-keeper','0','0',str(ram_for_keeper[0x2B])],keeper_saved)
+                if keeper_saved.read_bytes()!=keeper_checkpoint(keeper_final,56):raise RuntimeError('Complete prepared keeper comparison mismatch')
+                result['keeper_result']=keeper_final[0x612];result['keeper_comparison_instructions']=instructions
             if phase==54:
                 until(cpu,{0x8917})
                 thresholds=rom[16+26*8192+0x928:16+26*8192+0x92A]
@@ -92,7 +101,7 @@ def main():
                 if decided.read_bytes()!=keeper_checkpoint(bytes(m.ram[:2048]),55):raise RuntimeError('Complete stunned keeper decision mismatch')
                 result['stunned_result']=m[0x612]
         cases.append(result)
-    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Full numeric destination flight with original cell selection and native save/reload every step. Explicit frozen frame acknowledgements; no live NMI/task/input updates or queued arrival encounter/keeper comparison/outcome callback. Two free keeper cases also match keeper setup, plus the stunned random decision before presentation12. Free loose case additionally compares prepared post-display recovery and checks native control-ready. Display45 and native control setup are not claimed part of this original trajectory equality.'},indent=2)+'\n')
+    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Full numeric destination flight with original cell selection and native save/reload every step. Explicit frozen frame acknowledgements; no live NMI/task/input updates or queued arrival encounter/keeper comparison/outcome callback. Two free keeper cases also match keeper setup, plus the stunned random decision before presentation12 and explicitly prepared normal choice/comparison before presentation9. Free loose case additionally compares prepared post-display recovery and checks native control-ready. Display45 and native control setup are not claimed part of this original trajectory equality.'},indent=2)+'\n')
     print(f'{len(cases)} complete prepared numeric flights match at every saved cell/callback: {out}')
 
 

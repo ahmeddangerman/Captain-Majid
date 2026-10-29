@@ -700,3 +700,30 @@ Daily website note updated separately; engine/private research remains local.
   Fresh review found no material issue and independently rejected forged keeper
   prefixes, ownership, replay and mixed CLI operations. CMake unavailable. Detailed
   evidence and reproduction commands are in NATIVE_KEEPER_ARRIVAL.md.
+
+
+## 2026-10-29 — persistent prepared normal keeper comparison
+
+- Connected53 to56 before display9 using existing keeper profile/move preparation,
+  energy/variation/comparison and story override. Caller explicitly acknowledges
+  keeper choice and supplies action/subtype/opponent-team002B. Saved621 context,
+  shot062B distance, opposing keeper stats and raw primary type reach comparison;
+  story uses captured446/raw43C. No random, clock, score or ball writes inferred.
+- Snapshot23N361bytes saves cursor/result plus defense action/modified subtype/
+  effect; legacyM358 entry and stunned decision load with absent metadata0.56
+  preserves the sole opposing keeper prefix and valid normal status;55 new move
+  metadata must remain0. Invalid/replay/content/CLI and malformed tails reject.
+- New adapter test failed with stub then passed.254 original852F..8599 observations
+  match every represented save byte, covering4actions, types1/33/64, critical random
+  boundaries, powers0/100/65535, timer/penalty and story cases. No calls skipped;
+  stat-loader8, energy, comparison and story all run as original instructions.
+- Five complete prepared flights match each saved cell/callback; free normal case
+  additionally matches prepared keeper comparison. Prior4status and256stunned
+  decisions pass again with N. Evidence: keeper-comparison-expanded,
+  full-flight-keeper-comparison and keeper-entry-N-regression. Explicit frozen
+  frames and acknowledged choice presentation remain scope limits.
+- Next: commit keeper outcomes/rewards and score/possession/restart state, queued
+  arrival encounters, then live frame/presentation toward a full playable match.
+- Fresh review found no material defect. Expanded the session oracle to254cases
+  with raw type64, defense subtype128 and contexts0/4; all pass. Final default
+  Make suite/build pass cleanly; CMake unavailable. Engine remains private.

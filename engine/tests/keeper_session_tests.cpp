@@ -33,7 +33,7 @@ int main(){try{
   auto input=stunned;input.current.field.random_first=static_cast<std::uint8_t>(random);
   const auto result=resolve_session_stunned_keeper(input,{16,0});
   check(static_cast<unsigned>(result.phase)==55,"Stunned classification saved before display12");
-  const auto saved=bytes(result);check(saved.size()==358 && saved[10]=='M' && saved[355]==1 && saved[356]==0 &&
+  const auto saved=bytes(result);check(saved.size()==361 && saved[10]=='N' && saved[355]==1 && saved[356]==0 &&
    saved[357]==(random>=16 ? 0 : 1),"Saved result matches each original threshold boundary");
   std::istringstream stream(saved);check(bytes(load_phase_session(stream))==saved,"Keeper decision round-trip");
   check(result.current.field.random_first==random && result.current.clock.remaining==448 &&
@@ -51,5 +51,36 @@ int main(){try{
  for(auto offset:{355,356,357}){auto bad=valid;bad[offset]=offset==355?2:3;rejects([&]{std::istringstream i(bad);load_phase_session(i);});}
  for(unsigned length=355;length<358;++length){auto bad=valid;bad.resize(length);rejects([&]{std::istringstream i(bad);load_phase_session(i);});}
  auto unused=bytes(stunned);unused[357]=1;rejects([&]{std::istringstream i(unused);load_phase_session(i);});
+ ShotContent content{};content.goalkeepers.skills.resize(1);content.goalkeepers.skills[0].fill(20);
+ content.keeper.skill_selectors={25,26,25,28};content.keeper.strength_curve.fill(240);
+ for(auto& moves:content.keeper.moves)moves={{0,0,10,0}};
+ content.keeper_range=255;content.keeper_offset=128;content.keeper_thresholds={200,180,100,0};
+ auto before=normal;before.action->power=100;
+ const auto decision=resolve_prepared_session_keeper(before,0,0,4,content);
+ check(decision.keeper_decision->result_code==1,"Keeper score/adjustment classifies comparison");
+ check(static_cast<unsigned>(decision.phase)==56,"Ready keeper comparison persists before presentation9");
+ check(decision.current.field.roster[11].stamina==123 && decision.current.clock.remaining==448 &&
+  decision.action->power==100 && decision.current.field.random_first==0,"Keeper comparison preserves attack/stamina/time/random");
+ rejects([&]{resolve_prepared_session_keeper(decision,0,0,4,content);});
+ auto story_input=before;story_input.recovery->game_mode=1;story_input.recovery->attack_subtype=3;
+ check(resolve_prepared_session_keeper(story_input,0,0,5,content).keeper_decision->result_code==2,"Raw subtype and explicit opponent activate keeper story override");
+ story_input.current.field.random_first=128;
+ check(resolve_prepared_session_keeper(story_input,0,0,5,content).keeper_decision->result_code==3,"Keeper story override preserves random sign decision");
+ rejects([&]{resolve_prepared_session_keeper(before,4,0,4,content);});
+ const auto decided_bytes=bytes(decision);std::istringstream decision_stream(decided_bytes);
+ check(bytes(load_phase_session(decision_stream))==decided_bytes,"Normal keeper decision round-trip");
+ auto old_m=bytes(stunned);old_m[10]='M';old_m.resize(358);std::istringstream mstream(old_m);
+ check(bytes(load_phase_session(mstream))==bytes(stunned),"Legacy M entry loads without new move metadata");
+ auto old_decided=bytes(decided);old_decided[10]='M';old_decided.resize(358);std::istringstream old_decided_stream(old_decided);
+ check(bytes(load_phase_session(old_decided_stream))==bytes(decided),"Legacy M stunned decision retains result without new move metadata");
+ for(unsigned length=358;length<361;++length){auto bad=decided_bytes;bad.resize(length);rejects([&]{std::istringstream i(bad);load_phase_session(i);});}
+ auto invalid_decision=decision;invalid_decision.keeper_decision->result_code=4;rejects([&]{validate_phase_session(invalid_decision);});
+ invalid_decision=decision;invalid_decision.keeper_decision->defense_action=4;rejects([&]{validate_phase_session(invalid_decision);});
+ invalid_decision=decision;invalid_decision.current.field.keepers[1].stun=1;rejects([&]{validate_phase_session(invalid_decision);});
+ const auto before_errors=bytes(before);auto missing=content;missing.goalkeepers.skills.clear();rejects([&]{resolve_prepared_session_keeper(before,0,0,4,missing);});
+ check(bytes(before)==before_errors,"Error calls retain immutable source");
+ auto forbidden=decided_bytes;forbidden[10]='M';forbidden.resize(358);rejects([&]{std::istringstream i(forbidden);load_phase_session(i);});
+ for(auto offset:{358,359,360}){auto bad=bytes(stunned);bad[offset]=1;rejects([&]{std::istringstream i(bad);load_phase_session(i);});}
+ auto extra_decision=bytes(decided);extra_decision[358]=1;rejects([&]{std::istringstream i(extra_decision);load_phase_session(i);});
  std::cout<<"Saved keeper entry checks passed\n";
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
