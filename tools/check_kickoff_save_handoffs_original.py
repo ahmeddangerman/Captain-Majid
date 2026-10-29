@@ -27,7 +27,10 @@ def main():
     for name in ('rom','pack','keeper_dir','output_dir'):p.add_argument(name,type=Path)
     p.add_argument('--punch-recovery',action='store_true')
     p.add_argument('--rebound-recovery',action='store_true')
-    a=p.parse_args();rom=a.rom.read_bytes()
+    p.add_argument('--continue-recovery',action='store_true')
+    a=p.parse_args()
+    if a.continue_recovery and not (a.punch_recovery or a.rebound_recovery):p.error('Continuation requires recovery')
+    rom=a.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
     out=a.output_dir.resolve()
     if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private outputs must stay outside checkout')
@@ -69,8 +72,25 @@ def main():
                         actual_recovery=recovered_target.read_bytes();wanted_recovery=snapshot(recovery,6)
                         if actual_recovery!=wanted_recovery:raise RuntimeError(f'Rebound recovery mismatch {[(i,x,y) for i,(x,y) in enumerate(zip(actual_recovery,wanted_recovery)) if x!=y]}')
                         rebound_recovered=True
-                    results.append({'left':left,'right':right,'input_result':result,'action':action,'phase':phase,'instructions':steps,'punch_recovered':recovered,'rebound_recovered':rebound_recovered})
-    (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Constructed result2/3 and action inputs after acknowledged keeper comparison/display9, based on original kickoff positions. All represented outcome bytes match original861C/8646 handlers. No goal classification proof, optional punch recovery includes original movement/recipient selection without a second jitter; optional rebound recovery includes its separate jitter path, no actual display/NMI/audio/PPU.'},indent=2)+'\n')
+                    tail_phase=None;control_prepared=False
+                    if a.continue_recovery and (recovered or rebound_recovered):
+                        report,tail=trace_recovery(rom[16:262160],recovery,continue_handoff=True)
+                        routes={'player_control_handoff':1,'keeper_area_interaction':7}
+                        if report['boundary'] not in routes:raise RuntimeError(f'Unsupported tail {report["boundary"]}')
+                        tail_phase=routes[report['boundary']]
+                        tail_target=out/f'{name}-continued.cmjsession'
+                        run=subprocess.run([binary,str(a.pack.resolve()),str(recovered_target),'--continue-recovery','--capture',str(tail_target)],capture_output=True,text=True,timeout=30)
+                        if run.returncode:raise RuntimeError(run.stderr)
+                        if tail_target.read_bytes()!=snapshot(tail,tail_phase):raise RuntimeError('Recovery continuation mismatch')
+                        if tail_phase==1:
+                            report,ready=trace_recovery(rom[16:262160],tail,prepare_control=True)
+                            ready_target=out/f'{name}-control-ready.cmjsession'
+                            run=subprocess.run([binary,str(a.pack.resolve()),str(tail_target),'--setup-control','--capture',str(ready_target)],capture_output=True,text=True,timeout=30)
+                            if run.returncode:raise RuntimeError(run.stderr)
+                            if ready_target.read_bytes()!=snapshot(ready,9):raise RuntimeError('Recovered control setup mismatch')
+                            control_prepared=True
+                    results.append({'left':left,'right':right,'input_result':result,'action':action,'phase':phase,'instructions':steps,'punch_recovered':recovered,'rebound_recovered':rebound_recovered,'tail_phase':tail_phase,'control_prepared':control_prepared})
+    (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Constructed result2/3 and action inputs after acknowledged keeper comparison/display9, based on original kickoff positions. All represented outcome bytes match original861C/8646 handlers. No goal classification proof, optional punch recovery includes original movement/recipient selection without a second jitter; optional rebound recovery includes its separate jitter path, optional prepared recovery continuation stops at keeper-area interaction or prepares ordinary control, using disclosed host frame acknowledgements; no actual display/NMI/audio/PPU.'},indent=2)+'\n')
     print(f'{len(results)} controlled keeper save handoffs match: {out}')
 
 if __name__=='__main__':main()

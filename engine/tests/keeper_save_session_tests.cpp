@@ -76,6 +76,21 @@ int main(){try{
        !bytes(kickoff_recovered).empty(),"Keeper punch recovery retains kickoff coordinates");
  check(kickoff_recovered.control->motion_requested==0 && kickoff_punch.control->motion_requested==2,
        "Prepared punch recovery captures animation acknowledgement without input mutation");
+ auto kickoff_control=continue_session_recovery(kickoff_recovered);
+ check(kickoff_control.phase==FieldSessionPhase::player_control && kickoff_control.kickoff_formation &&
+       !bytes(kickoff_control).empty(),"Recovered kickoff ball returns to control with keeper coordinates");
+ auto keeper_area=kickoff_recovered;keeper_area.current.field.ball_x=204;keeper_area.current.field.ball_y=124;
+ auto area_result=continue_session_recovery(keeper_area);
+ check(area_result.phase==FieldSessionPhase::keeper_interaction && area_result.kickoff_formation,
+       "Recovered kickoff ball pauses at keeper-area interaction");
+ for(const auto& output:{kickoff_control,area_result}) {
+  auto saved=bytes(output);std::istringstream input(saved);
+  check(bytes(load_phase_session(input))==saved,"Recovery continuation roundtrip");
+  saved[10]='h';rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+ }
+ auto pending_story=kickoff_recovered;pending_story.recovery->game_mode=4;
+ pending_story.current.field.roster[pending_story.current.field.ball_owner].type=2;
+ rejects([&]{continue_session_recovery(pending_story);});
  auto recovered_bytes=bytes(kickoff_recovered);std::istringstream recovered_stream(recovered_bytes);
  check(bytes(load_phase_session(recovered_stream))==recovered_bytes,"Kickoff punch recovered-owner roundtrip");
  auto old_recovered=recovered_bytes;old_recovered[10]='g';

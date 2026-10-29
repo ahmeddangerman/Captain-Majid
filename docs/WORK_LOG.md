@@ -1127,3 +1127,18 @@ Daily website note updated separately; engine/private research remains local.
   source mutation. Regression failed when the validation was removed and passed
   after restoration. Actual next control/keeper-area/story phases remain pending.
 - Final Make check/all pass for rebound recovery. Private content stays outside Git.
+
+## 2026-10-29 — recovered ball to control or keeper-area pause
+
+- Retained keeper Y at1/7, snapshot44i370bytes. Real player-control serialization
+  regression failed before support, then passed. Both continuation roundtrips,
+  old h marker rejection and guarded story branch covered. All return branches
+  validate to avoid exposing unsupported state. Existing control setup is reused.
+- 80 original continuations match:64 rebound tails to typed keeper-area pause7,
+ 16 punch tails to player-control1; all16 then match control setup9. Combined
+  verifier compares304 complete states including128 save handlers and80 recovery
+  calls. Evidence: kickoff-recovery-tail-first. Non-goal result inputs remain
+  constructed; no actual NMI/PPU/audio or full-match claim. Keeper-area and story
+  handling remain next integration work.
+- Final Make check/all pass without compiler diagnostics. Raw ROM/private data
+  remain outside Git. Public daily summary is maintained separately on main.

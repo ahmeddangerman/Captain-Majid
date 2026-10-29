@@ -142,15 +142,18 @@ PhaseSessionState continue_session_recovery(const PhaseSessionState& post_presen
     const auto& field = state.current.field;
     if (field.ball_y >= 96 && field.ball_y < 160 && (field.ball_x < 80 || field.ball_x >= 176)) {
         state.phase = FieldSessionPhase::keeper_interaction;
+        validate_phase_session(state);
         return state;
     }
     const auto& owner = field.motion[field_motion_index(field.ball_owner)];
     if (state.recovery->game_mode == 4 && field.side == 0 &&
         field.roster[field.ball_owner].type != 1 && (owner.x >> 8) >= 128) {
         state.phase = FieldSessionPhase::story_transition;
+        validate_phase_session(state);
         return state;
     }
     state.phase = FieldSessionPhase::player_control;
+    validate_phase_session(state);
     return state;
 }
 }

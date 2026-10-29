@@ -348,3 +348,19 @@ out-of-field kickoff exits validate before returning and reject without mutation
 a real regression showed the old early return could expose an invalid state.
 Keeper-result inputs remain constructed, and subsequent control/keeper-area/story
 continuation is still outside this checkpoint.
+
+## Recovered ball continuation and control setup (2026-10-29)
+
+Snapshot44 (`i`,370bytes) retains kickoff keeper coordinates at ordinary
+player-control phase1 and keeper-area pause phase7. Existing recovery continuation
+now validates every returned branch, so an unsupported story state rejects
+atomically instead of escaping as an invalid session. Legacy h recovered states
+remain readable and cannot encode the newly supported combinations.
+
+`--continue-recovery` in the controlled save verifier compares80 original recovery
+tails:64 rebound cases stop at keeper-area interaction7, and16 punch cases reach
+player-control1. All16 punch cases also compare existing control setup to phase9.
+Combined with128 outcome handlers and80 recoveries,304 complete represented
+boundaries match. Evidence: `kickoff-recovery-tail-first`. These remain constructed
+non-goal result inputs; original presentation/frame acknowledgements are disclosed.
+Keeper-area interaction execution and story continuation remain unfinished.
