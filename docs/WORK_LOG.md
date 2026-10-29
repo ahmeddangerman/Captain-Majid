@@ -675,3 +675,28 @@ Daily website note updated separately; engine/private research remains local.
   reject opposing-side saves. Cost if caller semantics change: revise output route.
 - Next: prepared keeper entry52, queued arrival encounters, keeper/goal continuation
   and live frame/input/presentation toward a complete match. Overall unmeasured.
+
+
+## 2026-10-29 — saved keeper entry and stunned decision
+
+- Added native52→53 normal keeper selection or54 stunned entry; source opposing
+  keeper status selects the route. Prepared54→55 saves original random decision
+  before display12. Normal53 narrowly allows keeper ID11 in selected prefix;
+  ordinary field/flight queues remain field-player-only. NewM358bytes appends
+  keeper cursor/result context, preserving readers1..L and strict phase invariants.
+- Real adapter regression failed with unimplemented stub then passed. Original
+  observer initially rejected the speculative three-threshold fixture; actual
+  scan8928 contains two reachable bytes16,0, followed by opcodeA0. Corrected API
+  and tests use exactly two thresholds ending0, result0..1. Ruling: expose that
+  two-byte content explicitly — avoids treating code bytes as a third outcome —
+  cost for another ROM with altered algorithm is a content/parser extension.
+- Four original status routes and all256random decisions match represented saved
+  bytes with every original instruction executed, no skipped presentation calls.
+  Five complete prepared flights match every saved cell/callback, including ready
+  and stunned keeper setup and the stunned decision. Evidence: keeper-entry-final
+  and full-flight-keeper-final. Frozen frames/explicit waits remain limits; normal
+  keeper comparison/outcome/rewards and queued arrival encounters still pending.
+- Default Make suite and production build pass with no compiler warnings/errors.
+  Fresh review found no material issue and independently rejected forged keeper
+  prefixes, ownership, replay and mixed CLI operations. CMake unavailable. Detailed
+  evidence and reproduction commands are in NATIVE_KEEPER_ARRIVAL.md.
