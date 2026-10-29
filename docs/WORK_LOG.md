@@ -946,3 +946,14 @@ Daily website note updated separately; engine/private research remains local.
   80 control-poll comparisons pass in the new format: kickoff-poll-snapshot33.
   Original display36 assumed acknowledged; no actual NMI/audio/PPU. The field
   round and exceptional clock routes still require original comparison.
+
+## 2026-10-29 — first idle field round after kickoff
+
+- The previously enabled phase13 can use the existing field-round operation and
+  return to phase9 while retaining goalkeeper Y. Thirty-two original CPU
+  comparisons match all represented bytes across both sides and all formation
+  pairs with idle input at all22 polls. Evidence: kickoff-field-round-first.
+- This covers one prepared idle cycle only, with kickoff display acknowledged
+  and host frame acknowledgements. Other field inputs, contact, menu/story
+  interruptions, exceptional clock branches, real presentation and live matches
+  require further work. No additional gameplay behavior was invented.

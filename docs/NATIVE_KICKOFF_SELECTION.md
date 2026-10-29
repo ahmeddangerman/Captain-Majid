@@ -132,5 +132,16 @@ an idle decision. They match all represented snapshot bytes through E1E7 to the
 field-round boundary, including goalkeeper bytes. Input/display and host timing
 boundaries are as described above; evidence: `kickoff-clock-first`. Goal-area,
 added time and period-end paths explicitly reject keeper-context progression,
-as does the following field round, until these paths are observed and supported.
+until these paths are observed and supported. The idle field-round case is covered below.
 The observer's acknowledgements are not full presentation or hardware emulation.
+
+## Idle field round after kickoff (2026-10-29)
+
+From the ordinary phase13 clock boundary, the existing `--advance-world 0 0`
+operation now has additional evidence for kickoff sessions. Thirty-two original
+CPU comparisons cover both sides/all formation pairs using idle input at each of
+the 22 player polls. Each returns to phase9 and matches the complete represented
+snapshot, including goalkeeper positions. Evidence: `kickoff-field-round-first`;
+reproduce with `tools/check_kickoff_field_round_original.py`. The same prepared
+and host acknowledgement limits above apply. This does not establish parity for
+other inputs, contact, story, menu interruptions, or a complete live match.
