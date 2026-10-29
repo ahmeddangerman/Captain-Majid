@@ -37,13 +37,13 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 71)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 72)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
     const bool area_setup=phase==65;
-    const bool area_menu=(phase>=66 && phase<=71) || ((phase==18 || phase==19) && state.keeper_area);
+    const bool area_menu=(phase>=66 && phase<=72) || ((phase==18 || phase==19) && state.keeper_area);
     const bool area_state=area_setup || area_menu;
-    if(((phase>=65 && phase<=71) && !state.keeper_area) || (state.keeper_area && !area_state))
+    if(((phase>=65 && phase<=72) && !state.keeper_area) || (state.keeper_area && !area_state))
         throw std::invalid_argument("Keeper-area setup needs exactly one captured selection counter");
     if(state.keeper_area && (!state.action || !state.recovery || !state.scheduling ||
        state.keeper_area->selection_counter!=255 || !state.recovery->ball_variant ||
@@ -53,7 +53,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Keeper-area setup requires its original area and route");
     if(area_menu && (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
-    if(bool(state.area_defense)!=(phase==67 || (phase>=69 && phase<=71)))
+    if(bool(state.area_defense)!=(phase==67 || (phase>=69 && phase<=72)))
         throw std::invalid_argument("Initial area defense requires its captured choice arrays");
     if(phase==67 || phase==69) {
         if(!state.current.field.selected_defenders || state.current.field.selected_defenders>4 || state.action->cursor || state.area_defense->pressed)
@@ -61,17 +61,22 @@ void validate_phase_session(const PhaseSessionState& state) {
         for(unsigned i=0;i<4;++i)if(state.area_defense->actions[i]!=255 || state.area_defense->subtypes[i])
             throw std::invalid_argument("Initial defense actions must be unselected with unused subtypes zero");
     }
-    if(phase==70 || phase==71) {
+    if(phase>=70 && phase<=72) {
         const auto count=state.current.field.selected_defenders;
-        if(!count || count>4 || state.action->cursor>=count)
+        if(!count || count>4 || state.action->cursor>count || (phase==71 && state.action->cursor==count))
             throw std::invalid_argument("Defensive poll requires a valid selected cursor");
         for(unsigned i=0;i<4;++i) {
             const auto action=state.area_defense->actions[i];
             if((action!=255 && action>6) || state.area_defense->subtypes[i] || (i>=count && action!=255))
                 throw std::invalid_argument("Defensive poll supports ordinary field actions in the active prefix");
         }
-        if((phase==70 && state.area_defense->pressed) || (phase==71 && !(state.area_defense->pressed&128u)))
+        if(((phase==70 || phase==72) && state.area_defense->pressed) || (phase==71 && !(state.area_defense->pressed&128u)))
             throw std::invalid_argument("Pending defensive preparation requires the captured confirm input");
+        if(phase==72 && state.action->cursor!=count)
+            throw std::invalid_argument("Completed defense requires the full selected prefix");
+        if(state.action->cursor==count)for(unsigned i=0;i<count;++i)
+            if(state.area_defense->actions[i]==255)
+                throw std::invalid_argument("Full defensive prefix requires selected actions");
         if(phase==71 && (state.area_defense->actions[state.action->cursor]==255 ||
            state.recovery->opposing_player!=state.scheduling->selected_ids[state.action->cursor]))
             throw std::invalid_argument("Pending defensive preparation requires a confirmed selected field player");

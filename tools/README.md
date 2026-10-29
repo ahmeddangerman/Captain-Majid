@@ -138,3 +138,11 @@ PACK KEEPER_RAM OUTPUT_DIR` compares all256 pressed bytes in four constructed
 defensive UI states to original D3AB→D3A6/D3D4, including ordered sprite slots.
 Outputs must remain outside the checkout. This checks menu input before stat,
 special-move or stamina preparation; it does not implement AI or rendering.
+
+`check_area_defense_registration_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
+compares ordinary actions3–6, slot advancement, full-prefix confirmation/back and
+one four-defender native-save chain. Native `prepare-keeper-area-defense` resumes
+the captured sample; the latest snapshot writer is51p (still383bytes). Original
+parent returns and host frame/display acknowledgements are explicit. Special
+options and unrepresented full-prefix direction scratch writes reject. See the
+keeper-area reference for exact coverage and remaining execution work.

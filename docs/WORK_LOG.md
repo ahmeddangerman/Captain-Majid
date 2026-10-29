@@ -1256,3 +1256,25 @@ Daily website note updated separately; engine/private research remains local.
   Pending roundtrip retains pressed input; replay/missing confirmation reject.
   Next: inspect the original confirmed defensive-action loader and connect the
   supported preparation paths without bypassing special-move choices.
+
+## 2026-10-29 — ordinary defensive registration and menu return
+
+- Connected phase71 through original no-special field actions3–6: subtype0/icon,
+  next-slot subject prompt, last-slot wait and captured B return. A on a later full
+  poll clears the overlay and returns72 before area action execution. An original
+  comparison exposed the cleanup request; a failing regression then confirmed
+  its addition. No stamina is charged. Actions0–2 preparation and unrepresented
+  full-prefix directional scratch writes explicitly reject atomically.
+- Snapshot51p stays383bytes. Legacy o pending71 and partial70 remain readable;
+  old o full-prefix/new72 states reject. Roundtrip, replay, early completion,
+  missing icons and unchanged error inputs are covered.
+- 1,433 original boundaries match full represented state/ordered requests:640
+  registrations across actions3–6/four slots/ten IDs/four pressed samples,784
+  full-prefix polls and nine chained native-save continuations. Evidence:
+  defense-register-second. Host parent returns D568→8B8F and presentation/frame
+  acknowledgements are disclosed; no live renderer, action execution or AI claim.
+- Full Make check/all pass; all1,024 earlier input cases also match snapshot51.
+  Fresh read-only review found no Critical/Important issues. Atomic rejection
+  coverage was added before review completion. Further suggested legacy-partial
+  and mixed-direction sample coverage is recorded in the plan for follow-up.
+  Continuing into conditional defensive special-option loading.

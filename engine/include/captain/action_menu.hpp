@@ -26,6 +26,8 @@ ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,
 PhaseSessionState begin_keeper_area_defense(const PhaseSessionState& input,std::uint8_t blink);
 ActionMenuResult open_keeper_area_defense_prompt(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content);
+// Ordinary non-special field choices3..6 only; no energy is consumed here.
+ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,
                                       const ActionMenuContent& content);
 struct SessionAttackResult { PhaseSessionState state; PreparedAttackResult preparation; };

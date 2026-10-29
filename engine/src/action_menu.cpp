@@ -3,6 +3,29 @@
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_defense_preparation || !content.field_icons)
+  throw std::invalid_argument("Defensive registration requires a confirmed choice and private icons");
+ const auto slot=input.action->cursor;
+ const auto action=input.area_defense->actions[slot];
+ // Original bank28:8D65..8D8D bypasses special options for field actions>=3.
+ if(action<3 || action>6)
+  throw std::invalid_argument("This defensive choice needs the unimplemented special-option loader");
+ ActionMenuResult result{input};auto& state=result.state;auto& menu=*state.action;auto& defense=*state.area_defense;
+ const auto pressed=defense.pressed;
+ defense.subtypes[slot]=0;
+ result.presentation.push_back({ControlPresentationKind::sprite,(*content.field_icons)[action],slot});
+ ++menu.cursor;state.phase=FieldSessionPhase::keeper_area_defense_poll;defense.pressed=0;
+ if(menu.cursor<state.current.field.selected_defenders || (pressed&64u)) {
+  if(menu.cursor==state.current.field.selected_defenders)--menu.cursor;
+  menu.flash_counter|=64u;defense.blink=0;
+  result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
+ } else if(pressed&15u) {
+  throw std::invalid_argument("Full defensive prefix direction scratch slots are not represented");
+ }
+ validate_phase_session(state);return result;
+}
 ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
  validate_phase_session(input);
  if((input.phase!=FieldSessionPhase::keeper_area_defense_ready && input.phase!=FieldSessionPhase::keeper_area_defense_poll) || !content.field_icons)
@@ -11,6 +34,12 @@ ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::ui
  state.phase=FieldSessionPhase::keeper_area_defense_poll;
  defense.pressed=0;
  const auto icon=[&](unsigned slot) {const auto action=defense.actions[slot];return action==255 ? std::uint8_t{29} : (*content.field_icons)[action];};
+ const auto count=state.current.field.selected_defenders;
+ if((pressed&128u) && menu.cursor==count) {
+  state.phase=FieldSessionPhase::keeper_area_defense_complete;result.confirmed=true;
+  result.presentation.push_back({ControlPresentationKind::clear_overlay,0});
+  validate_phase_session(state);return result;
+ }
  if((pressed&128u) && defense.actions[menu.cursor]!=255) {
   state.recovery->opposing_player=state.scheduling->selected_ids[menu.cursor];
   defense.pressed=pressed;
@@ -18,12 +47,16 @@ ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::ui
   validate_phase_session(state);return result;
  }
  if((pressed&64u) && menu.cursor) {
-  result.presentation.push_back({ControlPresentationKind::sprite,icon(menu.cursor),menu.cursor});
+  if(menu.cursor<count)result.presentation.push_back({ControlPresentationKind::sprite,icon(menu.cursor),menu.cursor});
   --menu.cursor;menu.flash_counter|=64u;defense.blink=0;
   result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
   validate_phase_session(state);return result;
  }
  auto directions=static_cast<unsigned>(pressed&15u);
+ if(menu.cursor==count) {
+  if(directions)throw std::invalid_argument("Full defensive prefix direction scratch slots are not represented");
+  validate_phase_session(state);return result;
+ }
  if(directions) {
   unsigned direction=0;while(!(directions&(1u<<direction)))++direction;
   const auto action=content.directions[2][direction];

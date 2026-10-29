@@ -168,3 +168,37 @@ controlled menu cases, not1,024 naturally occurring match encounters. Invalid,
 missing, truncated and trailing content reject; pending save roundtrip, exact
 pressed retention and replay rejection are covered. Stat/special-move preparation,
 energy handling, actual rendering and AI decisions remain unfinished.
+
+## Ordinary defensive registration and return
+
+`prepare-keeper-area-defense` resumes phase71 for ordinary field actions3–6.
+The original bank28 loader returns no special options for these actions. Native
+registration stores subtype0, requests the selected icon, advances the cursor and
+opens the next defender's subject prompt. No stamina is charged in this UI step.
+Earlier captured choices0–2 can remain in input snapshots; this does not claim
+their preparation was executed natively.
+
+At the last slot, the captured confirm sample matters: B returns to the last
+defender; otherwise the menu waits at phase70 with cursor equal to count. A on
+the next poll clears the overlay and returns to phase72 before the area action
+route. B can reopen the last slot; idle retains the full-prefix wait. Directional
+samples at a full prefix, unless A/B takes precedence, reject because original
+scratch-slot writes outside the selected prefix are not represented. A directional
+confirm sample on the final registration likewise rejects unless B takes priority.
+These errors leave input unchanged. Actions0–2 still reject preparation here;
+their conditional special-option loader is the next task.
+
+Snapshot51 (`p`,383bytes) adds the completed phase and full-prefix wait semantics
+without changing the layout. Old o pending71 and partial phase70 remain readable;
+o cannot encode a full-prefix wait or phase72. Save/resume and replay rejection
+are covered.
+
+`check_area_defense_registration_original.py` matched1,433 controlled boundaries:
+640 registrations (actions3–6, four slots, ten field IDs, four pressed samples),
+784 supported full-prefix polls (counts1–4), and a chained four-defender sequence
+with nine native-save continuations. Complete represented state and ordered
+requests match original D3D4/D3AB through D3A6 or bank26:8B8F. Evidence:
+`defense-register-second`. The observer supplies explicit parent returns through
+D568 bank restoration and acknowledges frame/display work; every original
+instruction executes, but this is not a native renderer/NMI/audio loop. No
+defensive action result, AI decision or naturally occurring match is implied.

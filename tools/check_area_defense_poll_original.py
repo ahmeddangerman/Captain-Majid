@@ -19,17 +19,10 @@ def poll_snapshot(ram,phase):
     return bytes(data)
 
 
-def main():
-    p=argparse.ArgumentParser(description=__doc__)
-    for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
-    a=p.parse_args();rom=a.rom.read_bytes()
-    if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
-    out=a.output_dir.resolve()
-    if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private output must stay outside checkout')
-    out.mkdir(parents=True,exist_ok=False);prg=rom[16:262160];base=bytearray(a.keeper_ram.read_bytes())
+def defense_entries(prg,keeper_ram):
+    base=bytearray(keeper_ram)
     base[0x612],base[0x616],base[0x43d],base[0x43e]=2,0,0,0
     base,_,_=observe_keeper_save(prg,base);_,base=trace_recovery(prg,base);_,base=trace_recovery(prg,base,continue_handoff=True)
-    binary=str(Path('build/captain-phase-session').resolve());results=[]
     seeds=[('inactive',1,0,[255]*4,0,0),('active',1,0,[4,255,255,255],128,7),
            ('back',4,1,[4,2,255,255],211,0),('last',4,3,[4,2,6,5],128,255)]
     for name,count,cursor,actions,flags,blink in seeds:
@@ -42,6 +35,19 @@ def main():
         if report['boundary']!='defense_prompt':raise RuntimeError('Expected defensive prompt')
         entry=bytearray(ready);entry[0x61e],entry[0x61f],entry[0x620]=cursor,flags,blink
         entry[0x60b:0x60f]=bytes(actions);entry[0x606:0x60a]=bytes(4)
+        yield name,entry
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
+    a=p.parse_args();rom=a.rom.read_bytes()
+    if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
+    out=a.output_dir.resolve()
+    if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private output must stay outside checkout')
+    out.mkdir(parents=True,exist_ok=False);prg=rom[16:262160];base=bytearray(a.keeper_ram.read_bytes())
+    binary=str(Path('build/captain-phase-session').resolve());results=[]
+    for name,entry in defense_entries(prg,base):
         source=out/f'{name}-entry.cmjsession';source.write_bytes(poll_snapshot(entry,70))
         for pressed in range(256):
             report,final=trace_defense_poll(prg,entry,pressed)

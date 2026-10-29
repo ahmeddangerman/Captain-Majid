@@ -182,6 +182,52 @@ int main(){try{
  rejects([&]{poll_keeper_area_defense(defense_confirm.state,0,defense_content);});
  auto missing_sample=defense_confirm.state;missing_sample.area_defense->pressed=0;
  rejects([&]{validate_phase_session(missing_sample);});
+ auto plain_confirm=defense_confirm.state;plain_confirm.area_defense->pressed=128;
+ auto registered=prepare_keeper_area_defense(plain_confirm,defense_content);
+ check(static_cast<unsigned>(registered.state.phase)==70 && registered.state.action->cursor==1 &&
+       registered.state.area_defense->pressed==0 && registered.presentation.size()==1 &&
+       registered.presentation[0].id==55 && registered.presentation[0].slot==0,
+       "Ordinary last defender registers then waits for the next confirmation");
+ check(registered.state.current.field.roster[1].stamina==defense_confirm.state.current.field.roster[1].stamina,
+       "Menu registration does not consume defender stamina");
+ auto completed=poll_keeper_area_defense(registered.state,128,defense_content);
+ check(static_cast<unsigned>(completed.state.phase)==72 && completed.presentation.size()==1 &&
+       completed.presentation[0].kind==ControlPresentationKind::clear_overlay,
+       "Full-prefix confirmation returns without reading beyond the selected slots");
+ auto backed=poll_keeper_area_defense(registered.state,64,defense_content);
+ check(backed.state.action->cursor==0 && backed.presentation.size()==1,
+       "Back from the full prefix returns to its last defender without a nonexistent icon");
+ rejects([&]{poll_keeper_area_defense(registered.state,1,defense_content);});
+ auto pending_four=poll_keeper_area_defense(back_result.state,128,defense_content);
+ auto next_defender=prepare_keeper_area_defense(pending_four.state,defense_content);
+ check(next_defender.state.action->cursor==1 && next_defender.presentation.size()==2 &&
+       next_defender.presentation[1].id==42 && next_defender.state.area_defense->blink==0,
+       "Registered ordinary choice advances to the next subject prompt");
+ for(const auto& output:{registered.state,completed.state,next_defender.state}) {
+  auto saved=bytes(output);std::istringstream stream(saved);
+  check(bytes(load_phase_session(stream))==saved,"Registered defensive choices roundtrip");
+ }
+ for(const auto& output:{registered.state,completed.state}) {
+  auto saved=bytes(output);saved[10]='o';
+  rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+ }
+ auto old_pending=bytes(plain_confirm);old_pending[10]='o';std::istringstream old_pending_stream(old_pending);
+ check(bytes(load_phase_session(old_pending_stream))==bytes(plain_confirm),"Legacy o pending preparation stays readable");
+ auto special_pending=defense_confirm.state;special_pending.area_defense->actions[0]=2;
+ const auto special_before=bytes(special_pending);
+ rejects([&]{prepare_keeper_area_defense(special_pending,defense_content);});
+ check(bytes(special_pending)==special_before,"Unsupported special preparation leaves its input unchanged");
+ auto mixed_final=defense_confirm.state;mixed_final.area_defense->pressed=129;
+ const auto mixed_before=bytes(mixed_final);
+ rejects([&]{prepare_keeper_area_defense(mixed_final,defense_content);});
+ check(bytes(mixed_final)==mixed_before,"Unrepresented final direction leaves pending state unchanged");
+ rejects([&]{prepare_keeper_area_defense(plain_confirm,missing_icons);});
+ auto incomplete_full=registered.state;incomplete_full.area_defense->actions[0]=255;
+ rejects([&]{validate_phase_session(incomplete_full);});
+ auto early_complete=next_defender.state;early_complete.phase=FieldSessionPhase::keeper_area_defense_complete;
+ rejects([&]{validate_phase_session(early_complete);});
+ rejects([&]{prepare_keeper_area_defense(registered.state,defense_content);});
+ rejects([&]{poll_keeper_area_defense(completed.state,128,defense_content);});
  for(const auto& output:{empty_defense,initialized_defense}) {
   auto saved=bytes(output);std::istringstream stream(saved);
   check(bytes(load_phase_session(stream))==saved,"Defense entry roundtrip");
