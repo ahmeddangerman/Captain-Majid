@@ -23,6 +23,20 @@ int main(){try{
  ShotContent content{};content.experience=ExperienceContent{};content.experience->reward_factors.fill(64);
  content.experience->stage_bases.fill(100);content.punch_intervals.fill(8);
  const auto original=bytes(s);const auto rebound=resolve_session_keeper_save(s,content);
+ auto kickoff=s;kickoff.kickoff_formation=KickoffFormationContext{{124,132}};
+ auto kickoff_rebound=resolve_session_keeper_save(kickoff,content).state;
+ check(kickoff_rebound.phase==FieldSessionPhase::ball_recovery && kickoff_rebound.kickoff_formation &&
+       !bytes(kickoff_rebound).empty(),"Kickoff rebound handoff preserves keeper coordinates");
+ for(auto code:{2,3})for(auto action:{0,1}) {
+  auto input=kickoff;input.keeper_decision->result_code=code;input.keeper_decision->defense_action=action;
+  auto output=resolve_session_keeper_save(input,content).state;auto saved=bytes(output);
+  std::istringstream saved_stream(saved);check(bytes(load_phase_session(saved_stream))==saved,"Kickoff save handoff roundtrip");
+  check(output.kickoff_formation->keeper_y==input.kickoff_formation->keeper_y,"Keeper coordinates retained after save");
+  auto prior=saved;prior[10]='f';rejects([&]{std::istringstream i(prior);load_phase_session(i);});
+  rejects([&]{resolve_session_keeper_save(output,content);});
+ }
+ auto prior_decision=bytes(kickoff);prior_decision[10]='f';std::istringstream prior_stream(prior_decision);
+ check(bytes(load_phase_session(prior_stream))==bytes(kickoff),"Legacy f kickoff keeper decision loads");
  check(rebound.event==ShotEvent::rebound && rebound.state.phase==FieldSessionPhase::ball_recovery &&
   rebound.state.current.field.selected_defenders==0 && rebound.state.current.field.keepers[1].timer==1 &&
   rebound.state.current.field.keepers[1].penalty==127 && rebound.state.current.field.keepers[1].penalty_duration==4,

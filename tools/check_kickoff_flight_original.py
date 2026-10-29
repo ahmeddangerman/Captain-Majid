@@ -89,6 +89,8 @@ def main():
             until(cpu,{0x8509,0x8900})
             if cpu.pc!=0x8509:raise RuntimeError('Expected normal keeper')
             compare(53,['--prepare-keeper-entry'])
+            (out/f'{name}-keeper-entry.bin').write_bytes(m.ram[:2048])
+            (out/f'{name}-keeper-entry.cmjsession').write_bytes(source.read_bytes())
             if a.keeper_choice:
                 prepared_source=source;prepared_ram=bytes(m.ram[:2048])
                 for action in range(4):

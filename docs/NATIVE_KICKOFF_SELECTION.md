@@ -296,3 +296,20 @@ registered goals; all872 represented boundaries match across the16 flights and
 128 keeper branches. Evidence: `kickoff-postgoal-first`. Celebration/menu effects
 are supplied at a prepared boundary, not executed. Earlier reset/team selection
 for the next kickoff, complete presentation and a live match remain unfinished.
+
+## Controlled non-goal keeper handoffs with saved coordinates (2026-10-29)
+
+Snapshot42 (`g`,370bytes) carries keeper Y through rebound phase2, caught-ball
+possession phase57 and punch recovery phase58. Existing outcome/reward handlers
+are reused. Older f decisions load; old format markers cannot encode these new
+keeper-context combinations. Tests cover all three save boundaries, roundtrip,
+legacy input and rejection of repeated rewards/outcomes.
+
+`tools/check_kickoff_save_handoffs_original.py` uses captured kickoff keeper
+positions with explicitly constructed post-comparison result2/3 and keeper actions.
+All128 cases match original861C/8646 handler state:64 rebounds,48 catches and16
+punches. All represented bytes, reward state and both keeper Y bytes match.
+Evidence: `kickoff-save-handoffs-first`; inputs: `kickoff-entry-save-inputs`.
+These are outcome-handler checks, not evidence that these shots naturally produce
+non-goal results. Keeper display9 is explicitly acknowledged; subsequent rebound,
+keeper-play and punch recovery are outside this checkpoint.

@@ -30,12 +30,12 @@ def main():
     for side in (0, 11):
         source = a.formations_dir / f's{side}-l0-r0-n0-native.cmjsession'
         original = bytearray(source.read_bytes())
-        if original[258] != 61 or original[10] not in (ord('R'), ord('S'), ord('T'), ord('U'), ord('V'), ord('W'), ord('X'), ord('Y'), ord('Z'), ord('a'), ord('b'), ord('c'), ord('d'), ord('e'), ord('f')):
+        if original[258] != 61 or original[10] not in (ord('R'), ord('S'), ord('T'), ord('U'), ord('V'), ord('W'), ord('X'), ord('Y'), ord('Z'), ord('a'), ord('b'), ord('c'), ord('d'), ord('e'), ord('f'), ord('g')):
             raise ValueError('Expected saved placed formation')
         if original[10] == ord('R'):
-            original[10] = ord('f')
+            original[10] = ord('g')
             original += bytes(2)
-        original[10] = ord('f')
+        original[10] = ord('g')
         for random in range(256):
             m[0x5fb] = side
             m[0xe2] = random

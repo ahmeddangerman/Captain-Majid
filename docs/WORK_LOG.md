@@ -1079,3 +1079,18 @@ Daily website note updated separately; engine/private research remains local.
   assumes completed celebration/menu and captured ball mode0, and does not run
   those presentations or the next kickoff's earlier reset/team selection.
 - Final Make check/all pass. ROM and all generated private evidence stay outside Git.
+
+## 2026-10-29 — controlled keeper save handoffs with kickoff coordinates
+
+- Retained keeper Y through rebound2/catch57/punch58. Snapshot42g370bytes retains
+  previous readers; real rebound regression failed under prior guard then passed.
+  Roundtrip, old f decision input, forbidden old output and reward replay covered.
+- Constructed post-comparison result2/3 and action inputs on captured kickoff
+  positions. Original861C/8646 handlers match all128 cases:64 rebounds,48 catches,
+ 16 punches. Evidence: kickoff-save-handoffs-first. This does not assert naturally
+  occurring non-goal classifications for the actual kickoff shots (all prior
+  keeper comparisons resulted0). Keeper display9 explicitly acknowledged; later
+  recovery/keeper play remains pending. No hardware/full-match claim.
+- Final Make check/all pass without compiler diagnostics. Arabic daily summary
+  updated on website main separately; no browser rendering claim. Private ROM,
+  observations, derived content and state remain outside source control.
