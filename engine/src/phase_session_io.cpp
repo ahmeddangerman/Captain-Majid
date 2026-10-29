@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'n'))
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'o'))
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -36,6 +36,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.current.clock.script_flags = byte(input); state.current.clock.ball_mode = byte(input);
     state.current.shared_recovery_flags = byte(input); state.current.shared_recovery_timer = byte(input);
     state.phase = static_cast<FieldSessionPhase>(byte(input));
+    if(version<'o' && static_cast<unsigned>(state.phase)>69)
+        throw std::invalid_argument("Defensive polling requires session version50");
     if(version<'n' && static_cast<unsigned>(state.phase)>68)
         throw std::invalid_argument("Defensive prompt requires session version49");
     if(version<'m' && static_cast<unsigned>(state.phase)>66)
@@ -251,6 +253,11 @@ PhaseSessionState load_phase_session(std::istream& input) {
                 std::any_of(defense.subtypes.begin(),defense.subtypes.end(),[](auto v){return v!=0;}))
             throw std::invalid_argument("Nonzero unused area-defense data");
     }
+    if(version >= 'o') {
+        const auto pressed=byte(input);
+        if(state.area_defense)state.area_defense->pressed=pressed;
+        else if(pressed)throw std::invalid_argument("Nonzero unused defensive pressed input");
+    }
     if(version<'k' && state.phase==FieldSessionPhase::human_action_menu && state.keeper_area)
         throw std::invalid_argument("Keeper-area menu requires session version46");
     if(version<'l' && state.phase==FieldSessionPhase::attack_choice_pending && state.keeper_area)
@@ -295,7 +302,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'n');
+    byte(output, 'o');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -376,6 +383,7 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     for(unsigned i=0;i<4;++i)byte(output,state.area_defense ? state.area_defense->actions[i] : 0);
     for(unsigned i=0;i<4;++i)byte(output,state.area_defense ? state.area_defense->subtypes[i] : 0);
     byte(output,state.area_defense ? state.area_defense->blink : 0);
+    byte(output,state.area_defense ? state.area_defense->pressed : 0);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

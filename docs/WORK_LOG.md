@@ -1237,3 +1237,22 @@ Daily website note updated separately; engine/private research remains local.
   explicit host acknowledgements; no renderer/NMI/audio or defensive input claim.
 - Full Make check/all pass without compiler diagnostics. Interactive prompt save
   matches flag output. Source and private ROM/content/evidence stay separate.
+
+## 2026-10-29 — defensive directions, back, blink and confirmation
+
+- Added phase69/70 sampled defensive input and phase71 pause before D3D4 action
+  preparation. Direction priority, B returning a slot, blink timing and icon slots
+  follow original control flow. A records the selected defender without executing
+  its action or charging stamina. Snapshot50o383bytes retains the exact confirm
+  pressed byte so resumed preparation can process that same sample correctly.
+- Private content11B adds seven field icons; canonical20,088byte pack reproduces
+  prior A when stripped. A/9 missing-content polling and malformed/truncated/
+  trailing packs reject. No ROM/content/generated observations are committed.
+- All256 pressed bytes across four constructed UI seeds match complete state and
+  ordered slot-aware requests:1,024 cases,640 waits/384 preparation pauses.
+  Evidence: area-defense-polls-final. This uses captured area state and explicit
+  host acknowledgements; not live rendering, AI or naturally occurring match cases.
+- Focused keeper-save regressions, full Make check/all and diff checks pass.
+  Pending roundtrip retains pressed input; replay/missing confirmation reject.
+  Next: inspect the original confirmed defensive-action loader and connect the
+  supported preparation paths without bypassing special-move choices.

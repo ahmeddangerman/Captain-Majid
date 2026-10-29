@@ -3,6 +3,46 @@
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
+ validate_phase_session(input);
+ if((input.phase!=FieldSessionPhase::keeper_area_defense_ready && input.phase!=FieldSessionPhase::keeper_area_defense_poll) || !content.field_icons)
+  throw std::invalid_argument("Defensive input requires prompt/poll state and private icon content");
+ ActionMenuResult result{input};auto& state=result.state;auto& menu=*state.action;auto& defense=*state.area_defense;
+ state.phase=FieldSessionPhase::keeper_area_defense_poll;
+ defense.pressed=0;
+ const auto icon=[&](unsigned slot) {const auto action=defense.actions[slot];return action==255 ? std::uint8_t{29} : (*content.field_icons)[action];};
+ if((pressed&128u) && defense.actions[menu.cursor]!=255) {
+  state.recovery->opposing_player=state.scheduling->selected_ids[menu.cursor];
+  defense.pressed=pressed;
+  state.phase=FieldSessionPhase::keeper_area_defense_preparation;result.confirmed=true;
+  validate_phase_session(state);return result;
+ }
+ if((pressed&64u) && menu.cursor) {
+  result.presentation.push_back({ControlPresentationKind::sprite,icon(menu.cursor),menu.cursor});
+  --menu.cursor;menu.flash_counter|=64u;defense.blink=0;
+  result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
+  validate_phase_session(state);return result;
+ }
+ auto directions=static_cast<unsigned>(pressed&15u);
+ if(directions) {
+  unsigned direction=0;while(!(directions&(1u<<direction)))++direction;
+  const auto action=content.directions[2][direction];
+  if(action!=255) {
+   if(action>6)throw std::invalid_argument("Unsupported defensive menu action");
+   if(action!=defense.actions[menu.cursor]) {
+    defense.actions[menu.cursor]=action;defense.subtypes[menu.cursor]=0;menu.flash_counter=0;
+   }
+  }
+ }
+ if(!(menu.flash_counter&128u)) {menu.flash_counter=128;defense.blink=0;}
+ if(defense.blink)--defense.blink;
+ else {
+  defense.blink=13;menu.flash_counter^=64u;
+  result.presentation.push_back({ControlPresentationKind::sprite,
+   static_cast<std::uint8_t>(icon(menu.cursor)|((menu.flash_counter&64u)?0u:128u)),menu.cursor});
+ }
+ validate_phase_session(state);return result;
+}
 ActionMenuResult open_keeper_area_defense_prompt(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defense_initial)

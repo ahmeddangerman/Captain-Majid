@@ -150,11 +150,38 @@ int main(){try{
        four_prompt.presentation[4].slot==3,"Defensive prompt retains each icon slot");
  auto prompt_bytes=bytes(prompt.state);std::istringstream prompt_stream(prompt_bytes);
  check(bytes(load_phase_session(prompt_stream))==prompt_bytes,"Defensive prompt roundtrip");
- auto old_prompt=prompt_bytes;old_prompt[10]='m';
+ auto old_prompt=prompt_bytes;old_prompt[10]='m';old_prompt.resize(382);
  rejects([&]{std::istringstream old(old_prompt);load_phase_session(old);});
- auto old_initial=bytes(initialized_defense);old_initial[10]='m';std::istringstream old_initial_stream(old_initial);
+ auto old_initial=bytes(initialized_defense);old_initial[10]='m';old_initial.resize(382);std::istringstream old_initial_stream(old_initial);
  check(bytes(load_phase_session(old_initial_stream))==bytes(initialized_defense),"Legacy m initial defense loads");
  rejects([&]{open_keeper_area_defense_prompt(prompt.state,defense_content);});
+ defense_content.directions[2][0]=4;defense_content.field_icons=std::array<std::uint8_t,7>{10,11,12,13,55,15,16};
+ auto defense_poll=poll_keeper_area_defense(prompt.state,1,defense_content);
+ check(static_cast<unsigned>(defense_poll.state.phase)==70 && defense_poll.state.area_defense->actions[0]==4 &&
+       defense_poll.state.area_defense->blink==13 && defense_poll.presentation[0].id==55 &&
+       !bytes(defense_poll.state).empty(),"Defensive direction stores action and emits its first blink");
+ auto defense_confirm=poll_keeper_area_defense(defense_poll.state,131,defense_content);
+ check(static_cast<unsigned>(defense_confirm.state.phase)==71 && defense_confirm.confirmed &&
+       defense_confirm.state.area_defense->pressed==131 && defense_confirm.state.recovery->opposing_player==1 &&
+       defense_confirm.state.current.field.roster[1].stamina==defense_poll.state.current.field.roster[1].stamina,
+       "Defensive confirm retains its sample and defender without charging stamina");
+ auto back_state=four_prompt.state;back_state.phase=FieldSessionPhase::keeper_area_defense_poll;
+ back_state.action->cursor=1;back_state.area_defense->actions={4,2,255,255};
+ auto back_result=poll_keeper_area_defense(back_state,65,defense_content);
+ check(back_result.state.action->cursor==0 && back_result.presentation.size()==2 &&
+       back_result.presentation[0].slot==1 && back_result.state.area_defense->actions[0]==4,
+       "Back navigation restores the old slot and takes precedence over direction");
+ for(const auto& output:{defense_poll.state,defense_confirm.state}) {
+  auto saved=bytes(output);std::istringstream stream(saved);
+  check(bytes(load_phase_session(stream))==saved,"Defensive input state roundtrip");
+  saved[10]='n';saved.resize(382);
+  rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+ }
+ auto missing_icons=defense_content;missing_icons.field_icons.reset();
+ rejects([&]{poll_keeper_area_defense(prompt.state,0,missing_icons);});
+ rejects([&]{poll_keeper_area_defense(defense_confirm.state,0,defense_content);});
+ auto missing_sample=defense_confirm.state;missing_sample.area_defense->pressed=0;
+ rejects([&]{validate_phase_session(missing_sample);});
  for(const auto& output:{empty_defense,initialized_defense}) {
   auto saved=bytes(output);std::istringstream stream(saved);
   check(bytes(load_phase_session(stream))==saved,"Defense entry roundtrip");
@@ -166,7 +193,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<382;++size) {
+ for(unsigned size=372;size<383;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }

@@ -140,3 +140,31 @@ requests. Original8B73 runs through menu/initialization to D3A6. Evidence:
 v10 content reject; prompt replay rejects. Save roundtrip and legacy m initialization
 are covered. This is prepared drawing requests, not native rendering or defensive
 input execution. Earlier hardware/acknowledgement limits continue to apply.
+
+## Sampled defensive input and confirmation pause
+
+`poll-keeper-area-defense PRESSED` (or the flag form with `--`) advances one
+sample from phase69/70. It handles direction priority, changed choices, blink
+timing and slot-aware icons, and B returning to an earlier defender. A on an
+active choice pauses at phase71 before original D3D4 loads action/stat data.
+The saved opposing-player ID is the selected defender; the chosen action remains
+in its slot. Confirmation does not yet execute the action or spend stamina.
+
+Snapshot50 (`o`,383bytes) appends the captured confirm-button byte at382. This
+preserves the same sample when subsequent preparation resumes. Phase70 has no
+pending sample; phase71 requires A and a valid selected action/player. Older
+snapshot readers remain supported; old n cannot encode the new phases.
+
+Private content11 (`CMJSHOTB`,20,088bytes for the approved ROM) adds seven ordinary
+field-defender icons to content10. Removing these seven bytes and restoring A
+exactly reproduces the prior private pack. Older A can open a prompt but cannot
+poll without the missing icon section. No ROM tables are distributed in source.
+
+`check_area_defense_poll_original.py` compares all256 pressed bytes across four
+constructed UI states on captured area RAM:1,024 complete snapshots and ordered
+presentation requests,640 waiting states and384 confirmation pauses. Evidence:
+`area-defense-polls-final`. Original D3AB executes to D3A6 or D3D4. These are
+controlled menu cases, not1,024 naturally occurring match encounters. Invalid,
+missing, truncated and trailing content reject; pending save roundtrip, exact
+pressed retention and replay rejection are covered. Stat/special-move preparation,
+energy handling, actual rendering and AI decisions remain unfinished.

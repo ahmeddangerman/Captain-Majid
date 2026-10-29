@@ -28,8 +28,8 @@ def main():
         base = bytearray((a.ball_dir / f's{side}-0-native.cmjsession').read_bytes())
         if base[258] != 63 or base[20] != side or base[21] != side + 8 or base[296] != 1:
             raise ValueError('Expected saved kickoff ball and control context')
-        base[10] = ord('n')
-        base += bytes(382-len(base))
+        base[10] = ord('o')
+        base += bytes(383-len(base))
         for slot in (5, 6, 7, 9, 10):
             for old_control in (0, 1, 10, 255):
                 source_bytes = bytearray(base)

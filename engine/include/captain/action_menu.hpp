@@ -11,6 +11,7 @@ struct ActionMenuContent {
 struct AreaDefenseMenuContent {
     std::array<std::uint8_t,3> titles{};
     std::array<std::array<std::uint8_t,4>,3> directions{};
+    std::optional<std::array<std::uint8_t,7>> field_icons{};
 };
 struct ActionMenuResult {
     PhaseSessionState state;
@@ -24,6 +25,7 @@ ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,
 // Captured0620 is needed because earlier menu states do not represent it.
 PhaseSessionState begin_keeper_area_defense(const PhaseSessionState& input,std::uint8_t blink);
 ActionMenuResult open_keeper_area_defense_prompt(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
+ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,
                                       const ActionMenuContent& content);
 struct SessionAttackResult { PhaseSessionState state; PreparedAttackResult preparation; };

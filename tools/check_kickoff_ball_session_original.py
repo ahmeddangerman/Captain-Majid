@@ -32,8 +32,8 @@ def main():
         saved = bytearray((a.receivers_dir / f's{side}-r0.cmjsession').read_bytes())
         if saved[258] != 62 or saved[20] != side or saved[21] != side + 8:
             raise ValueError('Expected saved kickoff receiver and initial owner')
-        saved[10] = ord('n')
-        saved += bytes(382-len(saved))
+        saved[10] = ord('o')
+        saved += bytes(383-len(saved))
         motion = 122 + (7 if side == 0 else 17) * 6
         for index, (x, y) in enumerate(points):
             source_bytes = bytearray(saved)

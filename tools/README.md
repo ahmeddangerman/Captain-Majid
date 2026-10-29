@@ -130,3 +130,11 @@ The defensive prompt checkpoint exports `CMJSHOTA` (private content10), appendin
 includes captured defensive choices/blink state. See
 [NATIVE_KEEPER_AREA.md](../docs/NATIVE_KEEPER_AREA.md) for prepared presentation
 limits, ROM comparison tools and the new CLI commands. All packs remain private.
+
+Defensive sampled input uses private `CMJSHOTB` content11 (seven field icons after
+the content10 section) and383-byte `CMJSESSIONo` snapshots. The confirmation sample
+is retained at the preparation pause. `check_area_defense_poll_original.py ROM
+PACK KEEPER_RAM OUTPUT_DIR` compares all256 pressed bytes in four constructed
+defensive UI states to original D3AB→D3A6/D3D4, including ordered sprite slots.
+Outputs must remain outside the checkout. This checks menu input before stat,
+special-move or stamina preparation; it does not implement AI or rendering.

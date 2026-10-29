@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A')
+    if ((version < '1' || version > '9') && version!='A' && version!='B')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -152,7 +152,7 @@ ShotContent load_shot_content(std::istream& input) {
         reader.bytes(content.action_menu->titles);
         reader.bytes(content.action_menu->backgrounds);
     }
-    if(version=='A') {
+    if(version>='A') {
         content.area_defense_menu=AreaDefenseMenuContent{};
         reader.bytes(content.area_defense_menu->titles);
         for(auto& row:content.area_defense_menu->directions) {
@@ -160,6 +160,10 @@ ShotContent load_shot_content(std::istream& input) {
             for(auto action:row)if(action>6 && action!=255)
                 throw std::invalid_argument("Unsupported defensive menu action");
         }
+    }
+    if(version=='B') {
+        content.area_defense_menu->field_icons=std::array<std::uint8_t,7>{};
+        reader.bytes(*content.area_defense_menu->field_icons);
     }
     reader.end();
     return content;
