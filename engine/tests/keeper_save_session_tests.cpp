@@ -52,7 +52,7 @@ int main(){try{
   recovered.state.current.clock.remaining==448 && recovered.state.current.field.elapsed==0 && !recovered.special_owner_cleared,
   "Punch recovery acknowledges movement but skips a second jitter and clock/reward debit");
  rejects([&]{advance_session_keeper_punch_recovery(recovered.state,primary,movement);});
- auto legacy=original;legacy[10]='N';std::istringstream old(legacy);check(bytes(load_phase_session(old))==original,"N keeper decisions still readable");
+ auto legacy=original;legacy[10]='N';legacy.resize(361);std::istringstream old(legacy);check(bytes(load_phase_session(old))==original,"N keeper decisions still readable");
  auto forbidden=encoded;forbidden[10]='N';rejects([&]{std::istringstream i(forbidden);load_phase_session(i);});
  auto invalid=caught.state;invalid.current.field.ball_owner=12;rejects([&]{validate_phase_session(invalid);});
  invalid=punched.state;invalid.current.field.elapsed=0;rejects([&]{validate_phase_session(invalid);});

@@ -16,6 +16,7 @@ and goal/save calculations exist separately. Restart/keeper/story, nonterminal
 shot/goal integration, live frame/RNG/presentation and online matches remain work.
 
 Latest detailed references:
+- NATIVE_SCORED_GOAL.md for persistent score/scorer reward before goal presentation
 - NATIVE_KEEPER_SAVES.md for non-goal keeper handoffs and punch recovery
 - NATIVE_KEEPER_ARRIVAL.md for saved keeper setup and stunned decision
 - NATIVE_SAVED_BALL_FLIGHT.md for saved fractional flight, callback boundaries and empty-arrival loose possession

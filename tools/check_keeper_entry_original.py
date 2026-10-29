@@ -22,8 +22,9 @@ def keeper_checkpoint(ram, phase):
     data=bytearray(flight_checkpoint(base,phase,False))
     count=ram[0x600];data[28]=count
     data[309:314]=ram[0x601:0x601+count]+bytes(5-count)
-    if phase in (55,56):data[355:358]=bytes([1,ram[0x616],ram[0x612]])
-    if phase==56:data[358:361]=bytes([ram[0x43D],ram[0x43E],ram[0x445]])
+    if phase in (55,56,59):data[355:358]=bytes([1,ram[0x616],ram[0x612]])
+    if phase==56 or (phase==59 and not ram[0x38E]):data[358:361]=bytes([ram[0x43D],ram[0x43E],ram[0x445]])
+    if phase==59:data[361:365]=bytes([1,ram[0x28],ram[0x29],ram[0x629]])
     return bytes(data)
 
 

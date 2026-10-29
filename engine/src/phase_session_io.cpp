@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I' && version != 'J' && version != 'K' && version != 'L' && version != 'M' && version != 'N' && version != 'O')
+    if ((version < '1' || version > '9') && version != 'A' && version != 'B' && version != 'C' && version != 'D' && version != 'E' && version != 'F' && version != 'G' && version != 'H' && version != 'I' && version != 'J' && version != 'K' && version != 'L' && version != 'M' && version != 'N' && version != 'O' && version != 'P')
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -62,6 +62,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Shot flight setup requires session version19");
     if (version < 'K' && static_cast<unsigned>(state.phase) > 46)
         throw std::invalid_argument("Numeric ball flight requires session version20");
+    if (version < 'P' && static_cast<unsigned>(state.phase) > 58)
+        throw std::invalid_argument("Scored goal requires session version25");
     if (version < 'O' && static_cast<unsigned>(state.phase) > 56)
         throw std::invalid_argument("Keeper save handoff requires session version24");
     if (version < 'N' && static_cast<unsigned>(state.phase) > 55)
@@ -196,6 +198,12 @@ PhaseSessionState load_phase_session(std::istream& input) {
             state.keeper_decision->effect=effect;
         } else if(action || subtype || effect)throw std::invalid_argument("Nonzero unused keeper move");
     }
+    if(version >= 'P') {
+        const auto present=byte(input),left=byte(input),right=byte(input),kickoff=byte(input);
+        if(present>1)throw std::invalid_argument("Invalid score presence");
+        if(present)state.score=MatchScoreContext{left,right,kickoff};
+        else if(left || right || kickoff)throw std::invalid_argument("Nonzero unused score context");
+    }
     if (input.peek() != std::char_traits<char>::eof())
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
@@ -206,7 +214,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'O');
+    byte(output, 'P');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -272,6 +280,10 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     byte(output,state.keeper_decision ? state.keeper_decision->defense_action : 0);
     byte(output,state.keeper_decision ? state.keeper_decision->defense_subtype : 0);
     byte(output,state.keeper_decision ? state.keeper_decision->effect : 0);
+    byte(output,state.score ? 1 : 0);
+    byte(output,state.score ? state.score->left_goals : 0);
+    byte(output,state.score ? state.score->right_goals : 0);
+    byte(output,state.score ? state.score->kickoff : 0);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

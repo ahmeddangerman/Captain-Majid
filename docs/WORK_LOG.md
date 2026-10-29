@@ -762,3 +762,31 @@ Daily website note updated separately; engine/private research remains local.
   finish's optional-vector move, also seen before fix; defaultO2 suite/build are
   clean. Deferred diagnostic investigation; no demonstrated gameplay fault there.
   CMake unavailable. No other material review findings. Engine code stays private.
+
+
+## 2026-10-29 — persistent score and scorer reward
+
+- Added55/56→59 scored-goal preparation for result0 or result1 with subtype&63<3.
+  Explicit0028/0029/0629 baseline avoids guessed scores; saved score must agree.
+  Award scorer selector0 once, increment side0 byte with wrap, retain right score/
+  kickoff/time/RNG/ball/possession/status and save before goal presentation.
+- Snapshot25P365bytes adds4score metadata bytes and readers1..O.59 requires score,
+  retained flight/decision and matching normal/stunned prefix. Replay/special
+  turnover/invalid baseline/format errors reject. Other phases may retain scores.
+- Real native test failed with stub then passed.72 original goal preparations match
+  represented state/new score/reward bytes, including normal/stunned goals, raw
+  subtype masks, types1/33/64, score wrap and reward saturation. Evidence:
+  scored-goal-final. Eight full prepared numeric flights match each
+  cell/callback and eligible normal/stunned goal registration: full-flight-scored-goal.
+- Ruling: stop at85F0 after85ED score increment, before goal presentation1 — initial
+ 85B7 target blocks atC52A/CAAE and needs a presentation acknowledgement. All prior
+  original instructions/reward calls execute; no skipped calls. Cost: presentation1,
+  celebration30/987B, side flip, cleanup and kickoff remain explicitly pending.
+- Final default Make check/all pass cleanly. Fresh assertion core builds pass both
+  scored-goal and keeper-save tests; CMake unavailable. Review found no gameplay
+  defect, but identified a fixed-owner scorer fixture in the comparison tool.
+  Regraded as verification-important because other inputs would mislabel coverage:
+  current-owner assertion fails on owner3 RED; compute0300+12*owner, then72cases
+  pass for each owner2/3 (144total). Evidence: scored-goal-final and
+  scored-goal-owner3-green. Persistent scorer-type assertion prevents recurrence.
+  O1 assertion build retains previously logged GCC optional-vector diagnostics.

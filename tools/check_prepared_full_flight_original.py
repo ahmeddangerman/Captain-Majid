@@ -11,6 +11,7 @@ from flight_checkpoint import flight_checkpoint
 from check_keeper_entry_original import keeper_checkpoint
 from check_keeper_comparison_original import observe_keeper_comparison
 from check_keeper_saves_original import observe_keeper_save, post_save_checkpoint
+from check_scored_goal_original import observe_scored_goal
 from export_phase_session import export_session
 from trace_ball_recovery_phase import trace_recovery
 from verify_action_strength import PAYLOAD_SHA256
@@ -39,12 +40,13 @@ def main():
     def native(source,operation,dest):
         subprocess.run([binary,pack,str(source),*operation,'--capture',str(dest)],capture_output=True,check=True,timeout=30)
     cases=[]
-    for name,x,y,dest,zero in [('loose-with-defenders',120,100,221,False),('keeper-bound',160,96,233,True),('loose-free',80,100,161,True),('keeper-ready-free',160,96,233,True),('keeper-stunned-free',160,96,233,True),('keeper-catch-free',160,96,233,True),('keeper-punch-free',160,96,233,True)]:
+    for name,x,y,dest,zero in [('loose-with-defenders',120,100,221,False),('keeper-bound',160,96,233,True),('loose-free',80,100,161,True),('keeper-ready-free',160,96,233,True),('keeper-stunned-free',160,96,233,True),('keeper-catch-free',160,96,233,True),('keeper-punch-free',160,96,233,True),('keeper-goal-free',160,96,233,True)]:
         ram=bytearray(base);ram[0x634:0x638]=((x<<8)|64).to_bytes(2,'little')+((y<<8)|192).to_bytes(2,'little')
         ram[0x5FE]=((x-48)//8)*12+(y-80)//8;ram[0x638]=dest;ram[0x61A]=255;ram[0x61B]=0;ram[0x617]=0;ram[0x43C]=0;ram[0xE2]=1;ram[0xE3]=0
         if zero:ram[0x600:0x606]=bytes(6);ram[0x612]=0
         if name.startswith("keeper-") and name.endswith("free"):ram[0x38E]=int(name=="keeper-stunned-free")
         if name in ("keeper-catch-free","keeper-punch-free"):ram[0x61C:0x61E]=bytes(2)
+        if name=="keeper-goal-free":ram[0x61C:0x61E]=(65535).to_bytes(2,"little")
         # Freeze candidates in the first visited cell; positions are explicit input.
         probe,cp=original(ram);until(cp,{0xE773});cp.pc=0xE778;until(cp,{0xE7B4,0xE7CC})
         for slot in range(12,22):
@@ -74,7 +76,7 @@ def main():
             report,recovered=trace_recovery(rom[16:262160],bytes(m.ram[:2048]),skip_jitter=True)
             (out/'loose-free-recovery.json').write_text(json.dumps(report,indent=2)+'\n')
             dest=out/'loose-free-recovered.cmjsession';native(routed,['--recover-shot-loose'],dest)
-            expected=bytearray(export_session(recovered,6));expected[10]=ord('O');expected+=bytes(37)
+            expected=bytearray(export_session(recovered,6));expected[10]=ord('P');expected+=bytes(41)
             if dest.read_bytes()!=expected:raise RuntimeError('Complete loose recovery mismatch')
             controlled=out/'loose-free-control.cmjsession';native(dest,['--continue-recovery'],controlled)
             ready_control=out/'loose-free-control-ready.cmjsession';native(controlled,['--setup-control'],ready_control)
@@ -96,6 +98,12 @@ def main():
                 native(prepared,['--resolve-prepared-keeper',str(ram_for_keeper[0x43D]),'0',str(ram_for_keeper[0x2B])],keeper_saved)
                 if keeper_saved.read_bytes()!=keeper_checkpoint(keeper_final,56):raise RuntimeError('Complete prepared keeper comparison mismatch')
                 result['keeper_result']=keeper_final[0x612];result['keeper_comparison_instructions']=instructions
+                if keeper_final[0x612]==0 or (keeper_final[0x612]==1 and (keeper_final[0x43C]&63)<3):
+                    goal_final,goal_instructions=observe_scored_goal(rom[16:262160],keeper_final)
+                    goal_save=out/(name+'-goal-scored.cmjsession')
+                    native(keeper_saved,['--prepare-scored-goal',str(keeper_final[0x28]),str(keeper_final[0x29]),str(keeper_final[0x629])],goal_save)
+                    if goal_save.read_bytes()!=keeper_checkpoint(goal_final,59):raise RuntimeError('Joined normal goal preparation mismatch')
+                    result['goal_scored']=goal_final[0x28];result['goal_registration_instructions']=goal_instructions
                 if keeper_final[0x612]>=2:
                     # Explicit post-display9 handler; actual rewards/status/ownership run.
                     save_final,save_phase,save_instructions=observe_keeper_save(rom[16:262160],keeper_final)
@@ -119,8 +127,14 @@ def main():
                 decided=out/(name+'-decided.cmjsession');native(prepared,['--resolve-stunned-keeper',*map(str,thresholds)],decided)
                 if decided.read_bytes()!=keeper_checkpoint(bytes(m.ram[:2048]),55):raise RuntimeError('Complete stunned keeper decision mismatch')
                 result['stunned_result']=m[0x612]
+                if m[0x612]==0 or (m[0x612]==1 and (m[0x43C]&63)<3):
+                    goal_final,goal_instructions=observe_scored_goal(rom[16:262160],bytes(m.ram[:2048]))
+                    goal_save=out/(name+'-goal-scored.cmjsession')
+                    native(decided,['--prepare-scored-goal',str(m[0x28]),str(m[0x29]),str(m[0x629])],goal_save)
+                    if goal_save.read_bytes()!=keeper_checkpoint(goal_final,59):raise RuntimeError('Joined stunned goal preparation mismatch')
+                    result['goal_scored']=goal_final[0x28];result['goal_registration_instructions']=goal_instructions
         cases.append(result)
-    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Full numeric destination flight with original cell selection and native save/reload every step. Explicit frozen frame acknowledgements; no live NMI/task/input updates or queued arrival encounters. Free keeper cases also match keeper setup, stunned decision before presentation12, prepared normal choice/comparison before presentation9, and non-goal save/reward handlers after acknowledged display9, including punch recovery. Free loose case additionally compares prepared post-display recovery and checks native control-ready. Display45 and native control setup are not claimed part of this original trajectory equality.'},indent=2)+'\n')
+    (out/'verification.json').write_text(json.dumps({'cases':cases,'scope':'Full numeric destination flight with original cell selection and native save/reload every step. Explicit frozen frame acknowledgements; no live NMI/task/input updates or queued arrival encounters. Free keeper cases also match keeper setup, stunned decision before presentation12, prepared normal choice/comparison before presentation9, and non-goal save/reward handlers after acknowledged display9, including punch recovery. Eligible normal/stunned cases also compare scorer reward and score registration before goal presentation1, with no celebration/kickoff claim. Free loose case additionally compares prepared post-display recovery and checks native control-ready. Display45 and native control setup are not claimed part of this original trajectory equality.'},indent=2)+'\n')
     print(f'{len(cases)} complete prepared numeric flights match at every saved cell/callback: {out}')
 
 

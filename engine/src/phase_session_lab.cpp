@@ -15,6 +15,7 @@
 #include "captain/ball_flight_session.hpp"
 #include "captain/keeper_session.hpp"
 #include "captain/keeper_save_session.hpp"
+#include "captain/goal_session.hpp"
 #include <iomanip>
 #include <charconv>
 #include <cstdio>
@@ -81,6 +82,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::shot_flight_pending: return "shot flight setup ready; scheduling pending";
     case captain::FieldSessionPhase::ball_already_arrived: return "ball was already at destination; return without arrival callback";
     case captain::FieldSessionPhase::shot_loose_recovery: return "loose flight presentation/recovery pending";
+    case captain::FieldSessionPhase::goal_celebration_pending: return "goal scored; goal presentation and celebration pending";
     case captain::FieldSessionPhase::keeper_possession: return "keeper possession; keeper control pending";
     case captain::FieldSessionPhase::keeper_punch_recovery: return "keeper punch; no-jitter recovery pending";
     case captain::FieldSessionPhase::keeper_decided: return "keeper result saved; presentation9 pending";
@@ -110,6 +112,7 @@ void show(const captain::PhaseSessionState& state) {
               << " | cell " << unsigned(field.ball_cell) << " | elapsed " << unsigned(field.elapsed)
               << " | selected " << unsigned(field.selected_defenders)
               << " | random " << unsigned(field.random_first) << ',' << unsigned(field.random_second) << '\n';
+    if(state.score)std::cout << "Score: " << unsigned(state.score->left_goals) << '-' << unsigned(state.score->right_goals) << " | kickoff " << unsigned(state.score->kickoff) << '\n';
     if(state.keeper_decision) std::cout << "Keeper result: " << unsigned(state.keeper_decision->result_code) << '\n';
     if(state.ball_trajectory) std::cout << "Trajectory: " << state.ball_trajectory->x << ',' << state.ball_trajectory->y
         << " | velocity " << state.ball_trajectory->vx << ',' << state.ball_trajectory->vy << '\n';
@@ -482,7 +485,7 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
-                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --begin-ball-flight FILE LOWX LOWY | --continue-flight-arrival | --recover-shot-loose | --resolve-keeper-save | --recover-keeper-punch | --prepare-keeper-entry | --resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM | --resolve-stunned-keeper T0 T1 | --resolve-ball-cell | --advance-ball-cell | --prepare-shot-approach | --continue-unopposed-attack ACTION | --continue-prepared-attack | --resume-attack-clock | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --begin-ball-flight FILE LOWX LOWY | --continue-flight-arrival | --recover-shot-loose | --prepare-scored-goal LEFT RIGHT KICKOFF | --resolve-keeper-save | --recover-keeper-punch | --prepare-keeper-entry | --resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM | --resolve-stunned-keeper T0 T1 | --resolve-ball-cell | --advance-ball-cell | --prepare-shot-approach | --continue-unopposed-attack ACTION | --continue-prepared-attack | --resume-attack-clock | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -493,7 +496,7 @@ int main(int argc, char** argv) {
         bool run_control_tick = false, resume_control_time = false;
         bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false, run_continue_clearance = false, run_restart_route = false, run_restart_options = false, run_attack_clock = false, run_resume_attack = false, run_approach = false, run_ball_step=false, run_ball_cell=false, run_arrival=false, run_shot_recovery=false, run_keeper_entry=false, run_keeper_save=false, run_punch_recovery=false;
         std::optional<std::array<std::uint8_t,2>> stunned_thresholds;
-        std::optional<std::array<std::uint8_t,3>> keeper_choice;
+        std::optional<std::array<std::uint8_t,3>> keeper_choice,goal_baseline;
         std::optional<std::string> flight_file;
         std::array<unsigned,2> flight_fractions{};
         std::optional<std::array<unsigned,2>> restart_input;
@@ -529,6 +532,11 @@ int main(int argc, char** argv) {
             else if (option == "--begin-ball-flight") {
                 if(i+3>=argc || flight_file)throw std::invalid_argument("Expected begin-ball-flight FILE LOWX LOWY");
                 flight_file=argv[++i];flight_fractions[0]=number(argv[++i]);flight_fractions[1]=number(argv[++i]);
+            }
+            else if (option == "--prepare-scored-goal") {
+                if(i+3>=argc || goal_baseline)throw std::invalid_argument("Expected left score, right score and kickoff bytes");
+                const auto left=number(argv[++i]),right=number(argv[++i]),kickoff=number(argv[++i]);
+                goal_baseline=std::array<std::uint8_t,3>{static_cast<std::uint8_t>(left),static_cast<std::uint8_t>(right),static_cast<std::uint8_t>(kickoff)};
             }
             else if (option == "--resolve-keeper-save")run_keeper_save=true;
             else if (option == "--recover-keeper-punch")run_punch_recovery=true;
@@ -621,7 +629,7 @@ int main(int argc, char** argv) {
             unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) + unsigned(run_arrival) + unsigned(run_shot_recovery) + unsigned(run_keeper_entry) + unsigned(bool(stunned_thresholds)) + unsigned(bool(keeper_choice)) + unsigned(run_keeper_save) + unsigned(run_punch_recovery) > 1)
+            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) + unsigned(run_arrival) + unsigned(run_shot_recovery) + unsigned(run_keeper_entry) + unsigned(bool(stunned_thresholds)) + unsigned(bool(keeper_choice)) + unsigned(run_keeper_save) + unsigned(run_punch_recovery) + unsigned(bool(goal_baseline)) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -656,6 +664,7 @@ int main(int argc, char** argv) {
         if (unopposed_attack) state=captain::continue_prepared_session_attack(state,*content.contact,*unopposed_attack).state;
         if(flight_file)begin_ball_flight(state,content,*flight_file,flight_fractions[0],flight_fractions[1]);
         if(run_arrival)state=captain::continue_session_unopposed_arrival(state);
+        if(goal_baseline)state=captain::prepare_session_scored_goal(state,{(*goal_baseline)[0],(*goal_baseline)[1],(*goal_baseline)[2]},content);
         if(run_keeper_save)state=captain::resolve_session_keeper_save(state,content).state;
         if(run_punch_recovery)state=captain::advance_session_keeper_punch_recovery(state,content.field_players,*content.movement).state;
         if(keeper_choice)state=captain::resolve_prepared_session_keeper(state,(*keeper_choice)[0],(*keeper_choice)[1],(*keeper_choice)[2],content);
@@ -677,7 +686,7 @@ int main(int argc, char** argv) {
         show(state);
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
-        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, clearance-race-file FILE, continue-clearance, begin-ball-flight FILE LOWX LOWY, continue-flight-arrival, recover-shot-loose, resolve-keeper-save, recover-keeper-punch, prepare-keeper-entry, resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM, resolve-stunned-keeper T0 T1, resolve-ball-cell, advance-ball-cell, prepare-shot-approach, continue-unopposed-attack ACTION, continue-prepared-attack, resume-attack-clock, route-selected-restart, open-prepared-restart-options, restart-options-input HELD PRESSED, advance N, save NEW.cmjsession, quit\n";
+        std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, clearance-race-file FILE, continue-clearance, begin-ball-flight FILE LOWX LOWY, continue-flight-arrival, recover-shot-loose, prepare-scored-goal LEFT RIGHT KICKOFF, resolve-keeper-save, recover-keeper-punch, prepare-keeper-entry, resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM, resolve-stunned-keeper T0 T1, resolve-ball-cell, advance-ball-cell, prepare-shot-approach, continue-unopposed-attack ACTION, continue-prepared-attack, resume-attack-clock, route-selected-restart, open-prepared-restart-options, restart-options-input HELD PRESSED, advance N, save NEW.cmjsession, quit\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
             try {
@@ -715,6 +724,10 @@ int main(int argc, char** argv) {
                     if (command == "advance-control" || command == "resume-control-time")
                         advance_control(state, content, command == "resume-control-time");
                     show(state);
+                } else if (command == "prepare-scored-goal") {
+                    std::string left,right,kickoff;
+                    if(!(input>>left>>right>>kickoff)||(input>>extra))throw std::invalid_argument("Expected prepare-scored-goal LEFT RIGHT KICKOFF");
+                    state=captain::prepare_session_scored_goal(state,{static_cast<std::uint8_t>(number(left)),static_cast<std::uint8_t>(number(right)),static_cast<std::uint8_t>(number(kickoff))},content);show(state);
                 } else if (command == "resolve-prepared-keeper") {
                     std::string action,subtype,team;
                     if(!(input>>action>>subtype>>team)||(input>>extra))throw std::invalid_argument("Expected resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM");

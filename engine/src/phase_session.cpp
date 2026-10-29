@@ -37,14 +37,14 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 58)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 59)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
-    if (bool(state.shot_flight) != (phase >= 46 && phase <= 56))
+    if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59))
         throw std::invalid_argument("Flight setup requires exactly one shot context");
     if (state.shot_flight && (state.shot_flight->destination >= 240 || state.shot_flight->counter != 255))
         throw std::invalid_argument("Unsupported initial shot flight context");
-    const bool trajectory=phase>=47 && phase<=56;
+    const bool trajectory=(phase>=47 && phase<=56) || phase==59;
     if(bool(state.ball_trajectory)!=trajectory)
         throw std::invalid_argument("Numeric flight requires exactly one trajectory context");
     if(state.ball_trajectory) {
@@ -60,14 +60,14 @@ void validate_phase_session(const PhaseSessionState& state) {
             (phase==50 && (t.vx || t.vy)))
             throw std::invalid_argument("Unsupported numeric flight boundary");
     }
-    if((phase==51 && !state.shot_flight->loose_ball) || (phase>=52 && phase<=56 && state.shot_flight->loose_ball))
+    if((phase==51 && !state.shot_flight->loose_ball) || (((phase>=52 && phase<=56) || phase==59) && state.shot_flight->loose_ball))
         throw std::invalid_argument("Flight return phase does not match saved loose/keeper route");
-    if(bool(state.keeper_decision)!=(phase==55 || phase==56) ||
+    if(bool(state.keeper_decision)!=(phase==55 || phase==56 || phase==59) ||
        (state.keeper_decision && (state.keeper_decision->cursor ||
         state.keeper_decision->result_code>(phase==55?1:3) || state.keeper_decision->defense_action>3 ||
         (phase==55 && (state.keeper_decision->defense_action || state.keeper_decision->defense_subtype || state.keeper_decision->effect)))))
         throw std::invalid_argument("Stunned keeper decision needs one valid result/cursor context");
-    const bool keeper_selected=phase==53 || phase==56;
+    const bool keeper_selected=phase==53 || phase==56 || (phase==59 && !state.current.field.keepers[1].stun);
     const bool keeper_possession=phase==57;
     if(phase>=53 && phase<=56) {
         const auto& f=state.current.field;
@@ -85,6 +85,13 @@ void validate_phase_session(const PhaseSessionState& state) {
     if(phase==58 && (state.current.field.side!=0 || state.current.field.selected_defenders || state.current.field.elapsed!=1 ||
        !state.recovery || state.recovery->opposing_player!=11))
         throw std::invalid_argument("Punch recovery requires the prepared empty no-jitter handoff");
+    if(phase==59 && (!state.score || !state.keeper_decision || state.keeper_decision->result_code>1 ||
+       !state.recovery || state.recovery->opposing_player!=11 ||
+       (state.keeper_decision->result_code==1 && (state.recovery->attack_subtype&63u)>=3) ||
+       state.current.field.selected_defenders!=(state.current.field.keepers[1].stun?0:1) ||
+       (state.current.field.selected_defenders && (!state.scheduling || state.scheduling->selected_ids[0]!=11)) ||
+       (state.current.field.keepers[1].stun && (state.keeper_decision->defense_action || state.keeper_decision->defense_subtype || state.keeper_decision->effect))))
+        throw std::invalid_argument("Goal celebration needs a scored keeper result and matching normal/stunned prefix");
     const bool restart_options = phase >= 40 && phase <= 42;
     if (bool(state.restart_options) != restart_options)
         throw std::invalid_argument("Restart options require exactly one menu context");
