@@ -30,7 +30,7 @@ int main(){try{
    r.presentation[4].kind==ControlPresentationKind::sprite && r.presentation[4].id==4,"Options opening requests");
   auto expected=s;expected.phase=r.state.phase;expected.restart_options=r.state.restart_options;expected.current.clock.ball_mode=0;
   check(bytes(expected)==bytes(r.state),"Menu changes time/owner/status/stamina/rewards/action");
-  auto saved=roundtrip(r.state);check(bytes(saved).size()==383 && bytes(saved)[10]=='p',"Session51 format");
+  auto saved=roundtrip(r.state);check(bytes(saved).size()==385 && bytes(saved)[10]=='q',"Session52 format");
   auto versionG=bytes(saved);versionG[10]='G';versionG.resize(339);std::istringstream previous(versionG);
   check(bytes(load_phase_session(previous))==bytes(saved),"VersionG options rewrites canonically asH");
   rejects([&]{open_prepared_restart_options(saved);});

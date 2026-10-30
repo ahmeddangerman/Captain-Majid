@@ -64,7 +64,7 @@ def main():
                 if final[0x43d]!=final[0x60b+cur] or final[0x442]!=final[0x601+cur]:raise RuntimeError('Pending choice projection mismatch')
             results.append({'seed':name,'pressed':pressed,'phase':phase,'requests':len(requests)})
     packed=a.pack.read_bytes()
-    if packed[:8]==b'CMJSHOTC':packed=b'CMJSHOTB'+packed[8:20088]
+    if packed[:8]in (b'CMJSHOTC',b'CMJSHOTD'):packed=b'CMJSHOTB'+packed[8:20088]
     if packed[:8]!=b'CMJSHOTB':raise RuntimeError('Defensive input requires version11 pack')
     prior=bytearray(packed[:-7]);prior[7]=ord('A')
     legacy=bytearray(packed[:-22]);legacy[7]=ord('9')

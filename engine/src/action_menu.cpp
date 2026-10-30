@@ -3,6 +3,18 @@
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult open_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
+ const auto option=keeper_area_defense_special_option(input,content);
+ if(!option || !content.special_cursor)
+  throw std::invalid_argument("Special chooser requires an available option and private cursor geometry");
+ ActionMenuResult result{input};
+ result.state.area_special_option=*option;
+ result.state.area_defense->pressed=0;
+ result.state.phase=FieldSessionPhase::keeper_area_special_ready;
+ result.presentation.push_back({ControlPresentationKind::display,12});
+ result.special_cursor=SpecialCursorPresentation{(*content.special_cursor)[0],(*content.special_cursor)[1],3};
+ validate_phase_session(result.state);return result;
+}
 std::optional<std::uint8_t> keeper_area_defense_special_option(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defense_preparation)

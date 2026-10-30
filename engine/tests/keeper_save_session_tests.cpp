@@ -211,7 +211,7 @@ int main(){try{
   auto saved=bytes(output);saved[10]='o';
   rejects([&]{std::istringstream old(saved);load_phase_session(old);});
  }
- auto old_pending=bytes(plain_confirm);old_pending[10]='o';std::istringstream old_pending_stream(old_pending);
+ auto old_pending=bytes(plain_confirm);old_pending[10]='o';old_pending.resize(383);std::istringstream old_pending_stream(old_pending);
  check(bytes(load_phase_session(old_pending_stream))==bytes(plain_confirm),"Legacy o pending preparation stays readable");
  auto special_pending=defense_confirm.state;special_pending.area_defense->actions[0]=2;
  const auto special_before=bytes(special_pending);
@@ -228,7 +228,7 @@ int main(){try{
  rejects([&]{validate_phase_session(early_complete);});
  rejects([&]{prepare_keeper_area_defense(registered.state,defense_content);});
  rejects([&]{poll_keeper_area_defense(completed.state,128,defense_content);});
- auto legacy_partial=bytes(next_defender.state);legacy_partial[10]='o';std::istringstream legacy_partial_stream(legacy_partial);
+ auto legacy_partial=bytes(next_defender.state);legacy_partial[10]='o';legacy_partial.resize(383);std::istringstream legacy_partial_stream(legacy_partial);
  check(bytes(load_phase_session(legacy_partial_stream))==bytes(next_defender.state),"Legacy o partial70 remains readable");
  auto mixed_partial=pending_four.state;mixed_partial.area_defense->pressed=129;
  check(prepare_keeper_area_defense(mixed_partial,defense_content).state.action->cursor==1,
@@ -250,6 +250,31 @@ int main(){try{
  option_pending.current.field.roster[10].type=20;
  check(keeper_area_defense_special_option(option_pending,defense_content)==7,"Required teammate in slot10 enables option");
  rejects([&]{prepare_keeper_area_defense(option_pending,defense_content);});
+ defense_content.special_cursor=std::array<std::uint8_t,2>{22,33};
+ auto special_open=open_keeper_area_special(option_pending,defense_content);
+ check(static_cast<unsigned>(special_open.state.phase)==73 && special_open.state.area_defense->pressed==0 &&
+       special_open.presentation.size()==1 && special_open.presentation[0].id==12 &&
+       special_open.special_cursor && special_open.special_cursor->tile==22 &&
+       special_open.special_cursor->x==33 && special_open.special_cursor->attribute==3,
+       "Special menu opens with display and captured cursor metadata");
+ auto special_encoded=bytes(special_open.state);std::istringstream special_stream(special_encoded);
+ check(bytes(load_phase_session(special_stream))==special_encoded,"Special chooser roundtrip");
+ check(special_open.state.area_special_option && *special_open.state.area_special_option==7 &&
+       special_open.state.current.field.roster[1].stamina==option_pending.current.field.roster[1].stamina,
+       "Chooser saves option and leaves stamina unchanged");
+ auto missing_special=special_open.state;missing_special.area_special_option.reset();
+ rejects([&]{validate_phase_session(missing_special);});
+ auto malformed_special=special_encoded;malformed_special[383]=2;
+ rejects([&]{std::istringstream bad(malformed_special);load_phase_session(bad);});
+ auto absent_special=special_encoded;absent_special[383]=0;absent_special[384]=7;
+ rejects([&]{std::istringstream bad(absent_special);load_phase_session(bad);});
+ auto truncated_special=special_encoded;truncated_special.pop_back();
+ rejects([&]{std::istringstream bad(truncated_special);load_phase_session(bad);});
+ auto old_special=special_encoded;old_special[10]='p';old_special.resize(383);
+ rejects([&]{std::istringstream old(old_special);load_phase_session(old);});
+ auto no_cursor=defense_content;no_cursor.special_cursor.reset();
+ rejects([&]{open_keeper_area_special(option_pending,no_cursor);});
+ rejects([&]{open_keeper_area_special(special_open.state,defense_content);});
  defense_content.special_options->field_action2[10]=AreaDefenseSpecialOption{3,std::nullopt};
  check(keeper_area_defense_special_option(option_pending,defense_content)==3,"Unconditional option needs no teammate");
  defense_content.special_options->field_action2[10]=AreaDefenseSpecialOption{5,std::uint8_t{10}};
@@ -259,6 +284,11 @@ int main(){try{
   option_pending.current.field.roster[10].type=required;
   check(keeper_area_defense_special_option(option_pending,defense_content)==0,
         "Raw teammate type0/255 and subtype0 are distinct from no condition or option");
+  auto zero_option=open_keeper_area_special(option_pending,defense_content);
+  check(zero_option.state.area_special_option && *zero_option.state.area_special_option==0,
+        "Chooser preserves option zero distinctly from an absent option");
+  auto zero_bytes=bytes(zero_option.state);std::istringstream zero_stream(zero_bytes);
+  check(bytes(load_phase_session(zero_stream))==zero_bytes,"Chooser option zero survives a snapshot roundtrip");
   rejects([&]{prepare_keeper_area_defense(option_pending,defense_content);});
  }
  auto missing_options=defense_content;missing_options.special_options.reset();
@@ -282,7 +312,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<383;++size) {
+ for(unsigned size=372;size<385;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }

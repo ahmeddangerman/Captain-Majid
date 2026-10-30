@@ -3,7 +3,7 @@ project(CaptainMajid LANGUAGES CXX)
 
 add_library(captain_core engine/src/action_strength.cpp engine/src/session.cpp
     engine/src/defender_contact.cpp engine/src/shot_power.cpp engine/src/goalkeeper.cpp
-    engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_random.cpp
+    engine/src/energy.cpp engine/src/defense_affordability.cpp engine/src/keeper_state.cpp engine/src/reference_random.cpp
     engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp
     engine/src/defender_outcome.cpp engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
     engine/src/defender_selection.cpp engine/src/field_defender_preparation.cpp
@@ -47,6 +47,9 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(defense-affordability-tests engine/tests/defense_affordability_tests.cpp)
+    target_link_libraries(defense-affordability-tests PRIVATE captain_core)
+    add_test(NAME defense_affordability COMMAND defense-affordability-tests)
     add_executable(kickoff-session-tests engine/tests/kickoff_session_tests.cpp)
     target_link_libraries(kickoff-session-tests PRIVATE captain_core)
     add_test(NAME kickoff_session COMMAND kickoff-session-tests)

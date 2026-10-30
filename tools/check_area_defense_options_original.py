@@ -12,6 +12,7 @@ def main():
     for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
     a=p.parse_args();rom=a.rom.read_bytes();packed=a.pack.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
+    if packed[:8]==b'CMJSHOTD':packed=b'CMJSHOTC'+packed[8:-2]
     if packed[:8]!=b'CMJSHOTC':p.error('Expected private version12C pack')
     # Canonical content11 prefix size, followed by the new bounded rule section.
     start=20088;count=int.from_bytes(packed[start:start+2],'little');pos=start+2;rules=[];offsets=[]

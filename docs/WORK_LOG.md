@@ -1293,3 +1293,20 @@ Daily website note updated separately; engine/private research remains local.
 - The requested independent reviewer hit its usage limit; the author inspected
   the change and corrected a version-C guard in the prompt comparison tool.
   Next: special-choice UI and affordability, then the resulting area action.
+
+## 2026-10-30 — special chooser opening and stamina decision
+
+- Added phase73: an available defensive special option opens a prepared menu and
+  cursor before its first input. Snapshot52q385bytes stores the option; private
+  content13D adds two cursor geometry bytes. Older content/snapshots remain
+  readable within their existing scopes. Prior cursor Y is not represented.
+- Original CPU matched240 controlled menu openings with full represented snapshots
+  and display/cursor metadata; evidence defense-special-open-final. Legacy p phase,
+  missing/invalid content and replay reject; flag and interactive saves match.
+  Frame/display acknowledgements remain explicit; no live graphics or input claim.
+- Added isolated wrapped-sign stamina decision without debit or cost loading.
+  10,400 original numeric cases matched, including subtype0 and wraparound.
+  Full Make check/all passed. CMake was unavailable on this host. A separate
+  read-only review found no critical or important issues.
+- Next: sample the chooser's A/B and direction input, load the chosen move cost,
+  connect affordability and preserve the subsequent defensive action flow.

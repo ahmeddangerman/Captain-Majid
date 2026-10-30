@@ -225,3 +225,28 @@ special choices pending their chooser. Evidence: `defense-options-first`.
 The updated content pack also passed1,713 registration and1,024 input comparisons.
 These use captured state and host acknowledgements, not a complete match or
 live presentation. Special selection, affordability and action execution remain.
+
+## Special chooser opening and isolated stamina check
+
+`open-keeper-area-special` opens an available defensive special choice and saves
+phase73 before the chooser's first input. It emits display12 and cursor tile,
+horizontal position and attribute metadata; it retains the selected option and
+clears the earlier confirmation sample. The next input must be sampled separately.
+The cursor's vertical position is not yet represented at this opening boundary.
+Snapshot52 (`q`,385bytes) adds the optional selected option; older snapshots remain
+readable, while old p cannot represent the new phase. Private content13 `CMJSHOTD`
+adds two cursor bytes to content12; the canonical pack is20,222bytes.
+
+`check_area_defense_special_open_original.py` matched240 constructed openings
+through original D3D4→CFA4, comparing complete represented state, display request
+and cursor metadata. Evidence: `defense-special-open-final`. Host frame and
+presentation acknowledgements are explicit; this does not implement rendering or
+sampled chooser input. Invalid/missing content, legacy phase encoding and replay
+reject; interactive save matches the flag operation.
+
+The independent `can_select_defense_move` numeric function reproduces the original
+stamina decision using wrapped16-bit subtraction and its sign bit. Subtype0 is
+allowed even if the result has its high bit set. It neither loads move cost nor
+changes stamina. `check_defense_affordability_original.py` compared10,400 controlled
+numeric decisions against D76B→D75B, including wraparound. The chooser, move-cost
+loader and stamina check are not yet connected to one another.

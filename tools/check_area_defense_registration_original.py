@@ -74,7 +74,7 @@ def main():
     # Unsupported paths must leave no capture behind; no special-menu bypass.
     rejected=[]
     missing_rules=a.pack.read_bytes()
-    if missing_rules[:8]==b'CMJSHOTC':missing_rules=b'CMJSHOTB'+missing_rules[8:20088]
+    if missing_rules[:8]in (b'CMJSHOTC',b'CMJSHOTD'):missing_rules=b'CMJSHOTB'+missing_rules[8:20088]
     old_pack=out/'missing-option-rules.cmjpack';old_pack.write_bytes(missing_rules)
     for name,action,slot,pressed in (('missing-special-rules',2,0,128),('full-direction',4,3,129)):
         entry=bytearray(seeds['last']);entry[0x61e]=slot;entry[0x60b+slot]=action

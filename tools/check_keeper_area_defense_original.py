@@ -67,8 +67,8 @@ def main():
                 results.append({'count':count,'blink':blink,'flags':flags,'phase':phase,'instructions':report['instructions'],'prompt_checked':prompt_checked})
     if a.prompt:
         packed=a.pack.read_bytes()
-        if packed[:8] not in (b'CMJSHOTA',b'CMJSHOTB',b'CMJSHOTC'):raise RuntimeError('Prompt verification needs version10 or later pack')
-        if packed[:8]==b'CMJSHOTC':packed=b'CMJSHOTB'+packed[8:20088]
+        if packed[:8] not in (b'CMJSHOTA',b'CMJSHOTB',b'CMJSHOTC',b'CMJSHOTD'):raise RuntimeError('Prompt verification needs version10 or later pack')
+        if packed[:8]in (b'CMJSHOTC',b'CMJSHOTD'):packed=b'CMJSHOTB'+packed[8:20088]
         tail_size=15 if packed[:8]==b'CMJSHOTA' else 22
         old=bytearray(packed[:-tail_size]);old[7]=ord('9')
         invalid=bytearray(packed);invalid[-1 if tail_size==15 else -8]=7

@@ -4,6 +4,7 @@ CPPFLAGS += -Iengine/include
 CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
 CORE_SOURCES = engine/src/action_strength.cpp engine/src/session.cpp engine/src/defender_contact.cpp engine/src/shot_power.cpp engine/src/goalkeeper.cpp
 CORE_SOURCES += engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_random.cpp
+CORE_SOURCES += engine/src/defense_affordability.cpp
 CORE_SOURCES += engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp engine/src/defender_outcome.cpp
 CORE_SOURCES += engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
 CORE_SOURCES += engine/src/defender_selection.cpp
@@ -172,6 +173,9 @@ build/keeper-session-tests: engine/tests/keeper_session_tests.cpp $(CORE) $(HEAD
 build/keeper-save-session-tests: engine/tests/keeper_save_session_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/keeper_save_session_tests.cpp $(CORE) -o $@
 
+build/defense-affordability-tests: engine/tests/defense_affordability_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/defense_affordability_tests.cpp $(CORE) -o $@
+
 build/goal-session-tests: engine/tests/goal_session_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/goal_session_tests.cpp $(CORE) -o $@
 
@@ -184,7 +188,8 @@ build/kickoff-formation-tests: engine/tests/kickoff_formation_tests.cpp $(CORE) 
 build/kickoff-session-tests: engine/tests/kickoff_session_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/kickoff_session_tests.cpp $(CORE) -o $@
 
-check: build/kickoff-session-tests build/kickoff-formation-tests build/kickoff-selection-tests build/goal-session-tests build/keeper-save-session-tests build/keeper-session-tests build/loose-arrival-tests build/ball-flight-session-tests build/ball-step-tests build/ball-velocity-tests build/approach-session-tests build/attack-clock-tests build/restart-options-tests build/restart-route-tests build/clearance-handoff-tests build/clearance-race-tests build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+check: build/defense-affordability-tests build/kickoff-session-tests build/kickoff-formation-tests build/kickoff-selection-tests build/goal-session-tests build/keeper-save-session-tests build/keeper-session-tests build/loose-arrival-tests build/ball-flight-session-tests build/ball-step-tests build/ball-velocity-tests build/approach-session-tests build/attack-clock-tests build/restart-options-tests build/restart-route-tests build/clearance-handoff-tests build/clearance-race-tests build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
+	./build/defense-affordability-tests
 	./build/kickoff-session-tests
 	./build/kickoff-formation-tests
 	./build/kickoff-selection-tests
