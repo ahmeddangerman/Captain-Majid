@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese development data to a local CMJSHOTB pack."""
+"""Export private Japanese development data to a local CMJSHOTC pack."""
 import argparse
 import hashlib
 import struct
@@ -19,7 +19,7 @@ def export_data(rom):
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
-    data = bytearray(b'CMJSHOTB' + hashlib.sha256(rom[16:]).digest())
+    data = bytearray(b'CMJSHOTC' + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -122,6 +122,25 @@ def export_data(rom):
         if not 0xD539 <= pointer < 0xD548:
             raise ValueError('Unsupported defensive icon pointer')
         data.append(menu[pointer])
+    # Original8D65..8E1A uses raw player type, not resolved skill profile.
+    groups=word(stats,0x8E1B)
+    if not 0x8E1D<=groups<=0x901B or (groups-0x8E1B)%2:
+        raise ValueError('Unsupported defensive option type table')
+    count=(groups-0x8E1B)//2
+    data.extend(struct.pack('<H',count))
+    for player_type in range(count):
+        group=word(stats,0x8E1B+2*player_type)
+        if not groups<=group<=0x934D-14:
+            raise ValueError('Unsupported defensive option group')
+        pointer=word(stats,group+12)  # action2 is group slot(action+4).
+        data.append(int(bool(pointer)))
+        if pointer:
+            if not 0x934D<=pointer<0x9460:
+                raise ValueError('Unsupported defensive option rule pointer')
+            value=stats[pointer];conditional=not bool(value&128)
+            if conditional and pointer+1>=0x9460:
+                raise ValueError('Truncated defensive teammate condition')
+            data.extend((value&127,int(conditional),stats[pointer+1] if conditional else 0))
     return bytes(data)
 
 

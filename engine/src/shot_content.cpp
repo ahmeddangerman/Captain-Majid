@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -161,9 +161,24 @@ ShotContent load_shot_content(std::istream& input) {
                 throw std::invalid_argument("Unsupported defensive menu action");
         }
     }
-    if(version=='B') {
+    if(version>='B') {
         content.area_defense_menu->field_icons=std::array<std::uint8_t,7>{};
         reader.bytes(*content.area_defense_menu->field_icons);
+    }
+    if(version>='C') {
+        content.area_defense_menu->special_options=AreaDefenseSpecialOptions{};
+        auto& rules=content.area_defense_menu->special_options->field_action2;
+        rules.resize(reader.count(1,256));
+        for(auto& rule:rules) {
+            const auto present=reader.byte();
+            if(present>1)throw std::invalid_argument("Invalid defensive special-option presence");
+            if(present) {
+                const auto subtype=reader.byte(),conditional=reader.byte(),required=reader.byte();
+                if(subtype>127 || conditional>1 || (!conditional && required))
+                    throw std::invalid_argument("Invalid defensive special-option rule");
+                rule=AreaDefenseSpecialOption{subtype,conditional ? std::optional<std::uint8_t>{required} : std::nullopt};
+            }
+        }
     }
     reader.end();
     return content;

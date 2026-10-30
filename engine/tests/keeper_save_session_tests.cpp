@@ -228,6 +228,49 @@ int main(){try{
  rejects([&]{validate_phase_session(early_complete);});
  rejects([&]{prepare_keeper_area_defense(registered.state,defense_content);});
  rejects([&]{poll_keeper_area_defense(completed.state,128,defense_content);});
+ auto legacy_partial=bytes(next_defender.state);legacy_partial[10]='o';std::istringstream legacy_partial_stream(legacy_partial);
+ check(bytes(load_phase_session(legacy_partial_stream))==bytes(next_defender.state),"Legacy o partial70 remains readable");
+ auto mixed_partial=pending_four.state;mixed_partial.area_defense->pressed=129;
+ check(prepare_keeper_area_defense(mixed_partial,defense_content).state.action->cursor==1,
+       "A with direction registers a nonfinal slot before its next prompt");
+ auto mixed_back=plain_confirm;mixed_back.area_defense->pressed=193;
+ check(prepare_keeper_area_defense(mixed_back,defense_content).state.action->cursor==0,
+       "A plus B takes precedence over direction after final registration");
+ check(!keeper_area_defense_special_option(plain_confirm,defense_content),"Ordinary action bypasses special data");
+ auto option_pending=plain_confirm;option_pending.area_defense->actions[0]=2;
+ option_pending.current.field.roster[1].type=10;
+ defense_content.special_options=AreaDefenseSpecialOptions{};
+ defense_content.special_options->field_action2.resize(35);
+ check(!keeper_area_defense_special_option(option_pending,defense_content),"Missing rule means no special option");
+ check(prepare_keeper_area_defense(option_pending,defense_content).state.action->cursor==1,
+       "Action2 with no special option registers ordinary subtype0");
+ defense_content.special_options->field_action2[10]=AreaDefenseSpecialOption{7,std::uint8_t{20}};
+ for(unsigned i=1;i<=10;++i)option_pending.current.field.roster[i].type=10;
+ check(!keeper_area_defense_special_option(option_pending,defense_content),"Required teammate absent suppresses option");
+ option_pending.current.field.roster[10].type=20;
+ check(keeper_area_defense_special_option(option_pending,defense_content)==7,"Required teammate in slot10 enables option");
+ rejects([&]{prepare_keeper_area_defense(option_pending,defense_content);});
+ defense_content.special_options->field_action2[10]=AreaDefenseSpecialOption{3,std::nullopt};
+ check(keeper_area_defense_special_option(option_pending,defense_content)==3,"Unconditional option needs no teammate");
+ defense_content.special_options->field_action2[10]=AreaDefenseSpecialOption{5,std::uint8_t{10}};
+ check(keeper_area_defense_special_option(option_pending,defense_content)==5,"Original teammate scan includes the selected actor");
+ for(const auto required:{std::uint8_t{0},std::uint8_t{255}}) {
+  defense_content.special_options->field_action2[10]=AreaDefenseSpecialOption{0,required};
+  option_pending.current.field.roster[10].type=required;
+  check(keeper_area_defense_special_option(option_pending,defense_content)==0,
+        "Raw teammate type0/255 and subtype0 are distinct from no condition or option");
+  rejects([&]{prepare_keeper_area_defense(option_pending,defense_content);});
+ }
+ auto missing_options=defense_content;missing_options.special_options.reset();
+ rejects([&]{keeper_area_defense_special_option(option_pending,missing_options);});
+ option_pending.current.field.roster[1].type=35;
+ rejects([&]{keeper_area_defense_special_option(option_pending,defense_content);});
+ for(unsigned action=0;action<2;++action) {
+  auto bypass=plain_confirm;bypass.area_defense->actions[0]=action;
+  check(!keeper_area_defense_special_option(bypass,missing_options) &&
+        prepare_keeper_area_defense(bypass,missing_options).state.action->cursor==1,
+        "Nonzero area variant bypasses special options for field actions0/1");
+ }
  for(const auto& output:{empty_defense,initialized_defense}) {
   auto saved=bytes(output);std::istringstream stream(saved);
   check(bytes(load_phase_session(stream))==saved,"Defense entry roundtrip");

@@ -202,3 +202,26 @@ requests match original D3D4/D3AB through D3A6 or bank26:8B8F. Evidence:
 D568 bank restoration and acknowledges frame/display work; every original
 instruction executes, but this is not a native renderer/NMI/audio loop. No
 defensive action result, AI decision or naturally occurring match is implied.
+
+## Defensive special-option availability
+
+For a confirmed area defense choice, the native engine now checks whether a
+special move is available. Some moves require a teammate with a particular raw
+player type; others have no teammate condition. The scan includes field players
+1–10. If no special option exists, actions0–2 can register their ordinary choice.
+If an option exists, preparation pauses with an explicit error until the special
+move chooser is implemented. No stamina is charged at this stage.
+
+Private content12 (`CMJSHOTC`) adds bounded availability rules for118 raw player
+types; its canonical pack is20,220bytes. Older packs remain readable. Action2
+needs the new rules, and unknown types reject rather than guessing. Snapshot51p
+is unchanged. CLI/interactive `inspect-keeper-area-defense` reports an option
+without changing the saved session.
+
+The original ROM comparison covered1,416 constructed availability cases across
+all118 supported raw types, two teammate setups, two area variants and actions
+0–2. It also matched1,404 ordinary registrations and rejected12 available
+special choices pending their chooser. Evidence: `defense-options-first`.
+The updated content pack also passed1,713 registration and1,024 input comparisons.
+These use captured state and host acknowledgements, not a complete match or
+live presentation. Special selection, affordability and action execution remain.

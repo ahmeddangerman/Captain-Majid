@@ -1278,3 +1278,18 @@ Daily website note updated separately; engine/private research remains local.
   coverage was added before review completion. Further suggested legacy-partial
   and mixed-direction sample coverage is recorded in the plan for follow-up.
   Continuing into conditional defensive special-option loading.
+
+## 2026-10-30 — defensive special availability
+
+- Added private content12C rules and a non-mutating availability query. Field
+  action2 checks the raw player type and optional teammate among slots1–10;
+  actions0/1 bypass special options for the represented nonzero area variant.
+  No-option choices register normally; an available special remains pending for
+  its unimplemented chooser. No stamina is spent. Snapshot51p is unchanged.
+- Original comparison:1,416 availability cases,1,404 ordinary registrations,
+  and12 special pauses. Evidence: defense-options-first. The current pack also
+  matched1,713 registration and1,024 polling cases. Malformed or missing rule
+  data and unsupported player types reject. Full Make check/all passed.
+- The requested independent reviewer hit its usage limit; the author inspected
+  the change and corrected a version-C guard in the prompt comparison tool.
+  Next: special-choice UI and affordability, then the resulting area action.

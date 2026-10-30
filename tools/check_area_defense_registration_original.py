@@ -39,7 +39,7 @@ def main():
         for player in range(1,11):
             ids=[i for i in range(1,11) if i!=player][:3];ids.insert(slot,player)
             for action in range(3,7):
-                for pressed in (128,144,192,208):
+                for pressed in (128,144,192,208,193,*((129,) if slot<3 else ())):
                     entry=bytearray(seeds['last']);entry[0x61e]=slot
                     entry[0x601:0x605]=bytes(ids);entry[0x60b:0x60f]=bytes([4]*4)
                     entry[0x60b+slot]=action;entry[0x442]=player;entry[0x1e]=pressed
@@ -73,12 +73,15 @@ def main():
 
     # Unsupported paths must leave no capture behind; no special-menu bypass.
     rejected=[]
-    for name,action,slot,pressed in (('special0',0,0,128),('special1',1,0,128),('special2',2,0,128),('full-direction',4,3,129)):
+    missing_rules=a.pack.read_bytes()
+    if missing_rules[:8]==b'CMJSHOTC':missing_rules=b'CMJSHOTB'+missing_rules[8:20088]
+    old_pack=out/'missing-option-rules.cmjpack';old_pack.write_bytes(missing_rules)
+    for name,action,slot,pressed in (('missing-special-rules',2,0,128),('full-direction',4,3,129)):
         entry=bytearray(seeds['last']);entry[0x61e]=slot;entry[0x60b+slot]=action
         entry[0x442]=entry[0x601+slot];entry[0x1e]=pressed
         source=out/f'{name}-entry.cmjsession';source.write_bytes(poll_snapshot(entry,71))
         target=out/f'{name}-rejected.cmjsession'
-        run=subprocess.run([binary,pack,str(source),'--prepare-keeper-area-defense','--capture',str(target)],capture_output=True,timeout=30)
+        run=subprocess.run([binary,str(old_pack) if action==2 else pack,str(source),'--prepare-keeper-area-defense','--capture',str(target)],capture_output=True,timeout=30)
         if not run.returncode or target.exists():raise RuntimeError(f'{name}: unsupported registration accepted')
         rejected.append(name)
     (out/'verification.json').write_text(json.dumps({'cases':results,'rejected':rejected,

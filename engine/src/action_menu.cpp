@@ -3,15 +3,36 @@
 #include <stdexcept>
 
 namespace captain {
+std::optional<std::uint8_t> keeper_area_defense_special_option(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_defense_preparation)
+  throw std::invalid_argument("Defensive availability requires a confirmed choice");
+ const auto action=input.area_defense->actions[input.action->cursor];
+ // Field actions>=3 bypass options. With a nonzero area variant, so do0/1.
+ if(action>=3 || (input.recovery->ball_variant && action!=2))return std::nullopt;
+ if(action!=2 || !content.special_options)
+  throw std::invalid_argument("Missing private defensive special-option rules");
+ const auto player=input.recovery->opposing_player;
+ const auto type=input.current.field.roster[player].type;
+ const auto& rules=content.special_options->field_action2;
+ if(type>=rules.size())throw std::invalid_argument("Defensive special-option player type is outside private rules");
+ const auto& rule=rules[type];
+ if(!rule)return std::nullopt;
+ if(rule->subtype>127)throw std::invalid_argument("Unsupported defensive special subtype");
+ if(!rule->teammate_type)return rule->subtype;
+ // Original scans home field IDs1..10, including the acting player.
+ for(unsigned id=1;id<=10;++id)
+  if(input.current.field.roster[id].type==*rule->teammate_type)return rule->subtype;
+ return std::nullopt;
+}
 ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defense_preparation || !content.field_icons)
   throw std::invalid_argument("Defensive registration requires a confirmed choice and private icons");
  const auto slot=input.action->cursor;
  const auto action=input.area_defense->actions[slot];
- // Original bank28:8D65..8D8D bypasses special options for field actions>=3.
- if(action<3 || action>6)
-  throw std::invalid_argument("This defensive choice needs the unimplemented special-option loader");
+ if(keeper_area_defense_special_option(input,content))
+  throw std::invalid_argument("Available defensive special option requires its unimplemented move chooser");
  ActionMenuResult result{input};auto& state=result.state;auto& menu=*state.action;auto& defense=*state.area_defense;
  const auto pressed=defense.pressed;
  defense.subtypes[slot]=0;

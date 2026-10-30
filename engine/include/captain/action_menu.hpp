@@ -8,10 +8,18 @@ struct ActionMenuContent {
     std::array<std::uint8_t, 10> icons;
     std::array<std::uint8_t, 6> titles, backgrounds;
 };
+struct AreaDefenseSpecialOption {
+    std::uint8_t subtype=0;
+    std::optional<std::uint8_t> teammate_type{};
+};
+struct AreaDefenseSpecialOptions {
+    std::vector<std::optional<AreaDefenseSpecialOption>> field_action2;
+};
 struct AreaDefenseMenuContent {
     std::array<std::uint8_t,3> titles{};
     std::array<std::array<std::uint8_t,4>,3> directions{};
     std::optional<std::array<std::uint8_t,7>> field_icons{};
+    std::optional<AreaDefenseSpecialOptions> special_options{};
 };
 struct ActionMenuResult {
     PhaseSessionState state;
@@ -26,7 +34,9 @@ ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,
 PhaseSessionState begin_keeper_area_defense(const PhaseSessionState& input,std::uint8_t blink);
 ActionMenuResult open_keeper_area_defense_prompt(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content);
-// Ordinary non-special field choices3..6 only; no energy is consumed here.
+// Query the original area-specific option gate without changing state.
+std::optional<std::uint8_t> keeper_area_defense_special_option(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
+// Ordinary field choices only; available special options stay pending. No energy charge.
 ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,
                                       const ActionMenuContent& content);

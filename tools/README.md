@@ -146,3 +146,9 @@ the captured sample; the latest snapshot writer is51p (still383bytes). Original
 parent returns and host frame/display acknowledgements are explicit. Special
 options and unrepresented full-prefix direction scratch writes reject. See the
 keeper-area reference for exact coverage and remaining execution work.
+
+Private `CMJSHOTC` adds defensive special availability rules. Use
+`check_area_defense_options_original.py ROM PACK KEEPER_RAM OUTPUT_DIR` to compare
+the original loader and ordinary fallback. `inspect-keeper-area-defense` reports
+the current pending option without altering state; available special selection
+still requires a chooser. Keep the pack and outputs outside the checkout.
