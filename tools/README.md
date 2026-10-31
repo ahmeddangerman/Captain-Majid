@@ -165,3 +165,7 @@ content14E and snapshot53r; outputs remain outside the checkout.
 `check_defensive_move_inspection_original.py ROM PACK` compares the standalone
 profile-based move cost/effect and affordability against the original loader and
 decision. It does not execute a move, debit stamina or exercise the chooser.
+
+`check_area_defense_special_resolve_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
+compares saved chooser outcomes, cost and stamina decisions through the original
+D403/D40C boundary. Outputs and private content stay outside the checkout.

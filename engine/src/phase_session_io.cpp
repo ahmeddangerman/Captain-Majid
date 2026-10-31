@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'r'))
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'s'))
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -36,6 +36,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.current.clock.script_flags = byte(input); state.current.clock.ball_mode = byte(input);
     state.current.shared_recovery_flags = byte(input); state.current.shared_recovery_timer = byte(input);
     state.phase = static_cast<FieldSessionPhase>(byte(input));
+    if(version<'s' && static_cast<unsigned>(state.phase)>75)
+        throw std::invalid_argument("Special inspection requires session version54");
     if(version<'r' && static_cast<unsigned>(state.phase)>73)
         throw std::invalid_argument("Special chooser polling requires session version53");
     if(version<'q' && static_cast<unsigned>(state.phase)>72)
@@ -270,6 +272,12 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if(present)state.area_special_option=option;
     }
     if(version >= 'r') {state.area_special_cursor=byte(input);state.area_special_pressed=byte(input);}
+    if(version >= 's') {
+        const auto present=byte(input),status=byte(input),subtype=byte(input),low=byte(input),high=byte(input),effect=byte(input);
+        if(present>1 || (!present && (status || subtype || low || high || effect)))
+            throw std::invalid_argument("Invalid special decision context");
+        if(present)state.area_special_decision=PhaseSessionState::SpecialDecision{status,subtype,static_cast<std::uint16_t>(unsigned(low)|(unsigned(high)<<8)),effect};
+    }
     if(version<'k' && state.phase==FieldSessionPhase::human_action_menu && state.keeper_area)
         throw std::invalid_argument("Keeper-area menu requires session version46");
     if(version<'l' && state.phase==FieldSessionPhase::attack_choice_pending && state.keeper_area)
@@ -317,7 +325,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'r');
+    byte(output, 's');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -402,6 +410,10 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     byte(output,state.area_special_option ? 1 : 0);
     byte(output,state.area_special_option.value_or(0));
     byte(output,state.area_special_cursor);byte(output,state.area_special_pressed);
+    byte(output,state.area_special_decision ? 1 : 0);
+    const auto decision=state.area_special_decision.value_or(PhaseSessionState::SpecialDecision{});
+    byte(output,decision.status);byte(output,decision.subtype);byte(output,decision.cost&255);
+    byte(output,decision.cost>>8);byte(output,decision.effect);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

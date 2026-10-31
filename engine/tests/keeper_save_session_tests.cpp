@@ -271,6 +271,49 @@ int main(){try{
  auto special_cancel=poll_keeper_area_special(special_open.state,64,defense_content);
  check(special_cancel.state.area_special_pressed==64 && static_cast<unsigned>(special_cancel.state.phase)==75,
        "Chooser cancellation preserves the B sample");
+ auto cancel_inspected=inspect_keeper_area_special(special_cancel.state,FieldPlayerProfiles{},FieldDefenseContent{});
+ check(static_cast<unsigned>(cancel_inspected.state.phase)==76 &&
+       cancel_inspected.state.area_special_pressed==64 && cancel_inspected.presentation.empty(),
+       "Cancellation reaches the pre-redraw boundary without loading a move");
+ check(cancel_inspected.state.area_special_decision && cancel_inspected.state.area_special_decision->status==2 &&
+       cancel_inspected.state.area_special_decision->cost==0,"Cancellation stores canonical empty inspection data");
+ FieldPlayerProfiles special_profiles{};special_profiles.skills.resize(1);
+ FieldDefenseContent special_moves{};special_moves.skill_selectors[2][1]=1;
+ special_moves.moves[2].push_back({3,0,50,0});special_moves.moves[2].push_back({4,0,180,0});
+ auto cost_input=special_pick.state;cost_input.area_special_option=1;cost_input.recovery->ball_variant=1;
+ cost_input.current.field.roster[1].type=1;cost_input.current.field.roster[1].level=0;
+ cost_input.current.field.roster[1].stamina=179;
+ auto denied=inspect_keeper_area_special(cost_input,special_profiles,special_moves);
+ check(denied.state.area_special_decision && denied.state.area_special_decision->status==1 &&
+       denied.state.area_special_decision->subtype==1 && denied.state.area_special_decision->cost==180 &&
+       denied.state.area_special_decision->effect==4 && denied.presentation.size()==1 &&
+       denied.presentation[0].kind==ControlPresentationKind::script && denied.presentation[0].id==61 &&
+       denied.state.current.field.roster[1].stamina==179,"Unavailable stamina requests original warning without debit");
+ auto enough=cost_input;enough.current.field.roster[1].stamina=180;
+ auto accepted=inspect_keeper_area_special(enough,special_profiles,special_moves);
+ check(accepted.state.area_special_decision->status==0 && accepted.presentation.empty() &&
+       accepted.state.current.field.roster[1].stamina==180,"Affordable special reaches registration boundary without debit");
+ auto normal=cost_input;normal.area_special_cursor=0;normal.current.field.roster[1].stamina=0;
+ auto normal_result=inspect_keeper_area_special(normal,special_profiles,special_moves);
+ check(normal_result.state.area_special_decision->status==0 && normal_result.state.area_special_decision->subtype==0 &&
+       normal_result.state.area_special_decision->cost==50,"Ordinary subtype is accepted even with insufficient stamina");
+ auto inconsistent_decision=denied.state;inconsistent_decision.area_special_decision->status=0;
+ rejects([&]{validate_phase_session(inconsistent_decision);});
+ auto oversized_cost=accepted.state;oversized_cost.area_special_decision->cost=1024;
+ rejects([&]{validate_phase_session(oversized_cost);});
+ auto invalid_id=accepted.state;invalid_id.recovery->opposing_player=255;invalid_id.scheduling->selected_ids[0]=255;
+ rejects([&]{validate_phase_session(invalid_id);});
+ for(const auto& output:{cancel_inspected.state,denied.state,accepted.state,normal_result.state}) {
+  auto saved=bytes(output);std::istringstream stream(saved);
+  check(bytes(load_phase_session(stream))==saved,"Special inspection snapshot roundtrip");
+  saved[10]='r';saved.resize(387);
+  rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+  rejects([&]{inspect_keeper_area_special(output,special_profiles,special_moves);});
+ }
+ auto missing_moves=cost_input;
+ const auto before_inspection=bytes(missing_moves);
+ rejects([&]{inspect_keeper_area_special(missing_moves,special_profiles,FieldDefenseContent{});});
+ check(bytes(missing_moves)==before_inspection,"Missing move content leaves pending selection unchanged");
  auto special_both=poll_keeper_area_special(special_open.state,196,defense_content);
  check(special_both.state.area_special_cursor==1 && special_both.state.area_special_pressed==196,
        "Chooser moves before A and A takes priority over B");
@@ -343,7 +386,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<387;++size) {
+ for(unsigned size=372;size<393;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }

@@ -1,8 +1,32 @@
 #include "captain/action_menu.hpp"
 #include "captain/defender_selection.hpp"
+#include "captain/defensive_move_inspection.hpp"
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult inspect_keeper_area_special(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_special_decided)
+  throw std::invalid_argument("Special inspection requires a completed chooser");
+ ActionMenuResult result{input};auto& state=result.state;
+ PhaseSessionState::SpecialDecision decision{};
+ if(!(state.area_special_pressed&128u))decision.status=2;
+ else {
+  const auto id=state.recovery->opposing_player;
+  const auto& player=state.current.field.roster[id];
+  decision.subtype=state.area_special_cursor ? *state.area_special_option : 0;
+  const FieldPlayerRecord record{id,player.type,static_cast<std::uint8_t>(player.stamina),
+      static_cast<std::uint8_t>(player.stamina>>8),player.level};
+  const auto inspection=inspect_defensive_move(record,player.stamina,2,state.recovery->ball_variant,decision.subtype,profiles,defense);
+  decision.cost=inspection.cost;decision.effect=inspection.effect;
+  if(!inspection.allowed) {
+   decision.status=1;
+   result.presentation.push_back({ControlPresentationKind::script,61});
+  }
+ }
+ state.area_special_decision=decision;state.phase=FieldSessionPhase::keeper_area_special_inspected;
+ validate_phase_session(state);return result;
+}
 ActionMenuResult poll_keeper_area_special(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
  validate_phase_session(input);
  if((input.phase!=FieldSessionPhase::keeper_area_special_ready && input.phase!=FieldSessionPhase::keeper_area_special_poll) || !content.special_cursor_y_base)

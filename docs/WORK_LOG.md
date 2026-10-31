@@ -1333,3 +1333,20 @@ Daily website note updated separately; engine/private research remains local.
 - Full Make check/all pass after updating the legacy snapshot-size assertion.
   Previous chooser opening (240 cases) and availability (1,416 cases) also match
   with content14E. CMake and native Windows execution remain unverified here.
+
+## 2026-10-31 — chosen defensive move and stamina decision
+
+- Connected phase75 choice to original profile move cost/effect and wrapped-sign
+  stamina decision; phase76 saves accepted/denied/canceled status and full input.
+  Cancellation skips the loader, denial emits script61, and stamina is not debited.
+  Snapshot54s393bytes appends the decision; original $0445 remains distinct from
+  existing action field $0444.
+- Original D3F4→D403/D40C comparison matched136 controlled cases:88 accepted,
+  32 denied and16 canceled, including complete represented snapshots and warning
+  requests. Evidence: special-resolve-final. Original warning scripts ran with
+  host frame acknowledgements; redraw, registration and live presentation remain.
+- Read-only review found a missing CLI mutual-exclusion guard; fixed and regression
+  added. Next: subtype-specific icon data, register the accepted choice and redraw
+  while preserving earlier special choices. See NATIVE_DEFENSE_REDRAW_RESEARCH.md.
+- Full Make check/all pass after updating snapshot-size assertions; the previous
+  2,304 input and240 opening comparisons also pass with snapshot54s.

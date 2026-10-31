@@ -1,5 +1,6 @@
 #include "captain/phase_session.hpp"
 #include "captain/defender_selection.hpp"
+#include "captain/defense_affordability.hpp"
 #include <stdexcept>
 #include <utility>
 
@@ -37,13 +38,13 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 75)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 76)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
     const bool area_setup=phase==65;
-    const bool area_menu=(phase>=66 && phase<=75) || ((phase==18 || phase==19) && state.keeper_area);
+    const bool area_menu=(phase>=66 && phase<=76) || ((phase==18 || phase==19) && state.keeper_area);
     const bool area_state=area_setup || area_menu;
-    if(((phase>=65 && phase<=75) && !state.keeper_area) || (state.keeper_area && !area_state))
+    if(((phase>=65 && phase<=76) && !state.keeper_area) || (state.keeper_area && !area_state))
         throw std::invalid_argument("Keeper-area setup needs exactly one captured selection counter");
     if(state.keeper_area && (!state.action || !state.recovery || !state.scheduling ||
        state.keeper_area->selection_counter!=255 || !state.recovery->ball_variant ||
@@ -53,7 +54,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Keeper-area setup requires its original area and route");
     if(area_menu && (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
-    if(bool(state.area_defense)!=(phase==67 || (phase>=69 && phase<=75)))
+    if(bool(state.area_defense)!=(phase==67 || (phase>=69 && phase<=76)))
         throw std::invalid_argument("Initial area defense requires its captured choice arrays");
     if(phase==67 || phase==69) {
         if(!state.current.field.selected_defenders || state.current.field.selected_defenders>4 || state.action->cursor || state.area_defense->pressed)
@@ -61,34 +62,47 @@ void validate_phase_session(const PhaseSessionState& state) {
         for(unsigned i=0;i<4;++i)if(state.area_defense->actions[i]!=255 || state.area_defense->subtypes[i])
             throw std::invalid_argument("Initial defense actions must be unselected with unused subtypes zero");
     }
-    if(phase>=70 && phase<=75) {
+    if(phase>=70 && phase<=76) {
         const auto count=state.current.field.selected_defenders;
-        if(!count || count>4 || state.action->cursor>count || ((phase==71 || (phase>=73 && phase<=75)) && state.action->cursor==count))
+        if(!count || count>4 || state.action->cursor>count || ((phase==71 || (phase>=73 && phase<=76)) && state.action->cursor==count))
             throw std::invalid_argument("Defensive poll requires a valid selected cursor");
         for(unsigned i=0;i<4;++i) {
             const auto action=state.area_defense->actions[i];
             if((action!=255 && action>6) || state.area_defense->subtypes[i] || (i>=count && action!=255))
                 throw std::invalid_argument("Defensive poll supports ordinary field actions in the active prefix");
         }
-        if(((phase==70 || phase==72 || (phase>=73 && phase<=75)) && state.area_defense->pressed) || (phase==71 && !(state.area_defense->pressed&128u)))
+        if(((phase==70 || phase==72 || (phase>=73 && phase<=76)) && state.area_defense->pressed) || (phase==71 && !(state.area_defense->pressed&128u)))
             throw std::invalid_argument("Pending defensive preparation requires the captured confirm input");
         if(phase==72 && state.action->cursor!=count)
             throw std::invalid_argument("Completed defense requires the full selected prefix");
         if(state.action->cursor==count)for(unsigned i=0;i<count;++i)
             if(state.area_defense->actions[i]==255)
                 throw std::invalid_argument("Full defensive prefix requires selected actions");
-        if((phase==71 || (phase>=73 && phase<=75)) && (state.area_defense->actions[state.action->cursor]==255 ||
+        if((phase==71 || (phase>=73 && phase<=76)) && (state.area_defense->actions[state.action->cursor]==255 ||
            state.recovery->opposing_player!=state.scheduling->selected_ids[state.action->cursor]))
             throw std::invalid_argument("Pending defensive preparation requires a confirmed selected field player");
     }
-    if(bool(state.area_special_option)!=(phase>=73 && phase<=75) ||
+    if(bool(state.area_special_option)!=(phase>=73 && phase<=76) ||
        (state.area_special_option && (*state.area_special_option>127 ||
         state.area_defense->actions[state.action->cursor]!=2)))
         throw std::invalid_argument("Special chooser requires its captured option and action2");
     if((phase<73 && (state.area_special_cursor || state.area_special_pressed)) ||
        (phase>=73 && (state.area_special_cursor>1 || (phase==73 && state.area_special_cursor) ||
-        (phase!=75 && state.area_special_pressed) || (phase==75 && !(state.area_special_pressed&192u)))))
+        (phase!=75 && phase!=76 && state.area_special_pressed) || ((phase==75 || phase==76) && !(state.area_special_pressed&192u)))))
         throw std::invalid_argument("Invalid special chooser cursor or sampled input");
+    if(bool(state.area_special_decision)!=(phase==76))
+        throw std::invalid_argument("Special inspection needs its decision context");
+    if(state.area_special_decision) {
+        const auto& d=*state.area_special_decision;
+        const bool cancel=!(state.area_special_pressed&128u);
+        const auto subtype=state.area_special_cursor ? *state.area_special_option : 0;
+        if(d.status>2 || (cancel ? (d.status!=2 || d.subtype || d.cost || d.effect) :
+           (d.status==2 || d.subtype!=subtype || (d.subtype==0 && d.status!=0))))
+            throw std::invalid_argument("Invalid special inspection decision");
+        if(!cancel && (state.recovery->opposing_player>21 || d.cost>1023 ||
+           (d.status==0)!=can_select_defense_move(state.current.field.roster[state.recovery->opposing_player].stamina,d.cost,d.subtype)))
+            throw std::invalid_argument("Special inspection decision disagrees with stamina");
+    }
     if(phase==68 && state.current.field.selected_defenders)
         throw std::invalid_argument("Empty area defense completion requires no selected players");
     if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59))

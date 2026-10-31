@@ -280,3 +280,21 @@ Original loader and decision comparisons covered800 constructed cases for four
 player types, variants1/2 and subtypes0/1; unsupported alternate profile encodings
 are excluded. This helper is not yet called by the chooser or session flow, and
 its effect corresponds to original $0445, not the existing action field $0444.
+
+## Selected special move inspection
+
+`resolve-keeper-area-special` connects the completed chooser to move-cost loading
+and the original stamina decision. A confirms the highlighted ordinary or special
+subtype; B without A cancels. The saved phase76 records accepted, denied or canceled,
+the selected subtype, cost and original $0445 effect. A denial requests warning
+script61. Cancel skips the cost loader, and none of these paths deducts stamina.
+The full chooser sample remains saved for the subsequent menu flow.
+
+Snapshot54 (`s`,393bytes) appends this decision while keeping older snapshots
+readable. `check_area_defense_special_resolve_original.py` matched136 controlled
+cases (88 accepted,32 denied,16 canceled) from D3F4 to D403/D40C, including full
+represented state and ordered warning requests. Evidence: `special-resolve-final`.
+Original warning scripts execute with explicit host frame acknowledgements.
+Unsupported profile encodings reject; this stops before registering the choice,
+redrawing icons and resuming the original input tail. See
+`NATIVE_DEFENSE_REDRAW_RESEARCH.md` for the next boundary.
