@@ -258,6 +258,37 @@ int main(){try{
        special_open.special_cursor->x==33 && special_open.special_cursor->attribute==3,
        "Special menu opens with display and captured cursor metadata");
  auto special_encoded=bytes(special_open.state);std::istringstream special_stream(special_encoded);
+ auto legacy_q=special_encoded;legacy_q[10]='q';legacy_q.resize(385);std::istringstream legacy_q_stream(legacy_q);
+ check(bytes(load_phase_session(legacy_q_stream))==special_encoded,"Legacy q chooser opening remains readable");
+ defense_content.special_cursor_y_base=100;
+ auto special_down=poll_keeper_area_special(special_open.state,4,defense_content);
+ check(static_cast<unsigned>(special_down.state.phase)==74 && special_down.state.area_special_cursor==1 &&
+       special_down.special_cursor_y && *special_down.special_cursor_y==100,"Chooser direction updates cursor after displaying its old position");
+ auto special_pick=poll_keeper_area_special(special_down.state,128,defense_content);
+ check(static_cast<unsigned>(special_pick.state.phase)==75 && special_pick.state.area_special_cursor==1 &&
+       special_pick.state.area_special_pressed==128 && special_pick.special_cursor_y && *special_pick.special_cursor_y==248,
+       "Chooser confirmation preserves input and selected special option");
+ auto special_cancel=poll_keeper_area_special(special_open.state,64,defense_content);
+ check(special_cancel.state.area_special_pressed==64 && static_cast<unsigned>(special_cancel.state.phase)==75,
+       "Chooser cancellation preserves the B sample");
+ auto special_both=poll_keeper_area_special(special_open.state,196,defense_content);
+ check(special_both.state.area_special_cursor==1 && special_both.state.area_special_pressed==196,
+       "Chooser moves before A and A takes priority over B");
+ auto special_up_down=poll_keeper_area_special(special_down.state,12,defense_content);
+ check(special_up_down.state.area_special_cursor==0,"Chooser prioritizes up when both directions are pressed");
+ for(const auto& output:{special_down.state,special_pick.state,special_cancel.state}) {
+  auto saved=bytes(output);std::istringstream stream(saved);
+  check(bytes(load_phase_session(stream))==saved,"Chooser sampled input roundtrip");
+  saved[10]='q';saved.resize(385);
+  rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+ }
+ auto invalid_special_cursor=special_down.state;invalid_special_cursor.area_special_cursor=2;
+ rejects([&]{validate_phase_session(invalid_special_cursor);});
+ auto missing_exit=special_pick.state;missing_exit.area_special_pressed=0;
+ rejects([&]{validate_phase_session(missing_exit);});
+ rejects([&]{poll_keeper_area_special(special_pick.state,0,defense_content);});
+ auto missing_y=defense_content;missing_y.special_cursor_y_base.reset();
+ rejects([&]{poll_keeper_area_special(special_open.state,0,missing_y);});
  check(bytes(load_phase_session(special_stream))==special_encoded,"Special chooser roundtrip");
  check(special_open.state.area_special_option && *special_open.state.area_special_option==7 &&
        special_open.state.current.field.roster[1].stamina==option_pending.current.field.roster[1].stamina,
@@ -312,7 +343,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<385;++size) {
+ for(unsigned size=372;size<387;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }

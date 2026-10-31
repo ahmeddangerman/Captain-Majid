@@ -1310,3 +1310,26 @@ Daily website note updated separately; engine/private research remains local.
   read-only review found no critical or important issues.
 - Next: sample the chooser's A/B and direction input, load the chosen move cost,
   connect affordability and preserve the subsequent defensive action flow.
+
+## 2026-10-31 — special defensive chooser input
+
+- Added sampled input for the special chooser with phase74 wait and phase75 result.
+  Direction precedes A/B, up and A win their respective ties, and the exit sample
+  is retained for subsequent original flow. Snapshot53r is387bytes; private E
+  content adds one cursor position byte. The previous D payload matches exactly.
+- Original CFA9 execution matched2,304 controlled cases across all256 samples,
+  opening/waiting cursors and synthetic option values; full represented snapshots,
+  cursor position and selection/cancel outcomes match. Evidence: special-poll-first.
+  Explicit yield acknowledgement; no renderer, move execution or stamina debit.
+- Original research found that move registration also needs subtype-specific icons
+  and expanded validation. Selection, move-cost loading and its affordability
+  must be connected before claiming a complete defensive action.
+- Added a separate inspection helper combining profile-based move cost/effect and
+  the stamina decision without debit. The original loader/decision matched800
+  controlled supported-profile cases; unsupported alternate encodings remain out
+  of scope. It is not yet connected to phase75. Original effect $0445 must not be
+  confused with existing action field $0444. A read-only review found no critical
+  or important issues in chooser input.
+- Full Make check/all pass after updating the legacy snapshot-size assertion.
+  Previous chooser opening (240 cases) and availability (1,416 cases) also match
+  with content14E. CMake and native Windows execution remain unverified here.

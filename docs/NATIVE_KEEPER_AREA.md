@@ -250,3 +250,33 @@ allowed even if the result has its high bit set. It neither loads move cost nor
 changes stamina. `check_defense_affordability_original.py` compared10,400 controlled
 numeric decisions against D76B→D75B, including wraparound. The chooser, move-cost
 loader and stamina check are not yet connected to one another.
+
+## Special chooser sampled input
+
+`poll-keeper-area-special PRESSED` advances one sampled input from the prepared
+chooser or its next wait. Direction is handled before confirmation or cancel;
+up takes precedence over down, and A takes precedence over B. The emitted cursor
+position uses the previous cursor until exit, when it is hidden. Phase74 saves a
+waiting cursor; phase75 saves the chosen cursor and the complete exit input for
+the later action flow. No stamina is spent by this menu step.
+
+Snapshot53 (`r`,387bytes) adds the cursor and exit sample; older snapshots remain
+readable and cannot encode the new phases. Private content14 (`CMJSHOTE`) adds one
+cursor position byte; the canonical pack is20,223bytes, with the previous D
+payload unchanged. An available special option must still go through move-cost
+loading and affordability before its action can be registered.
+
+`check_area_defense_special_poll_original.py` matched2,304 controlled input
+cases: every byte for the opening state and both waiting cursor positions, using
+synthetic options0/1/127. Complete represented state, cursor position and the
+original selection/cancel result matched CFA9→CFA4 or D3F4. Evidence:
+`special-poll-first`. The observation resumes after an explicit cooperative yield;
+it does not claim actual rendering, audio, stamina deduction or move execution.
+
+`inspect_defensive_move` also combines existing player-profile move preparation
+with the isolated stamina decision. It reports cost, affordability and move effect
+without mutating stamina. Its caller must supply matching raw player/stamina bytes.
+Original loader and decision comparisons covered800 constructed cases for four
+player types, variants1/2 and subtypes0/1; unsupported alternate profile encodings
+are excluded. This helper is not yet called by the chooser or session flow, and
+its effect corresponds to original $0445, not the existing action field $0444.

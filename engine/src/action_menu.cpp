@@ -3,6 +3,22 @@
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult poll_keeper_area_special(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
+ validate_phase_session(input);
+ if((input.phase!=FieldSessionPhase::keeper_area_special_ready && input.phase!=FieldSessionPhase::keeper_area_special_poll) || !content.special_cursor_y_base)
+  throw std::invalid_argument("Special chooser input requires its wait state and private cursor position");
+ ActionMenuResult result{input};auto& state=result.state;
+ result.special_cursor_y=static_cast<std::uint8_t>(*content.special_cursor_y_base+16u*state.area_special_cursor);
+ if(pressed&12u) {
+  if(pressed&8u) {if(state.area_special_cursor)--state.area_special_cursor;}
+  else if(!state.area_special_cursor)++state.area_special_cursor;
+ }
+ if(pressed&192u) {
+  state.phase=FieldSessionPhase::keeper_area_special_decided;state.area_special_pressed=pressed;
+  result.special_cursor_y=248;result.confirmed=(pressed&128u)!=0;
+ } else state.phase=FieldSessionPhase::keeper_area_special_poll;
+ validate_phase_session(state);return result;
+}
 ActionMenuResult open_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
  const auto option=keeper_area_defense_special_option(input,content);
  if(!option || !content.special_cursor)

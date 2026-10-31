@@ -21,6 +21,7 @@ struct AreaDefenseMenuContent {
     std::optional<std::array<std::uint8_t,7>> field_icons{};
     std::optional<AreaDefenseSpecialOptions> special_options{};
     std::optional<std::array<std::uint8_t,2>> special_cursor{}; // tile, x
+    std::optional<std::uint8_t> special_cursor_y_base{};
 };
 struct SpecialCursorPresentation { std::uint8_t tile, x, attribute; };
 struct ActionMenuResult {
@@ -28,6 +29,7 @@ struct ActionMenuResult {
     std::vector<ControlPresentationRequest> presentation{};
     bool confirmed = false;
     std::optional<SpecialCursorPresentation> special_cursor{};
+    std::optional<std::uint8_t> special_cursor_y{};
 };
 ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
 // Route2 only, after acknowledged area presentation; facing is captured explicitly.
@@ -40,6 +42,7 @@ ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::ui
 // Query the original area-specific option gate without changing state.
 std::optional<std::uint8_t> keeper_area_defense_special_option(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult open_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
+ActionMenuResult poll_keeper_area_special(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content);
 // Ordinary field choices only; available special options stay pending. No energy charge.
 ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,

@@ -157,3 +157,11 @@ still requires a chooser. Keep the pack and outputs outside the checkout.
 compares the prepared special chooser with original D3D4→CFA4 using content13D
 and snapshot52q. `check_defense_affordability_original.py ROM` compares the
 isolated numeric stamina decision; it does not load move cost or run the chooser.
+
+`check_area_defense_special_poll_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
+compares sampled chooser input through original CFA9→CFA4/D3F4. It uses private
+content14E and snapshot53r; outputs remain outside the checkout.
+
+`check_defensive_move_inspection_original.py ROM PACK` compares the standalone
+profile-based move cost/effect and affordability against the original loader and
+decision. It does not execute a move, debit stamina or exercise the chooser.

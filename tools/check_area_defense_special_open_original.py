@@ -12,6 +12,7 @@ def main():
     for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
     a=p.parse_args();rom=a.rom.read_bytes();packed=a.pack.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
+    if packed[:8]==b'CMJSHOTE':packed=b'CMJSHOTD'+packed[8:-1]
     if packed[:8]!=b'CMJSHOTD':p.error('Expected private version13D pack')
     start=20088;count=int.from_bytes(packed[start:start+2],'little');pos=start+2;rules=[]
     if not 1<=count<=256:raise RuntimeError('Invalid option rule count')
@@ -47,7 +48,7 @@ def main():
                         target=out/f'{name}-opened.cmjsession'
                         run=subprocess.run([binary,pack,str(source),'--open-keeper-area-special','--capture',str(target)],capture_output=True,text=True,timeout=30)
                         if run.returncode:raise RuntimeError(f'{name}: {run.stderr}')
-                        expected=bytearray(poll_snapshot(final,73)[:383]);expected[10]=ord('q');expected+=bytes([1,report['option']])
+                        expected=bytearray(poll_snapshot(final,73)[:383]);expected[10]=ord('r');expected+=bytes([1,report['option'],0,0])
                         actual=target.read_bytes()
                         if actual!=expected:raise RuntimeError(f'{name}: state mismatch {[(i,x,y) for i,(x,y) in enumerate(zip(actual,expected)) if x!=y]} (lengths {len(actual)}/{len(expected)})')
                         requests=[{'kind':int(k),'id':int(v),'slot':int(s)} for k,v,s in re.findall(r'Presentation request (\d+) \| id (\d+) \| slot (\d+)',run.stdout)]
