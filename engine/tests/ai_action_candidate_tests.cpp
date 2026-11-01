@@ -1,9 +1,21 @@
 #include "captain/ai_action_candidate.hpp"
 #include "captain/shot_content.hpp"
+#include "captain/area_ai_session.hpp"
 #include <fstream>
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) {
+ if(argc==3 && std::string(argv[1])=="--prepare") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  unsigned id,type,flags,alt,level,action,variant,subtype,first,second;
+  while(std::cin>>id>>type>>flags>>alt>>level>>action>>variant>>subtype>>first>>second) {
+   if(id>255||type>255||flags>255||alt>255||level>255||action>255||variant>255||subtype>255||first>255||second>255)return 2;
+   try {auto r=captain::prepare_opponent_area_action({static_cast<std::uint8_t>(id),static_cast<std::uint8_t>(type),static_cast<std::uint8_t>(flags),static_cast<std::uint8_t>(alt),static_cast<std::uint8_t>(level)},action,variant,subtype,first,second,content);
+    std::cout<<r.preparation.stamina_cost<<' '<<unsigned(r.preparation.move_effect)<<' '<<unsigned(r.move_flags)<<' '<<r.action_power.power<<' '<<unsigned(r.action_power.subtype)<<' '<<r.energy.stamina<<'\n';
+   }catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--plan") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   if(!content.ai_area_choice)return 2;

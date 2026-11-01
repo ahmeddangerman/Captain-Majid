@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -204,6 +204,13 @@ ShotContent load_shot_content(std::istream& input) {
                 throw std::invalid_argument("Unsupported AI recipient target");
         }
         for(auto row:ai.recipient_profile_rows)if(row>=ai.recipient_rows.size())throw std::invalid_argument("Missing AI recipient row");
+    }
+    if(version>='I') {
+        content.area_attack6=FieldDefenseContent{};auto& attack=*content.area_attack6;
+        reader.bytes(attack.skill_selectors[0]);attack.moves[0]=reader.moves();
+        if(attack.moves[0].size()!=2)throw std::invalid_argument("Unsupported area attack6 move count");
+        for(auto skill:attack.skill_selectors[0])if(skill!=255 && (skill<1 || skill>30))throw std::invalid_argument("Unsupported area attack6 selector");
+        attack.strength_curve=content.attack.strength_curve;
     }
     reader.end();
     return content;

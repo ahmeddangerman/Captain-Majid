@@ -1450,3 +1450,14 @@ Daily website note updated separately; engine/private research remains local.
   input tests pass; full Make check/all pass. No complete match or attack result
   claimed. Next: original attack preparation from this saved choice, with generic
   team resolution and empty-prefix entry still pending.
+
+## 2026-11-01 — opponent area attack numeric preparation
+
+- Added supported opponent area attack preparation using existing profile/skill
+  and power routines. Private I adds12bytes for action6 selectors and two moves;
+  the previous H payload is identical after stripping the addition.
+- Original comparisons through8980 match640 cost/effect/flags/power/subtype/stamina
+  cases. Evidence: area-attack-original.log. No opponent stamina debit; this remains
+  a prepared calculation before session commit and action presentation/execution.
+- Next: connect phase78 to saved prepared attack and preserve its cost, then start
+  the original presentation/defender sequence. Overall percentage remains unmeasured.

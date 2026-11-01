@@ -121,3 +121,18 @@ patterns and random inputs. Complete represented state matches; evidence:
 `ai-session-final`. Roundtrip, replay, invalid target cell and older version checks
 are covered. Full Make check/all pass. Live scheduling, generic team resolution,
 attack preparation and resulting defense execution remain unfinished.
+
+## Opponent area attack preparation
+
+`prepare_opponent_area_action` now joins profile-based move preparation and
+original power adjustment for supported actions1/4/6 and area variants1/2.
+Action6 needs additional private selectors and two moves; content18I adds12bytes
+to the H pack (21,286bytes total). Its earlier H payload is unchanged. The shared
+numeric loader is reused with action6's private data; it does not substitute an
+ordinary-shot move. Unsupported action/variant/subtype or missing data reject.
+
+Original CPU comparisons through8980 matched640 cost, effect, flags, power,
+subtype and stamina outputs. Evidence: `area-attack-original.log`. The opponent's
+stamina is preserved by this stage. This preparation function is not yet committed
+to the saved phase78 session; that connection and presentation/defense execution
+remain the next task.

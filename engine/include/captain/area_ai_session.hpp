@@ -1,6 +1,10 @@
 #pragma once
 #include "captain/phase_session.hpp"
 #include "captain/ai_action_candidate.hpp"
+#include "captain/shot_content.hpp"
 namespace captain {
+PreparedAttackResult prepare_opponent_area_action(const FieldPlayerRecord& player,
+ std::uint8_t action,std::uint8_t variant,std::uint8_t subtype,std::uint8_t first,
+ std::uint8_t second,const ShotContent& content);
 PhaseSessionState choose_session_area_action(const PhaseSessionState&,const AiAreaChoiceContent&);
 }

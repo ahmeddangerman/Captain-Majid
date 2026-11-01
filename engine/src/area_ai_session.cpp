@@ -2,6 +2,18 @@
 #include "captain/player_movement.hpp"
 #include <stdexcept>
 namespace captain {
+PreparedAttackResult prepare_opponent_area_action(const FieldPlayerRecord& player,
+ std::uint8_t action,std::uint8_t variant,std::uint8_t subtype,std::uint8_t first,
+ std::uint8_t second,const ShotContent& content) {
+ if(player.player_id<12 || player.player_id>21 || (variant!=1 && variant!=2) ||
+    (action!=1 && action!=4 && action!=6) || (action==6 ? subtype>1 : subtype!=0))
+  throw std::invalid_argument("Unsupported opponent area attack preparation");
+ if(action==6 && !content.area_attack6)throw std::invalid_argument("Missing private area attack6 content");
+ // Action6 uses its private selectors/moves in slot0 of the shared numeric loader.
+ // Supported subtypes0/1 do not trigger the ordinary-shot subtype override.
+ return prepare_attacking_action({player,static_cast<std::uint8_t>(action==6?0:action),variant,subtype,11,0,first,second,false},
+  content.field_players,action==6?*content.area_attack6:content.attack);
+}
 PhaseSessionState choose_session_area_action(const PhaseSessionState& input,const AiAreaChoiceContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defense_complete)throw std::invalid_argument("Area AI requires completed defensive choices");

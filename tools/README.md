@@ -205,3 +205,6 @@ preparation. The current private H pack includes recipient rows.
 
 `check_area_ai_session_original.py ROM PACK KEEPER_RAM OUTPUT_DIR` compares the
 saved phase78 opponent choice before attack preparation. Uses snapshot56u.
+
+`check_opponent_area_attack_original.py ROM PACK KEEPER_RAM` compares supported
+area attack numeric preparation through8980 using private content18I.
