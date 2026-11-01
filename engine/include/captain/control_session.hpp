@@ -3,7 +3,7 @@
 #include "captain/ball_recovery.hpp"
 
 namespace captain {
-enum class ControlPresentationKind : std::uint8_t { display, script, field_map, sprite, clear_overlay };
+enum class ControlPresentationKind : std::uint8_t { display, script, field_map, sprite, clear_overlay, wait_frames };
 struct ControlPresentationRequest {
     ControlPresentationKind kind;
     std::uint8_t id;

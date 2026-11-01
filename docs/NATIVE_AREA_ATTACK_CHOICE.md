@@ -162,3 +162,18 @@ checker compared480 original choices, preparations and presentation continuation
 to8998, including full represented state and script request. Evidence:
 `area-presentation-final`. Host frame acknowledgements remain explicit. Full Make
 check/all pass. The defender loop and its gameplay outcomes remain next.
+
+## Prepared defender announcements
+
+`announce-prepared-area-defenders FACING` advances phase80 to81 at89D5.
+For supported area choices2/4/5 it emits script15 and a20-frame wait per defender;
+action6 skips that announcement. Script4 and a final1-frame wait complete the
+prefix. The last announced player becomes the saved opposing player; the final
+motion request is16. Final facing0/64 is supplied explicitly from acknowledged
+presentation and is not claimed as independently calculated.
+
+Snapshot59x stays398bytes. Original comparisons matched32 cases across one/four
+defenders, ordinary/special/skip patterns and both area variants, including full
+represented state and ordered script/wait requests. Evidence:
+`area-announcement-first`. Full Make check/all pass. Host acknowledgements remain
+explicit; no native live frame advancement or defender calculation is inferred.

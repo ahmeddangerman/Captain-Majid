@@ -2,6 +2,24 @@
 #include "captain/player_movement.hpp"
 #include <stdexcept>
 namespace captain {
+ActionMenuResult announce_prepared_area_defenders(const PhaseSessionState& input,std::uint8_t facing) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_defense_entry || (facing!=0 && facing!=64))throw std::invalid_argument("Defender announcements require prepared entry and captured facing");
+ ActionMenuResult result{input};auto& state=result.state;
+ for(unsigned slot=0;slot<state.current.field.selected_defenders;++slot) {
+  const auto action=state.area_defense->actions[slot];
+  if(action!=2 && action!=4 && action!=5 && action!=6)throw std::invalid_argument("Unrepresented area defender presentation action");
+  if(action==6)continue;
+  state.recovery->opposing_player=state.scheduling->selected_ids[slot];
+  result.presentation.push_back({ControlPresentationKind::script,15});
+  result.presentation.push_back({ControlPresentationKind::wait_frames,20});
+ }
+ result.presentation.push_back({ControlPresentationKind::script,4});
+ result.presentation.push_back({ControlPresentationKind::wait_frames,1});
+ state.control->facing=facing;state.control->motion_requested=16;
+ state.phase=FieldSessionPhase::keeper_area_defenders_announced;
+ validate_phase_session(state);return result;
+}
 ActionMenuResult begin_prepared_area_defense(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_attack_prepared)throw std::invalid_argument("Area defense entry requires prepared attack");

@@ -1481,3 +1481,13 @@ Daily website note updated separately; engine/private research remains local.
   state and script request. Evidence: area-presentation-final. Snapshot58w stays
   398bytes; full Make check/all pass. Explicit host frame acknowledgements; no
   renderer or defensive outcome claim. Continuing into the defender sequence.
+
+## 2026-11-01 — prepared defender announcement prefix
+
+- Added phase80→81 at89D5, explicit scripts and frame-wait requests for the saved
+  defender order. Action6 skips announcement; other supported area choices2/4/5
+  announce and update the opposing player. Final motion request16 is saved; final
+  facing is captured explicitly, matching earlier prepared-presentation boundaries.
+- 32 original announcement prefixes match complete represented state and ordered
+  requests. Evidence: area-announcement-first. Snapshot59x remains398bytes;
+  full Make check/all pass. Next: defender skill/energy preparation and comparison.

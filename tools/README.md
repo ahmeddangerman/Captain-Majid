@@ -214,3 +214,7 @@ choice and its prepared attack. The latest writer is snapshot57v398bytes.
 
 `--present` additionally compares the prepared script14 continuation to8998.
 The current writer is snapshot58w398bytes. Host frame acknowledgements are explicit.
+
+`check_area_defender_announcement_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
+compares prepared defender announcements through89D5, supplying captured facing.
+The current writer is snapshot59x398bytes.

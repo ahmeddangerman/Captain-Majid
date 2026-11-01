@@ -238,6 +238,14 @@ int main(){try{
  auto second_variant=prepared_area;second_variant.recovery->ball_variant=2;second_variant.control->motion_requested=2;
  const auto second_entry=begin_prepared_area_defense(second_variant);
  check(second_entry.state.control->motion_requested==0,"Second area variant clears prior motion instead of requesting ground motion");
+ const auto announced=announce_prepared_area_defenders(area_entry.state,64);
+ check(static_cast<unsigned>(announced.state.phase)==81 && announced.state.control->motion_requested==16 &&
+       announced.presentation.size()==4 && announced.presentation[1].kind==ControlPresentationKind::wait_frames &&
+       announced.presentation[1].id==20,"Area defender announcement emits script and explicit waits");
+ auto announced_bytes=bytes(announced.state);std::istringstream announced_stream(announced_bytes);
+ check(bytes(load_phase_session(announced_stream))==announced_bytes,"Announced defenders roundtrip");
+ rejects([&]{announce_prepared_area_defenders(announced.state,64);});
+ rejects([&]{announce_prepared_area_defenders(area_entry.state,1);});
  check(static_cast<unsigned>(completed.state.phase)==72 && completed.presentation.size()==1 &&
        completed.presentation[0].kind==ControlPresentationKind::clear_overlay,
        "Full-prefix confirmation returns without reading beyond the selected slots");
