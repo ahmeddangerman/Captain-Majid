@@ -54,3 +54,16 @@ input cases reject, as do malformed AI content sections. Evidence:
 `ai-area-original.log`. Full Make check/all pass. This is not yet the final AI
 choice or a saved-match continuation; those must preserve the later original
 adjustment branches before attack preparation is connected.
+
+## Supported final action adjustments
+
+`choose_ai_area_action` applies original route2 handlers for candidate0,1 and3,
+returning the final action and subtype. Candidate2 enters the separate8933
+recipient-selection flow and explicitly rejects in this operation. It is not
+silently replaced by another candidate. Session integration remains pending.
+
+`check_ai_area_action_original.py` compared21,632 controlled inputs including
+mirrored positions. The18,832 supported final action/subtype pairs matched the
+original return at897D. The2,800 recipient-choice cases were identified using
+the original candidate and rejected by the native operation. Full Make check/all
+passed; evidence: `ai-final-original.log`. No complete opponent turn is claimed.

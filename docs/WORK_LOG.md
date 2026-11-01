@@ -1412,3 +1412,13 @@ Daily website note updated separately; engine/private research remains local.
   inputs and three malformed packs reject. Full Make check/all pass.
 - Final original action/subtype adjustment and saved-session integration remain
   next; no complete AI or playable match claim. See NATIVE_AREA_ATTACK_CHOICE.md.
+
+## 2026-11-01 — supported final opponent action branches
+
+- Added original route2 final adjustments for candidates0/1/3; the roster-based
+  candidate2 recipient path rejects explicitly until implemented. No fixed-action
+  fallback is substituted. Saved-session integration remains pending.
+- Original comparison matched18,832 final action/subtype pairs, including mirrored
+  positions, and identified2,800 pending recipient cases. Full Make check/all pass.
+  Evidence: ai-final-original.log. Next: recipient selection and its move/subtype
+  handling, then saved area-action preparation.

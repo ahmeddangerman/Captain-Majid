@@ -189,3 +189,7 @@ and later action/subtype adjustments are outside this component comparison.
 `check_ai_area_candidate_original.py ROM PACK KEEPER_RAM` compares the route2
 direct-player profile, field category and initial candidate stage before87B0.
 It uses private G content; final action adjustment and session flow remain pending.
+
+`check_ai_area_action_original.py ROM PACK KEEPER_RAM` compares the supported
+route2 final action/subtype handlers and verifies explicit rejection of the
+recipient-selection branch. It does not run a complete opponent action.

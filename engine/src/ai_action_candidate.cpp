@@ -1,6 +1,18 @@
 #include "captain/ai_action_candidate.hpp"
 #include <stdexcept>
 namespace captain {
+AiAreaAction choose_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiAreaChoiceContent& content) {
+ const auto choice=choose_ai_area_candidate(type,flags,alternate,x,y,random,content);
+ // Original route2 dispatch8903 selects890B/8911/8917/891A. Candidate2
+ // enters8933 and needs a roster-based recipient decision, handled separately.
+ switch(choice.candidate) {
+ case 0:return {choice,4,0};
+ case 1:return {choice,6,0};
+ case 3:return {choice,6,1};
+ default:throw std::invalid_argument("AI recipient selection or unknown action branch is not supported");
+ }
+}
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiAreaChoiceContent& content) {
  if(type==0)throw std::invalid_argument("AI generic team resolution is not captured");
