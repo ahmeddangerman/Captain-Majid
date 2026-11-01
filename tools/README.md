@@ -177,3 +177,7 @@ content and snapshot55t; it stops before the subsequent saved-input tail.
 `check_area_defense_special_tail_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
 compares the continuation after D41F to the next input wait, retaining original
 processor flags and the sampled buttons. Output remains outside the checkout.
+
+`trace_area_attack_choice.py ROM KEEPER_RAM OUTPUT_DIR` observes the original
+opponent choice after the completed area defense menu. This is bounded CPU
+research; it does not compare a native AI implementation or execute the action.

@@ -1378,3 +1378,15 @@ Daily website note updated separately; engine/private research remains local.
   stamina debit or defense execution claimed. Focused tests and Make check/all pass.
 - Next: use the completed defensive choices in the area action and connect the
   resulting possession, shot and match flow. Overall completion remains unmeasured.
+
+## 2026-11-01 — opponent action-choice research
+
+- Traced the completed menu return8B8F→897D. Original route2 enters the opponent
+  choice dispatcher before attack preparation, so the next connection must not
+  assume a fixed ordinary shot.
+- Added a bounded original CPU observer and recorded768 controlled random pairs
+  on one captured area fixture:192 action1 and576 action6 outputs. Evidence:
+  area-ai-choice-first/observations.json. Numeric codes have no guessed labels.
+  No native AI parity, match execution or overall completion increase is claimed.
+- Next: original route/category and weighted choice tables, then native opponent
+  decision and attack preparation. See NATIVE_AREA_ATTACK_CHOICE.md.
