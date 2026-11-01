@@ -105,3 +105,19 @@ branch. Generic teams are still unsupported.
 `check_ai_area_plan_original.py` matched5,976 complete choices through897D,
 including action, subtype, target, field cell and final random state. This is a
 pure planning component; the saved match phase and attack preparation are next.
+
+## Saved area action choice
+
+`choose-keeper-area-action` connects completed defensive choices (phase72) to
+phase78, before attack preparation. Action, subtype and random state are committed
+with the optional recipient and cell. The target cell must agree with the saved
+recipient position. Snapshot56u adds three bytes (396 total); prior formats remain
+readable and cannot encode phase78. Empty defensive prefixes are not connected
+by this operation yet.
+
+`check_area_ai_session_original.py` compared480 complete saved choices to original
+execution through897D, across four profiles, two variants, three teammate position
+patterns and random inputs. Complete represented state matches; evidence:
+`ai-session-final`. Roundtrip, replay, invalid target cell and older version checks
+are covered. Full Make check/all pass. Live scheduling, generic team resolution,
+attack preparation and resulting defense execution remain unfinished.

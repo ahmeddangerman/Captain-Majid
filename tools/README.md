@@ -202,3 +202,6 @@ checkout; this is research rather than native AI verification.
 recipient selection with profile-selected private data. `check_ai_area_plan_original.py
 ROM PACK KEEPER_RAM` compares the combined supported area choice before attack
 preparation. The current private H pack includes recipient rows.
+
+`check_area_ai_session_original.py ROM PACK KEEPER_RAM OUTPUT_DIR` compares the
+saved phase78 opponent choice before attack preparation. Uses snapshot56u.

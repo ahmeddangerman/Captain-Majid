@@ -5,7 +5,7 @@ CXXFLAGS ?= -std=c++17 -O2 -Wall -Wextra -Wpedantic
 CORE_SOURCES = engine/src/action_strength.cpp engine/src/session.cpp engine/src/defender_contact.cpp engine/src/shot_power.cpp engine/src/goalkeeper.cpp
 CORE_SOURCES += engine/src/energy.cpp engine/src/keeper_state.cpp engine/src/reference_random.cpp
 CORE_SOURCES += engine/src/defense_affordability.cpp
-CORE_SOURCES += engine/src/defensive_move_inspection.cpp engine/src/ai_action_candidate.cpp
+CORE_SOURCES += engine/src/defensive_move_inspection.cpp engine/src/ai_action_candidate.cpp engine/src/area_ai_session.cpp
 CORE_SOURCES += engine/src/shot_outcome.cpp engine/src/shot_sequence.cpp engine/src/defender_sequence.cpp engine/src/defender_outcome.cpp
 CORE_SOURCES += engine/src/ball_recovery.cpp engine/src/field_handoff.cpp
 CORE_SOURCES += engine/src/defender_selection.cpp

@@ -12,9 +12,10 @@ from verify_action_strength import PAYLOAD_SHA256
 
 def snapshot(ram,phase,cursor,pressed,option,decision):
     data=bytearray(checkpoint(ram,phase,option,cursor,pressed)[:387])
-    data[10]=ord('t');data[258]=phase
+    data[10]=ord('u');data[258]=phase
     status={'accepted':0,'denied':1,'canceled':2}[decision['status']]
     cost=decision['cost'];data+=bytes((1,status,decision['subtype'],cost&255,cost>>8,decision['effect']))
+    data+=bytes(3)
     return bytes(data)
 
 
@@ -83,14 +84,14 @@ def main():
     for name,pressed in (('blink',0),('back',64),('unchanged',1<<unchanged),('changed',1<<changed)):
         raw=bytearray(seeds['last']);raw[0x61e]=1;raw[0x61f]=raw[0x620]=0
         raw[0x60b:0x60f]=bytes((4,2,255,255));raw[0x606:0x60a]=bytes((0,1,0,0))
-        data=bytearray(poll_snapshot(raw,70));data[10]=ord('t')
+        data=bytearray(poll_snapshot(raw,70));data[10]=ord('u')
         source=out/f'poll-{name}-entry.cmjsession';source.write_bytes(data)
         report,final=trace_defense_poll(prg,raw,pressed)
         if report['boundary']!='poll_wait':raise RuntimeError('Unexpected special subtype poll boundary')
         target=out/f'poll-{name}-result.cmjsession'
         run=subprocess.run([binary,pack,str(source),'--poll-keeper-area-defense',str(pressed),'--capture',str(target)],capture_output=True,text=True,timeout=30)
         if run.returncode:raise RuntimeError(f'{name}: {run.stderr}')
-        expected=bytearray(poll_snapshot(final,70));expected[10]=ord('t')
+        expected=bytearray(poll_snapshot(final,70));expected[10]=ord('u')
         if target.read_bytes()!=expected:raise RuntimeError(f'{name}: special subtype poll state mismatch')
         if name=='unchanged' and final[0x607]!=1:raise RuntimeError('Unchanged action lost special subtype')
         if name=='changed' and final[0x607]!=0:raise RuntimeError('Changed action retained old special subtype')

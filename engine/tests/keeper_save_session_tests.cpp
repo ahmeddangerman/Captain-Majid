@@ -1,6 +1,7 @@
 #include "captain/keeper_save_session.hpp"
 #include "captain/recovery_session.hpp"
 #include "captain/action_menu.hpp"
+#include "captain/area_ai_session.hpp"
 #include "captain/phase_session_io.hpp"
 #include <sstream>
 #include <iostream>
@@ -191,6 +192,27 @@ int main(){try{
  check(registered.state.current.field.roster[1].stamina==defense_confirm.state.current.field.roster[1].stamina,
        "Menu registration does not consume defender stamina");
  auto completed=poll_keeper_area_defense(registered.state,128,defense_content);
+ auto ai_input=completed.state;ai_input.current.field.random_first=0;
+ ai_input.current.field.roster[ai_input.current.field.ball_owner].type=35;
+ ai_input.current.field.roster[ai_input.current.field.ball_owner].stamina=0;
+ AiAreaChoiceContent ai_data{};ai_data.profile_rows={0};ai_data.cells[0]={5,32};ai_data.rows.resize(1);ai_data.rows[0][44]=0x10;
+ auto ai_chosen=choose_session_area_action(ai_input,ai_data);
+ check(static_cast<unsigned>(ai_chosen.phase)==78 && ai_chosen.action->action==6 && ai_chosen.area_ai_target &&
+       !ai_chosen.area_ai_target->recipient,"Saved opponent area choice advances phase");
+ auto ai_saved=bytes(ai_chosen);std::istringstream ai_stream(ai_saved);
+ check(bytes(load_phase_session(ai_stream))==ai_saved,"Area AI choice roundtrip");
+ rejects([&]{choose_session_area_action(ai_chosen,ai_data);});
+ ai_saved[10]='t';ai_saved.resize(393);rejects([&]{std::istringstream old(ai_saved);load_phase_session(old);});
+ ai_data.rows[0][44]=0x20;ai_data.recipient_profile_rows={0};ai_data.recipient_rows.resize(1);ai_data.recipient_rows[0][0]=8;
+ ai_input.current.field.random_second=0;const auto before_ai=bytes(ai_input);
+ const auto targeted_ai=choose_session_area_action(ai_input,ai_data);
+ check(targeted_ai.action->action==1 && targeted_ai.area_ai_target->recipient==13 && bytes(ai_input)==before_ai,
+       "AI recipient choice commits target without mutating input");
+ auto target_bytes=bytes(targeted_ai);std::istringstream target_stream(target_bytes);
+ check(bytes(load_phase_session(target_stream))==target_bytes,"AI target and cell roundtrip");
+ auto bad_target=targeted_ai;bad_target.area_ai_target->cell^=1;
+ rejects([&]{validate_phase_session(bad_target);});
+ auto missing_ai=targeted_ai;missing_ai.area_ai_target.reset();rejects([&]{validate_phase_session(missing_ai);});
  check(static_cast<unsigned>(completed.state.phase)==72 && completed.presentation.size()==1 &&
        completed.presentation[0].kind==ControlPresentationKind::clear_overlay,
        "Full-prefix confirmation returns without reading beyond the selected slots");
@@ -451,7 +473,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<393;++size) {
+ for(unsigned size=372;size<396;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }

@@ -1439,3 +1439,14 @@ Daily website note updated separately; engine/private research remains local.
   Generic teams and unsupported raw option groups reject; no fixed substitution.
 - Next: add a saved area-choice phase, preserving optional recipient/cell and
   native random state; then original attack preparation. No playable-match claim.
+
+## 2026-11-01 — saved opponent area choice
+
+- Connected completed defensive choices to saved phase78 through native AI plan.
+  Snapshot56u396bytes adds target context; target cell is validated against roster
+  position. Preserves action/subtype/random state, stamina, clock and prior choices.
+- 480 complete original saved-state comparisons match through897D. Evidence:
+  ai-session-final. Roundtrip, older formats, replay, target validation and immutable
+  input tests pass; full Make check/all pass. No complete match or attack result
+  claimed. Next: original attack preparation from this saved choice, with generic
+  team resolution and empty-prefix entry still pending.
