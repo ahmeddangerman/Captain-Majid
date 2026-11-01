@@ -193,3 +193,7 @@ It uses private G content; final action adjustment and session flow remain pendi
 `check_ai_area_action_original.py ROM PACK KEEPER_RAM` compares the supported
 route2 final action/subtype handlers and verifies explicit rejection of the
 recipient-selection branch. It does not run a complete opponent action.
+
+`trace_ai_area_recipient.py ROM KEEPER_RAM OUTPUT_JSON` observes original recipient
+selection before its special-move lookup. The report must remain outside the
+checkout; this is research rather than native AI verification.

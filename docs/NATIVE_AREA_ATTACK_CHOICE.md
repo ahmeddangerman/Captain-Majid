@@ -67,3 +67,20 @@ mirrored positions. The18,832 supported final action/subtype pairs matched the
 original return at897D. The2,800 recipient-choice cases were identified using
 the original candidate and rejected by the native operation. Full Make check/all
 passed; evidence: `ai-final-original.log`. No complete opponent turn is claimed.
+
+## Recipient branch research
+
+`trace_ai_area_recipient.py` observes8933 until8A3F (before special-move lookup)
+or its caller return. The first private report covers12,168 constructed cases:
+169 direct profiles, three teammate position patterns, eight first-random values
+and three second-random values. It reached move lookup in5,911 cases and fallback
+in6,257. Evidence: `ai-recipient-first.json`. These are original observations,
+not native recipient-choice parity.
+
+The branch can try a preferred teammate, scan field players12–21 for a teammate
+on the relevant side, or choose another target using random bytes. Some strategies
+rotate the first random byte, so native integration must preserve the changed
+random state as well as the chosen player. The fallback action is4 in this route.
+After a recipient is found the original writes its ID and field cell before
+looking up the move subtype. Those steps must be represented together; action
+and subtype alone cannot describe this branch.

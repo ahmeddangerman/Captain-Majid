@@ -1422,3 +1422,8 @@ Daily website note updated separately; engine/private research remains local.
   positions, and identified2,800 pending recipient cases. Full Make check/all pass.
   Evidence: ai-final-original.log. Next: recipient selection and its move/subtype
   handling, then saved area-action preparation.
+- Continued original recipient research with a bounded observer:12,168 cases
+  across169 profiles and three teammate position patterns reached5,911 move
+  lookups and6,257 fallback returns. Evidence: ai-recipient-first.json. Native
+  implementation must preserve rotated random state, recipient ID/cell and move
+  subtype; this research does not claim native recipient parity.
