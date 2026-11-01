@@ -4,12 +4,15 @@ import argparse,hashlib,json,subprocess
 from pathlib import Path
 from check_area_defense_poll_original import defense_entries,poll_snapshot
 from trace_area_attack_choice import observe_area_attack_choice
+from trace_area_attack_presentation import trace_area_attack_presentation
 from verify_action_strength import PAYLOAD_SHA256
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
  p.add_argument('--prepare',action='store_true')
+ p.add_argument('--present',action='store_true')
  a=p.parse_args();rom=a.rom.read_bytes()
+ if a.present:a.prepare=True
  if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved ROM')
  out=a.output_dir.resolve()
  if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private outputs must stay outside checkout')
@@ -37,6 +40,15 @@ def main():
        expected=bytearray(poll_snapshot(raw_prepared,79));expected[393:396]=bytes((1,raw_prepared[0x5fc] if report['action']==1 else 0,raw_prepared[0x638] if report['action']==1 else 0));expected[396:398]=raw_prepared[0x43f:0x441]
        actual=prepared.read_bytes()
        if actual!=expected:raise RuntimeError(f'{name} prepared: {[(i,x,y)for i,(x,y)in enumerate(zip(actual,expected))if x!=y]}')
+       if a.present:
+        presented=out/f'{name}-defense-entry.cmjsession'
+        run=subprocess.run(['build/captain-phase-session',str(a.pack.resolve()),str(prepared),'--begin-prepared-area-defense','--capture',str(presented)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(run.stderr)
+        presentation,raw_presented=trace_area_attack_presentation(prg,raw_prepared)
+        expected=bytearray(poll_snapshot(raw_presented,80));expected[393:396]=bytes((1,raw_presented[0x5fc] if report['action']==1 else 0,raw_presented[0x638] if report['action']==1 else 0));expected[396:398]=raw_presented[0x43f:0x441]
+        actual=presented.read_bytes()
+        if actual!=expected:raise RuntimeError(f'{name} presentation: {[(i,x,y)for i,(x,y)in enumerate(zip(actual,expected))if x!=y]}')
+        if 'Presentation request 1 | id 14 | slot 0' not in run.stdout or presentation['requests']!=[{'kind':1,'id':14,'slot':0}]:raise RuntimeError('Presentation request mismatch')
       results.append({'type':kind,'variant':variant,'pattern':pattern,'first':first,'second':second,'action':report['action']})
  (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Constructed completed defensive prefixes and direct opponent profiles. Full represented save compared at897D after original CPU choice. Target metadata captures new recipient/cell only. No attack preparation, renderer or complete match.'},indent=2)+'\n')
  print(f'{len(results)} complete saved area AI choices match original')

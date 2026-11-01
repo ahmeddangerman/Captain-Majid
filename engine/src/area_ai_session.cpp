@@ -2,6 +2,13 @@
 #include "captain/player_movement.hpp"
 #include <stdexcept>
 namespace captain {
+ActionMenuResult begin_prepared_area_defense(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_attack_prepared)throw std::invalid_argument("Area defense entry requires prepared attack");
+ ActionMenuResult result{input};result.presentation.push_back({ControlPresentationKind::script,14});
+ result.state.control->motion_requested=input.recovery->ball_variant==1 ? 2 : 0;result.state.phase=FieldSessionPhase::keeper_area_defense_entry;
+ validate_phase_session(result.state);return result;
+}
 PhaseSessionState prepare_session_area_attack(const PhaseSessionState& input,const ShotContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_ai_chosen)throw std::invalid_argument("Area attack requires a saved opponent choice");

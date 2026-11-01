@@ -147,3 +147,18 @@ rejects. `check_area_ai_session_original.py --prepare` matched480 saved choices
 and their480 prepared continuations against complete represented original state.
 Evidence: `area-attack-session-original.log`. Full Make check/all pass. Action
 presentation and defensive resolution are still next.
+
+## Prepared action presentation and defender entry
+
+`begin-prepared-area-defense` advances prepared phase79 to phase80 at8998,
+after script14 and before the defender loop. This is an explicit prepared
+presentation acknowledgement, not a native renderer. Original EC3E clears the
+motion request; the script's variant selector at bank16:8259 chooses the branch.
+Variant1 subsequently requests motion2 (ED32 and bank24:8701), while variant2
+leaves it0. The native state reflects this distinction and emits script14.
+
+Snapshot58w stays398bytes and adds the new phase. `--present` on the saved-choice
+checker compared480 original choices, preparations and presentation continuations
+to8998, including full represented state and script request. Evidence:
+`area-presentation-final`. Host frame acknowledgements remain explicit. Full Make
+check/all pass. The defender loop and its gameplay outcomes remain next.

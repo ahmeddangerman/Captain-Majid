@@ -1470,3 +1470,14 @@ Daily website note updated separately; engine/private research remains local.
 - 480 complete original choice snapshots and480 prepared continuations match.
   Evidence: area-attack-session-original.log. Roundtrip, replay and legacy version
   rejection are covered. Next: action presentation and defender sequence.
+
+## 2026-11-01 — prepared action presentation to defender entry
+
+- Added phase79→80 at8998 after prepared script14 and before the defender loop.
+  Original comparison exposed a variant difference: variant1 requests motion2;
+  variant2 leaves0 after EC3E reset. Traced selector8259 and motion request path,
+  corrected implementation and added a regression.
+- 480 original choice/preparation/presentation chains match full represented
+  state and script request. Evidence: area-presentation-final. Snapshot58w stays
+  398bytes; full Make check/all pass. Explicit host frame acknowledgements; no
+  renderer or defensive outcome claim. Continuing into the defender sequence.

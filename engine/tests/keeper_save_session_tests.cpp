@@ -227,6 +227,17 @@ int main(){try{
  rejects([&]{prepare_session_area_attack(prepared_area,ai_attack_data);});
  auto prior_prepared=prepared_bytes;prior_prepared[10]='u';prior_prepared.resize(396);
  rejects([&]{std::istringstream old(prior_prepared);load_phase_session(old);});
+ const auto area_entry=begin_prepared_area_defense(prepared_area);
+ check(static_cast<unsigned>(area_entry.state.phase)==80 && area_entry.state.control->motion_requested==2 &&
+       area_entry.presentation.size()==1 && area_entry.presentation[0].id==14 &&
+       area_entry.state.current.clock.remaining==prepared_area.current.clock.remaining,"Prepared presentation enters area defense without clock debit");
+ auto entry_bytes=bytes(area_entry.state);std::istringstream entry_stream(entry_bytes);
+ check(bytes(load_phase_session(entry_stream))==entry_bytes,"Area defense entry roundtrip");
+ rejects([&]{begin_prepared_area_defense(area_entry.state);});
+ entry_bytes[10]='v';rejects([&]{std::istringstream old(entry_bytes);load_phase_session(old);});
+ auto second_variant=prepared_area;second_variant.recovery->ball_variant=2;second_variant.control->motion_requested=2;
+ const auto second_entry=begin_prepared_area_defense(second_variant);
+ check(second_entry.state.control->motion_requested==0,"Second area variant clears prior motion instead of requesting ground motion");
  check(static_cast<unsigned>(completed.state.phase)==72 && completed.presentation.size()==1 &&
        completed.presentation[0].kind==ControlPresentationKind::clear_overlay,
        "Full-prefix confirmation returns without reading beyond the selected slots");

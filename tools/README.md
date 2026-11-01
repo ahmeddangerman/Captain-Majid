@@ -211,3 +211,6 @@ area attack numeric preparation through8980 using private content18I.
 
 Add `--prepare` to `check_area_ai_session_original.py` to compare both the saved
 choice and its prepared attack. The latest writer is snapshot57v398bytes.
+
+`--present` additionally compares the prepared script14 continuation to8998.
+The current writer is snapshot58w398bytes. Host frame acknowledgements are explicit.
