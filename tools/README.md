@@ -181,3 +181,7 @@ processor flags and the sampled buttons. Output remains outside the checkout.
 `trace_area_attack_choice.py ROM KEEPER_RAM OUTPUT_DIR` observes the original
 opponent choice after the completed area defense menu. This is bounded CPU
 research; it does not compare a native AI implementation or execute the action.
+
+`check_ai_action_candidate_original.py ROM` compares native packed action sampling
+with original bank28:8B0B using synthetic replacement data. Category/profile lookup
+and later action/subtype adjustments are outside this component comparison.

@@ -23,3 +23,17 @@ This is original-game research, not native AI implementation or an executed
 match action. Next: trace875D's route/category and weighted choice data, reproduce
 its supported decisions natively, then connect attack preparation and the saved
 defensive prefix to their actual outcomes.
+
+## Native packed candidate sampler
+
+`choose_ai_action_candidate` accepts four bytes containing eight action codes and
+a random byte. Original bank28:8B0B uses the random byte's low three bits: even
+indices read the upper nibble and odd indices read the lower nibble. Duplicate
+codes preserve their original probability. The function accepts supplied data;
+no original action tables are embedded in the distributed source.
+
+`check_ai_action_candidate_original.py` compared8,192 cases against the original
+routine using32 synthetic replacement rows and every random byte. Native focused
+checks and original comparisons passed. This covers sampling only; selecting the
+row from player profile/field category and later subtype adjustments remain
+unimplemented and the sampler is not yet connected to the saved match session.

@@ -1390,3 +1390,13 @@ Daily website note updated separately; engine/private research remains local.
   No native AI parity, match execution or overall completion increase is claimed.
 - Next: original route/category and weighted choice tables, then native opponent
   decision and attack preparation. See NATIVE_AREA_ATTACK_CHOICE.md.
+
+## 2026-11-01 — native opponent action candidate sampling
+
+- Added a native data-supplied sampler for eight packed action candidates, matching
+  original bank28:8B0B nibble order and low-three-bit random indexing. Duplicate
+  candidates retain their probability; no ROM tables are embedded in source.
+- 8,192 original comparisons passed across32 synthetic replacement rows and every
+  random byte. Focused native checks passed. Profile/category row selection, later
+  action/subtype adjustments and session integration remain unfinished; this is a
+  component checkpoint, not a complete native AI or playable match.
