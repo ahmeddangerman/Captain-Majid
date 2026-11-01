@@ -84,3 +84,24 @@ random state as well as the chosen player. The fallback action is4 in this route
 After a recipient is found the original writes its ID and field cell before
 looking up the move subtype. Those steps must be represented together; action
 and subtype alone cannot describe this branch.
+
+## Native recipient selection and combined plan
+
+The native recipient routine now reproduces the preferred target, teammate scan,
+fallback action, target cell and random-byte rotation. The original retry path
+computes another random target but does not store it before retrying the old
+target; the native code preserves this behavior. The original comparison matched
+15,210 cases across169 profiles, three position patterns, all ten carrier IDs,
+multiple ball positions and random pairs. Evidence: `ai-recipient-profile-original.log`.
+
+Private content17H adds557bytes of recipient-profile and recipient-choice rows;
+the canonical pack is21,274bytes and the previous G payload remains unchanged.
+`plan_ai_area_action` combines candidate, final adjustment and recipient choice
+for supported route2 inputs. Nonzero area variants skip action1 special subtype
+options in the original. The native plan requires variants1/2 and rejects raw
+option-group types outside the represented range when entering the recipient
+branch. Generic teams are still unsupported.
+
+`check_ai_area_plan_original.py` matched5,976 complete choices through897D,
+including action, subtype, target, field cell and final random state. This is a
+pure planning component; the saved match phase and attack preparation are next.

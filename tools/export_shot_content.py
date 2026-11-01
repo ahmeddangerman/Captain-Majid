@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese development data to a local CMJSHOTG pack."""
+"""Export private Japanese development data to a local CMJSHOTH pack."""
 import argparse
 import hashlib
 import struct
@@ -19,7 +19,7 @@ def export_data(rom):
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
-    data = bytearray(b'CMJSHOTG' + hashlib.sha256(rom[16:]).digest())
+    data = bytearray(b'CMJSHOTH' + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -157,6 +157,12 @@ def export_data(rom):
     if rows>64 or 0xB12E+48*rows>0xC000:raise ValueError('Unsupported AI row bounds')
     data.extend(struct.pack('<H',rows))
     data.extend(stats[0xB12E:0xB12E+48*rows])
+    recipients=[stats[0x9662+12*i+10] for i in range((0x9E4E-0x9662)//12)]
+    vector(recipients)
+    recipient_rows=max(recipients)+1
+    if recipient_rows>64 or 0xB72E+8*recipient_rows>0xC000:raise ValueError('Unsupported AI recipient bounds')
+    data.extend(struct.pack('<H',recipient_rows))
+    data.extend(stats[0xB72E:0xB72E+8*recipient_rows])
     return bytes(data)
 
 

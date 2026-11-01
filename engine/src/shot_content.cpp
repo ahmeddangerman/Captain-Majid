@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -193,6 +193,17 @@ ShotContent load_shot_content(std::istream& input) {
         ai.rows.resize(reader.count(1,64));
         for(auto& row:ai.rows)reader.bytes(row);
         for(auto row:ai.profile_rows)if(row>=ai.rows.size())throw std::invalid_argument("Invalid AI profile row");
+    }
+    if(version>='H') {
+        auto& ai=*content.ai_area_choice;
+        ai.recipient_profile_rows=reader.vector(1,221);
+        ai.recipient_rows.resize(reader.count(1,64));
+        for(auto& row:ai.recipient_rows) {
+            reader.bytes(row);
+            for(auto entry:row)if((entry>>2)!=15 && ((entry>>2)<2 || (entry>>2)>11))
+                throw std::invalid_argument("Unsupported AI recipient target");
+        }
+        for(auto row:ai.recipient_profile_rows)if(row>=ai.recipient_rows.size())throw std::invalid_argument("Missing AI recipient row");
     }
     reader.end();
     return content;

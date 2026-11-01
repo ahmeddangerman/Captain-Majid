@@ -197,3 +197,8 @@ recipient-selection branch. It does not run a complete opponent action.
 `trace_ai_area_recipient.py ROM KEEPER_RAM OUTPUT_JSON` observes original recipient
 selection before its special-move lookup. The report must remain outside the
 checkout; this is research rather than native AI verification.
+
+`check_ai_area_recipient_original.py ROM KEEPER_RAM --pack PACK` compares native
+recipient selection with profile-selected private data. `check_ai_area_plan_original.py
+ROM PACK KEEPER_RAM` compares the combined supported area choice before attack
+preparation. The current private H pack includes recipient rows.

@@ -1427,3 +1427,15 @@ Daily website note updated separately; engine/private research remains local.
   lookups and6,257 fallback returns. Evidence: ai-recipient-first.json. Native
   implementation must preserve rotated random state, recipient ID/cell and move
   subtype; this research does not claim native recipient parity.
+
+## 2026-11-01 — native recipient selection and combined opponent choice
+
+- Implemented preferred/scan/fallback recipient selection, target cell and random
+  mutation. Original comparison exposed that a retry does not store its new
+  random target; fixed and covered by a focused regression. Native outcomes now
+  match15,210 original cases. Private H adds557bytes; prior G payload is identical.
+- Combined candidate and recipient branches into a native area action plan.
+  5,976 original complete choices match action/subtype/target/cell/random state.
+  Generic teams and unsupported raw option groups reject; no fixed substitution.
+- Next: add a saved area-choice phase, preserving optional recipient/cell and
+  native random state; then original attack preparation. No playable-match claim.

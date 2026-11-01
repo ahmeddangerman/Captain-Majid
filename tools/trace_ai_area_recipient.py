@@ -17,7 +17,7 @@ def observe_recipient(prg,ram,profile_type):
  for step in range(4000):
   if c.pc==0x8a3f or c.pc==0x200:
    return {'boundary':'move_lookup' if c.pc==0x8a3f else 'fallback','recipient':m[0x5fc] if c.pc==0x8a3f else None,'action':m[0x43b],
-           'random_first':m[0xe2],'instructions':step}
+           'cell':m[0x638] if c.pc==0x8a3f else None,'random_first':m[0xe2],'instructions':step}
   if c.pc<0x8000 or c.pc in (0xcb0f,0xcaae):raise RuntimeError(f'Unsupported recipient boundary {c.pc:04x}')
   c.step()
  raise RuntimeError('Recipient instruction bound')

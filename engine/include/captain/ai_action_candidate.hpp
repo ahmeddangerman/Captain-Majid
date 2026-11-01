@@ -2,14 +2,34 @@
 #include <array>
 #include <cstdint>
 #include <vector>
+#include <optional>
 namespace captain {
+struct AiRecipientResult {
+ std::uint8_t action,random_first;
+ std::optional<std::uint8_t> recipient{},cell{};
+};
+// Input entry is private profile-selected recipient data; stops before subtype lookup.
+AiRecipientResult choose_ai_area_recipient(std::uint8_t entry,std::uint8_t carrier,
+ std::uint8_t ball_x,std::uint8_t random_first,std::uint8_t random_second,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates);
 struct AiAreaChoiceContent {
  std::vector<std::uint8_t> profile_rows;
  std::array<std::array<std::uint8_t,2>,16> cells{};
  std::vector<std::array<std::uint8_t,48>> rows;
+ std::vector<std::uint8_t> recipient_profile_rows;
+ std::vector<std::array<std::uint8_t,8>> recipient_rows;
 };
+AiRecipientResult choose_profiled_ai_area_recipient(std::uint8_t type,std::uint8_t flags,
+ std::uint8_t alternate,std::uint8_t carrier,std::uint8_t ball_x,
+ std::uint8_t random_first,std::uint8_t random_second,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates,const AiAreaChoiceContent& content);
 struct AiAreaChoice { std::uint8_t category,row,candidate; };
 struct AiAreaAction { AiAreaChoice choice; std::uint8_t action,subtype; };
+struct AiAreaPlan { std::uint8_t action,subtype,random_first; std::optional<std::uint8_t> recipient{},cell{}; };
+AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t carrier,std::uint8_t ball_x,std::uint8_t ball_y,std::uint8_t first,
+ std::uint8_t second,std::uint8_t variant,const std::array<std::array<std::uint8_t,2>,10>& teammates,
+ const AiAreaChoiceContent& content);
 // The candidate2 recipient-selection branch is not supported by this operation.
 AiAreaAction choose_ai_area_action(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,

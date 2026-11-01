@@ -1,6 +1,61 @@
 #include "captain/ai_action_candidate.hpp"
 #include <stdexcept>
+#include "captain/defender_selection.hpp"
 namespace captain {
+AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t carrier,std::uint8_t ball_x,std::uint8_t ball_y,std::uint8_t first,
+ std::uint8_t second,std::uint8_t variant,const std::array<std::array<std::uint8_t,2>,10>& teammates,
+ const AiAreaChoiceContent& content) {
+ if(carrier<12 || carrier>21 || (variant!=1 && variant!=2))throw std::invalid_argument("Unsupported opponent area context");
+ const auto choice=choose_ai_area_candidate(type,flags,alternate,ball_x,ball_y,first,content);
+ if(choice.candidate!=2){const auto action=choose_ai_area_action(type,flags,alternate,ball_x,ball_y,first,content);return {action.action,action.subtype,first,std::nullopt,std::nullopt};}
+ // Original attack action1 handler8D41 skips special options for nonzero variant.
+ // Raw types beyond the captured original option-group table remain unsupported.
+ if(type>=118)throw std::invalid_argument("Unrepresented original AI move-option group");
+ const auto target=choose_profiled_ai_area_recipient(type,flags,alternate,carrier,ball_x,first,second,teammates,content);
+ return {target.action,0,target.random_first,target.recipient,target.cell};
+}
+AiRecipientResult choose_profiled_ai_area_recipient(std::uint8_t type,std::uint8_t flags,
+ std::uint8_t alternate,std::uint8_t carrier,std::uint8_t ball_x,
+ std::uint8_t first,std::uint8_t second,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates,const AiAreaChoiceContent& content) {
+ if(!type)throw std::invalid_argument("Missing generic AI team type");
+ if(flags&128u)type=alternate;
+ if(type<35 || unsigned(type-35)>=content.recipient_profile_rows.size())throw std::invalid_argument("Missing AI recipient profile");
+ const auto row=content.recipient_profile_rows[type-35];
+ if(row>=content.recipient_rows.size())throw std::invalid_argument("Missing AI recipient row");
+ return choose_ai_area_recipient(content.recipient_rows[row][first&7u],carrier,ball_x,first,second,teammates);
+}
+AiRecipientResult choose_ai_area_recipient(std::uint8_t entry,std::uint8_t carrier,
+ std::uint8_t ball_x,std::uint8_t random_first,std::uint8_t random_second,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates) {
+ if(carrier<12 || carrier>21)throw std::invalid_argument("AI recipient requires opponent field carrier");
+ const auto encoded=unsigned(entry>>2);const auto strategy=unsigned(entry&3u);
+ if(encoded!=15 && (encoded<2 || encoded>11))throw std::invalid_argument("Unsupported preferred AI recipient");
+ auto random=random_first;
+ const auto random_target=[&](unsigned carry) {
+  unsigned target=(unsigned(random)+random_second+carry)&15u;
+  if(target>=10)target-=10;
+  target+=12;
+  if(target==carrier){target+=2;if(target>=22)target=12;}
+  return target;
+ };
+ unsigned preferred=encoded+10;
+ if(encoded==15 || preferred==carrier)preferred=random_target(1);
+ const auto acceptable=[&](unsigned target){return ball_x>=teammates[target-12][0] || ball_x<96;};
+ const auto chosen=[&](unsigned target){const auto& p=teammates[target-12];return AiRecipientResult{1,random,static_cast<std::uint8_t>(target),field_cell_at(p[0],p[1])};};
+ const auto scan=[&]() -> unsigned {for(unsigned target=12;target<=21;++target)if(target!=carrier && teammates[target-12][0]<96)return target;return 0;};
+ if(strategy==3){const auto target=scan();if(target)return chosen(target);}
+ if(acceptable(preferred))return chosen(preferred);
+ if(strategy==2){const auto target=scan();if(target)return chosen(target);}
+ if(strategy!=0) {
+  random=static_cast<std::uint8_t>((random>>1)|128u);
+  // Original898A calls8A20 but does not store its returned target in3C.
+  // The following89B3 retries the unchanged preferred target, which already
+  // failed. Preserve the random mutation rather than substituting that target.
+ }
+ return {4,random,std::nullopt,std::nullopt};
+}
 AiAreaAction choose_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiAreaChoiceContent& content) {
  const auto choice=choose_ai_area_candidate(type,flags,alternate,x,y,random,content);
