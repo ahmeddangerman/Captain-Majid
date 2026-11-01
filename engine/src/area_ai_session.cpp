@@ -2,6 +2,17 @@
 #include "captain/player_movement.hpp"
 #include <stdexcept>
 namespace captain {
+PreparedAreaDefender prepare_area_defender(const FieldPlayerRecord& player,std::uint8_t attack,
+ std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,
+ std::uint8_t defense_subtype,const ShotContent& content) {
+ if(player.player_id<1 || player.player_id>10 || (attack!=1 && attack!=4 && attack!=6) ||
+    (variant!=1 && variant!=2) || (defense!=2 && defense!=4) ||
+    (defense==2 ? defense_subtype>1 : defense_subtype!=0))throw std::invalid_argument("Unsupported area defender preparation");
+ const auto prepared=prepare_profiled_field_defender(player,content.field_players,defense,variant,defense_subtype,content.defense);
+ const auto stamina=static_cast<std::uint16_t>(unsigned(player.flags)|(unsigned(player.alternate_type)<<8));
+ const auto energy=calculate_energy({stamina,prepared.stamina_cost,player.type,11,attack,attack_subtype,true,false});
+ return {prepared,energy};
+}
 ActionMenuResult announce_prepared_area_defenders(const PhaseSessionState& input,std::uint8_t facing) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defense_entry || (facing!=0 && facing!=64))throw std::invalid_argument("Defender announcements require prepared entry and captured facing");

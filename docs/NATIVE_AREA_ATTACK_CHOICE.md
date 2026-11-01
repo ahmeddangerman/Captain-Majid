@@ -177,3 +177,17 @@ defenders, ordinary/special/skip patterns and both area variants, including full
 represented state and ordered script/wait requests. Evidence:
 `area-announcement-first`. Full Make check/all pass. Host acknowledgements remain
 explicit; no native live frame advancement or defender calculation is inferred.
+
+## Defender preparation and energy
+
+`prepare_area_defender` reproduces the numeric stage89DA..8A05 for supported
+human defenders1..10, actions2/4 and area variants1/2. It prepares skill/effect
+from private profiles and applies the original stamina cost, including raw
+type32's cost adjustment and the weakened flag after an exhausted subtraction.
+This pure calculation does not yet commit a defender into the saved session.
+
+The original CPU checker matched2,430 strength/effect/cost/stamina/weakened/carry
+outputs across three raw types, three levels, both variants and ordinary/special
+defense choices. Seven unsupported inputs reject. Evidence:
+`area-defender-original.log`. Full Make check/all pass. Next: area-specific
+comparison tables and classification, then saved defender execution.

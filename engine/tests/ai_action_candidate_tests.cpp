@@ -5,6 +5,17 @@
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) {
+ if(argc==3 && std::string(argv[1])=="--defender") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  unsigned id,type,flags,alt,level,attack,attack_subtype,variant,defense,subtype;
+  while(std::cin>>id>>type>>flags>>alt>>level>>attack>>attack_subtype>>variant>>defense>>subtype) {
+   if(id>255||type>255||flags>255||alt>255||level>255||attack>255||attack_subtype>255||variant>255||defense>255||subtype>255)return 2;
+   try {const auto r=captain::prepare_area_defender({static_cast<std::uint8_t>(id),static_cast<std::uint8_t>(type),static_cast<std::uint8_t>(flags),static_cast<std::uint8_t>(alt),static_cast<std::uint8_t>(level)},attack,attack_subtype,variant,defense,subtype,content);
+    std::cout<<unsigned(r.preparation.base_strength)<<' '<<unsigned(r.preparation.move_effect)<<' '<<r.energy.cost<<' '<<r.energy.stamina<<' '<<r.energy.weakened<<' '<<r.energy.carry<<'\n';
+   }catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--prepare") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   unsigned id,type,flags,alt,level,action,variant,subtype,first,second;

@@ -1491,3 +1491,12 @@ Daily website note updated separately; engine/private research remains local.
 - 32 original announcement prefixes match complete represented state and ordered
   requests. Evidence: area-announcement-first. Snapshot59x remains398bytes;
   full Make check/all pass. Next: defender skill/energy preparation and comparison.
+
+## 2026-11-01 — area defender skill and stamina calculation
+
+- Added pure preparation for supported human area defenders/actions2/4. Reuses
+  profile skill preparation and original energy arithmetic, preserving type32's
+  adjusted cost, exhaustion and subtraction carry. Session commit still pending.
+- Original CPU comparison matched2,430 numeric results at8A05; seven unsupported
+  inputs reject. Evidence: area-defender-original.log. Full Make check/all pass.
+  Continuing into area-specific comparison before saved defensive execution.

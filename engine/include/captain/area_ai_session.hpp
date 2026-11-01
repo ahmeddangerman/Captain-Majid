@@ -3,6 +3,10 @@
 #include "captain/ai_action_candidate.hpp"
 #include "captain/shot_content.hpp"
 namespace captain {
+struct PreparedAreaDefender { FieldDefenderPreparationResult preparation; EnergyResult energy; };
+PreparedAreaDefender prepare_area_defender(const FieldPlayerRecord&,std::uint8_t attack,
+ std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,
+ std::uint8_t defense_subtype,const ShotContent&);
 ActionMenuResult announce_prepared_area_defenders(const PhaseSessionState&,std::uint8_t facing);
 ActionMenuResult begin_prepared_area_defense(const PhaseSessionState&);
 PhaseSessionState prepare_session_area_attack(const PhaseSessionState&,const ShotContent&);
