@@ -173,3 +173,7 @@ D403/D40C boundary. Outputs and private content stay outside the checkout.
 `check_area_defense_special_redraw_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
 compares defensive registration and redraw through D41F. It uses private F
 content and snapshot55t; it stops before the subsequent saved-input tail.
+
+`check_area_defense_special_tail_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
+compares the continuation after D41F to the next input wait, retaining original
+processor flags and the sampled buttons. Output remains outside the checkout.

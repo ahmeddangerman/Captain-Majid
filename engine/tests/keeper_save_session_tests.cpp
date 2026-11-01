@@ -178,7 +178,7 @@ int main(){try{
   rejects([&]{std::istringstream old(saved);load_phase_session(old);});
  }
  auto missing_icons=defense_content;missing_icons.field_icons.reset();
- rejects([&]{poll_keeper_area_defense(prompt.state,0,missing_icons);});
+ rejects([&]{poll_keeper_area_defense(prompt.state,1,missing_icons);});
  rejects([&]{poll_keeper_area_defense(defense_confirm.state,0,defense_content);});
  auto missing_sample=defense_confirm.state;missing_sample.area_defense->pressed=0;
  rejects([&]{validate_phase_session(missing_sample);});
@@ -305,6 +305,41 @@ int main(){try{
  check(static_cast<unsigned>(selected_redraw.state.phase)==77 && selected_redraw.state.action->cursor==1 &&
        selected_redraw.state.area_defense->subtypes[0]==1 && selected_redraw.presentation.size()==3 &&
        selected_redraw.presentation[2].id==77,"Accepted last special stores subtype and its icon");
+ auto full_tail=continue_keeper_area_special(selected_redraw.state,defense_content);
+ check(static_cast<unsigned>(full_tail.state.phase)==70 && full_tail.state.action->cursor==1 &&
+       full_tail.state.area_defense->subtypes[0]==1 && !full_tail.state.area_special_option &&
+       !full_tail.state.area_special_decision,"Full accepted tail retains special subtype and clears completed context");
+ auto cancel_tail=continue_keeper_area_special(canceled_redraw.state,defense_content);
+ check(static_cast<unsigned>(cancel_tail.state.phase)==70 && cancel_tail.state.action->cursor==0,
+       "Canceled first slot returns to defensive input wait");
+ auto full_back=selected_redraw.state;full_back.area_special_pressed=192;
+ auto no_icons=defense_content;no_icons.field_icons.reset();no_icons.action2_special_icon.reset();
+ auto full_back_result=continue_keeper_area_special(full_back,no_icons);
+ check(full_back_result.state.action->cursor==0 && full_back_result.state.area_defense->subtypes[0]==1 &&
+       full_back_result.presentation.size()==1,"Full A+B tail uses B without requesting an icon");
+ auto full_direction=selected_redraw.state;full_direction.area_special_pressed=129;
+ const auto before_direction=bytes(full_direction);
+ rejects([&]{continue_keeper_area_special(full_direction,defense_content);});
+ check(bytes(full_direction)==before_direction,"Unsupported full-prefix direction rejects atomically");
+ auto nonfinal_accepted=accepted.state;nonfinal_accepted.current.field.selected_defenders=2;
+ nonfinal_accepted.scheduling->selected_ids[1]=2;nonfinal_accepted.area_special_pressed=193;
+ auto nonfinal_redraw=redraw_keeper_area_special(nonfinal_accepted,defense_content);
+ auto nonfinal_tail=continue_keeper_area_special(nonfinal_redraw.state,defense_content);
+ check(nonfinal_tail.state.action->cursor==1 && nonfinal_tail.state.area_defense->subtypes[0]==1 &&
+       nonfinal_tail.state.area_defense->actions[1]==255 && nonfinal_tail.presentation.size()==1 &&
+       nonfinal_tail.presentation[0].id==defense_content.titles[2],"Nonfinal accepted path ignores B/direction");
+ auto denied_buttons=denied.state;denied_buttons.area_special_pressed=193;
+ auto denied_redraw=redraw_keeper_area_special(denied_buttons,defense_content);
+ auto denied_tail=continue_keeper_area_special(denied_redraw.state,defense_content);
+ check(denied_tail.state.action->cursor==0 && denied_tail.state.area_defense->actions[0]==2 &&
+       denied_tail.presentation.size()==1,"Denied nonfinal path ignores B/direction");
+ auto previous_cancel=canceled_redraw.state;previous_cancel.current.field.selected_defenders=2;
+ previous_cancel.scheduling->selected_ids[1]=2;previous_cancel.action->cursor=1;
+ previous_cancel.recovery->opposing_player=2;previous_cancel.area_defense->actions[0]=2;
+ previous_cancel.area_defense->subtypes[0]=1;previous_cancel.area_defense->actions[1]=2;
+ auto previous_tail=continue_keeper_area_special(previous_cancel,defense_content);
+ check(previous_tail.state.action->cursor==0 && previous_tail.state.area_defense->subtypes[0]==1 &&
+       previous_tail.presentation.size()==2,"Canceled B preserves earlier special subtype");
  const auto encoded_redraw=bytes(selected_redraw.state);std::istringstream redraw_stream(encoded_redraw);
  check(bytes(load_phase_session(redraw_stream))==encoded_redraw,"Special redraw snapshot roundtrip");
  auto invalid_old_redraw=encoded_redraw;invalid_old_redraw[10]='s';

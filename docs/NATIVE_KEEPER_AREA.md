@@ -320,3 +320,23 @@ blink, back, same direction and changed direction. Full represented snapshots an
 ordered presentation requests match the original up to D41F. Evidence:
 `special-redraw-check-final`. Host frame acknowledgements are explicit; the input
 tail, execution of the chosen defense and live graphics/audio remain unfinished.
+
+## Resume the saved button sample
+
+`continue-keeper-area-special` continues phase77 into the next defensive menu
+wait. For accepted or denied choices with another defender remaining, the original
+opens the next prompt. Canceled choices and a full selection process the saved
+button sample again: B may go back, and direction may change the selected action.
+The A button is not reprocessed at this boundary. Special subtypes survive when
+the action stays the same; changing action clears them. Unsupported directions
+that access an unrepresented full-prefix scratch slot reject atomically.
+
+This continuation keeps snapshot55t and clears the completed special-choice
+context when returning to the defensive menu. The original observer runs the
+CPU continuously from D3F4 through D41F so the saved processor flags and original
+button sample control the actual branch. Presentation uses explicit host frame
+acknowledgements; defensive action execution and live graphics remain unfinished.
+The original comparison matched1,104 controlled continuations and rejected240
+full-prefix directional cases whose scratch slots are unrepresented. Evidence:
+`special-tail-final`; complete represented snapshots and post-D41F presentation
+requests matched.

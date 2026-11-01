@@ -1365,3 +1365,16 @@ Daily website note updated separately; engine/private research remains local.
   Full Make check/all pass; independent review found no critical/important issue.
   Explicit host frame acknowledgements; actual rendering and action execution are
   still unfinished. Next: resume D41F's saved-button tail into the next menu state.
+
+## 2026-11-01 — defensive special choice input continuation
+
+- Connected phase77 through the saved-button tail to the next defensive menu wait.
+  Accepted/denied nonfinal choices open the next prompt; canceled/full-prefix
+  cases process B/directions from the preserved sample, without reprocessing A.
+  Special subtype survives unchanged action and clears when action changes.
+- Original execution from D3F4 through D41F to D3A6 matched1,104 controlled
+  continuations, with240 unsupported full-prefix directional cases rejected.
+  Evidence: special-tail-final. Host frame acknowledgements; no actual rendering,
+  stamina debit or defense execution claimed. Focused tests and Make check/all pass.
+- Next: use the completed defensive choices in the area action and connect the
+  resulting possession, shot and match flow. Overall completion remains unmeasured.

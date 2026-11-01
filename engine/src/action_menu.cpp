@@ -4,6 +4,25 @@
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult continue_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_special_redrawn)
+  throw std::invalid_argument("Special continuation requires a completed redraw");
+ auto state=input;
+ const auto pressed=state.area_special_pressed;
+ const auto canceled=state.area_special_decision->status==2;
+ state.area_special_option.reset();state.area_special_decision.reset();
+ state.area_special_cursor=0;state.area_special_pressed=0;
+ state.phase=FieldSessionPhase::keeper_area_defense_poll;
+ if(!canceled && state.action->cursor<state.current.field.selected_defenders) {
+  state.action->flash_counter|=64u;state.area_defense->blink=0;
+  ActionMenuResult result{state};
+  result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
+  validate_phase_session(result.state);return result;
+ }
+ // D438 continues with B/directions only; this is the chooser's same sample.
+ return poll_keeper_area_defense(state,static_cast<std::uint8_t>(pressed&127u),content);
+}
 namespace {
 std::uint8_t defense_icon(const KeeperAreaDefenseContext& defense,unsigned slot,const AreaDefenseMenuContent& content) {
  const auto action=defense.actions[slot];
@@ -135,8 +154,8 @@ ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,cons
 }
 ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
  validate_phase_session(input);
- if((input.phase!=FieldSessionPhase::keeper_area_defense_ready && input.phase!=FieldSessionPhase::keeper_area_defense_poll) || !content.field_icons)
-  throw std::invalid_argument("Defensive input requires prompt/poll state and private icon content");
+ if(input.phase!=FieldSessionPhase::keeper_area_defense_ready && input.phase!=FieldSessionPhase::keeper_area_defense_poll)
+  throw std::invalid_argument("Defensive input requires prompt/poll state");
  ActionMenuResult result{input};auto& state=result.state;auto& menu=*state.action;auto& defense=*state.area_defense;
  state.phase=FieldSessionPhase::keeper_area_defense_poll;
  defense.pressed=0;

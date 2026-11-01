@@ -46,6 +46,7 @@ ActionMenuResult open_keeper_area_special(const PhaseSessionState& input,const A
 ActionMenuResult poll_keeper_area_special(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content);
 ActionMenuResult inspect_keeper_area_special(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense);
 ActionMenuResult redraw_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
+ActionMenuResult continue_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 // Ordinary field choices only; available special options stay pending. No energy charge.
 ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,
