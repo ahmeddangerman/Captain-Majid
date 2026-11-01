@@ -9,11 +9,13 @@
 #include "captain/control_input.hpp"
 #include "captain/control_tick.hpp"
 #include "captain/action_menu.hpp"
+#include "captain/ai_action_candidate.hpp"
 #include <istream>
 #include <optional>
 
 namespace captain {
 struct ShotContent {
+    std::optional<AiAreaChoiceContent> ai_area_choice{};
     std::array<std::uint8_t, 32> source_payload_sha256;
     FieldPlayerProfiles field_players;
     GoalkeeperProfiles goalkeepers;
@@ -34,7 +36,7 @@ struct ShotContent {
     std::optional<AreaDefenseMenuContent> area_defense_menu{};
 };
 
-// Development CMJSHOT1..9/A/B/C/D/E/F content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..9/A/B/C/D/E/F/G content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

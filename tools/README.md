@@ -185,3 +185,7 @@ research; it does not compare a native AI implementation or execute the action.
 `check_ai_action_candidate_original.py ROM` compares native packed action sampling
 with original bank28:8B0B using synthetic replacement data. Category/profile lookup
 and later action/subtype adjustments are outside this component comparison.
+
+`check_ai_area_candidate_original.py ROM PACK KEEPER_RAM` compares the route2
+direct-player profile, field category and initial candidate stage before87B0.
+It uses private G content; final action adjustment and session flow remain pending.

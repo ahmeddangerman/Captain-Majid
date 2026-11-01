@@ -1,7 +1,21 @@
 #include "captain/ai_action_candidate.hpp"
+#include "captain/shot_content.hpp"
+#include <fstream>
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) {
+ if(argc==3 && std::string(argv[1])=="--area") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  if(!content.ai_area_choice)return 2;
+  unsigned type,flags,alt,x,y,r;
+  while(std::cin>>type>>flags>>alt>>x>>y>>r) {
+   if(type>255||flags>255||alt>255||x>255||y>255||r>255)return 2;
+   try {auto result=captain::choose_ai_area_candidate(type,flags,alt,x,y,r,*content.ai_area_choice);
+    std::cout<<unsigned(result.category)<<' '<<unsigned(result.row)<<' '<<unsigned(result.candidate)<<'\n';
+   } catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==2 && std::string(argv[1])=="--batch") {
   unsigned a,b,c,d,r;
   while(std::cin>>a>>b>>c>>d>>r) {

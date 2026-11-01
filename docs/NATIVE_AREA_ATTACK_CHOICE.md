@@ -37,3 +37,20 @@ routine using32 synthetic replacement rows and every random byte. Native focused
 checks and original comparisons passed. This covers sampling only; selecting the
 row from player profile/field category and later subtype adjustments remain
 unimplemented and the sampler is not yet connected to the saved match session.
+
+## Native route2 profile and field category
+
+`choose_ai_area_candidate` now selects the route2 candidate data from a direct
+opponent player type and its raw alternate flags, folds the field position into
+the original cell/category map, and calls the packed sampler. Generic team-type
+resolution and types outside the captured169 profile rows reject explicitly.
+The private G pack adds493bytes (profile row IDs, cell categories and six action
+rows); the canonical pack is20,717bytes. Its earlier F payload is unchanged.
+
+`check_ai_area_candidate_original.py` matched21,632 original comparisons across
+169 direct types, ordinary/alternate flags, eight positions and eight random
+indices, stopping at87B0 before final action/subtype adjustment. Five unsupported
+input cases reject, as do malformed AI content sections. Evidence:
+`ai-area-original.log`. Full Make check/all pass. This is not yet the final AI
+choice or a saved-match continuation; those must preserve the later original
+adjustment branches before attack preparation is connected.

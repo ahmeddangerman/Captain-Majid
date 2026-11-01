@@ -23,6 +23,7 @@ def main():
     for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
     a=p.parse_args();rom=a.rom.read_bytes();packed=a.pack.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
+    if packed[:8]==b'CMJSHOTG':packed=b'CMJSHOTF'+packed[8:20224]
     if packed[:8]!=b'CMJSHOTF':p.error('Expected private version15F pack')
     out=a.output_dir.resolve()
     if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private output must stay outside checkout')

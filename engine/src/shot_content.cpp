@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -186,6 +186,14 @@ ShotContent load_shot_content(std::istream& input) {
     }
     if(version>='E')content.area_defense_menu->special_cursor_y_base=reader.byte();
     if(version>='F')content.area_defense_menu->action2_special_icon=reader.byte();
+    if(version>='G') {
+        content.ai_area_choice=AiAreaChoiceContent{};auto& ai=*content.ai_area_choice;
+        ai.profile_rows=reader.vector(1,221);
+        for(auto& cell:ai.cells){reader.bytes(cell);if(cell[1]>32)throw std::invalid_argument("Invalid AI cell category");}
+        ai.rows.resize(reader.count(1,64));
+        for(auto& row:ai.rows)reader.bytes(row);
+        for(auto row:ai.profile_rows)if(row>=ai.rows.size())throw std::invalid_argument("Invalid AI profile row");
+    }
     reader.end();
     return content;
 }

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese development data to a local CMJSHOTF pack."""
+"""Export private Japanese development data to a local CMJSHOTG pack."""
 import argparse
 import hashlib
 import struct
@@ -19,7 +19,7 @@ def export_data(rom):
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
-    data = bytearray(b'CMJSHOTF' + hashlib.sha256(rom[16:]).digest())
+    data = bytearray(b'CMJSHOTG' + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -150,6 +150,13 @@ def export_data(rom):
     if not 0xD539<=action2<action2+1<next_action<=0xD548:
         raise ValueError('Unsupported action2 special icon bounds')
     data.append(menu[action2+1])
+    categories=[stats[0x9662+12*i+6] for i in range((0x9E4E-0x9662)//12)]
+    vector(categories)
+    data.extend(stats[0x8B9E:0x8BBE])
+    rows=max(categories)+1
+    if rows>64 or 0xB12E+48*rows>0xC000:raise ValueError('Unsupported AI row bounds')
+    data.extend(struct.pack('<H',rows))
+    data.extend(stats[0xB12E:0xB12E+48*rows])
     return bytes(data)
 
 

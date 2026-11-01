@@ -11,7 +11,7 @@ from check_area_defense_poll_original import defense_entries
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def observe_area_attack_choice(prg,ram):
+def observe_area_attack_choice(prg,ram,*,candidate_only=False):
     if len(ram)!=2048 or ram[0x22]&64 or ram[0x5fb]!=11 or ram[0x621]!=2:
         raise ValueError('Expected prepared opponent possession in own-area route2')
     count=ram[0x600]
@@ -23,6 +23,9 @@ def observe_area_attack_choice(prg,ram):
     memory[0x23]=memory[0x22]|7;memory.select=memory[0x23]
     cpu=MPU(memory=memory);cpu.pc,cpu.sp,cpu.p=0x8b8f,0x50,cpu.UNUSED
     for step in range(20000):
+        if candidate_only and memory.bank_at(cpu.pc)==28 and cpu.pc==0x87b0:
+            pointer=memory[0x3c]+256*memory[0x3d]
+            return {'category':memory[0x3e],'row':(pointer-0xb12e)//48,'candidate':cpu.a},bytes(memory.ram[:2048])
         if memory.bank_at(cpu.pc)==26 and cpu.pc==0x897d:
             return {'instructions':step,'action':memory[0x43b],'subtype':memory[0x43c],
                     'writes':memory.writes},bytes(memory.ram[:2048])

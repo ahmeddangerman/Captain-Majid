@@ -1400,3 +1400,15 @@ Daily website note updated separately; engine/private research remains local.
   random byte. Focused native checks passed. Profile/category row selection, later
   action/subtype adjustments and session integration remain unfinished; this is a
   component checkpoint, not a complete native AI or playable match.
+
+## 2026-11-01 — route2 opponent profile/category selection
+
+- Connected direct opponent types and alternate flags to private AI profile rows,
+  original folded cell categories and packed action sampling. Generic team types
+  and out-of-scope profile/category inputs reject. Private G adds493bytes, with
+  the previous F payload verified identical after stripping the addition.
+- Original comparisons matched21,632 candidate stages through87B0 (169 types,
+  two raw flag states, eight positions, eight random indices). Five unsupported
+  inputs and three malformed packs reject. Full Make check/all pass.
+- Final original action/subtype adjustment and saved-session integration remain
+  next; no complete AI or playable match claim. See NATIVE_AREA_ATTACK_CHOICE.md.
