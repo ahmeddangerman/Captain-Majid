@@ -213,6 +213,20 @@ int main(){try{
  auto bad_target=targeted_ai;bad_target.area_ai_target->cell^=1;
  rejects([&]{validate_phase_session(bad_target);});
  auto missing_ai=targeted_ai;missing_ai.area_ai_target.reset();rejects([&]{validate_phase_session(missing_ai);});
+ ShotContent ai_attack_data{};ai_attack_data.field_players.alternate={0};ai_attack_data.field_players.skills.resize(1);
+ ai_attack_data.field_players.skills[0].fill(20);ai_attack_data.area_attack6=FieldDefenseContent{};
+ ai_attack_data.area_attack6->skill_selectors[0]={1,1,1};ai_attack_data.area_attack6->moves[0]={{4,0,7,0},{5,0,8,0}};
+ ai_attack_data.area_attack6->strength_curve.fill(64);
+ const auto prepared_area=prepare_session_area_attack(ai_chosen,ai_attack_data);
+ check(static_cast<unsigned>(prepared_area.phase)==79 && prepared_area.area_ai_target->cost==7 &&
+       prepared_area.action->move_effect==4 && (prepared_area.recovery->attack_subtype&128u) &&
+       prepared_area.current.field.roster[prepared_area.current.field.ball_owner].stamina==0,
+       "Saved area attack commits cost/effect/power without stamina debit");
+ auto prepared_bytes=bytes(prepared_area);std::istringstream prepared_stream(prepared_bytes);
+ check(bytes(load_phase_session(prepared_stream))==prepared_bytes,"Prepared area attack roundtrip");
+ rejects([&]{prepare_session_area_attack(prepared_area,ai_attack_data);});
+ auto prior_prepared=prepared_bytes;prior_prepared[10]='u';prior_prepared.resize(396);
+ rejects([&]{std::istringstream old(prior_prepared);load_phase_session(old);});
  check(static_cast<unsigned>(completed.state.phase)==72 && completed.presentation.size()==1 &&
        completed.presentation[0].kind==ControlPresentationKind::clear_overlay,
        "Full-prefix confirmation returns without reading beyond the selected slots");
@@ -473,7 +487,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<396;++size) {
+ for(unsigned size=372;size<398;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }

@@ -2,6 +2,16 @@
 #include "captain/player_movement.hpp"
 #include <stdexcept>
 namespace captain {
+PhaseSessionState prepare_session_area_attack(const PhaseSessionState& input,const ShotContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_ai_chosen)throw std::invalid_argument("Area attack requires a saved opponent choice");
+ const auto id=input.current.field.ball_owner;const auto& p=input.current.field.roster[id];
+ const auto result=prepare_opponent_area_action({id,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},input.action->action,input.recovery->ball_variant,input.recovery->attack_subtype,input.current.field.random_first,input.current.field.random_second,content);
+ auto state=input;state.action->power=result.action_power.power;state.action->move_effect=result.preparation.move_effect;
+ state.action->move_flags=result.move_flags;state.recovery->attack_subtype=result.action_power.subtype;
+ state.area_ai_target->cost=result.preparation.stamina_cost;state.phase=FieldSessionPhase::keeper_area_attack_prepared;
+ validate_phase_session(state);return state;
+}
 PreparedAttackResult prepare_opponent_area_action(const FieldPlayerRecord& player,
  std::uint8_t action,std::uint8_t variant,std::uint8_t subtype,std::uint8_t first,
  std::uint8_t second,const ShotContent& content) {

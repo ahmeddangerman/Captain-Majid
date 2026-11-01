@@ -208,3 +208,6 @@ saved phase78 opponent choice before attack preparation. Uses snapshot56u.
 
 `check_opponent_area_attack_original.py ROM PACK KEEPER_RAM` compares supported
 area attack numeric preparation through8980 using private content18I.
+
+Add `--prepare` to `check_area_ai_session_original.py` to compare both the saved
+choice and its prepared attack. The latest writer is snapshot57v398bytes.

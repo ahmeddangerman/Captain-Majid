@@ -1461,3 +1461,12 @@ Daily website note updated separately; engine/private research remains local.
   a prepared calculation before session commit and action presentation/execution.
 - Next: connect phase78 to saved prepared attack and preserve its cost, then start
   the original presentation/defender sequence. Overall percentage remains unmeasured.
+
+## 2026-11-01 — saved opponent area attack preparation
+
+- Connected saved choice phase78 to phase79 before original8980 presentation.
+  Commits power, adjusted subtype, effect, flags and cost without stamina debit
+  or clock change. Snapshot57v398bytes appends cost; old choice inputs load.
+- 480 complete original choice snapshots and480 prepared continuations match.
+  Evidence: area-attack-session-original.log. Roundtrip, replay and legacy version
+  rejection are covered. Next: action presentation and defender sequence.

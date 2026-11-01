@@ -136,3 +136,14 @@ subtype and stamina outputs. Evidence: `area-attack-original.log`. The opponent'
 stamina is preserved by this stage. This preparation function is not yet committed
 to the saved phase78 session; that connection and presentation/defense execution
 remain the next task.
+
+## Saved prepared opponent attack
+
+`prepare-opponent-area-attack` now continues saved phase78 to phase79 at8980,
+before presentation. It commits power, adjusted subtype, effect, flags and cost;
+the roster stamina and match clock remain unchanged. Snapshot57v adds two cost
+bytes (398 total); old saved choice inputs remain readable. Repeated preparation
+rejects. `check_area_ai_session_original.py --prepare` matched480 saved choices
+and their480 prepared continuations against complete represented original state.
+Evidence: `area-attack-session-original.log`. Full Make check/all pass. Action
+presentation and defensive resolution are still next.

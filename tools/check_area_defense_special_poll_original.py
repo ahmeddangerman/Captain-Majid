@@ -10,8 +10,8 @@ from verify_action_strength import PAYLOAD_SHA256
 
 def checkpoint(raw,phase,option,cursor,pressed=0):
     # Preserve the q prefix and append r's cursor/exit-sample bytes explicitly.
-    data=bytearray(poll_snapshot(raw,phase)[:383]);data[10]=ord('u')
-    data+=bytes((1,option,cursor,pressed))+bytes(9)
+    data=bytearray(poll_snapshot(raw,phase)[:383]);data[10]=ord('v')
+    data+=bytes((1,option,cursor,pressed))+bytes(11)
     return bytes(data)
 
 

@@ -8,6 +8,7 @@ from verify_action_strength import PAYLOAD_SHA256
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
+ p.add_argument('--prepare',action='store_true')
  a=p.parse_args();rom=a.rom.read_bytes()
  if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved ROM')
  out=a.output_dir.resolve()
@@ -28,6 +29,14 @@ def main():
       expected=bytearray(poll_snapshot(final,78));expected[393:396]=bytes((1,final[0x5fc] if report['action']==1 else 0,final[0x638] if report['action']==1 else 0))
       actual=target.read_bytes()
       if actual!=expected:raise RuntimeError(f'{name}: {[(i,x,y)for i,(x,y)in enumerate(zip(actual,expected))if x!=y]} lengths {len(actual)}/{len(expected)}')
+      if a.prepare:
+       prepared=out/f'{name}-prepared.cmjsession'
+       run=subprocess.run(['build/captain-phase-session',str(a.pack.resolve()),str(target),'--prepare-opponent-area-attack','--capture',str(prepared)],capture_output=True,text=True,timeout=30)
+       if run.returncode:raise RuntimeError(run.stderr)
+       preparation,raw_prepared=observe_area_attack_choice(prg,raw,prepare_attack=True)
+       expected=bytearray(poll_snapshot(raw_prepared,79));expected[393:396]=bytes((1,raw_prepared[0x5fc] if report['action']==1 else 0,raw_prepared[0x638] if report['action']==1 else 0));expected[396:398]=raw_prepared[0x43f:0x441]
+       actual=prepared.read_bytes()
+       if actual!=expected:raise RuntimeError(f'{name} prepared: {[(i,x,y)for i,(x,y)in enumerate(zip(actual,expected))if x!=y]}')
       results.append({'type':kind,'variant':variant,'pattern':pattern,'first':first,'second':second,'action':report['action']})
  (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Constructed completed defensive prefixes and direct opponent profiles. Full represented save compared at897D after original CPU choice. Target metadata captures new recipient/cell only. No attack preparation, renderer or complete match.'},indent=2)+'\n')
  print(f'{len(results)} complete saved area AI choices match original')
