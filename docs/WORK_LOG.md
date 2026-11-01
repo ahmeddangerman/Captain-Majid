@@ -1510,3 +1510,16 @@ Daily website note updated separately; engine/private research remains local.
   four result codes and exhausted/special/random boundaries. Four malformed packs
   reject. Full Make check/all pass. Evidence: area-contact-original.log. Continuing
   directly into saved contact execution and result continuation.
+
+## 2026-11-01 — saved area defender contact
+
+- Added phase81→82, committing first defender stamina, identity, effect/cost,
+  strength/subtype and result. Attack power and clock remain unchanged. Snapshot60y
+  adds14bytes; old x announcements load; duplicate contact attempts reject.
+- 1,296 complete original snapshots match, covering all four results; interactive
+  capture, atomic failures, bad metadata, legacy reading and full Make check/all
+  pass. Prior32 announcement and480 choice/preparation/presentation chains pass.
+  Evidence: area-contact-session-original.log, area-announcement-y,
+  area-presentation-y. First choices5/6 and later defenders still pending.
+- Continuing directly into the original post-contact status/recovery/clock stage,
+  including added-time and period-end boundaries. No complete-match claim.

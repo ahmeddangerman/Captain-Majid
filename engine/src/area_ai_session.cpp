@@ -23,6 +23,17 @@ PreparedAreaContact compare_area_defender(const FieldPlayerRecord& player,std::u
  const auto comparison=compare_defender_contact({incoming,prepared.preparation.base_strength,first,second,selected.range,selected.offset,prepared.energy.weakened,selected.eligible,2,player.player_id,defense_subtype,selected.thresholds});
  return {prepared,comparison};
 }
+PhaseSessionState resolve_session_area_defender(const PhaseSessionState& input,const ShotContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_defenders_announced)throw std::invalid_argument("Area contact requires announced defenders");
+ const auto id=input.scheduling->selected_ids[0];const auto& p=input.current.field.roster[id];
+ const auto defense=input.area_defense->actions[0];
+ const auto result=compare_area_defender({id,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},input.action->action,input.recovery->attack_subtype,input.recovery->ball_variant,defense,input.area_defense->subtypes[0],input.action->power,input.current.field.random_first,input.current.field.random_second,content);
+ auto state=input;state.current.field.roster[id].stamina=result.defender.energy.stamina;
+ state.recovery->opposing_player=id;const auto& c=result.comparison;
+ state.area_contact=AreaContactContext{0,defense,c.subtype,result.defender.preparation.move_effect,c.defender_power,result.defender.energy.cost,c.strength,c.loss,c.score,c.result_code,result.defender.energy.weakened};
+ state.phase=FieldSessionPhase::keeper_area_defender_compared;validate_phase_session(state);return state;
+}
 ActionMenuResult announce_prepared_area_defenders(const PhaseSessionState& input,std::uint8_t facing) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defense_entry || (facing!=0 && facing!=64))throw std::invalid_argument("Defender announcements require prepared entry and captured facing");

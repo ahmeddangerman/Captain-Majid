@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'x'))
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'y'))
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -36,6 +36,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.current.clock.script_flags = byte(input); state.current.clock.ball_mode = byte(input);
     state.current.shared_recovery_flags = byte(input); state.current.shared_recovery_timer = byte(input);
     state.phase = static_cast<FieldSessionPhase>(byte(input));
+    if(version<'y' && static_cast<unsigned>(state.phase)>81)
+        throw std::invalid_argument("Area contact requires session version60");
     if(version<'x' && static_cast<unsigned>(state.phase)>80)
         throw std::invalid_argument("Area defender announcements require session version59");
     if(version<'w' && static_cast<unsigned>(state.phase)>79)
@@ -298,6 +300,19 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if(state.area_ai_target)state.area_ai_target->cost=cost;
         else if(cost)throw std::invalid_argument("Unused area attack cost");
     }
+    if(version>='y') {
+        const auto present=byte(input);AreaContactContext c;
+        c.cursor=byte(input);c.defense_action=byte(input);c.defense_subtype=byte(input);c.effect=byte(input);
+        const auto power_low=byte(input),power_high=byte(input),cost_low=byte(input),cost_high=byte(input);
+        c.defender_power=static_cast<std::uint16_t>(unsigned(power_low)|(unsigned(power_high)<<8));
+        c.cost=static_cast<std::uint16_t>(unsigned(cost_low)|(unsigned(cost_high)<<8));
+        c.strength=byte(input);c.loss=byte(input);c.score=byte(input);c.result=byte(input);
+        const auto weakened=byte(input);c.weakened=bool(weakened);
+        if(present>1 || weakened>1 || (!present && (c.cursor || c.defense_action || c.defense_subtype || c.effect ||
+           c.defender_power || c.cost || c.strength || c.loss || c.score || c.result || c.weakened)))
+            throw std::invalid_argument("Invalid area contact encoding");
+        if(present)state.area_contact=c;
+    }
     if(version<'k' && state.phase==FieldSessionPhase::human_action_menu && state.keeper_area)
         throw std::invalid_argument("Keeper-area menu requires session version46");
     if(version<'l' && state.phase==FieldSessionPhase::attack_choice_pending && state.keeper_area)
@@ -347,7 +362,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'x');
+    byte(output, 'y');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -441,6 +456,12 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     byte(output,state.area_ai_target ? state.area_ai_target->cell : 0);
     const auto area_cost=state.area_ai_target ? state.area_ai_target->cost : 0;
     byte(output,area_cost&255);byte(output,area_cost>>8);
+    byte(output,state.area_contact ? 1 : 0);
+    const auto area=state.area_contact.value_or(AreaContactContext{});
+    for(const auto value:{area.cursor,area.defense_action,area.defense_subtype,area.effect,
+        static_cast<std::uint8_t>(area.defender_power),static_cast<std::uint8_t>(area.defender_power>>8),
+        static_cast<std::uint8_t>(area.cost),static_cast<std::uint8_t>(area.cost>>8),
+        area.strength,area.loss,area.score,area.result,static_cast<std::uint8_t>(area.weakened)})byte(output,value);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

@@ -206,3 +206,22 @@ classification codes, random boundaries, exhausted stamina, both variants and
 supported attacks1/4/6. Four malformed packs reject. Evidence:
 `area-contact-original.log`. Synthetic selection tests and full Make check/all
 pass. Saved session integration and result dispatch/presentation remain next.
+
+## Saved first defender contact
+
+`resolve-area-defender` now continues announced phase81 to phase82 before the
+original result timing at8A2B. It commits the first selected defender's stamina,
+identity, prepared effect/cost, rolled strength, subtype and comparison result.
+The attack power and clock remain unchanged. Snapshot60y adds14bytes (412 total);
+older announcement snapshots load with no contact context. Replayed calculations
+reject before charging stamina again. Unsupported first choices5/6 still reject
+atomically; skipping them and advancing subsequent defenders remain pending.
+
+Original comparisons matched1,296 complete saved states across both variants,
+one/four selected defenders, supported attacks, special/ordinary defenses, stamina
+and random boundaries. All four results are covered. Interactive capture, replay,
+malformed metadata, legacy announcement reading and full Make check/all pass.
+Evidence: `area-contact-session-original.log`. Earlier32 announcements and480
+choice/preparation/presentation chains also pass with the new format. A test input
+initially used incorrect field-cell geometry; corrected to the existing8-pixel,
+12-row coordinate mapping before the final run. Result timing/dispatch is next.

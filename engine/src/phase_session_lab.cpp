@@ -85,6 +85,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::ball_already_arrived: return "ball was already at destination; return without arrival callback";
     case captain::FieldSessionPhase::shot_loose_recovery: return "loose flight presentation/recovery pending";
     case captain::FieldSessionPhase::keeper_area_defense_poll: return "defensive input sampled; next poll pending";
+    case captain::FieldSessionPhase::keeper_area_defender_compared: return "area defender compared; result timing pending";
     case captain::FieldSessionPhase::keeper_area_defenders_announced: return "area defenders announced; contact calculation pending";
     case captain::FieldSessionPhase::keeper_area_defense_entry: return "area attack presentation acknowledged; defender sequence entry";
     case captain::FieldSessionPhase::keeper_area_attack_prepared: return "opponent area attack prepared; presentation pending";
@@ -138,6 +139,9 @@ void show(const captain::PhaseSessionState& state) {
               << " | random " << unsigned(field.random_first) << ',' << unsigned(field.random_second) << '\n';
     if(state.kickoff_receiver)std::cout << "Kickoff receiver: " << unsigned(*state.kickoff_receiver) << '\n';
     if(state.kickoff_formation)std::cout << "Keeper Y: " << unsigned(state.kickoff_formation->keeper_y[0]) << ',' << unsigned(state.kickoff_formation->keeper_y[1]) << '\n';
+    if(state.area_contact)std::cout << "Area contact: cursor " << unsigned(state.area_contact->cursor)
+        << " | result " << unsigned(state.area_contact->result) << " | strength " << unsigned(state.area_contact->strength)
+        << " | cost " << state.area_contact->cost << " | weakened " << state.area_contact->weakened << '\n';
     if(state.keeper_area)std::cout << "Keeper-area selection counter: " << unsigned(state.keeper_area->selection_counter) << '\n';
     if(state.score)std::cout << "Score: " << unsigned(state.score->left_goals) << '-' << unsigned(state.score->right_goals) << " | kickoff " << unsigned(state.score->kickoff) << '\n';
     if(state.keeper_decision) std::cout << "Keeper result: " << unsigned(state.keeper_decision->result_code) << '\n';
@@ -586,7 +590,7 @@ int main(int argc, char** argv) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
-                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --begin-ball-flight FILE LOWX LOWY | --continue-flight-arrival | --recover-shot-loose | --prepare-kickoff-formation FILE SIDE | --prepare-kickoff-receiver RANDOM C1 C2 C3 C4 C5 | --prepare-kickoff-ball | --continue-prepared-kickoff | --continue-prepared-goal-restart | --prepare-scored-goal LEFT RIGHT KICKOFF | --resolve-keeper-save | --recover-keeper-punch | --poll-keeper-area-special PRESSED | --announce-prepared-area-defenders FACING | --begin-prepared-area-defense | --prepare-opponent-area-attack | --choose-keeper-area-action | --continue-keeper-area-special | --redraw-keeper-area-special | --resolve-keeper-area-special | --open-keeper-area-special | --inspect-keeper-area-defense | --prepare-keeper-area-defense | --poll-keeper-area-defense PRESSED | --open-keeper-area-defense | --begin-keeper-area-defense BLINK | --open-prepared-keeper-area-menu FACING | --prepare-keeper-area | --prepare-keeper-entry | --resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM | --resolve-stunned-keeper T0 T1 | --resolve-ball-cell | --advance-ball-cell | --prepare-shot-approach | --continue-unopposed-attack ACTION | --continue-prepared-attack | --resume-attack-clock | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
+                     "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --begin-ball-flight FILE LOWX LOWY | --continue-flight-arrival | --recover-shot-loose | --prepare-kickoff-formation FILE SIDE | --prepare-kickoff-receiver RANDOM C1 C2 C3 C4 C5 | --prepare-kickoff-ball | --continue-prepared-kickoff | --continue-prepared-goal-restart | --prepare-scored-goal LEFT RIGHT KICKOFF | --resolve-keeper-save | --recover-keeper-punch | --poll-keeper-area-special PRESSED | --resolve-area-defender | --announce-prepared-area-defenders FACING | --begin-prepared-area-defense | --prepare-opponent-area-attack | --choose-keeper-area-action | --continue-keeper-area-special | --redraw-keeper-area-special | --resolve-keeper-area-special | --open-keeper-area-special | --inspect-keeper-area-defense | --prepare-keeper-area-defense | --poll-keeper-area-defense PRESSED | --open-keeper-area-defense | --begin-keeper-area-defense BLINK | --open-prepared-keeper-area-menu FACING | --prepare-keeper-area | --prepare-keeper-entry | --resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM | --resolve-stunned-keeper T0 T1 | --resolve-ball-cell | --advance-ball-cell | --prepare-shot-approach | --continue-unopposed-attack ACTION | --continue-prepared-attack | --resume-attack-clock | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n";
         return 2;
     }
@@ -600,6 +604,7 @@ int main(int argc, char** argv) {
         std::optional<std::array<std::uint8_t,3>> keeper_choice,goal_baseline;
         std::optional<std::string> flight_file,kickoff_file;
         std::optional<unsigned> area_announce_facing;
+        bool run_area_contact=false;
         unsigned kickoff_side=0;
         std::optional<std::array<std::uint8_t,6>> kickoff_receiver;
         std::array<unsigned,2> flight_fractions{};
@@ -670,6 +675,7 @@ int main(int argc, char** argv) {
                 if(++i>=argc || area_special_pressed)throw std::invalid_argument("Expected sampled pressed byte");
                 area_special_pressed=number(argv[i]);
             }
+            else if (option == "--resolve-area-defender") {if(run_area_contact)throw std::invalid_argument("Repeated area contact");run_area_contact=true;}
             else if (option == "--announce-prepared-area-defenders") {
                 if(++i>=argc || area_announce_facing)throw std::invalid_argument("Expected captured facing");
                 area_announce_facing=number(argv[i]);
@@ -777,7 +783,7 @@ int main(int argc, char** argv) {
             unsigned(run_continue_recovery) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) + unsigned(run_arrival) + unsigned(run_shot_recovery) + unsigned(run_keeper_entry) + unsigned(bool(stunned_thresholds)) + unsigned(bool(keeper_choice)) + unsigned(run_keeper_save) + unsigned(run_punch_recovery) + unsigned(bool(goal_baseline)) + unsigned(run_goal_restart) + unsigned(bool(kickoff_file)) + unsigned(bool(kickoff_receiver)) + unsigned(run_kickoff_ball) + unsigned(run_kickoff_handoff) + unsigned(run_keeper_area) + unsigned(bool(area_menu_facing)) + unsigned(bool(area_defense_blink)) + unsigned(run_area_defense_prompt) + unsigned(bool(area_defense_pressed)) + unsigned(run_prepare_area_defense) + unsigned(run_inspect_area_defense) + unsigned(run_open_area_special) + unsigned(bool(area_special_pressed)) + unsigned(run_resolve_area_special) + unsigned(run_redraw_area_special) + unsigned(run_continue_area_special) + unsigned(run_area_ai) + unsigned(run_area_attack) + unsigned(run_area_defense_entry) + unsigned(bool(area_announce_facing)) > 1)
+            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) + unsigned(run_arrival) + unsigned(run_shot_recovery) + unsigned(run_keeper_entry) + unsigned(bool(stunned_thresholds)) + unsigned(bool(keeper_choice)) + unsigned(run_keeper_save) + unsigned(run_punch_recovery) + unsigned(bool(goal_baseline)) + unsigned(run_goal_restart) + unsigned(bool(kickoff_file)) + unsigned(bool(kickoff_receiver)) + unsigned(run_kickoff_ball) + unsigned(run_kickoff_handoff) + unsigned(run_keeper_area) + unsigned(bool(area_menu_facing)) + unsigned(bool(area_defense_blink)) + unsigned(run_area_defense_prompt) + unsigned(bool(area_defense_pressed)) + unsigned(run_prepare_area_defense) + unsigned(run_inspect_area_defense) + unsigned(run_open_area_special) + unsigned(bool(area_special_pressed)) + unsigned(run_resolve_area_special) + unsigned(run_redraw_area_special) + unsigned(run_continue_area_special) + unsigned(run_area_ai) + unsigned(run_area_attack) + unsigned(run_area_defense_entry) + unsigned(bool(area_announce_facing)) + unsigned(run_area_contact) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -823,6 +829,7 @@ int main(int argc, char** argv) {
         if(run_punch_recovery)state=captain::advance_session_keeper_punch_recovery(state,content.field_players,*content.movement).state;
         if(keeper_choice)state=captain::resolve_prepared_session_keeper(state,(*keeper_choice)[0],(*keeper_choice)[1],(*keeper_choice)[2],content);
         if(area_special_pressed)poll_area_special(state,content,*area_special_pressed);
+        if(run_area_contact)state=captain::resolve_session_area_defender(state,content);
         if(area_announce_facing){const auto result=captain::announce_prepared_area_defenders(state,*area_announce_facing);state=result.state;for(const auto& r:result.presentation){std::cout<<"Presentation request "<<unsigned(r.kind)<<" | id "<<unsigned(r.id)<<" | slot "<<unsigned(r.slot)<<'\n';}}
         if(run_area_defense_entry){const auto entry=captain::begin_prepared_area_defense(state);state=entry.state;for(const auto& r:entry.presentation)std::cout<<"Presentation request "<<unsigned(r.kind)<<" | id "<<unsigned(r.id)<<" | slot "<<unsigned(r.slot)<<'\n';}
         if(run_area_attack)state=captain::prepare_session_area_attack(state,content);
@@ -898,6 +905,9 @@ int main(int argc, char** argv) {
                 } else if (command == "poll-keeper-area-special") {
                     if(!(input>>value)||(input>>extra))throw std::invalid_argument("Expected sampled pressed byte");
                     poll_area_special(state,content,number(value));show(state);
+                } else if (command == "resolve-area-defender") {
+                    if(input>>extra)throw std::invalid_argument("Expected no arguments");
+                    state=captain::resolve_session_area_defender(state,content);show(state);
                 } else if (command == "announce-prepared-area-defenders") {
                     if(!(input>>value) || (input>>extra))throw std::invalid_argument("Expected captured facing");
                     const auto result=captain::announce_prepared_area_defenders(state,number(value));state=result.state;

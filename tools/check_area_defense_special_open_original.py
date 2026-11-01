@@ -53,7 +53,7 @@ def main():
                         target=out/f'{name}-opened.cmjsession'
                         run=subprocess.run([binary,pack,str(source),'--open-keeper-area-special','--capture',str(target)],capture_output=True,text=True,timeout=30)
                         if run.returncode:raise RuntimeError(f'{name}: {run.stderr}')
-                        expected=bytearray(poll_snapshot(final,73)[:383]);expected[10]=ord('x');expected+=bytes([1,report['option'],0,0])+bytes(11)
+                        expected=bytearray(poll_snapshot(final,73)[:383]);expected[10]=ord('y');expected+=bytes([1,report['option'],0,0])+bytes(25)
                         actual=target.read_bytes()
                         if actual!=expected:raise RuntimeError(f'{name}: state mismatch {[(i,x,y) for i,(x,y) in enumerate(zip(actual,expected)) if x!=y]} (lengths {len(actual)}/{len(expected)})')
                         requests=[{'kind':int(k),'id':int(v),'slot':int(s)} for k,v,s in re.findall(r'Presentation request (\d+) \| id (\d+) \| slot (\d+)',run.stdout)]

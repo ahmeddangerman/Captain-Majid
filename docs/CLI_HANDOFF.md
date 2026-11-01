@@ -16,6 +16,7 @@ and goal/save calculations exist separately. Restart/keeper/story, nonterminal
 shot/goal integration, live frame/RNG/presentation and online matches remain work.
 
 Latest detailed references:
+- NATIVE_AREA_ATTACK_CHOICE.md for opponent area choice/preparation and saved first defender contact
 - NATIVE_KEEPER_AREA.md for saved keeper-area interaction setup before its menu
 - NATIVE_KICKOFF_FORMATION.md for verified kickoff formation placement
 - NATIVE_KICKOFF_SELECTION.md for original kickoff team/receiver calculations
@@ -58,9 +59,10 @@ Cloud credentials and binaries are not part of the migration.
 4. Inspect current snapshot readers and the latest implemented boundary before
    continuing. Do not repeat completed checkpoints or invent full-match parity.
 5. Continue original restart/keeper/story and remaining shot flow toward one
-   complete playable match. Keep the engine private and update the work log.
+   complete playable match. Update the work log and follow current AGENTS.md publishing rules.
 
 The public website may be cloned separately from
-https://github.com/ahmeddangerman/Captain-Majid.git. Engine work must not be pushed
-there. The transferred bundle's origin initially points to a local file; leave
-that safe local origin until a private source remote is explicitly configured.
+https://github.com/ahmeddangerman/Captain-Majid.git. The user subsequently authorized engine source on its public `work`
+branch; `main` is the website. The transferred bundle may initially have a local
+origin; check the current remote before pushing. Never publish ROMs, patches or
+derived private research. Repository privacy changes need explicit authorization.

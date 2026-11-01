@@ -246,6 +246,40 @@ int main(){try{
  check(bytes(load_phase_session(announced_stream))==announced_bytes,"Announced defenders roundtrip");
  rejects([&]{announce_prepared_area_defenders(announced.state,64);});
  rejects([&]{announce_prepared_area_defenders(area_entry.state,1);});
+ ai_attack_data.field_players.ordinary.fill(0);
+ ai_attack_data.defense.skill_selectors[4]={1,1,1};
+ ai_attack_data.defense.moves[4]={{3,0,9,0}};ai_attack_data.defense.strength_curve.fill(64);
+ ai_attack_data.area_comparison=AreaComparisonContent{};
+ for(auto& pair:ai_attack_data.area_comparison->variation)pair={100,100};
+ ai_attack_data.area_comparison->thresholds={200,100,50,0};
+ ai_attack_data.field_comparison.eligibility.resize(10);
+ auto contact_input=announced.state;const auto contact_id=contact_input.scheduling->selected_ids[0];
+ contact_input.current.field.roster[contact_id].type=1;
+ contact_input.current.field.roster[contact_id].stamina=100;
+ const auto contact_before=bytes(contact_input);
+ const auto contact=resolve_session_area_defender(contact_input,ai_attack_data);
+ check(static_cast<unsigned>(contact.phase)==82 && contact.area_contact &&
+       contact.current.field.roster[contact_id].stamina==91 &&
+       contact.area_contact->cost==9 && contact.area_contact->effect==3 &&
+       contact.recovery->opposing_player==contact_id && bytes(contact_input)==contact_before,
+       "Saved area defender commits stamina and result without mutating input");
+ auto contact_bytes=bytes(contact);std::istringstream contact_stream(contact_bytes);
+ check(bytes(load_phase_session(contact_stream))==contact_bytes,"Area contact context roundtrip");
+ rejects([&]{resolve_session_area_defender(contact,ai_attack_data);});
+ auto no_contact=contact;no_contact.area_contact.reset();rejects([&]{validate_phase_session(no_contact);});
+ auto wrong_contact=contact;wrong_contact.area_contact->cursor=4;rejects([&]{validate_phase_session(wrong_contact);});
+ auto bad_encoding=contact_bytes;bad_encoding[398]=2;
+ rejects([&]{std::istringstream bad(bad_encoding);load_phase_session(bad);});
+ bad_encoding=contact_bytes;bad_encoding[411]=2;
+ rejects([&]{std::istringstream bad(bad_encoding);load_phase_session(bad);});
+ auto legacy_announced=announced_bytes;legacy_announced[10]='x';legacy_announced.resize(398);
+ std::istringstream legacy_announced_stream(legacy_announced);
+ check(bytes(load_phase_session(legacy_announced_stream))==announced_bytes,"Legacy x announcement loads without contact context");
+ auto missing_area_data=ai_attack_data;missing_area_data.area_comparison.reset();
+ rejects([&]{resolve_session_area_defender(contact_input,missing_area_data);});
+ check(bytes(contact_input)==contact_before,"Failed area calculation leaves input unchanged");
+ auto old_contact=contact_bytes;old_contact[10]='x';old_contact.resize(398);
+ rejects([&]{std::istringstream old(old_contact);load_phase_session(old);});
  check(static_cast<unsigned>(completed.state.phase)==72 && completed.presentation.size()==1 &&
        completed.presentation[0].kind==ControlPresentationKind::clear_overlay,
        "Full-prefix confirmation returns without reading beyond the selected slots");
@@ -506,7 +540,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<398;++size) {
+ for(unsigned size=372;size<412;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }
