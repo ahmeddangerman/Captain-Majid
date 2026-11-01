@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -211,6 +211,14 @@ ShotContent load_shot_content(std::istream& input) {
         if(attack.moves[0].size()!=2)throw std::invalid_argument("Unsupported area attack6 move count");
         for(auto skill:attack.skill_selectors[0])if(skill!=255 && (skill<1 || skill>30))throw std::invalid_argument("Unsupported area attack6 selector");
         attack.strength_curve=content.attack.strength_curve;
+    }
+    if(version>='J') {
+        content.area_comparison=AreaComparisonContent{};auto& area=*content.area_comparison;
+        reader.bytes(area.attack_groups);reader.bytes(area.defense_groups);
+        for(auto& pair:area.variation)reader.bytes(pair);
+        reader.bytes(area.thresholds);
+        for(auto attack:{1,4,6})for(auto defense:{2,4})
+            select_area_comparison(attack,defense,area,content.field_comparison.eligibility);
     }
     reader.end();
     return content;

@@ -13,6 +13,16 @@ PreparedAreaDefender prepare_area_defender(const FieldPlayerRecord& player,std::
  const auto energy=calculate_energy({stamina,prepared.stamina_cost,player.type,11,attack,attack_subtype,true,false});
  return {prepared,energy};
 }
+PreparedAreaContact compare_area_defender(const FieldPlayerRecord& player,std::uint8_t attack,
+ std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,
+ std::uint8_t defense_subtype,std::uint16_t incoming,std::uint8_t first,
+ std::uint8_t second,const ShotContent& content) {
+ if(!content.area_comparison)throw std::invalid_argument("Missing private area comparison content");
+ const auto prepared=prepare_area_defender(player,attack,attack_subtype,variant,defense,defense_subtype,content);
+ const auto selected=select_area_comparison(attack,defense,*content.area_comparison,content.field_comparison.eligibility);
+ const auto comparison=compare_defender_contact({incoming,prepared.preparation.base_strength,first,second,selected.range,selected.offset,prepared.energy.weakened,selected.eligible,2,player.player_id,defense_subtype,selected.thresholds});
+ return {prepared,comparison};
+}
 ActionMenuResult announce_prepared_area_defenders(const PhaseSessionState& input,std::uint8_t facing) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defense_entry || (facing!=0 && facing!=64))throw std::invalid_argument("Defender announcements require prepared entry and captured facing");

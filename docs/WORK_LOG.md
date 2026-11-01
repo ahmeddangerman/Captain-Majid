@@ -1500,3 +1500,13 @@ Daily website note updated separately; engine/private research remains local.
 - Original CPU comparison matched2,430 numeric results at8A05; seven unsupported
   inputs reject. Evidence: area-defender-original.log. Full Make check/all pass.
   Continuing into area-specific comparison before saved defensive execution.
+
+## 2026-11-01 — area defender contact comparison
+
+- Added separate private area action groups, variation and thresholds; reused the
+  numeric roll without substituting ordinary-shot comparison data. J adds36bytes;
+  prior I payload verified identical. Incoming power is preserved at this stage.
+- 9,720 complete original defender calculations match through8A28, including all
+  four result codes and exhausted/special/random boundaries. Four malformed packs
+  reject. Full Make check/all pass. Evidence: area-contact-original.log. Continuing
+  directly into saved contact execution and result continuation.

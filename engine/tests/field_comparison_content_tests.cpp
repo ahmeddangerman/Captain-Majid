@@ -21,5 +21,16 @@ int main(){
  r=captain::select_field_comparison(0,3,12,c);req(r.table_index==131&&r.range==9,"coefficient offset wraps while eligibility index remains full byte");
  rejects([&]{captain::select_field_comparison(5,0,12,c);});rejects([&]{captain::select_field_comparison(0,5,12,c);});rejects([&]{captain::select_field_comparison(0,0,22,c);});
  c.eligibility.clear();rejects([&]{captain::select_field_comparison(0,3,12,c);});c.eligibility.resize(256);c.variation.clear();rejects([&]{captain::select_field_comparison(0,3,12,c);});
+ captain::AreaComparisonContent area{};area.attack_groups[1]=1;area.attack_groups[4]=0;area.attack_groups[6]=2;
+ area.defense_groups[2]=0;area.defense_groups[4]=1;area.thresholds={200,100,50,0};
+ for(auto& pair:area.variation)pair={20,30};
+ area.variation[5]={40,50};c.eligibility[5]=128;
+ const auto selected=captain::select_area_comparison(1,4,area,c.eligibility);
+ req(selected.table_index==5 && selected.range==40 && selected.offset==50 && selected.eligible && selected.thresholds==area.thresholds,"area-specific tables select independently");
+ rejects([&]{captain::select_area_comparison(0,2,area,c.eligibility);});
+ rejects([&]{captain::select_area_comparison(1,5,area,c.eligibility);});
+ area.variation[5][0]=0;rejects([&]{captain::select_area_comparison(1,4,area,c.eligibility);});
+ area.variation[5][0]=1;area.thresholds[3]=1;rejects([&]{captain::select_area_comparison(1,4,area,c.eligibility);});
+ area.thresholds[3]=0;area.attack_groups[1]=255;rejects([&]{captain::select_area_comparison(1,4,area,c.eligibility);});
  std::cout<<"Field comparison selection checks passed\n";
 }

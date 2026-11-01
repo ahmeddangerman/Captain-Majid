@@ -5,6 +5,17 @@
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) {
+ if(argc==3 && std::string(argv[1])=="--contact") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  unsigned id,type,flags,alt,level,attack,attack_subtype,variant,defense,subtype,incoming,first,second;
+  while(std::cin>>id>>type>>flags>>alt>>level>>attack>>attack_subtype>>variant>>defense>>subtype>>incoming>>first>>second) {
+   if(id>255||type>255||flags>255||alt>255||level>255||attack>255||attack_subtype>255||variant>255||defense>255||subtype>255||incoming>65535||first>255||second>255)return 2;
+   try {const auto r=captain::compare_area_defender({static_cast<std::uint8_t>(id),static_cast<std::uint8_t>(type),static_cast<std::uint8_t>(flags),static_cast<std::uint8_t>(alt),static_cast<std::uint8_t>(level)},attack,attack_subtype,variant,defense,subtype,incoming,first,second,content);
+    const auto& c=r.comparison;std::cout<<r.defender.energy.stamina<<' '<<r.defender.energy.cost<<' '<<unsigned(r.defender.preparation.move_effect)<<' '<<c.defender_power<<' '<<unsigned(c.strength)<<' '<<unsigned(c.loss)<<' '<<unsigned(c.score)<<' '<<unsigned(c.result_code)<<' '<<unsigned(c.subtype)<<' '<<c.incoming_power<<'\n';
+   }catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--defender") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   unsigned id,type,flags,alt,level,attack,attack_subtype,variant,defense,subtype;

@@ -191,3 +191,18 @@ outputs across three raw types, three levels, both variants and ordinary/special
 defense choices. Seven unsupported inputs reject. Evidence:
 `area-defender-original.log`. Full Make check/all pass. Next: area-specific
 comparison tables and classification, then saved defender execution.
+
+## Area-specific contact comparison
+
+`compare_area_defender` combines preparation/energy with the original area
+comparison at8A05..8A28. Its action groups, variation pairs and thresholds are
+separate from ordinary shot comparisons. Private J adds36bytes (21,322 total);
+the earlier I payload is unchanged. The shared numeric roll/classifier is reused,
+including special defense and exhausted weakening. Incoming attack power is not
+reduced by this caller. Unsupported defense actions and missing data reject.
+
+`check_area_contact_original.py` matched9,720 complete results, covering all four
+classification codes, random boundaries, exhausted stamina, both variants and
+supported attacks1/4/6. Four malformed packs reject. Evidence:
+`area-contact-original.log`. Synthetic selection tests and full Make check/all
+pass. Saved session integration and result dispatch/presentation remain next.

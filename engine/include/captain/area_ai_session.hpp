@@ -7,6 +7,11 @@ struct PreparedAreaDefender { FieldDefenderPreparationResult preparation; Energy
 PreparedAreaDefender prepare_area_defender(const FieldPlayerRecord&,std::uint8_t attack,
  std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,
  std::uint8_t defense_subtype,const ShotContent&);
+struct PreparedAreaContact { PreparedAreaDefender defender; DefenderContactResult comparison; };
+PreparedAreaContact compare_area_defender(const FieldPlayerRecord&,std::uint8_t attack,
+ std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,
+ std::uint8_t defense_subtype,std::uint16_t incoming,std::uint8_t first,
+ std::uint8_t second,const ShotContent&);
 ActionMenuResult announce_prepared_area_defenders(const PhaseSessionState&,std::uint8_t facing);
 ActionMenuResult begin_prepared_area_defense(const PhaseSessionState&);
 PhaseSessionState prepare_session_area_attack(const PhaseSessionState&,const ShotContent&);

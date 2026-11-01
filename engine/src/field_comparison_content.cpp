@@ -1,6 +1,18 @@
 #include "captain/field_comparison_content.hpp"
 #include <stdexcept>
 namespace captain {
+FieldComparisonSelection select_area_comparison(std::uint8_t attack,
+    std::uint8_t defense, const AreaComparisonContent& content,
+    const std::vector<std::uint8_t>& eligibility) {
+    if ((attack!=1 && attack!=4 && attack!=6) || (defense!=2 && defense!=4))
+        throw std::invalid_argument("Unsupported area comparison actions");
+    const unsigned index=unsigned(content.attack_groups[attack])*4+content.defense_groups[defense];
+    if(index>=content.variation.size() || index>=eligibility.size() || !content.variation[index][0])
+        throw std::invalid_argument("Missing area comparison data");
+    const auto pair=content.variation[index];
+    classify_score(0,content.thresholds);
+    return {static_cast<std::uint8_t>(index),pair[0],pair[1],bool(eligibility[index]&128u),content.thresholds};
+}
 FieldComparisonSelection select_field_comparison(std::uint8_t attack_action,
     std::uint8_t defense_action, std::uint8_t defender_id,
     const FieldComparisonContent& content) {
