@@ -4,6 +4,40 @@
 #include <stdexcept>
 
 namespace captain {
+namespace {
+std::uint8_t defense_icon(const KeeperAreaDefenseContext& defense,unsigned slot,const AreaDefenseMenuContent& content) {
+ const auto action=defense.actions[slot];
+ if(action==255)return 29;
+ if(defense.subtypes[slot]) {
+  if(action!=2 || defense.subtypes[slot]!=1 || !content.action2_special_icon)
+   throw std::invalid_argument("Missing supported special defensive icon");
+  return *content.action2_special_icon;
+ }
+ if(!content.field_icons)throw std::invalid_argument("Missing defensive icons");
+ return (*content.field_icons)[action];
+}
+}
+ActionMenuResult redraw_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_special_inspected)
+  throw std::invalid_argument("Special redraw requires an inspected choice");
+ ActionMenuResult result{input};auto& state=result.state;
+ auto& menu=*state.action;auto& defense=*state.area_defense;
+ const auto& decision=*state.area_special_decision;
+ if(decision.status==0) {
+  if(decision.subtype>1)throw std::invalid_argument("Unsupported special defensive subtype");
+  defense.subtypes[menu.cursor]=decision.subtype;
+  ++menu.cursor;
+ }
+ result.presentation.push_back({ControlPresentationKind::clear_overlay,0});
+ const auto count=state.current.field.selected_defenders;
+ result.presentation.push_back({ControlPresentationKind::display,static_cast<std::uint8_t>(17+count)});
+ for(unsigned slot=0;slot<count;++slot)
+  result.presentation.push_back({ControlPresentationKind::sprite,defense_icon(defense,slot,content),static_cast<std::uint8_t>(slot)});
+ if(menu.cursor<count)result.presentation.push_back({ControlPresentationKind::display,22});
+ state.phase=FieldSessionPhase::keeper_area_special_redrawn;
+ validate_phase_session(state);return result;
+}
 ActionMenuResult inspect_keeper_area_special(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_special_decided)
@@ -106,7 +140,7 @@ ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::ui
  ActionMenuResult result{input};auto& state=result.state;auto& menu=*state.action;auto& defense=*state.area_defense;
  state.phase=FieldSessionPhase::keeper_area_defense_poll;
  defense.pressed=0;
- const auto icon=[&](unsigned slot) {const auto action=defense.actions[slot];return action==255 ? std::uint8_t{29} : (*content.field_icons)[action];};
+ const auto icon=[&](unsigned slot) {return defense_icon(defense,slot,content);};
  const auto count=state.current.field.selected_defenders;
  if((pressed&128u) && menu.cursor==count) {
   state.phase=FieldSessionPhase::keeper_area_defense_complete;result.confirmed=true;

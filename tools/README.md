@@ -169,3 +169,7 @@ decision. It does not execute a move, debit stamina or exercise the chooser.
 `check_area_defense_special_resolve_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
 compares saved chooser outcomes, cost and stamina decisions through the original
 D403/D40C boundary. Outputs and private content stay outside the checkout.
+
+`check_area_defense_special_redraw_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
+compares defensive registration and redraw through D41F. It uses private F
+content and snapshot55t; it stops before the subsequent saved-input tail.

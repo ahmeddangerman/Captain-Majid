@@ -277,6 +277,10 @@ int main(){try{
        "Cancellation reaches the pre-redraw boundary without loading a move");
  check(cancel_inspected.state.area_special_decision && cancel_inspected.state.area_special_decision->status==2 &&
        cancel_inspected.state.area_special_decision->cost==0,"Cancellation stores canonical empty inspection data");
+ auto canceled_redraw=redraw_keeper_area_special(cancel_inspected.state,defense_content);
+ check(static_cast<unsigned>(canceled_redraw.state.phase)==77 && canceled_redraw.state.action->cursor==0 &&
+       canceled_redraw.state.area_special_pressed==64 && canceled_redraw.presentation.size()==4,
+       "Canceled special redraw keeps cursor and sample before button tail");
  FieldPlayerProfiles special_profiles{};special_profiles.skills.resize(1);
  FieldDefenseContent special_moves{};special_moves.skill_selectors[2][1]=1;
  special_moves.moves[2].push_back({3,0,50,0});special_moves.moves[2].push_back({4,0,180,0});
@@ -293,6 +297,32 @@ int main(){try{
  auto accepted=inspect_keeper_area_special(enough,special_profiles,special_moves);
  check(accepted.state.area_special_decision->status==0 && accepted.presentation.empty() &&
        accepted.state.current.field.roster[1].stamina==180,"Affordable special reaches registration boundary without debit");
+ const auto prior_accept=bytes(accepted.state);
+ rejects([&]{redraw_keeper_area_special(accepted.state,defense_content);});
+ check(bytes(accepted.state)==prior_accept,"Missing special icon leaves decision unchanged");
+ defense_content.action2_special_icon=77;
+ auto selected_redraw=redraw_keeper_area_special(accepted.state,defense_content);
+ check(static_cast<unsigned>(selected_redraw.state.phase)==77 && selected_redraw.state.action->cursor==1 &&
+       selected_redraw.state.area_defense->subtypes[0]==1 && selected_redraw.presentation.size()==3 &&
+       selected_redraw.presentation[2].id==77,"Accepted last special stores subtype and its icon");
+ const auto encoded_redraw=bytes(selected_redraw.state);std::istringstream redraw_stream(encoded_redraw);
+ check(bytes(load_phase_session(redraw_stream))==encoded_redraw,"Special redraw snapshot roundtrip");
+ auto invalid_old_redraw=encoded_redraw;invalid_old_redraw[10]='s';
+ rejects([&]{std::istringstream old(invalid_old_redraw);load_phase_session(old);});
+ auto resumed=selected_redraw.state;resumed.phase=FieldSessionPhase::keeper_area_defense_poll;
+ resumed.area_special_option.reset();resumed.area_special_decision.reset();resumed.area_special_cursor=0;resumed.area_special_pressed=0;
+ resumed.action->cursor=0;resumed.area_defense->blink=0;resumed.action->flash_counter=0;
+ defense_content.directions[2][0]=2;defense_content.directions[2][1]=4;
+ auto same=poll_keeper_area_defense(resumed,1,defense_content);
+ check(same.state.area_defense->subtypes[0]==1 && same.presentation[0].id==77,
+       "Same action preserves and blinks the special icon");
+ auto changed=poll_keeper_area_defense(resumed,2,defense_content);
+ check(changed.state.area_defense->subtypes[0]==0 && changed.state.area_defense->actions[0]==4,
+       "Changing action clears the old special subtype");
+ auto old_subtype_snapshot=bytes(resumed);old_subtype_snapshot[10]='s';
+ rejects([&]{std::istringstream old(old_subtype_snapshot);load_phase_session(old);});
+ auto unsupported=accepted.state;unsupported.area_special_option=127;unsupported.area_special_decision->subtype=127;
+ rejects([&]{redraw_keeper_area_special(unsupported,defense_content);});
  auto normal=cost_input;normal.area_special_cursor=0;normal.current.field.roster[1].stamina=0;
  auto normal_result=inspect_keeper_area_special(normal,special_profiles,special_moves);
  check(normal_result.state.area_special_decision->status==0 && normal_result.state.area_special_decision->subtype==0 &&

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese development data to a local CMJSHOTE pack."""
+"""Export private Japanese development data to a local CMJSHOTF pack."""
 import argparse
 import hashlib
 import struct
@@ -19,7 +19,7 @@ def export_data(rom):
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
-    data = bytearray(b'CMJSHOTE' + hashlib.sha256(rom[16:]).digest())
+    data = bytearray(b'CMJSHOTF' + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -144,6 +144,12 @@ def export_data(rom):
     # Count-one special chooser cursor: tile and horizontal position.
     data.extend((menu[0xD003],menu[0xD01B]))
     data.append(menu[0xD00B])  # Count-one chooser cursor Y origin.
+    # The action2 list must have a second icon for its supported special subtype.
+    action2=word(menu,0xD52B+2*2)
+    next_action=word(menu,0xD52B+2*3)
+    if not 0xD539<=action2<action2+1<next_action<=0xD548:
+        raise ValueError('Unsupported action2 special icon bounds')
+    data.append(menu[action2+1])
     return bytes(data)
 
 

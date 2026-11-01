@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -185,6 +185,7 @@ ShotContent load_shot_content(std::istream& input) {
         reader.bytes(*content.area_defense_menu->special_cursor);
     }
     if(version>='E')content.area_defense_menu->special_cursor_y_base=reader.byte();
+    if(version>='F')content.area_defense_menu->action2_special_icon=reader.byte();
     reader.end();
     return content;
 }

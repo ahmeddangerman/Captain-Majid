@@ -298,3 +298,25 @@ Original warning scripts execute with explicit host frame acknowledgements.
 Unsupported profile encodings reject; this stops before registering the choice,
 redrawing icons and resuming the original input tail. See
 `NATIVE_DEFENSE_REDRAW_RESEARCH.md` for the next boundary.
+
+## Register and redraw defensive choices
+
+`redraw-keeper-area-special` continues a saved phase76 decision to phase77,
+before the original D41F input tail. Accepted choices save the subtype and advance
+the defender cursor; denied and canceled choices retain the previous selection.
+It emits overlay clear, count, slot-specific icons and the next subject when
+applicable. Action2 subtype1 survives later back navigation, blinking and repeated
+direction; changing action clears it. Unsupported subtypes and missing special
+icon content reject without changing the input state.
+
+Snapshot55 (`t`,393bytes) adds phase77 and permits retained action2 subtype1;
+earlier snapshots remain readable but cannot encode that subtype. Private content15
+(`CMJSHOTF`,20,224bytes for the approved ROM) adds one subtype1 icon. Removing the
+last byte and restoring the E header reproduces the previous pack exactly.
+
+`check_area_defense_special_redraw_original.py` matched30 controlled redraws
+(20 accepted,5 denied,5 canceled) and four later input cases covering special-icon
+blink, back, same direction and changed direction. Full represented snapshots and
+ordered presentation requests match the original up to D41F. Evidence:
+`special-redraw-check-final`. Host frame acknowledgements are explicit; the input
+tail, execution of the chosen defense and live graphics/audio remain unfinished.

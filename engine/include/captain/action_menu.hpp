@@ -22,6 +22,7 @@ struct AreaDefenseMenuContent {
     std::optional<AreaDefenseSpecialOptions> special_options{};
     std::optional<std::array<std::uint8_t,2>> special_cursor{}; // tile, x
     std::optional<std::uint8_t> special_cursor_y_base{};
+    std::optional<std::uint8_t> action2_special_icon{};
 };
 struct SpecialCursorPresentation { std::uint8_t tile, x, attribute; };
 struct ActionMenuResult {
@@ -44,6 +45,7 @@ std::optional<std::uint8_t> keeper_area_defense_special_option(const PhaseSessio
 ActionMenuResult open_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_keeper_area_special(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content);
 ActionMenuResult inspect_keeper_area_special(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense);
+ActionMenuResult redraw_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 // Ordinary field choices only; available special options stay pending. No energy charge.
 ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,

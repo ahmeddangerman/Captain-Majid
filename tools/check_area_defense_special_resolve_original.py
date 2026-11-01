@@ -42,7 +42,7 @@ def main():
         target=out/f'{index}-resolved.cmjsession'
         run=subprocess.run([binary,pack,str(source),'--resolve-keeper-area-special','--capture',str(target)],capture_output=True,text=True,timeout=30)
         if run.returncode:raise RuntimeError(f'case{index} {cases[index]}: {run.stderr}')
-        expected=bytearray(checkpoint(final,75,1,cursor,pressed)[:387]);expected[10]=ord('s');expected[258]=76
+        expected=bytearray(checkpoint(final,75,1,cursor,pressed)[:387]);expected[10]=ord('t');expected[258]=76
         status={'accepted':0,'denied':1,'canceled':2}[report['boundary']]
         expected+=bytes((1,status,report['subtype'],report['cost']&255,report['cost']>>8,report['effect']))
         actual=target.read_bytes()

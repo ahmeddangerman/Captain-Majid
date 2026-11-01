@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'s'))
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'t'))
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -36,6 +36,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.current.clock.script_flags = byte(input); state.current.clock.ball_mode = byte(input);
     state.current.shared_recovery_flags = byte(input); state.current.shared_recovery_timer = byte(input);
     state.phase = static_cast<FieldSessionPhase>(byte(input));
+    if(version<'t' && static_cast<unsigned>(state.phase)>76)
+        throw std::invalid_argument("Special redraw requires session version55");
     if(version<'s' && static_cast<unsigned>(state.phase)>75)
         throw std::invalid_argument("Special inspection requires session version54");
     if(version<'r' && static_cast<unsigned>(state.phase)>73)
@@ -316,6 +318,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
         throw std::invalid_argument("Trailing phase session data");
     if (input.bad()) throw std::invalid_argument("Unable to read phase session");
     validate_phase_session(state);
+    if(version<'t' && state.area_defense && std::any_of(state.area_defense->subtypes.begin(),state.area_defense->subtypes.end(),[](auto v){return v!=0;}))
+        throw std::invalid_argument("Defensive subtype requires session version55");
     if(version<'p' && state.phase==FieldSessionPhase::keeper_area_defense_poll &&
        state.action->cursor==state.current.field.selected_defenders)
         throw std::invalid_argument("Full defensive poll requires session version51");
@@ -325,7 +329,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 's');
+    byte(output, 't');
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));

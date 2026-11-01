@@ -10,7 +10,7 @@ from verify_action_strength import PAYLOAD_SHA256
 
 def checkpoint(raw,phase,option,cursor,pressed=0):
     # Preserve the q prefix and append r's cursor/exit-sample bytes explicitly.
-    data=bytearray(poll_snapshot(raw,phase)[:383]);data[10]=ord('s')
+    data=bytearray(poll_snapshot(raw,phase)[:383]);data[10]=ord('t')
     data+=bytes((1,option,cursor,pressed))+bytes(6)
     return bytes(data)
 
@@ -20,6 +20,7 @@ def main():
     for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
     a=p.parse_args();rom=a.rom.read_bytes();packed=a.pack.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
+    if packed[:8]==b'CMJSHOTF':packed=b'CMJSHOTE'+packed[8:-1]
     if packed[:8]!=b'CMJSHOTE':p.error('Expected private version14E pack')
     out=a.output_dir.resolve()
     if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private output must stay outside checkout')

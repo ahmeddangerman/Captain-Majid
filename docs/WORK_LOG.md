@@ -1350,3 +1350,18 @@ Daily website note updated separately; engine/private research remains local.
   while preserving earlier special choices. See NATIVE_DEFENSE_REDRAW_RESEARCH.md.
 - Full Make check/all pass after updating snapshot-size assertions; the previous
   2,304 input and240 opening comparisons also pass with snapshot54s.
+
+## 2026-11-01 — defensive choice registration and redraw
+
+- Added phase76→77: accepted choices register the subtype and advance the cursor;
+  denied/canceled choices preserve it. Ordered overlay/count/slot-icon/subject
+  requests reproduce the original up to D41F, before the saved-input tail.
+- Snapshot55t remains393bytes; private content15F adds an action2 subtype1 icon.
+  Special subtypes survive back, blink and unchanged direction; changed action
+  clears them. Older snapshots and content keep their prior supported scope.
+- Original checks matched30 controlled redraws (20 accepted,5 denied,5 canceled)
+  and four subtype input cases. Evidence: special-redraw-check-final. Previous
+  136 decisions and2,304 chooser inputs match with the new pack/snapshot.
+  Full Make check/all pass; independent review found no critical/important issue.
+  Explicit host frame acknowledgements; actual rendering and action execution are
+  still unfinished. Next: resume D41F's saved-button tail into the next menu state.
