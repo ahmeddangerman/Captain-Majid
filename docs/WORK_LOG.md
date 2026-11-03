@@ -1555,7 +1555,7 @@ Daily website note updated separately; engine/private research remains local.
   preserves earlier offsets/readers and rejects downgraded later-slot contacts.
   This bounded version extension avoids moving existing sections. Old cursor0
   y/z contact/clock saves continue to load.
--720 complete original sequences match:696 contacts,748 skips, both variants,
+- 720 complete original sequences match: 696 contacts, 748 skips, both variants,
   one/four selected players, all four results and every slot0..3. Includes both
   saved facing values, special/exhausted inputs, terminal early stops, all-skip
   prefixes and interactive capture/replay. Evidence: area-sequence-work/original-final.log.
@@ -1566,3 +1566,9 @@ Daily website note updated separately; engine/private research remains local.
 - Original scripts run with explicit host frame acknowledgements/frozen RNG in
   the observer. This is prepared native state, not evidence of live rendering or
   a complete playable match. Overall completion remains unmeasured.
+
+- Publication verified: engine feature56b1339 is on public work; Arabic daily note
+  ae4e35f is on main. GitHub Pages run54 (41599207276) completed successfully for
+  that webpage commit. All seven older dates, approved roadmap/design and manual
+  date navigation are preserved. Direct live-page HTTP is restricted here; this
+  is deployment verification through GitHub, not a browser-render claim.

@@ -45,5 +45,5 @@
 
 - [x] Run `make -j3 check`, `make -j3 all`, focused original comparisons and `git diff --check`.
 - [x] Request an independent read-only code review; resolve material findings.
-- [ ] Update `docs/WORK_LOG.md`, detailed reference and status with scope/evidence. Push verified source to `origin work:work`.
-- [ ] Update the current Arabic daily progress note, preserve design/history/manual navigation, syntax-check and publish on `main`; verify GitHub Pages deployment separately.
+- [x] Update `docs/WORK_LOG.md`, detailed reference and status with scope/evidence. Push verified source to `origin work:work`.
+- [x] Update the current Arabic daily progress note, preserve design/history/manual navigation, syntax-check and publish on `main`; verify GitHub Pages deployment separately.
