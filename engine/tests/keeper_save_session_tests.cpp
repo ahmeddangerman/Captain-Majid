@@ -384,6 +384,24 @@ int main(){try{
        prefix_clock.state.field.elapsed==static_cast<std::uint8_t>(loop.state.current.field.elapsed+3) &&
        bytes(loop.state)==prefix_before,"Area prefix clock preview is pure and advances time once");
  rejects([&]{calculate_area_prefix_clock(contact,3);});
+ auto prefix_input=loop.state;prefix_input.current.clock.remaining=449;
+ const auto prefix_saved=advance_session_area_prefix_clock(prefix_input,3);
+ check(static_cast<unsigned>(prefix_saved.state.phase)==90 && prefix_saved.state.current.clock.remaining==446,"Saved prefix clock advances once");
+ rejects([&]{advance_session_area_prefix_clock(prefix_saved.state,3);});
+ prefix_input.current.clock.remaining=1;prefix_input.current.clock.extra_time=5;
+ const auto prefix_pause=advance_session_area_prefix_clock(prefix_input,3);
+ check(static_cast<unsigned>(prefix_pause.state.phase)==91,"Saved prefix clock retains added time");
+ auto prefix_resume=resume_session_area_prefix_clock(prefix_pause.state);
+ check(static_cast<unsigned>(prefix_resume.phase)==90 && prefix_resume.current.clock.remaining==0,"Prefix clock resumes without another debit");
+ rejects([&]{resume_session_area_prefix_clock(prefix_resume);});
+ prefix_input.current.clock.remaining=0;prefix_input.current.clock.extra_time=0;
+ const auto prefix_end=advance_session_area_prefix_clock(prefix_input,3);
+ check(static_cast<unsigned>(prefix_end.state.phase)==92,"Saved prefix clock retains period end");
+ for(const auto& item:{prefix_saved.state,prefix_pause.state,prefix_end.state}) {
+  auto raw=bytes(item);std::istringstream current(raw);
+  check(bytes(load_phase_session(current))==raw,"Prefix clock snapshot roundtrip");
+  raw[10]=static_cast<char>(128);rejects([&]{std::istringstream old(raw);load_phase_session(old);});
+ }
  auto bad_cursor=loop.state;bad_cursor.area_defender_cursor=3;rejects([&]{validate_phase_session(bad_cursor);});
  auto old_contact=contact_bytes;old_contact[10]='x';old_contact.resize(398);
  rejects([&]{std::istringstream old(old_contact);load_phase_session(old);});

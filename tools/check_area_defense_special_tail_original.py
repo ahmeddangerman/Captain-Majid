@@ -46,7 +46,7 @@ def main():
                     unsupported.append(case);continue
                 if run.returncode:raise RuntimeError(f'{case}: {run.stderr}')
                 report,final=trace_special_tail(prg,raw,pressed,cursor,1)
-                expected=bytearray(poll_snapshot(final,70));expected[10]=128
+                expected=bytearray(poll_snapshot(final,70));expected[10]=129
                 actual=target.read_bytes()
                 if actual!=expected:raise RuntimeError(f'{case}: {[(i,x,y)for i,(x,y)in enumerate(zip(actual,expected))if x!=y]} lengths {len(actual)}/{len(expected)}')
                 requests=[{'kind':int(k),'id':int(v),'slot':int(slot)} for k,v,slot in re.findall(r'Presentation request (\d+) \| id (\d+) \| slot (\d+)',run.stdout)]

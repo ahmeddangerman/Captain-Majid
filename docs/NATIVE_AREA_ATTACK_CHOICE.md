@@ -304,3 +304,18 @@ for supported attacks, normal time, added time and period end, including elapsed
 wrapping and keeper recovery. The original observer uses explicit host frame
 acknowledgements; no native rendering or live scheduling is inferred. Evidence:
 `area-prefix-original.log`.
+
+## Saved final prefix clock
+
+`advance-area-prefix-clock ELAPSED` commits the previously verified calculation
+from phase88 to normal phase90, added-time pause91 or period-end boundary92. The
+elapsed byte must currently be supplied explicitly from the original action
+table; automatic content-table selection remains pending. The operation rejects
+a second advance, and `resume-area-prefix-clock` changes91 to90 without repeating
+the clock or recovery. Period transition and possession dispatch remain pending.
+
+Snapshot63 uses byte129 and remains413 bytes. Earlier byte128 saves load, but
+cannot encode the new phases. Ninety complete original saved states match through
+the final prefix clock, covering normal time, added time and period end. The
+original observer uses explicit frame acknowledgements and frozen randomness.
+Evidence: area-prefix-saved-original.log. Full Make check/all pass.

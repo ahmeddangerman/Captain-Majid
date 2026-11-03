@@ -34,6 +34,17 @@ ContactPreludeResult calculate_area_prefix_clock(const PhaseSessionState& input,
  const auto clock=advance_match_clock(state.clock,elapsed,state.field.random_first);state.clock=clock.state;
  return {state,clock,elapsed};
 }
+PhaseSessionResult advance_session_area_prefix_clock(const PhaseSessionState& input,std::uint8_t elapsed) {
+ const auto calculated=calculate_area_prefix_clock(input,elapsed);auto state=input;state.current=calculated.state;
+ state.phase=calculated.clock.continuation==ClockContinuation::period_end ? FieldSessionPhase::keeper_area_prefix_period_end :
+  calculated.clock.continuation==ClockContinuation::added_time_presentation ? FieldSessionPhase::keeper_area_prefix_added_time : FieldSessionPhase::keeper_area_prefix_clock_done;
+ validate_phase_session(state);return {state,calculated,std::nullopt,{}};
+}
+PhaseSessionState resume_session_area_prefix_clock(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_prefix_added_time)throw std::invalid_argument("No area prefix added-time presentation to resume");
+ auto state=input;state.phase=FieldSessionPhase::keeper_area_prefix_clock_done;validate_phase_session(state);return state;
+}
 ActionMenuResult present_session_area_contact_result(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_contact_clock_done)

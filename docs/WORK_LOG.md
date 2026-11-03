@@ -1582,3 +1582,15 @@ Daily website note updated separately; engine/private research remains local.
   and represented state, including elapsed wrap and keeper recovery. Evidence:
   area-prefix-original.log. Focused native checks cover input immutability and
   invalid phase. Full Make check/all pass; no complete match claim.
+
+## 2026-11-03 — saved final area prefix clock
+
+- Connected exhausted area defense phase88 to saved normal90, added-time91 and
+  period-end92 boundaries. An explicit elapsed byte remains necessary; action
+  table selection and possession dispatch are not connected yet. Resume changes
+  only phase, and a second clock advance rejects.
+- Snapshot63 uses byte129, still413 bytes; legacy saves load and cannot encode
+  the new phases. Ninety complete original saved states match across supported
+  attacks, normal/added-time/period-end, recovery and elapsed wrapping. CLI and
+  replay checks plus full Make check/all pass. Evidence: area-prefix-saved-original.log.
+  Original frame acknowledgements remain explicit; no native rendering claim.

@@ -38,13 +38,13 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 
 void validate_phase_session(const PhaseSessionState& state) {
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 89)
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 92)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
     const bool area_setup=phase==65;
-    const bool area_menu=(phase>=66 && phase<=89) || ((phase==18 || phase==19) && state.keeper_area);
+    const bool area_menu=(phase>=66 && phase<=92) || ((phase==18 || phase==19) && state.keeper_area);
     const bool area_state=area_setup || area_menu;
-    if(((phase>=65 && phase<=89) && !state.keeper_area) || (state.keeper_area && !area_state))
+    if(((phase>=65 && phase<=92) && !state.keeper_area) || (state.keeper_area && !area_state))
         throw std::invalid_argument("Keeper-area setup needs exactly one captured selection counter");
     if(state.keeper_area && (!state.action || !state.recovery || !state.scheduling ||
        state.keeper_area->selection_counter!=255 || !state.recovery->ball_variant ||
@@ -54,7 +54,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Keeper-area setup requires its original area and route");
     if(area_menu && (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
-    if(bool(state.area_defense)!=(phase==67 || (phase>=69 && phase<=89)))
+    if(bool(state.area_defense)!=(phase==67 || (phase>=69 && phase<=92)))
         throw std::invalid_argument("Initial area defense requires its captured choice arrays");
     if(phase==67 || phase==69) {
         if(!state.current.field.selected_defenders || state.current.field.selected_defenders>4 || state.action->cursor || state.area_defense->pressed)
@@ -62,7 +62,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         for(unsigned i=0;i<4;++i)if(state.area_defense->actions[i]!=255 || state.area_defense->subtypes[i])
             throw std::invalid_argument("Initial defense actions must be unselected with unused subtypes zero");
     }
-    if(phase>=70 && phase<=89) {
+    if(phase>=70 && phase<=92) {
         const auto count=state.current.field.selected_defenders;
         if(!count || count>4 || state.action->cursor>count || ((phase==71 || (phase>=73 && phase<=76)) && state.action->cursor==count))
             throw std::invalid_argument("Defensive poll requires a valid selected cursor");
@@ -108,12 +108,12 @@ void validate_phase_session(const PhaseSessionState& state) {
            (d.status==0)!=can_select_defense_move(state.current.field.roster[state.recovery->opposing_player].stamina,d.cost,d.subtype)))
             throw std::invalid_argument("Special inspection decision disagrees with stamina");
     }
-    if(bool(state.area_ai_target)!=(phase>=78 && phase<=89))throw std::invalid_argument("Area AI choice needs saved target context");
-    if(phase>=78 && phase<=89) {
+    if(bool(state.area_ai_target)!=(phase>=78 && phase<=92))throw std::invalid_argument("Area AI choice needs saved target context");
+    if(phase>=78 && phase<=92) {
         const auto& target=*state.area_ai_target;
         const auto subtype=phase>=79 ? state.recovery->attack_subtype&127u : state.recovery->attack_subtype;
         const bool terminal_presentation=(phase==86 || phase==89) && state.area_contact && state.area_contact->result>=2;
-        if((phase>=81 && phase<=89) && (state.control->motion_requested!=(terminal_presentation?0:16) ||
+        if((phase>=81 && phase<=92) && (state.control->motion_requested!=(terminal_presentation?0:16) ||
            (terminal_presentation ? state.control->facing!=0 : (state.control->facing!=0 && state.control->facing!=64))))throw std::invalid_argument("Invalid announced area presentation state");
         if(phase==80 && state.control->motion_requested!=(state.recovery->ball_variant==1 ? 2 : 0))throw std::invalid_argument("Area defense entry needs acknowledged motion request");
         if(target.cost>1023 || (phase==78 && target.cost))throw std::invalid_argument("Invalid prepared area cost");
@@ -133,11 +133,13 @@ void validate_phase_session(const PhaseSessionState& state) {
     if(phase==84 && (state.current.clock.remaining || !state.current.clock.extra_time ||
        state.current.clock.ball_mode || (state.current.clock.script_flags&64u)))
         throw std::invalid_argument("Invalid area contact added-time boundary");
+    if(phase==91 && (state.current.clock.remaining || !state.current.clock.extra_time || state.current.clock.ball_mode || (state.current.clock.script_flags&64u)))throw std::invalid_argument("Invalid area prefix added-time boundary");
+    if(phase==92 && state.current.clock.remaining)throw std::invalid_argument("Area prefix period end requires exhausted match clock");
     if(phase==85 && state.current.clock.remaining)
         throw std::invalid_argument("Area period end requires exhausted match clock");
     if((phase<82 && state.area_defender_cursor) ||
-       (phase>=82 && phase<=89 && (state.area_defender_cursor>state.current.field.selected_defenders ||
-        (phase==88 ? state.area_defender_cursor!=state.current.field.selected_defenders :
+       (phase>=82 && phase<=92 && (state.area_defender_cursor>state.current.field.selected_defenders ||
+        ((phase==88 || phase>=90) ? state.area_defender_cursor!=state.current.field.selected_defenders :
          state.area_defender_cursor>=state.current.field.selected_defenders))) ||
        (phase==87 && !state.area_defender_cursor) ||
        (phase==89 && state.area_contact->result<2))
@@ -369,7 +371,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Unsupported captured action ID");
     if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && !post_possession && !area_state) || state.action->menu_route >= 6))
         throw std::invalid_argument("Human attacking menu requires captured action context and side0");
-    if (static_cast<unsigned>(state.phase) >= 20 && phase!=78 && phase!=79 && phase!=80 && phase!=81 && phase!=82 && phase!=83 && phase!=84 && phase!=85 && phase!=86 && phase!=87 && phase!=88 && phase!=89 && state.action->action != 0)
+    if (static_cast<unsigned>(state.phase) >= 20 && phase!=78 && phase!=79 && phase!=80 && phase!=81 && phase!=82 && phase!=83 && phase!=84 && phase!=85 && phase!=86 && phase!=87 && phase!=88 && phase!=89 && phase!=90 && phase!=91 && phase!=92 && state.action->action != 0)
         throw std::invalid_argument("Only ordinary shots are supported at attack-prepared phase");
 }
 

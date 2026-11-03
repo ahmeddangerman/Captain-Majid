@@ -15,6 +15,8 @@ PreparedAreaContact compare_area_defender(const FieldPlayerRecord&,std::uint8_t 
 // Numeric preview before original area result dispatch; elapsed is supplied by
 // the original-derived action table. This does not advance the saved phase.
 ContactPreludeResult calculate_area_prefix_clock(const PhaseSessionState&,std::uint8_t elapsed);
+PhaseSessionResult advance_session_area_prefix_clock(const PhaseSessionState&,std::uint8_t elapsed);
+PhaseSessionState resume_session_area_prefix_clock(const PhaseSessionState&);
 ActionMenuResult present_session_area_contact_result(const PhaseSessionState&);
 ActionMenuResult advance_session_area_defender(const PhaseSessionState&);
 ActionMenuResult skip_session_area_defender(const PhaseSessionState&);

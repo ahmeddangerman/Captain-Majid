@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare the pure area-prefix clock preview with original CPU observations."""
+"""Compare the saved area-prefix clock continuation with original CPU observations."""
 import argparse,hashlib,json,subprocess
 from pathlib import Path
 from py65.devices.mpu6502 import MPU
@@ -53,10 +53,10 @@ def main():
       off=0x300+12*keeper;raw[off+5:off+8]=bytes((2,7,3));raw[off+10]=5
      label=f'a{action}-t{remaining}-e{extra}-r{random}';source=out/f'{label}-entry.cmjsession';target=out/f'{label}-preview.cmjsession';source.write_bytes(saved(raw,88,cost))
      run=subprocess.run([str(a.probe.resolve()),str(source),str(elapsed),str(target)],capture_output=True,text=True,check=True,timeout=10)
-     original,boundary=observe(prg,raw);wanted=saved(original,88,cost);actual=target.read_bytes()
+     original,boundary=observe(prg,raw);wanted=saved(original,90+boundary,cost);actual=target.read_bytes()
      if int(run.stdout)!=boundary or actual!=wanted:raise RuntimeError(f'{label}: boundary {run.stdout.strip()} != {boundary}, offsets {[(i,x,y)for i,(x,y)in enumerate(zip(actual,wanted))if x!=y]}')
      results.append({'action':action,'remaining':remaining,'extra':extra,'random':random,'boundary':boundary});boundaries.add(boundary)
  if boundaries!={0,1,2}:raise RuntimeError(f'Missing clock boundary: {boundaries}')
- (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Original8A5D through8A60 or added-time/period-end; frozen randomness and explicit host frame acknowledgements. Pure native preview only; no saved phase transition or possession dispatch.'},indent=2)+'\n')
- print(f'{len(results)} pure area prefix clock previews match original, including normal, added-time and period-end boundaries')
+ (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Original8A5D through8A60 or added-time/period-end; frozen randomness and explicit host frame acknowledgements. Saved clock continuation only; no possession dispatch.'},indent=2)+'\n')
+ print(f'{len(results)} saved area prefix clock continuations match original, including normal, added-time and period-end boundaries')
 if __name__=='__main__':main()
