@@ -278,6 +278,36 @@ int main(){try{
  auto missing_area_data=ai_attack_data;missing_area_data.area_comparison.reset();
  rejects([&]{resolve_session_area_defender(contact_input,missing_area_data);});
  check(bytes(contact_input)==contact_before,"Failed area calculation leaves input unchanged");
+ ContactPreludeContent area_clock{};area_clock.field_elapsed.fill(3);area_clock.defender_status.fill(2);
+ auto clock_input=contact;clock_input.current.clock.remaining=449;
+ const auto clocked=advance_session_area_contact_clock(clock_input,area_clock);
+ check(static_cast<unsigned>(clocked.state.phase)==83 && clocked.state.current.clock.remaining==446 &&
+       clocked.state.current.field.roster[contact_id].stamina==91 && clocked.prelude && clocked.prelude->elapsed_step==3,
+       "Area contact clock advances status/time without another stamina debit");
+ rejects([&]{advance_session_area_contact_clock(clocked.state,area_clock);});
+ clock_input.current.clock.remaining=1;clock_input.current.clock.extra_time=5;
+ const auto paused=advance_session_area_contact_clock(clock_input,area_clock);
+ check(static_cast<unsigned>(paused.state.phase)==84,"Area contact preserves added-time pause");
+ const auto clock_resumed=resume_session_area_contact_clock(paused.state);
+ auto clock_resumed_expected=paused.state;clock_resumed_expected.phase=static_cast<FieldSessionPhase>(83);
+ check(bytes(clock_resumed)==bytes(clock_resumed_expected),"Area clock resume changes only its phase");
+ rejects([&]{resume_session_area_contact_clock(clock_resumed);});
+ clock_input.current.clock.remaining=0;clock_input.current.clock.extra_time=0;
+ const auto ended=advance_session_area_contact_clock(clock_input,area_clock);
+ check(static_cast<unsigned>(ended.state.phase)==85,"Area contact retains period-end boundary");
+ for(const auto& timed:{clocked.state,paused.state,ended.state}) {
+  const auto saved=bytes(timed);std::istringstream encoded_clock(saved);
+  check(bytes(load_phase_session(encoded_clock))==saved,"Area clock boundary roundtrip");
+  auto old_clock=saved;old_clock[10]='y';
+  rejects([&]{std::istringstream old(old_clock);load_phase_session(old);});
+ }
+ auto previous_contact=contact_bytes;previous_contact[10]='y';
+ std::istringstream previous_contact_stream(previous_contact);
+ check(bytes(load_phase_session(previous_contact_stream))==contact_bytes,"Legacy y compared defender loads");
+ auto malformed_pause=paused.state;malformed_pause.current.clock.remaining=1;
+ rejects([&]{validate_phase_session(malformed_pause);});
+ malformed_pause=paused.state;malformed_pause.current.clock.extra_time=0;
+ rejects([&]{validate_phase_session(malformed_pause);});
  auto old_contact=contact_bytes;old_contact[10]='x';old_contact.resize(398);
  rejects([&]{std::istringstream old(old_contact);load_phase_session(old);});
  check(static_cast<unsigned>(completed.state.phase)==72 && completed.presentation.size()==1 &&

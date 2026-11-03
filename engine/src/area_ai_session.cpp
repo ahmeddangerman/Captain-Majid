@@ -23,6 +23,27 @@ PreparedAreaContact compare_area_defender(const FieldPlayerRecord& player,std::u
  const auto comparison=compare_defender_contact({incoming,prepared.preparation.base_strength,first,second,selected.range,selected.offset,prepared.energy.weakened,selected.eligible,2,player.player_id,defense_subtype,selected.thresholds});
  return {prepared,comparison};
 }
+PhaseSessionResult advance_session_area_contact_clock(const PhaseSessionState& input,
+ const ContactPreludeContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_defender_compared)
+  throw std::invalid_argument("Area contact clock requires a saved comparison");
+ auto state=input;const auto& contact=*input.area_contact;
+ const auto applied=apply_contact_prelude({state.current,state.recovery->opposing_player,
+  contact.defense_action,contact.result<2},content);
+ state.current=applied.state;
+ state.phase=applied.clock.continuation==ClockContinuation::period_end ? FieldSessionPhase::keeper_area_contact_period_end :
+  applied.clock.continuation==ClockContinuation::added_time_presentation ? FieldSessionPhase::keeper_area_contact_added_time :
+  FieldSessionPhase::keeper_area_contact_clock_done;
+ validate_phase_session(state);return {state,applied,std::nullopt,{}};
+}
+PhaseSessionState resume_session_area_contact_clock(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_contact_added_time)
+  throw std::invalid_argument("No area contact added-time presentation to resume");
+ auto state=input;state.phase=FieldSessionPhase::keeper_area_contact_clock_done;
+ validate_phase_session(state);return state;
+}
 PhaseSessionState resolve_session_area_defender(const PhaseSessionState& input,const ShotContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_defenders_announced)throw std::invalid_argument("Area contact requires announced defenders");

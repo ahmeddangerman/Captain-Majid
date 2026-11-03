@@ -225,3 +225,24 @@ Evidence: `area-contact-session-original.log`. Earlier32 announcements and480
 choice/preparation/presentation chains also pass with the new format. A test input
 initially used incorrect field-cell geometry; corrected to the existing8-pixel,
 12-row coordinate mapping before the final run. Result timing/dispatch is next.
+
+## Saved contact recovery and clock
+
+`advance-area-contact-clock` continues phase82 through the original8A2B..8A3F
+status/recovery/clock stage. Results0/1 affect the defender; results2/3 affect
+the ball carrier, following the original carry selection. Stamina is retained
+from the earlier calculation. It saves normal continuation83, added-time pause84
+or period-end85; the period transition itself is not implemented here.
+`resume-area-contact-clock` acknowledges prepared added-time presentation and
+changes84→83 only, without repeating time, recovery or status effects.
+
+Snapshot61z remains412bytes. Older y compared-defender snapshots load, while
+y cannot encode the new clock boundaries. Roundtrip, malformed boundaries,
+replay and legacy reading are covered. `check_area_contact_session_original.py
+--clock` matched1,296 complete saved contacts and156 full post-contact snapshots
+across all four contact results and normal/added-time/period-end routes. Original
+clock display enters its scheduler; the observer executes those instructions with
+explicit frame acknowledgements and frozen random input, rather than skipping
+the display routine. This does not establish native rendering or live scheduling.
+Evidence: `area-contact-clock-original.log`. Result presentation and advancing
+subsequent defenders remain next.

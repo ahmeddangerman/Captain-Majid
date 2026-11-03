@@ -2,6 +2,14 @@
 
 **Overall completion is not currently measured.** The previously repeated7% was an unsupported planning guess and is retired. The checkpoints below describe observable capabilities; they have different sizes and must not be averaged into a game-completion percentage.
 
+## Latest verified step — 2026-11-03
+
+The supported opponent area sequence now connects action/recipient selection,
+attack preparation, prepared defender announcements, the first defender's saved
+comparison/stamina, and post-contact recovery/status/clock. It preserves added-time
+and period-end boundaries. Later defenders, result presentation/dispatch and a
+complete playable match remain unfinished. See [NATIVE_AREA_ATTACK_CHOICE.md](NATIVE_AREA_ATTACK_CHOICE.md).
+
 ## Current capabilities
 
 | Area | Current state | Completion checkpoint |

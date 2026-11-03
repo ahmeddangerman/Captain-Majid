@@ -1523,3 +1523,20 @@ Daily website note updated separately; engine/private research remains local.
   area-presentation-y. First choices5/6 and later defenders still pending.
 - Continuing directly into the original post-contact status/recovery/clock stage,
   including added-time and period-end boundaries. No complete-match claim.
+
+## 2026-11-03 — saved area contact recovery and clock
+
+- Connected phase82 to original post-contact status/recovery/time handling,
+  preserving normal83, added-time84 and period-end85 boundaries. Added-time
+  acknowledgement changes only phase; stamina is never charged again. Actual
+  result presentation, subsequent defenders and period transitions remain pending.
+- Snapshot61z stays412bytes, reads y contact snapshots and rejects newer phases
+  in old formats. Boundary roundtrip, bad metadata, replay and resume are covered.
+- Original comparison:1,296 complete contact saves and156 complete clock/recovery/
+  status continuations match, including all four results, extra time, period end,
+  elapsed wrapping and keeper recovery. Evidence: area-contact-clock-original.log.
+  Clock display uses the original scheduler with explicit host frame acknowledgements
+  and frozen randomness; it is not evidence of a native live display/frame loop.
+- Full Make check/all pass. Independent review found no blocking issues. Earlier32
+  announcements and480 choice/preparation/presentation chains pass with z snapshots
+  (area-announcement-z, area-presentation-z). Overall completion remains unmeasured.
