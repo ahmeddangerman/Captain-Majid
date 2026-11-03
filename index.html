@@ -240,20 +240,21 @@ footer {
     <section class="daily-update" aria-labelledby="update-title">
       <header>
         <span>سجل التحديث اليومي</span>
-        <time id="update-date" datetime="2026-11-01">١ نوفمبر ٢٠٢٦</time>
+        <time id="update-date" datetime="2026-11-03">٣ نوفمبر ٢٠٢٦</time>
       </header>
-      <h2 id="update-title">خطوة جديدة في المهارات الدفاعية</h2>
+      <h2 id="update-title">خطوة جديدة في حسابات الدفاع</h2>
       <div id="update-content" aria-live="polite" aria-atomic="true">
-        <p id="update-summary">تقدّم العمل على اختيار المهارات الدفاعية وعرضها بعد فحص طاقة اللاعب.</p>
+        <p id="update-summary">بعد اختيار الحركة، صار المحرك يحسب مواجهة المدافع ويحفظ نتيجتها، مع طاقة اللاعب ووقت المباراة.</p>
         <ul id="update-points">
-          <li>أُضيف حفظ اختيار المهارة وإظهار رمزها بعد قبولها.</li>
-          <li>تبقى المهارة المختارة محفوظة أثناء التنقل بين المدافعين، وقد طابقت الحالات المختبرة اللعبة الأصلية.</li>
-          <li>اتصل اختيار الخصم لحركته وزميله المستهدف بتجهيز قوة الحركة وحفظ حالتها، مع مقارنة النتائج باللعبة الأصلية. استكمال تنفيذ الحركات والمباراة الكاملة ما زالا قيد العمل.</li>
+          <li>ربطنا قوة المدافع بالحركة التي اختارها وبطاقته المتبقية، بما فيها المهارات الخاصة.</li>
+          <li>أضفنا حفظ نتيجة المواجهة واستكمالها من دون خصم الطاقة أو الوقت مرتين.</li>
+          <li>اختبرنا النتائج أمام النسخة الأصلية، بما يشمل الوقت بدل الضائع ونهاية الشوط.</li>
+          <li>الخطوة القادمة: استكمال بقية المدافعين ونتائج المواجهة. المباراة الكاملة لم تكتمل بعد.</li>
         </ul>
       </div>
       <nav class="update-controls" aria-label="التنقل بين التحديثات اليومية">
         <button id="update-older" type="button" aria-label="عرض تحديث أقدم">◀ الأقدم</button>
-        <span id="update-count" class="update-count" aria-live="polite">١ / ٤</span>
+        <span id="update-count" class="update-count" aria-live="polite">١ / ٨</span>
         <button id="update-newer" type="button" aria-label="عرض تحديث أحدث">الأحدث ▶</button>
       </nav>
     </section>
@@ -297,6 +298,18 @@ buttons.forEach((button, index) => {
 });
 
 const updates = [
+  {
+  "date": "2026-11-03",
+  "dateLabel": "٣ نوفمبر ٢٠٢٦",
+  "title": "خطوة جديدة في حسابات الدفاع",
+  "summary": "بعد اختيار الحركة، صار المحرك يحسب مواجهة المدافع ويحفظ نتيجتها، مع طاقة اللاعب ووقت المباراة.",
+  "points": [
+    "ربطنا قوة المدافع بالحركة التي اختارها وبطاقته المتبقية، بما فيها المهارات الخاصة.",
+    "أضفنا حفظ نتيجة المواجهة واستكمالها من دون خصم الطاقة أو الوقت مرتين.",
+    "اختبرنا النتائج أمام النسخة الأصلية، بما يشمل الوقت بدل الضائع ونهاية الشوط.",
+    "الخطوة القادمة: استكمال بقية المدافعين ونتائج المواجهة. المباراة الكاملة لم تكتمل بعد."
+  ]
+},
   {
   "date": "2026-11-01",
   "dateLabel": "١ نوفمبر ٢٠٢٦",
@@ -408,7 +421,7 @@ function showUpdate(index) {
     item.textContent = point;
     return item;
   }));
-  updateCount.textContent = `${["١", "٢", "٣"][updateIndex]} / ٣`;
+  updateCount.textContent = `${(updateIndex + 1).toLocaleString("ar-u-nu-arab")} / ${updates.length.toLocaleString("ar-u-nu-arab")}`;
 }
 
 olderButton.addEventListener("click", () => {
