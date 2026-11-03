@@ -12,6 +12,7 @@ def main():
     for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
     a=p.parse_args();rom=a.rom.read_bytes();packed=a.pack.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
+    if packed[:8]==b'CMJSHOTK':packed=b'CMJSHOTJ'+packed[8:21322]
     if packed[:8]==b'CMJSHOTJ':packed=b'CMJSHOTI'+packed[8:21286]
     if packed[:8]==b'CMJSHOTI':packed=b'CMJSHOTH'+packed[8:21274]
     if packed[:8]==b'CMJSHOTH':packed=b'CMJSHOTG'+packed[8:20717]

@@ -384,6 +384,12 @@ int main(){try{
        prefix_clock.state.field.elapsed==static_cast<std::uint8_t>(loop.state.current.field.elapsed+3) &&
        bytes(loop.state)==prefix_before,"Area prefix clock preview is pure and advances time once");
  rejects([&]{calculate_area_prefix_clock(contact,3);});
+ ai_attack_data.area_prefix_elapsed=std::array<std::uint8_t,7>{};
+ (*ai_attack_data.area_prefix_elapsed)[loop.state.action->action]=3;
+ const auto profiled=advance_profiled_area_prefix_clock(loop.state,ai_attack_data);
+ check(bytes(profiled.state)==bytes(advance_session_area_prefix_clock(loop.state,3).state),"Original timing content selects saved attack duration");
+ auto missing_prefix_content=ai_attack_data;missing_prefix_content.area_prefix_elapsed.reset();
+ rejects([&]{advance_profiled_area_prefix_clock(loop.state,missing_prefix_content);});
  auto prefix_input=loop.state;prefix_input.current.clock.remaining=449;
  const auto prefix_saved=advance_session_area_prefix_clock(prefix_input,3);
  check(static_cast<unsigned>(prefix_saved.state.phase)==90 && prefix_saved.state.current.clock.remaining==446,"Saved prefix clock advances once");

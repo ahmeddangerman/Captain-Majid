@@ -8,9 +8,9 @@ The supported opponent area sequence now connects action/recipient selection,
 attack preparation, prepared defender announcements, ordered supported defenders'
 saved comparison/stamina, post-contact recovery/status/clock and prepared result
 display. It handles skipped entries and terminal early exits while preserving
-added-time and period-end boundaries. Final sequence timing now has a saved continuation with an explicitly supplied
-elapsed value. Automatic timing-table selection, possession dispatch, other
-defensive choices and a complete playable match remain unfinished. See [NATIVE_AREA_ATTACK_CHOICE.md](NATIVE_AREA_ATTACK_CHOICE.md).
+added-time and period-end boundaries. Final sequence timing now selects its elapsed value from private original game
+data and has a saved continuation. Possession dispatch, other defensive choices
+and a complete playable match remain unfinished. See [NATIVE_AREA_ATTACK_CHOICE.md](NATIVE_AREA_ATTACK_CHOICE.md).
 
 ## Current capabilities
 

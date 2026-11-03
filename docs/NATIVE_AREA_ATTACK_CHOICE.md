@@ -319,3 +319,17 @@ cannot encode the new phases. Ninety complete original saved states match throug
 the final prefix clock, covering normal time, added time and period end. The
 original observer uses explicit frame acknowledgements and frozen randomness.
 Evidence: area-prefix-saved-original.log. Full Make check/all pass.
+
+## Automatic final prefix timing
+
+`advance-profiled-area-prefix-clock` selects the elapsed byte from the saved
+attack action using original-derived private timing content, then commits the
+existing saved clock continuation. Private pack K adds seven timing bytes;
+the preceding J payload is unchanged. Older packs remain readable, but this
+operation rejects them when timing content is absent. The explicit elapsed
+operation remains available for development comparisons.
+
+Ninety complete saved cases match original execution, including actions1/4/6,
+normal time, added time, period end and keeper recovery. Missing/truncated timing
+content and repeated advancement reject. Evidence: `area-auto-original.log`.
+The following possession dispatch and a complete playable match remain pending.

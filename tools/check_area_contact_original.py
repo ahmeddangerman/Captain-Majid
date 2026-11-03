@@ -46,6 +46,7 @@ def main():
   if x!=y:raise RuntimeError(f'{c}: {x} != {y}')
  if codes!=set(range(4)):raise RuntimeError(f'Incomplete result coverage: {codes}')
  packed=a.pack.read_bytes()
+ if packed[:8]==b'CMJSHOTK':packed=b'CMJSHOTJ'+packed[8:21322]
  if packed[:8]!=b'CMJSHOTJ' or len(packed)!=21322:raise RuntimeError('Unexpected private J pack')
  previous=a.pack.with_name('japanese-cycle-v18-area-attack.cmjpack')
  if previous.exists() and packed[:7]+b'I'+packed[8:-36]!=previous.read_bytes():raise RuntimeError('Earlier I content changed')

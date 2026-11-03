@@ -31,7 +31,7 @@ def observe(prg,raw):
 
 def main():
  p=argparse.ArgumentParser(description=__doc__)
- for name in ('rom','keeper_ram','probe','output_dir'):p.add_argument(name,type=Path)
+ for name in ('rom','keeper_ram','probe','output_dir','pack'):p.add_argument(name,type=Path)
  a=p.parse_args();rom=a.rom.read_bytes()
  if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved ROM')
  out=a.output_dir.resolve()
@@ -55,8 +55,22 @@ def main():
      run=subprocess.run([str(a.probe.resolve()),str(source),str(elapsed),str(target)],capture_output=True,text=True,check=True,timeout=10)
      original,boundary=observe(prg,raw);wanted=saved(original,90+boundary,cost);actual=target.read_bytes()
      if int(run.stdout)!=boundary or actual!=wanted:raise RuntimeError(f'{label}: boundary {run.stdout.strip()} != {boundary}, offsets {[(i,x,y)for i,(x,y)in enumerate(zip(actual,wanted))if x!=y]}')
+     automatic=out/f'{label}-automatic.cmjsession'
+     run=subprocess.run(['build/captain-phase-session',str(a.pack.resolve()),str(source),'--advance-profiled-area-prefix-clock','--capture',str(automatic)],capture_output=True,text=True,timeout=10)
+     if run.returncode or automatic.read_bytes()!=wanted:raise RuntimeError(f'{label}: automatic selection mismatch: {run.stderr}')
+     oldpack=a.pack.with_name('japanese-cycle-v19-area-comparison.cmjpack')
+     if len(results)==0:
+      rejected=out/'missing-timing.cmjsession'
+      missing=subprocess.run(['build/captain-phase-session',str(oldpack),str(source),'--advance-profiled-area-prefix-clock','--capture',str(rejected)],capture_output=True,text=True,timeout=10)
+      if not missing.returncode or rejected.exists():raise RuntimeError('Missing timing content accepted')
+      broken=out/'truncated.cmjpack';broken.write_bytes(a.pack.read_bytes()[:-1]);bad=out/'truncated-result.cmjsession'
+      malformed=subprocess.run(['build/captain-phase-session',str(broken),str(source),'--advance-profiled-area-prefix-clock','--capture',str(bad)],capture_output=True,text=True,timeout=10)
+      if not malformed.returncode or bad.exists():raise RuntimeError('Truncated timing content accepted')
+      replay=out/'replay.cmjsession'
+      repeated=subprocess.run(['build/captain-phase-session',str(a.pack.resolve()),str(automatic),'--advance-profiled-area-prefix-clock','--capture',str(replay)],capture_output=True,text=True,timeout=10)
+      if not repeated.returncode or replay.exists():raise RuntimeError('Automatic clock replay accepted')
      results.append({'action':action,'remaining':remaining,'extra':extra,'random':random,'boundary':boundary});boundaries.add(boundary)
  if boundaries!={0,1,2}:raise RuntimeError(f'Missing clock boundary: {boundaries}')
  (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Original8A5D through8A60 or added-time/period-end; frozen randomness and explicit host frame acknowledgements. Saved clock continuation only; no possession dispatch.'},indent=2)+'\n')
- print(f'{len(results)} saved area prefix clock continuations match original, including normal, added-time and period-end boundaries')
+ print(f'{len(results)} saved and automatically selected area prefix clock continuations match original, including normal, added-time and period-end boundaries')
 if __name__=='__main__':main()

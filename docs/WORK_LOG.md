@@ -1594,3 +1594,14 @@ Daily website note updated separately; engine/private research remains local.
   attacks, normal/added-time/period-end, recovery and elapsed wrapping. CLI and
   replay checks plus full Make check/all pass. Evidence: area-prefix-saved-original.log.
   Original frame acknowledgements remain explicit; no native rendering claim.
+
+## 2026-11-03 — automatically selected final prefix timing
+
+- Added original action-table timing to private development pack K; its J payload
+  is unchanged. `advance-profiled-area-prefix-clock` chooses the saved action's
+  elapsed value and commits the existing clock step. Missing/truncated content
+  and repeated advancement reject; old packs remain readable.
+- Ninety saved states match the original across all supported attacks and normal,
+  added-time and period-end outcomes. Native checks and full Make check/all pass.
+  Evidence: area-auto-original.log. Possession dispatch remains next; overall
+  port completion is unmeasured.

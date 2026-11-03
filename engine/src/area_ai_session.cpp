@@ -40,6 +40,12 @@ PhaseSessionResult advance_session_area_prefix_clock(const PhaseSessionState& in
   calculated.clock.continuation==ClockContinuation::added_time_presentation ? FieldSessionPhase::keeper_area_prefix_added_time : FieldSessionPhase::keeper_area_prefix_clock_done;
  validate_phase_session(state);return {state,calculated,std::nullopt,{}};
 }
+PhaseSessionResult advance_profiled_area_prefix_clock(const PhaseSessionState& input,const ShotContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_prefix_done || !content.area_prefix_elapsed)
+  throw std::invalid_argument("Area prefix clock requires saved prefix and original timing content");
+ return advance_session_area_prefix_clock(input,(*content.area_prefix_elapsed)[input.action->action]);
+}
 PhaseSessionState resume_session_area_prefix_clock(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_prefix_added_time)throw std::invalid_argument("No area prefix added-time presentation to resume");
