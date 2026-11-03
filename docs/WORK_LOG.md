@@ -1605,3 +1605,17 @@ Daily website note updated separately; engine/private research remains local.
   added-time and period-end outcomes. Native checks and full Make check/all pass.
   Evidence: area-auto-original.log. Possession dispatch remains next; overall
   port completion is unmeasured.
+
+## 2026-11-03 — area result dispatch movement preview
+
+- Added a pure preview of original C606 movement before area result dispatch.
+  Normal results share route0; terminal results2/3 route to recovery or the
+  original terminal handler. Input state is unchanged; no movement or possession
+  is committed yet. Earlier prefix snapshots do not retain whether the last
+  nonterminal comparison was0 or1, which must be considered before later logic.
+- 60 original CPU comparisons match the complete field, 20 per route, including
+  zero/nonzero elapsed and random boundary inputs. Explicit host frame
+  acknowledgements and frozen input randomness remain research assumptions.
+  Evidence: area-dispatch-original.log. Full Make check/all pass. Next: saved
+  movement boundary and original result/possession handling. Overall progress
+  remains unmeasured.

@@ -3,6 +3,11 @@
 #include "captain/ai_action_candidate.hpp"
 #include "captain/shot_content.hpp"
 namespace captain {
+struct AreaDispatchPreview { FieldPhaseResult movement; std::uint8_t route; };
+// Before the original result dispatch, advance the ordinary field movement only.
+// Route0 continues the attack, route2 enters loose-ball recovery, route3 enters
+// the original terminal handler. Caller owns any later state transition.
+AreaDispatchPreview preview_area_result_dispatch(const PhaseSessionState&,const ShotContent&);
 struct PreparedAreaDefender { FieldDefenderPreparationResult preparation; EnergyResult energy; };
 PreparedAreaDefender prepare_area_defender(const FieldPlayerRecord&,std::uint8_t attack,
  std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,

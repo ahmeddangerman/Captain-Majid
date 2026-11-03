@@ -2,6 +2,13 @@
 #include "captain/player_movement.hpp"
 #include <stdexcept>
 namespace captain {
+AreaDispatchPreview preview_area_result_dispatch(const PhaseSessionState& input,const ShotContent& content) {
+ validate_phase_session(input);
+ if((input.phase!=FieldSessionPhase::keeper_area_prefix_clock_done && input.phase!=FieldSessionPhase::keeper_area_terminal_result) || !content.movement)
+  throw std::invalid_argument("Area dispatch needs a ready result and original movement content");
+ const auto route=input.phase==FieldSessionPhase::keeper_area_terminal_result ? input.area_contact->result : 0;
+ return {advance_field_phase(input.current.field,content.field_players,*content.movement),static_cast<std::uint8_t>(route)};
+}
 PreparedAreaDefender prepare_area_defender(const FieldPlayerRecord& player,std::uint8_t attack,
  std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,
  std::uint8_t defense_subtype,const ShotContent& content) {

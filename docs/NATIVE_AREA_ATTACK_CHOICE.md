@@ -333,3 +333,20 @@ Ninety complete saved cases match original execution, including actions1/4/6,
 normal time, added time, period end and keeper recovery. Missing/truncated timing
 content and repeated advancement reject. Evidence: `area-auto-original.log`.
 The following possession dispatch and a complete playable match remain pending.
+
+## Area result dispatch movement preview
+
+`preview_area_result_dispatch` previews original8A6F through8A72, where C606
+advances the field before the result is dispatched. It requires a saved normal
+prefix clock or terminal result and private movement content. It returns the
+advanced field and a route:0 for attack continuation (original results0/1),
+2 for loose-ball recovery, or3 for the original terminal handler. It does not
+change the input session, commit the movement, award experience, or resolve
+possession. The exact last nonterminal result is not retained by the existing
+prefix snapshot; both nonterminal results share this initial route.
+
+Sixty original CPU comparisons match the complete represented field across
+20 cases per route, elapsed and random boundary inputs. The observer executes
+C606 with frozen input randomness and explicit host frame acknowledgements.
+Evidence: `area-dispatch-original.log`. Full Make check/all pass. Saved movement
+and actual downstream result/possession handling remain next.
