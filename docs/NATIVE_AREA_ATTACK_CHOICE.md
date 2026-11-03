@@ -246,3 +246,46 @@ explicit frame acknowledgements and frozen random input, rather than skipping
 the display routine. This does not establish native rendering or live scheduling.
 Evidence: `area-contact-clock-original.log`. Result presentation and advancing
 subsequent defenders remain next.
+
+## Ordered defender sequence and prepared result display
+
+`present-area-contact-result` continues saved clock phase83 to86 at8A48. It
+requests script16 for terminal results2/3 or script17 for results0/1, then
+script18. The terminal presentation clears facing and motion; nonterminal
+presentation preserves them. These are explicit prepared display acknowledgements,
+not a native renderer. Repeating the presentation operation rejects.
+
+`advance-area-defender` routes phase86 to the next selected defender87, the
+exhausted prefix88 before original9085 final timing, or terminal exit89 before
+possession dispatch. Nonterminal advance increments the cursor once, discards
+the old comparison and requests the original one-frame wait when another player
+remains. Terminal results keep their context and do not process later players.
+`resolve-area-defender` now uses the saved cursor in phases81/87, so subsequent
+supported defenders reuse the existing calculation/clock/display pipeline.
+
+`skip-area-defender` handles choices5/6 in phases81/87. It records the selected
+identity and advances without charging stamina, applying contact timing or
+inheriting an old result. Both all-skip and mixed prefixes stop at the correct
+next/end boundary. Other unsupported choices continue to reject atomically.
+
+Snapshot62 uses explicit byte128 after the earlier ASCII1..z versions. It adds
+one loop-cursor byte at412 (413 total), preserving every previous offset and
+reader. Old y/z contact and clock snapshots with cursor0 still load. A later
+contact cannot be downgraded to an old format by removing its new cursor; the
+existing contact cursor would disagree and the reader rejects it.
+
+`check_area_defender_sequence_original.py` compares complete represented
+contact, clock, presentation and next/end snapshots plus ordered requests. The
+original observer executes actual instructions with frozen random bytes and
+explicit host frame acknowledgements. It stops before final prefix timing or
+terminal possession dispatch; neither is implemented by these new operations.
+
+Final original comparisons matched720 complete sequences:696 contacts and748
+skipped entries across one/four selected players, both area variants, supported
+attacks1/4/6, all four results, ordinary/special defenses, exhausted input and
+both saved facing states. Every selected slot0..3 is exercised. Interactive
+chains and replay guards match. Evidence: `area-sequence-work/original-final.log`.
+Earlier1,296 saved contacts,156 clock states,32 announcements and480 opponent
+choice/preparation/presentation chains pass with the new format. Full Make
+check/all and independent review pass; focused legacy tests preserve cursor0
+y/z compatibility and reject downgraded later-slot contacts.

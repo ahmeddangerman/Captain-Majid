@@ -301,13 +301,84 @@ int main(){try{
   auto old_clock=saved;old_clock[10]='y';
   rejects([&]{std::istringstream old(old_clock);load_phase_session(old);});
  }
- auto previous_contact=contact_bytes;previous_contact[10]='y';
+ auto previous_clock=bytes(clocked.state);previous_clock[10]='z';previous_clock.resize(412);
+ std::istringstream previous_clock_stream(previous_clock);
+ check(bytes(load_phase_session(previous_clock_stream))==bytes(clocked.state),"Legacy z cursor0 clock snapshot loads");
+ auto previous_contact=contact_bytes;previous_contact[10]='y';previous_contact.resize(412);
  std::istringstream previous_contact_stream(previous_contact);
  check(bytes(load_phase_session(previous_contact_stream))==contact_bytes,"Legacy y compared defender loads");
  auto malformed_pause=paused.state;malformed_pause.current.clock.remaining=1;
  rejects([&]{validate_phase_session(malformed_pause);});
  malformed_pause=paused.state;malformed_pause.current.clock.extra_time=0;
  rejects([&]{validate_phase_session(malformed_pause);});
+ auto result_input=clocked.state;result_input.area_contact->result=1;
+ const auto presented_result=present_session_area_contact_result(result_input);
+ check(static_cast<unsigned>(presented_result.state.phase)==86 && presented_result.presentation.size()==2 &&
+       presented_result.presentation[0].id==17 && presented_result.presentation[1].id==18 &&
+       presented_result.state.control->motion_requested==16 &&
+       presented_result.state.current.field.roster[contact_id].stamina==91,
+       "Prepared nonterminal result requests scripts17/18 without repeating numeric effects");
+ rejects([&]{present_session_area_contact_result(presented_result.state);});
+ result_input.area_contact->result=2;
+ const auto terminal_presented=present_session_area_contact_result(result_input);
+ check(terminal_presented.presentation[0].id==16 && terminal_presented.state.control->motion_requested==0 &&
+       terminal_presented.state.control->facing==0,"Terminal result script16 clears facing and motion");
+ for(const auto& output:{presented_result.state,terminal_presented.state}) {
+  auto saved=bytes(output);std::istringstream input(saved);
+  check(bytes(load_phase_session(input))==saved,"Presented area result roundtrip");
+  saved[10]='z';saved.resize(412);
+  rejects([&]{std::istringstream old(saved);load_phase_session(old);});
+ }
+ auto chain=result_input;chain.area_contact->result=1;chain.current.field.selected_defenders=4;
+ chain.scheduling->selected_ids={1,2,3,4,0};chain.action->cursor=4;
+ chain.area_defense->actions={4,4,4,4};chain.area_defense->subtypes={0,0,0,0};
+ chain.action->power=65535;
+ for(unsigned id=2;id<=4;++id){chain.current.field.roster[id].type=1;chain.current.field.roster[id].stamina=100;}
+ auto loop=advance_session_area_defender(present_session_area_contact_result(chain).state);
+ check(static_cast<unsigned>(loop.state.phase)==87 && loop.state.area_defender_cursor==1 && !loop.state.area_contact &&
+       loop.presentation.size()==1 && loop.presentation[0].kind==ControlPresentationKind::wait_frames &&
+       loop.presentation[0].id==1,"Nonterminal result advances once and requests next-defender wait");
+ rejects([&]{advance_session_area_defender(loop.state);});
+ rejects([&]{skip_session_area_defender(loop.state);});
+ for(unsigned cursor=1;cursor<4;++cursor) {
+  const auto resolved=resolve_session_area_defender(loop.state,ai_attack_data);
+  check(resolved.area_contact->cursor==cursor && resolved.current.field.roster[cursor+1].stamina==91,
+        "Later selected defender consumes its own stamina exactly once");
+  if(cursor==1) {
+   const auto current=bytes(resolved);
+   for(const auto version:{'y','z'}) {
+    auto downgraded=current;downgraded[10]=version;downgraded.resize(412);
+    rejects([&]{std::istringstream old(downgraded);load_phase_session(old);});
+   }
+   std::istringstream later_saved(current);
+   check(bytes(load_phase_session(later_saved))==current,"Later defender cursor roundtrips in the new format");
+  }
+  loop=advance_session_area_defender(present_session_area_contact_result(advance_session_area_contact_clock(resolved,area_clock).state).state);
+ }
+ check(static_cast<unsigned>(loop.state.phase)==88 && loop.state.area_defender_cursor==4 && !loop.state.area_contact &&
+       loop.presentation.empty(),"Full defender prefix stops before final clock without a fifth wait");
+ rejects([&]{resolve_session_area_defender(loop.state,ai_attack_data);});
+ auto skipped=announced.state;skipped.current.field.selected_defenders=4;skipped.action->cursor=4;
+ skipped.scheduling->selected_ids={1,2,3,4,0};skipped.area_defense->actions={5,6,5,6};skipped.area_defense->subtypes={0,0,0,0};
+ const auto skip_clock=skipped.current.clock.remaining;const auto skip_energy=skipped.current.field.roster;
+ for(unsigned cursor=0;cursor<4;++cursor){
+  const auto step=skip_session_area_defender(skipped);skipped=step.state;
+  check(skipped.area_defender_cursor==cursor+1 && step.presentation.size()==(cursor<3?1u:0u),"Skip advances exactly one selected slot");
+ }
+ check(static_cast<unsigned>(skipped.phase)==88 && skipped.current.clock.remaining==skip_clock &&
+       skipped.current.field.roster[1].stamina==skip_energy[1].stamina && skipped.recovery->opposing_player==4,
+       "All-skip prefix ends without contact, stamina or clock effects");
+ rejects([&]{skip_session_area_defender(skipped);});
+ chain.area_contact->result=2;
+ const auto terminal_exit=advance_session_area_defender(present_session_area_contact_result(chain).state);
+ check(static_cast<unsigned>(terminal_exit.state.phase)==89 && !terminal_exit.state.area_defender_cursor &&
+       terminal_exit.state.area_contact->result==2 && terminal_exit.presentation.empty() &&
+       terminal_exit.state.current.field.roster[2].stamina==100,"Terminal result stops before later defenders");
+ for(const auto& saved_state:{loop.state,skipped,terminal_exit.state}){
+  const auto saved=bytes(saved_state);std::istringstream input(saved);
+  check(bytes(load_phase_session(input))==saved,"Area sequence cursor and exit roundtrip");
+ }
+ auto bad_cursor=loop.state;bad_cursor.area_defender_cursor=3;rejects([&]{validate_phase_session(bad_cursor);});
  auto old_contact=contact_bytes;old_contact[10]='x';old_contact.resize(398);
  rejects([&]{std::istringstream old(old_contact);load_phase_session(old);});
  check(static_cast<unsigned>(completed.state.phase)==72 && completed.presentation.size()==1 &&
@@ -570,7 +641,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<412;++size) {
+ for(unsigned size=372;size<413;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }

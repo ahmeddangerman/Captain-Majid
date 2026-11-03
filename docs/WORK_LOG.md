@@ -1540,3 +1540,29 @@ Daily website note updated separately; engine/private research remains local.
 - Full Make check/all pass. Independent review found no blocking issues. Earlier32
   announcements and480 choice/preparation/presentation chains pass with z snapshots
   (area-announcement-z, area-presentation-z). Overall completion remains unmeasured.
+
+## 2026-11-03 — ordered area defenders and result presentation
+
+- Connected post-contact timing to prepared scripts16/17 then18 (phase86),
+  preserving terminal facing/motion clearing. Added saved next-defender87,
+  prefix-end88 before final timing, and terminal exit89 before possession dispatch.
+- Later selected defenders reuse the existing preparation/comparison/clock path.
+  Choices5/6 skip calculations without stamina/time debit. Nonterminal advance
+  clears the prior result and requests the original one-frame wait; terminal
+  results stop immediately. Final sequence timing and possession dispatch remain
+  next. Unsupported defensive choices0/1/3 still reject.
+- Snapshot62 uses byte128 after ASCIIz, adds one loop cursor at412 (413bytes),
+  preserves earlier offsets/readers and rejects downgraded later-slot contacts.
+  This bounded version extension avoids moving existing sections. Old cursor0
+  y/z contact/clock saves continue to load.
+-720 complete original sequences match:696 contacts,748 skips, both variants,
+  one/four selected players, all four results and every slot0..3. Includes both
+  saved facing values, special/exhausted inputs, terminal early stops, all-skip
+  prefixes and interactive capture/replay. Evidence: area-sequence-work/original-final.log.
+- Regression evidence:1,296 complete saved contacts,156 clock states,32 prepared
+  announcements and480 opponent choice/preparation/presentation chains pass with
+  the new format. Full Make check/all and diff check pass. Independent review
+  found no blocking issues; added explicit later-slot downgrade rejection coverage.
+- Original scripts run with explicit host frame acknowledgements/frozen RNG in
+  the observer. This is prepared native state, not evidence of live rendering or
+  a complete playable match. Overall completion remains unmeasured.

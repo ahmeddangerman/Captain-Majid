@@ -16,7 +16,7 @@ and goal/save calculations exist separately. Restart/keeper/story, nonterminal
 shot/goal integration, live frame/RNG/presentation and online matches remain work.
 
 Latest detailed references:
-- NATIVE_AREA_ATTACK_CHOICE.md for opponent area choice/preparation and saved first defender contact
+- NATIVE_AREA_ATTACK_CHOICE.md for opponent area choice/preparation and ordered saved defender sequence
 - NATIVE_KEEPER_AREA.md for saved keeper-area interaction setup before its menu
 - NATIVE_KICKOFF_FORMATION.md for verified kickoff formation placement
 - NATIVE_KICKOFF_SELECTION.md for original kickoff team/receiver calculations

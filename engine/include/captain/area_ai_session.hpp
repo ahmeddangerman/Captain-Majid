@@ -12,6 +12,9 @@ PreparedAreaContact compare_area_defender(const FieldPlayerRecord&,std::uint8_t 
  std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,
  std::uint8_t defense_subtype,std::uint16_t incoming,std::uint8_t first,
  std::uint8_t second,const ShotContent&);
+ActionMenuResult present_session_area_contact_result(const PhaseSessionState&);
+ActionMenuResult advance_session_area_defender(const PhaseSessionState&);
+ActionMenuResult skip_session_area_defender(const PhaseSessionState&);
 PhaseSessionResult advance_session_area_contact_clock(const PhaseSessionState&,const ContactPreludeContent&);
 PhaseSessionState resume_session_area_contact_clock(const PhaseSessionState&);
 PhaseSessionState resolve_session_area_defender(const PhaseSessionState&,const ShotContent&);

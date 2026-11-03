@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'z'))
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'z') && version!=128)
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -36,6 +36,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.current.clock.script_flags = byte(input); state.current.clock.ball_mode = byte(input);
     state.current.shared_recovery_flags = byte(input); state.current.shared_recovery_timer = byte(input);
     state.phase = static_cast<FieldSessionPhase>(byte(input));
+    if(version<128 && static_cast<unsigned>(state.phase)>85)
+        throw std::invalid_argument("Area defender sequence requires session version62");
     if(version<'z' && static_cast<unsigned>(state.phase)>82)
         throw std::invalid_argument("Area contact clock requires session version61");
     if(version<'y' && static_cast<unsigned>(state.phase)>81)
@@ -315,6 +317,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
             throw std::invalid_argument("Invalid area contact encoding");
         if(present)state.area_contact=c;
     }
+    if(version>=128)state.area_defender_cursor=byte(input);
     if(version<'k' && state.phase==FieldSessionPhase::human_action_menu && state.keeper_area)
         throw std::invalid_argument("Keeper-area menu requires session version46");
     if(version<'l' && state.phase==FieldSessionPhase::attack_choice_pending && state.keeper_area)
@@ -364,7 +367,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
-    byte(output, 'z');
+    byte(output, 128);
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -464,6 +467,7 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
         static_cast<std::uint8_t>(area.defender_power),static_cast<std::uint8_t>(area.defender_power>>8),
         static_cast<std::uint8_t>(area.cost),static_cast<std::uint8_t>(area.cost>>8),
         area.strength,area.loss,area.score,area.result,static_cast<std::uint8_t>(area.weakened)})byte(output,value);
+    byte(output,state.area_defender_cursor);
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

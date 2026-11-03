@@ -23,6 +23,47 @@ PreparedAreaContact compare_area_defender(const FieldPlayerRecord& player,std::u
  const auto comparison=compare_defender_contact({incoming,prepared.preparation.base_strength,first,second,selected.range,selected.offset,prepared.energy.weakened,selected.eligible,2,player.player_id,defense_subtype,selected.thresholds});
  return {prepared,comparison};
 }
+ActionMenuResult present_session_area_contact_result(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_contact_clock_done)
+  throw std::invalid_argument("Area result presentation requires completed contact timing");
+ ActionMenuResult result{input};const bool terminal=input.area_contact->result>=2;
+ result.presentation.push_back({ControlPresentationKind::script,static_cast<std::uint8_t>(terminal?16:17)});
+ result.presentation.push_back({ControlPresentationKind::script,18});
+ if(terminal){result.state.control->facing=0;result.state.control->motion_requested=0;}
+ result.state.phase=FieldSessionPhase::keeper_area_contact_presented;
+ validate_phase_session(result.state);return result;
+}
+ActionMenuResult advance_session_area_defender(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_contact_presented)
+  throw std::invalid_argument("Area defender advance requires completed result presentation");
+ ActionMenuResult result{input};auto& state=result.state;
+ if(state.area_contact->result>=2)state.phase=FieldSessionPhase::keeper_area_terminal_result;
+ else {
+  ++state.area_defender_cursor;state.area_contact.reset();
+  state.phase=state.area_defender_cursor==state.current.field.selected_defenders ?
+   FieldSessionPhase::keeper_area_prefix_done : FieldSessionPhase::keeper_area_defender_next;
+  if(state.phase==FieldSessionPhase::keeper_area_defender_next)
+   result.presentation.push_back({ControlPresentationKind::wait_frames,1});
+ }
+ validate_phase_session(state);return result;
+}
+ActionMenuResult skip_session_area_defender(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_defenders_announced && input.phase!=FieldSessionPhase::keeper_area_defender_next)
+  throw std::invalid_argument("Area skip requires the next selected defender");
+ const auto action=input.area_defense->actions[input.area_defender_cursor];
+ if(action!=5 && action!=6)throw std::invalid_argument("Selected area defense requires a contact calculation");
+ ActionMenuResult result{input};auto& state=result.state;
+ state.recovery->opposing_player=state.scheduling->selected_ids[state.area_defender_cursor];
+ ++state.area_defender_cursor;
+ state.phase=state.area_defender_cursor==state.current.field.selected_defenders ?
+  FieldSessionPhase::keeper_area_prefix_done : FieldSessionPhase::keeper_area_defender_next;
+ if(state.phase==FieldSessionPhase::keeper_area_defender_next)
+  result.presentation.push_back({ControlPresentationKind::wait_frames,1});
+ validate_phase_session(state);return result;
+}
 PhaseSessionResult advance_session_area_contact_clock(const PhaseSessionState& input,
  const ContactPreludeContent& content) {
  validate_phase_session(input);
@@ -46,13 +87,13 @@ PhaseSessionState resume_session_area_contact_clock(const PhaseSessionState& inp
 }
 PhaseSessionState resolve_session_area_defender(const PhaseSessionState& input,const ShotContent& content) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::keeper_area_defenders_announced)throw std::invalid_argument("Area contact requires announced defenders");
- const auto id=input.scheduling->selected_ids[0];const auto& p=input.current.field.roster[id];
- const auto defense=input.area_defense->actions[0];
- const auto result=compare_area_defender({id,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},input.action->action,input.recovery->attack_subtype,input.recovery->ball_variant,defense,input.area_defense->subtypes[0],input.action->power,input.current.field.random_first,input.current.field.random_second,content);
+ if(input.phase!=FieldSessionPhase::keeper_area_defenders_announced && input.phase!=FieldSessionPhase::keeper_area_defender_next)throw std::invalid_argument("Area contact requires the next announced defender");
+ const auto cursor=input.area_defender_cursor;const auto id=input.scheduling->selected_ids[cursor];const auto& p=input.current.field.roster[id];
+ const auto defense=input.area_defense->actions[cursor];
+ const auto result=compare_area_defender({id,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},input.action->action,input.recovery->attack_subtype,input.recovery->ball_variant,defense,input.area_defense->subtypes[cursor],input.action->power,input.current.field.random_first,input.current.field.random_second,content);
  auto state=input;state.current.field.roster[id].stamina=result.defender.energy.stamina;
  state.recovery->opposing_player=id;const auto& c=result.comparison;
- state.area_contact=AreaContactContext{0,defense,c.subtype,result.defender.preparation.move_effect,c.defender_power,result.defender.energy.cost,c.strength,c.loss,c.score,c.result_code,result.defender.energy.weakened};
+ state.area_contact=AreaContactContext{cursor,defense,c.subtype,result.defender.preparation.move_effect,c.defender_power,result.defender.energy.cost,c.strength,c.loss,c.score,c.result_code,result.defender.energy.weakened};
  state.phase=FieldSessionPhase::keeper_area_defender_compared;validate_phase_session(state);return state;
 }
 ActionMenuResult announce_prepared_area_defenders(const PhaseSessionState& input,std::uint8_t facing) {
