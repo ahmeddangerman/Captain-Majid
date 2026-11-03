@@ -289,3 +289,18 @@ Earlier1,296 saved contacts,156 clock states,32 announcements and480 opponent
 choice/preparation/presentation chains pass with the new format. Full Make
 check/all and independent review pass; focused legacy tests preserve cursor0
 y/z compatibility and reject downgraded later-slot contacts.
+
+## Final prefix clock calculation
+
+`calculate_area_prefix_clock` previews the original final elapsed-time and keeper
+recovery calculation after the saved defender prefix is exhausted. The caller
+supplies the elapsed value from the original action table. The function leaves
+the input and saved phase unchanged, and returns the resulting state, clock
+continuation and elapsed step. It rejects other phases. This is a pure numeric
+piece; it is not yet connected to a saved phase, the action table or possession.
+
+`check_area_prefix_clock_original.py` matched 90 controlled original CPU cases
+for supported attacks, normal time, added time and period end, including elapsed
+wrapping and keeper recovery. The original observer uses explicit host frame
+acknowledgements; no native rendering or live scheduling is inferred. Evidence:
+`area-prefix-original.log`.

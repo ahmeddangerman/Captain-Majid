@@ -378,6 +378,12 @@ int main(){try{
   const auto saved=bytes(saved_state);std::istringstream input(saved);
   check(bytes(load_phase_session(input))==saved,"Area sequence cursor and exit roundtrip");
  }
+ const auto prefix_before=bytes(loop.state);
+ const auto prefix_clock=calculate_area_prefix_clock(loop.state,3);
+ check(prefix_clock.state.clock.remaining==loop.state.current.clock.remaining-3 &&
+       prefix_clock.state.field.elapsed==static_cast<std::uint8_t>(loop.state.current.field.elapsed+3) &&
+       bytes(loop.state)==prefix_before,"Area prefix clock preview is pure and advances time once");
+ rejects([&]{calculate_area_prefix_clock(contact,3);});
  auto bad_cursor=loop.state;bad_cursor.area_defender_cursor=3;rejects([&]{validate_phase_session(bad_cursor);});
  auto old_contact=contact_bytes;old_contact[10]='x';old_contact.resize(398);
  rejects([&]{std::istringstream old(old_contact);load_phase_session(old);});

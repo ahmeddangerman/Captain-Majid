@@ -1572,3 +1572,13 @@ Daily website note updated separately; engine/private research remains local.
   that webpage commit. All seven older dates, approved roadmap/design and manual
   date navigation are preserved. Direct live-page HTTP is restricted here; this
   is deployment verification through GitHub, not a browser-render claim.
+
+## 2026-11-03 — final area prefix clock preview
+
+- Added a pure final prefix clock/recovery calculation. It consumes an explicit
+  original-derived elapsed value and does not change the input session or phase.
+  Saved continuation, source action-table integration and possession remain next.
+- 90 original CPU comparisons match normal, added-time and period-end outcomes
+  and represented state, including elapsed wrap and keeper recovery. Evidence:
+  area-prefix-original.log. Focused native checks cover input immutability and
+  invalid phase. Full Make check/all pass; no complete match claim.

@@ -23,6 +23,17 @@ PreparedAreaContact compare_area_defender(const FieldPlayerRecord& player,std::u
  const auto comparison=compare_defender_contact({incoming,prepared.preparation.base_strength,first,second,selected.range,selected.offset,prepared.energy.weakened,selected.eligible,2,player.player_id,defense_subtype,selected.thresholds});
  return {prepared,comparison};
 }
+ContactPreludeResult calculate_area_prefix_clock(const PhaseSessionState& input,std::uint8_t elapsed) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_prefix_done)
+  throw std::invalid_argument("Area prefix clock requires exhausted defenders");
+ auto state=input.current;
+ state.field.elapsed=static_cast<std::uint8_t>(unsigned(state.field.elapsed)+elapsed);
+ const auto recovery=advance_keeper_recovery({state.field.keepers,state.shared_recovery_flags,state.shared_recovery_timer},elapsed);
+ state.field.keepers=recovery.keepers;state.shared_recovery_flags=recovery.shared_flags;state.shared_recovery_timer=recovery.shared_timer;
+ const auto clock=advance_match_clock(state.clock,elapsed,state.field.random_first);state.clock=clock.state;
+ return {state,clock,elapsed};
+}
 ActionMenuResult present_session_area_contact_result(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_contact_clock_done)
