@@ -5,6 +5,50 @@
 #include <utility>
 
 namespace captain {
+FieldRoundResult advance_area_pass_field_round(const PhaseSessionState& input,const PlayerProfileMappings& primary,const FieldPhaseContent& movement,
+ const ControlMovementContent& control,const WorldStepContent& world,const std::array<LogicalButtons,22>& inputs) {
+ validate_phase_session(input);
+ const bool blocked=input.phase==FieldSessionPhase::area_pass_blocked_field_round;
+ if(!blocked && input.phase!=FieldSessionPhase::area_pass_capture_field_round)
+  throw std::invalid_argument("Area pass field round needs a completed control tick");
+ auto prepared=input;prepared.phase=FieldSessionPhase::field_round_pending;
+ prepared.area_ai_target.reset();prepared.area_contact.reset();prepared.area_pass_contact.reset();
+ prepared.shot_flight.reset();prepared.ball_trajectory.reset();prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+ auto result=advance_control_field_round(prepared,primary,movement,control,world,inputs);auto& state=result.state;
+ if(state.phase!=FieldSessionPhase::control_ready && state.phase!=FieldSessionPhase::action_menu_pending)
+  throw std::invalid_argument("Area pass field round awaits a contact, story or special continuation");
+ state.area_ai_target=input.area_ai_target;state.area_contact=input.area_contact;state.area_pass_contact=input.area_pass_contact;
+ state.shot_flight=input.shot_flight;state.ball_trajectory=input.ball_trajectory;
+ state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+ state.ball_trajectory->x=static_cast<std::uint16_t>((unsigned(state.current.field.ball_x)<<8)|(input.ball_trajectory->x&255u));
+ state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(state.current.field.ball_y)<<8)|(input.ball_trajectory->y&255u));
+ const bool menu=state.phase==FieldSessionPhase::action_menu_pending;
+ state.phase=blocked ? (menu ? FieldSessionPhase::area_pass_blocked_action_menu : FieldSessionPhase::area_pass_blocked_control_wait) :
+  (menu ? FieldSessionPhase::area_pass_capture_action_menu : FieldSessionPhase::area_pass_capture_control_wait);
+ validate_phase_session(state);return result;
+}
+ControlTickResult advance_area_pass_control_tick(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,
+ const GoalkeeperProfiles& keepers,const WorldStepContent& content) {
+ validate_phase_session(input);
+ const bool blocked=input.phase==FieldSessionPhase::area_pass_blocked_clock_pending;
+ if(!blocked && input.phase!=FieldSessionPhase::area_pass_capture_clock_pending)
+  throw std::invalid_argument("Area pass control clock requires a saved input decision");
+ auto prepared=input;prepared.phase=FieldSessionPhase::control_clock_pending;
+ prepared.area_ai_target.reset();prepared.area_contact.reset();prepared.area_pass_contact.reset();
+ prepared.shot_flight.reset();prepared.ball_trajectory.reset();prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+ auto result=advance_control_tick(prepared,profiles,keepers,content);auto& state=result.state;
+ state.area_ai_target=input.area_ai_target;state.area_contact=input.area_contact;state.area_pass_contact=input.area_pass_contact;
+ state.shot_flight=input.shot_flight;state.ball_trajectory=input.ball_trajectory;
+ state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+ switch(state.phase) {
+  case FieldSessionPhase::field_round_pending: state.phase=blocked ? FieldSessionPhase::area_pass_blocked_field_round : FieldSessionPhase::area_pass_capture_field_round;break;
+  case FieldSessionPhase::goal_area_action: state.phase=blocked ? FieldSessionPhase::area_pass_blocked_goal_area : FieldSessionPhase::area_pass_capture_goal_area;break;
+  case FieldSessionPhase::control_added_time: state.phase=blocked ? FieldSessionPhase::area_pass_blocked_added_time : FieldSessionPhase::area_pass_capture_added_time;break;
+  case FieldSessionPhase::period_end: state.phase=blocked ? FieldSessionPhase::area_pass_blocked_period_end : FieldSessionPhase::area_pass_capture_period_end;break;
+  default:throw std::invalid_argument("Unsupported area pass control clock continuation");
+ }
+ validate_phase_session(state);return result;
+}
 namespace {
 std::uint16_t maximum_stamina(const FieldPhaseState& field, std::uint8_t id,
     const FieldPlayerProfiles& profiles, const GoalkeeperProfiles& keepers, const WorldStepContent& content) {

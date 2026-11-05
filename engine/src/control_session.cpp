@@ -3,6 +3,43 @@
 #include <stdexcept>
 
 namespace captain {
+namespace {
+ControlSetupResult prepare_area_pass_control(const PhaseSessionState& input,FieldSessionPhase expected,FieldSessionPhase output) {
+    validate_phase_session(input);
+    if(input.phase!=expected)throw std::invalid_argument("Area pass needs a saved control entry");
+    auto prepared=input;prepared.phase=FieldSessionPhase::player_control;
+    prepared.area_ai_target.reset();prepared.area_contact.reset();prepared.area_pass_contact.reset();
+    prepared.shot_flight.reset();prepared.ball_trajectory.reset();prepared.action=ActionContext{};
+    prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+    prepared.current.field.selected_defenders=0;prepared.scheduling->selected_ids.fill(0);
+    auto result=prepare_session_control(prepared);auto& state=result.state;
+    state.area_ai_target=input.area_ai_target;state.area_contact=input.area_contact;state.area_pass_contact=input.area_pass_contact;
+    state.shot_flight=input.shot_flight;state.ball_trajectory=input.ball_trajectory;state.action=input.action;
+    state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+    state.ball_trajectory->x=static_cast<std::uint16_t>((unsigned(state.current.field.ball_x)<<8)|(input.ball_trajectory->x&255u));
+    state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(state.current.field.ball_y)<<8)|(input.ball_trajectory->y&255u));
+    state.phase=output;validate_phase_session(state);return result;
+}
+}
+ControlSetupResult prepare_session_area_pass_blocked_control(const PhaseSessionState& input) {
+    return prepare_area_pass_control(input,FieldSessionPhase::area_pass_blocked_control_entry,FieldSessionPhase::area_pass_blocked_control_ready);
+}
+ControlSetupResult prepare_session_area_pass_capture_control(const PhaseSessionState& input) {
+    return prepare_area_pass_control(input,FieldSessionPhase::area_pass_capture_control_entry,FieldSessionPhase::area_pass_capture_control_ready);
+}
+ControlSetupResult prepare_session_area_action6_control(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::area_action6_control_pending && input.phase!=FieldSessionPhase::area_action6_recovered_control)
+        throw std::invalid_argument("Area action6 control setup needs a saved control handoff");
+    auto prepared=input;prepared.phase=FieldSessionPhase::player_control;
+    prepared.area_ai_target.reset();prepared.area_defense.reset();prepared.clearance_flight.reset();prepared.clearance_race.reset();
+    prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+    auto result=prepare_session_control(prepared);auto& state=result.state;
+    state.area_ai_target=input.area_ai_target;state.area_defense=input.area_defense;
+    state.clearance_flight=input.clearance_flight;state.clearance_race=input.clearance_race;
+    state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+    state.phase=FieldSessionPhase::area_action6_control_ready;validate_phase_session(state);return result;
+}
 ControlSetupResult prepare_session_control(const PhaseSessionState& input) {
     validate_phase_session(input);
     if ((input.phase != FieldSessionPhase::player_control && input.phase != FieldSessionPhase::kickoff_control_pending) || !input.control ||

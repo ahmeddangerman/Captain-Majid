@@ -3,13 +3,18 @@
 #include "captain/action_menu.hpp"
 #include "captain/area_ai_session.hpp"
 #include "captain/phase_session_io.hpp"
+#include "captain/ball_flight_session.hpp"
+#include "captain/defender_selection.hpp"
+#include "captain/clearance_race.hpp"
+#include "captain/control_session.hpp"
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
 #include <stdexcept>
 namespace {
 void check(bool v,const char*m){if(!v){std::cerr<<m<<'\n';std::exit(1);}}
-template<class F>void rejects(F f){bool v=false;try{f();}catch(const std::invalid_argument&){v=true;}check(v,"Invalid keeper save accepted");}
+template<class F>void reject_test(F f,int line){bool v=false;try{f();}catch(const std::invalid_argument&){v=true;}if(!v){std::cerr<<"Expected invalid state rejection at test line "<<line<<'\n';std::exit(1);}}
+#define rejects(f) reject_test(f,__LINE__)
 std::string bytes(const captain::PhaseSessionState&s){std::ostringstream o;captain::write_phase_session(o,s);return o.str();}
 }
 int main(){try{
@@ -311,7 +316,7 @@ int main(){try{
  rejects([&]{validate_phase_session(malformed_pause);});
  malformed_pause=paused.state;malformed_pause.current.clock.extra_time=0;
  rejects([&]{validate_phase_session(malformed_pause);});
- auto result_input=clocked.state;result_input.area_contact->result=1;
+ auto result_input=clocked.state;result_input.area_contact->result=1;result_input.area_sequence_result=1;
  const auto presented_result=present_session_area_contact_result(result_input);
  check(static_cast<unsigned>(presented_result.state.phase)==86 && presented_result.presentation.size()==2 &&
        presented_result.presentation[0].id==17 && presented_result.presentation[1].id==18 &&
@@ -319,7 +324,7 @@ int main(){try{
        presented_result.state.current.field.roster[contact_id].stamina==91,
        "Prepared nonterminal result requests scripts17/18 without repeating numeric effects");
  rejects([&]{present_session_area_contact_result(presented_result.state);});
- result_input.area_contact->result=2;
+ result_input.area_contact->result=2;result_input.area_sequence_result=2;
  const auto terminal_presented=present_session_area_contact_result(result_input);
  check(terminal_presented.presentation[0].id==16 && terminal_presented.state.control->motion_requested==0 &&
        terminal_presented.state.control->facing==0,"Terminal result script16 clears facing and motion");
@@ -329,7 +334,7 @@ int main(){try{
   saved[10]='z';saved.resize(412);
   rejects([&]{std::istringstream old(saved);load_phase_session(old);});
  }
- auto chain=result_input;chain.area_contact->result=1;chain.current.field.selected_defenders=4;
+ auto chain=result_input;chain.area_contact->result=1;chain.area_sequence_result=1;chain.current.field.selected_defenders=4;
  chain.scheduling->selected_ids={1,2,3,4,0};chain.action->cursor=4;
  chain.area_defense->actions={4,4,4,4};chain.area_defense->subtypes={0,0,0,0};
  chain.action->power=65535;
@@ -369,7 +374,7 @@ int main(){try{
        skipped.current.field.roster[1].stamina==skip_energy[1].stamina && skipped.recovery->opposing_player==4,
        "All-skip prefix ends without contact, stamina or clock effects");
  rejects([&]{skip_session_area_defender(skipped);});
- chain.area_contact->result=2;
+ chain.area_contact->result=2;chain.area_sequence_result=2;
  const auto terminal_exit=advance_session_area_defender(present_session_area_contact_result(chain).state);
  check(static_cast<unsigned>(terminal_exit.state.phase)==89 && !terminal_exit.state.area_defender_cursor &&
        terminal_exit.state.area_contact->result==2 && terminal_exit.presentation.empty() &&
@@ -396,14 +401,555 @@ int main(){try{
  check(static_cast<unsigned>(prefix_saved.state.phase)==90 && prefix_saved.state.current.clock.remaining==446,"Saved prefix clock advances once");
  rejects([&]{advance_session_area_prefix_clock(prefix_saved.state,3);});
  rejects([&]{preview_area_result_dispatch(prefix_saved.state,ai_attack_data);});
- auto dispatch_data=ai_attack_data;dispatch_data.movement=FieldPhaseContent{};
+ auto dispatch_data=ai_attack_data;dispatch_data.movement=movement;
+ dispatch_data.experience=ExperienceContent{};dispatch_data.experience->stage_bases[0]=4;dispatch_data.experience->reward_factors[1]=64;
  auto ready_dispatch=prefix_saved.state;ready_dispatch.current.field.elapsed=0;
  const auto ready_bytes=bytes(ready_dispatch);
  const auto dispatch_preview=preview_area_result_dispatch(ready_dispatch,dispatch_data);
  check(dispatch_preview.route==0 && dispatch_preview.movement.players.empty() && bytes(ready_dispatch)==ready_bytes,"Zero-time area dispatch preview preserves input");
+ auto attack_dispatch=prefix_saved.state;attack_dispatch.area_sequence_result=1;
+ attack_dispatch.current.field.roster[attack_dispatch.current.field.ball_owner].type=1;attack_dispatch.experience=ExperienceState{};
+ const auto attack_dispatch_before=bytes(attack_dispatch);
+ const auto continued=advance_session_area_result_dispatch(attack_dispatch,dispatch_data);
+ check(continued.route==0 && continued.state.phase==FieldSessionPhase::keeper_area_attack_continuation &&
+       continued.state.current.field.ball_owner==attack_dispatch.current.field.ball_owner &&
+       continued.state.current.field.elapsed==0 && !continued.reward && bytes(attack_dispatch)==attack_dispatch_before,
+       "Final area result 0/1 commits movement once and preserves possession at attack continuation");
+ check(continued.state.area_defense && continued.state.area_defense->actions[0]==attack_dispatch.area_defense->actions[0],
+       "Area action6 retains defensive choices needed by a later recovery");
+ auto action4_source=prefix_saved.state;action4_source.action->action=4;action4_source.recovery->attack_subtype=0;
+ action4_source.current.field.roster[action4_source.current.field.ball_owner].type=1;action4_source.experience=ExperienceState{};
+ for(unsigned i=0;i<action4_source.current.field.selected_defenders;++i){action4_source.area_defense->actions[i]=5;action4_source.area_defense->subtypes[i]=0;}
+ const auto action4_dispatch=advance_session_area_result_dispatch(action4_source,dispatch_data);
+ check(action4_dispatch.state.area_defense && action4_dispatch.state.area_defense->actions[0]==5,
+       "Area action4 dispatch retains the earlier defender choices");
+ const auto action4_bytes=bytes(action4_dispatch.state);std::istringstream action4_stream(action4_bytes);
+ check(static_cast<unsigned char>(action4_bytes[10])==131 && bytes(load_phase_session(action4_stream))==action4_bytes,
+       "Area action4 retained choices survive snapshot roundtrip");
+ auto action4_old=action4_bytes;action4_old[10]=static_cast<char>(130);
+ rejects([&]{std::istringstream old(action4_old);load_phase_session(old);});
+ const auto action4_encounter=continue_session_area_action4(action4_dispatch.state,0,0,&*dispatch_data.experience);
+ check(action4_encounter.experience->totals[0]==1,"Area action4 awards carrier experience once");
+ rejects([&]{continue_session_area_action4(action4_dispatch.state,0,0,nullptr);});
+ check(action4_encounter.phase==FieldSessionPhase::area_action4_encounters_pending &&
+       action4_encounter.current.field.selected_defenders==action4_dispatch.state.current.field.selected_defenders &&
+       action4_encounter.recovery->ball_variant==0 && bytes(action4_dispatch.state)==action4_bytes,
+       "Area action4 retains defenders choosing action5 and clears the ball variant");
+ auto action4_skips=action4_dispatch.state;for(unsigned i=0;i<action4_skips.current.field.selected_defenders;++i)action4_skips.area_defense->actions[i]=6;
+ const auto action4_control=continue_session_area_action4(action4_skips,0,0,&*dispatch_data.experience);
+ check(action4_control.phase==FieldSessionPhase::area_action4_control_pending &&
+       action4_control.current.field.selected_defenders==action4_skips.current.field.selected_defenders,
+       "Area action4 without choice5 preserves the original prefix before control");
+ auto action4_legacy=action4_dispatch.state;action4_legacy.area_defense.reset();
+ const auto legacy4_bytes=bytes(action4_legacy);std::istringstream legacy4_stream(legacy4_bytes);
+ check(static_cast<unsigned char>(legacy4_bytes[10])==130 && bytes(load_phase_session(legacy4_stream))==legacy4_bytes,
+       "Legacy action4 continuation remains readable without invented choices");
+ rejects([&]{continue_session_area_action4(action4_legacy,0,0,&*dispatch_data.experience);});
+ rejects([&]{continue_session_area_action4(action4_encounter,0,0,&*dispatch_data.experience);});
+ AreaAction6DestinationContent area6_content{};for(auto& p:area6_content.positions)p={80,100};
+ const auto area6_before=bytes(continued.state);
+ const auto area6_destination=continue_session_area_action6(continued.state,64,2,area6_content,&*dispatch_data.experience);
+ check(area6_destination.experience->totals[0]==1,"Area action6 awards carrier experience once");
+ rejects([&]{continue_session_area_action6(continued.state,64,2,area6_content,nullptr);});
+ check(area6_destination.phase==FieldSessionPhase::area_action6_destination_pending &&
+       area6_destination.current.field.ball_x==175 && area6_destination.current.field.ball_y==100 &&
+       area6_destination.current.field.ball_cell==field_cell_at(175,100) &&
+       area6_destination.area_ai_target->cell==area6_destination.current.field.ball_cell &&
+       bytes(continued.state)==area6_before,"Area action6 selects mirrored destination without mutating input");
+ const auto area6_bytes=bytes(area6_destination);std::istringstream area6_stream(area6_bytes);
+ check(bytes(load_phase_session(area6_stream))==area6_bytes,"Area action6 destination snapshot roundtrips");
+ auto area6_old=area6_bytes;area6_old[10]=static_cast<char>(130);
+ rejects([&]{std::istringstream old(area6_old);load_phase_session(old);});
+ auto area6_bad=area6_content;for(auto& p:area6_bad.positions)p={0,0};
+ rejects([&]{continue_session_area_action6(continued.state,64,2,area6_bad,&*dispatch_data.experience);});
+ rejects([&]{continue_session_area_action6(area6_destination,64,2,area6_content,&*dispatch_data.experience);});
+ auto area6_race_input=area6_destination;area6_race_input.recovery->opposing_player=1;
+ for(auto& p:area6_race_input.current.field.motion){p.x=100<<8;p.y=120<<8;}
+ for(auto id:{2,13}){auto& p=area6_race_input.current.field.motion[field_motion_index(id)];
+  p.x=static_cast<std::uint16_t>(unsigned(area6_race_input.current.field.ball_x)<<8);
+  p.y=static_cast<std::uint16_t>(unsigned(area6_race_input.current.field.ball_y)<<8);}
+ FieldPhaseContent area6_race_movement{};area6_race_movement.profiles.speeds.resize(1);
+ area6_race_movement.geometry.direction_thresholds.fill(65535);
+ PlayerProfileMappings area6_race_profiles{};ClearanceRaceContent area6_race_data{};
+ const auto race_before=bytes(area6_race_input);
+ const auto area6_race=resolve_session_area_action6_race(area6_race_input,area6_race_profiles,area6_race_movement,area6_race_data);
+ check(area6_race.winner==13 && area6_race.state.phase==FieldSessionPhase::area_action6_race_winner &&
+       area6_race.state.current.field.ball_owner==13 && bytes(area6_race_input)==race_before,
+       "Area action6 race commits the first eligible active-side winner");
+ const auto area6_race_bytes=bytes(area6_race.state);std::istringstream area6_race_stream(area6_race_bytes);
+ check(bytes(load_phase_session(area6_race_stream))==area6_race_bytes,"Area action6 race snapshot roundtrips");
+ const auto area6_control=continue_session_area_action6_winner(area6_race.state,64,0);
+ check(area6_control.phase==FieldSessionPhase::area_action6_control_pending && area6_control.control->facing==64 &&
+       area6_control.area_ai_target && area6_control.area_defense && area6_control.clearance_race &&
+       bytes(area6_race.state)==area6_race_bytes,"Area action6 winner reaches saved control entry preserving prior context");
+ const auto area6_control_bytes=bytes(area6_control);std::istringstream area6_control_stream(area6_control_bytes);
+ check(bytes(load_phase_session(area6_control_stream))==area6_control_bytes,"Area action6 control handoff roundtrips");
+ const auto area6_ready=prepare_session_area_action6_control(area6_control);
+ check(area6_ready.state.phase==FieldSessionPhase::area_action6_control_ready && area6_ready.state.control->decision_timer==10 &&
+       area6_ready.state.area_defense && area6_ready.state.clearance_race && bytes(area6_control)==area6_control_bytes,
+       "Area action6 enters prepared control while retaining original area and race context");
+ const auto area6_ready_bytes=bytes(area6_ready.state);std::istringstream area6_ready_stream(area6_ready_bytes);
+ check(bytes(load_phase_session(area6_ready_stream))==area6_ready_bytes,"Area action6 prepared control snapshot roundtrips");
+ rejects([&]{prepare_session_area_action6_control(area6_ready.state);});
+ rejects([&]{continue_session_area_action6_winner(area6_control,64,0);});
+ auto timeout_input=area6_race_input;
+ for(auto& p:timeout_input.current.field.motion){p.x=100<<8;p.y=120<<8;}
+ const auto area6_timeout=resolve_session_area_action6_race(timeout_input,area6_race_profiles,area6_race_movement,area6_race_data);
+ check(area6_timeout.state.phase==FieldSessionPhase::area_action6_race_timeout && !area6_timeout.winner,
+       "Area action6 race reaches timeout when no candidate moves");
+ const auto timeout_before=bytes(area6_timeout.state);
+ const auto area6_recovered=advance_session_area_action6_recovery(area6_timeout.state,area6_race_profiles,area6_race_movement);
+ check(area6_recovered.state.phase==FieldSessionPhase::area_action6_recovered_owner && area6_recovered.recipient &&
+       area6_recovered.state.area_defense && area6_recovered.state.clearance_race && bytes(area6_timeout.state)==timeout_before,
+       "Area action6 timeout recovery preserves selected choices and race metadata");
+ const auto area6_recovered_bytes=bytes(area6_recovered.state);std::istringstream area6_recovered_stream(area6_recovered_bytes);
+ check(bytes(load_phase_session(area6_recovered_stream))==area6_recovered_bytes,"Area action6 recovered-owner snapshot roundtrips");
+ const auto area6_recovered_control=continue_session_area_action6_recovery(area6_recovered.state,64,0);
+ check(area6_recovered_control.phase==FieldSessionPhase::area_action6_recovered_control &&
+       area6_recovered_control.clearance_race && area6_recovered_control.area_defense && bytes(area6_recovered.state)==area6_recovered_bytes,
+       "Area action6 recovered owner reaches control handoff with retained context");
+ const auto area6_recovered_control_bytes=bytes(area6_recovered_control);std::istringstream area6_recovered_control_stream(area6_recovered_control_bytes);
+ check(bytes(load_phase_session(area6_recovered_control_stream))==area6_recovered_control_bytes,"Area action6 recovered control snapshot roundtrips");
+ rejects([&]{continue_session_area_action6_recovery(area6_recovered_control,64,0);});
+ auto legacy_timeout=area6_timeout.state;legacy_timeout.area_defense.reset();
+ rejects([&]{advance_session_area_action6_recovery(legacy_timeout,area6_race_profiles,area6_race_movement);});
+ rejects([&]{advance_session_area_action6_recovery(area6_recovered.state,area6_race_profiles,area6_race_movement);});
+ rejects([&]{resolve_session_area_action6_race(area6_race.state,area6_race_profiles,area6_race_movement,area6_race_data);});
+ auto area_flight_input=continued.state;
+ area_flight_input.action->action=1;area_flight_input.recovery->attack_subtype=0;area_flight_input.area_defense.reset();
+ area_flight_input.current.field.ball_x=204;area_flight_input.current.field.ball_y=124;
+ area_flight_input.current.field.ball_cell=field_cell_at(204,124);
+ area_flight_input.current.field.motion[field_motion_index(13)].x=128<<8;
+ area_flight_input.current.field.motion[field_motion_index(13)].y=124<<8;
+ area_flight_input.area_ai_target->recipient=13;
+ area_flight_input.area_ai_target->cell=field_cell_at(128,124);
+ BallVelocityContent area_velocity{};area_velocity.quarter_wave.fill(100);
+ AreaFlightAcknowledgement ack{64,192,4,64,2,0x1234,0xfedc};
+ const auto flight_before=bytes(area_flight_input);
+ const auto area_flight=begin_prepared_area_action_flight(area_flight_input,ack,movement.geometry,area_velocity,&*dispatch_data.experience);
+ check(area_flight.experience->totals[0]==1,"Area flight awards carrier experience once before clearing the selected prefix");
+ rejects([&]{begin_prepared_area_action_flight(area_flight_input,ack,movement.geometry,area_velocity,nullptr);});
+ auto undefended_flight=area_flight_input;undefended_flight.current.field.selected_defenders=0;undefended_flight.scheduling->selected_ids.fill(0);
+ undefended_flight.action->cursor=0;undefended_flight.area_defender_cursor=0;
+ check(begin_prepared_area_action_flight(undefended_flight,ack,movement.geometry,area_velocity,nullptr).experience->totals[0]==0,
+       "Area continuation without selected defenders skips the experience award");
+ check(area_flight.phase==FieldSessionPhase::area_ball_advance_ready && area_flight.ball_trajectory->flags==1 &&
+       area_flight.shot_flight->counter==255 && area_flight.shot_flight->distance==4 &&
+       area_flight.area_ai_target->recipient==13 && area_flight.current.field.selected_defenders==0 &&
+       bytes(area_flight_input)==flight_before,"Area flight setup retains recipient and commits flag1 after acknowledgement");
+ auto area_flight_bytes=bytes(area_flight);std::istringstream area_flight_stream(area_flight_bytes);
+ check(static_cast<unsigned char>(area_flight_bytes[10])==131 && bytes(load_phase_session(area_flight_stream))==area_flight_bytes,
+       "Area flight snapshot version65 roundtrips");
+ const auto flight_step=advance_prepared_area_ball_cell(area_flight);
+ check((flight_step.state.phase==FieldSessionPhase::area_ball_cell_callback ||
+        flight_step.state.phase==FieldSessionPhase::area_ball_arrival_callback) &&
+       flight_step.state.ball_trajectory->flags==1 && bytes(area_flight)==area_flight_bytes,
+       "Area numeric flight commits to a separate callback boundary without mutating input");
+ const auto step_bytes=bytes(flight_step.state);std::istringstream step_stream(step_bytes);
+ check(bytes(load_phase_session(step_stream))==step_bytes,"Area flight callback snapshot roundtrips");
+ rejects([&]{advance_prepared_area_ball_cell(flight_step.state);});
+ check(flight_step.state.phase==FieldSessionPhase::area_ball_cell_callback,"Area flight fixture reaches a new-cell callback");
+ auto cell_input=flight_step.state;cell_input.current.field.random_first=1;cell_input.current.field.random_second=0;
+ for(unsigned id=1;id<=10;++id){auto& p=cell_input.current.field.motion[field_motion_index(id)];
+  p.x=static_cast<std::uint16_t>(unsigned(cell_input.current.field.ball_x)<<8);
+  p.y=static_cast<std::uint16_t>(unsigned(cell_input.current.field.ball_y)<<8);p.status=0;}
+ const auto cell_before=bytes(cell_input);
+ const auto cell_done=resolve_session_area_ball_cell(cell_input);
+ check(cell_done.phase==FieldSessionPhase::area_ball_advance_ready && cell_done.current.field.selected_defenders==4 &&
+       cell_done.scheduling->selected_ids[0]==1 && cell_done.scheduling->selected_ids[3]==4 && bytes(cell_input)==cell_before,
+       "Area cell callback accumulates opposing defenders with original capacity");
+ rejects([&]{resolve_session_area_ball_cell(cell_done);});
+ const auto next_area_step=advance_prepared_area_ball_cell(cell_done);
+ check(next_area_step.state.current.field.selected_defenders==4,"Area flight preserves selected defenders across subsequent steps");
+ auto downgraded_flight=area_flight_bytes;downgraded_flight[10]=static_cast<char>(130);
+ rejects([&]{std::istringstream old(downgraded_flight);load_phase_session(old);});
+ auto at_target=area_flight_input;at_target.current.field.motion[field_motion_index(13)].x=204<<8;
+ at_target.current.field.motion[field_motion_index(13)].y=124<<8;at_target.area_ai_target->cell=field_cell_at(204,124);
+ at_target.action->auxiliary|=128;
+ const auto area_arrived=begin_prepared_area_action_flight(at_target,ack,movement.geometry,area_velocity,&*dispatch_data.experience);
+ check(area_arrived.phase==FieldSessionPhase::area_ball_already_arrived && area_arrived.shot_flight->counter==38 &&
+       area_arrived.ball_trajectory->vx==0x1234 && area_arrived.ball_trajectory->vy==0xfedc,
+       "Area early return preserves captured stale velocity and special counter");
+ const auto arrived_bytes=bytes(area_arrived);std::istringstream arrived_stream(arrived_bytes);
+ check(bytes(load_phase_session(arrived_stream))==arrived_bytes,"Area early return snapshot preserves stale velocity");
+ auto arrived_old=arrived_bytes;arrived_old[10]=static_cast<char>(130);
+ rejects([&]{std::istringstream old(arrived_old);load_phase_session(old);});
+ const auto received=continue_area_already_arrived(area_arrived);
+ check(received.phase==FieldSessionPhase::area_pass_received && received.current.field.ball_owner==13 &&
+       received.current.field.side==area_arrived.current.field.side && received.ball_trajectory->vx==0x1234 &&
+       bytes(area_arrived)==arrived_bytes,"Area early return transfers to saved recipient without changing input");
+ const auto received_bytes=bytes(received);std::istringstream received_stream(received_bytes);
+ check(bytes(load_phase_session(received_stream))==received_bytes,"Area pass-received snapshot roundtrips");
+ auto shifted_recipient=received;shifted_recipient.current.field.motion[field_motion_index(13)].x=200<<8;
+ shifted_recipient.current.field.motion[field_motion_index(13)].y=120<<8;
+ const auto pass_before=bytes(shifted_recipient);const auto keeper_entry=continue_area_pass_received(shifted_recipient);
+ check(keeper_entry.phase==FieldSessionPhase::area_pass_keeper_entry && keeper_entry.current.field.ball_x==200 &&
+       keeper_entry.current.field.ball_y==120 && (keeper_entry.ball_trajectory->x&255)==64 &&
+       (keeper_entry.ball_trajectory->y&255)==192 && bytes(shifted_recipient)==pass_before,
+       "Area pass handoff positions the ball at the recipient while preserving fractions");
+ const auto keeper_entry_bytes=bytes(keeper_entry);std::istringstream keeper_entry_stream(keeper_entry_bytes);
+ check(bytes(load_phase_session(keeper_entry_stream))==keeper_entry_bytes,"Area pass keeper-entry snapshot roundtrips");
+ const auto keeper_prepared=prepare_area_pass_keeper(keeper_entry);
+ check(keeper_prepared.phase==FieldSessionPhase::area_pass_keeper_prepared && keeper_prepared.keeper_area &&
+       keeper_prepared.action->action==1 && keeper_prepared.action->menu_route==2 &&
+       keeper_prepared.shot_flight->counter==255 && keeper_prepared.ball_trajectory->flags==1 &&
+       bytes(keeper_entry)==keeper_entry_bytes,"Area pass reaches prepared keeper menu while retaining prior flight context");
+ const auto keeper_prepared_bytes=bytes(keeper_prepared);std::istringstream keeper_prepared_stream(keeper_prepared_bytes);
+ check(bytes(load_phase_session(keeper_prepared_stream))==keeper_prepared_bytes,"Prepared area pass keeper snapshot roundtrips");
+ rejects([&]{prepare_area_pass_keeper(keeper_prepared);});
+ rejects([&]{continue_area_pass_received(keeper_entry);});
+ rejects([&]{continue_area_already_arrived(received);});
+ rejects([&]{continue_area_already_arrived(area_flight);});
+ auto normal_arrival=area_arrived;normal_arrival.phase=FieldSessionPhase::area_ball_arrival_callback;
+ check(continue_area_already_arrived(normal_arrival).phase==FieldSessionPhase::area_pass_received,
+       "Unopposed normal area arrival reaches the same recipient handoff");
+ auto defended_arrival=normal_arrival;defended_arrival.current.field.selected_defenders=1;defended_arrival.scheduling->selected_ids[0]=1;
+ const auto defended_before=bytes(defended_arrival);
+ const auto defender_entry=continue_area_already_arrived(defended_arrival);
+ check(static_cast<unsigned>(defender_entry.phase)==114 && defender_entry.current.field.ball_owner==defended_arrival.current.field.ball_owner &&
+       defender_entry.current.field.selected_defenders==1 && defender_entry.scheduling->selected_ids[0]==1 &&
+       bytes(defended_arrival)==defended_before,"Defended area arrival stops at the first defender without transferring possession");
+ const auto defender_entry_bytes=bytes(defender_entry);std::istringstream defender_entry_stream(defender_entry_bytes);
+ check(bytes(load_phase_session(defender_entry_stream))==defender_entry_bytes,"Defended area arrival entry survives a snapshot roundtrip");
+ rejects([&]{continue_area_already_arrived(defender_entry);});
+ const auto defender_announced=acknowledge_area_pass_defender_announcement(defender_entry);
+ check(static_cast<unsigned>(defender_announced.phase)==115 && defender_announced.recovery->ball_variant==defender_entry.recovery->ball_variant &&
+       defender_announced.scheduling->selected_ids[0]==1 && defender_announced.current.field.ball_owner==defender_entry.current.field.ball_owner &&
+       bytes(defender_entry)==defender_entry_bytes,"Acknowledged area defender announcement preserves the temporary flag and owner");
+ const auto pass_announced_bytes=bytes(defender_announced);std::istringstream pass_announced_stream(pass_announced_bytes);
+ check(bytes(load_phase_session(pass_announced_stream))==pass_announced_bytes,"Acknowledged defender announcement snapshot roundtrips");
+ rejects([&]{acknowledge_area_pass_defender_announcement(defender_announced);});
+ const auto prepared_pass_defender=prepare_area_pass_defender(defender_announced,50);
+ check(static_cast<unsigned>(prepared_pass_defender.phase)==116 && prepared_pass_defender.recovery->opposing_player==1 &&
+       prepared_pass_defender.recovery->ball_variant==0 && prepared_pass_defender.area_pass_contact &&
+       prepared_pass_defender.area_pass_contact->saved_ball_variant==defender_announced.recovery->ball_variant &&
+       prepared_pass_defender.area_pass_contact->captured_cost==50 && bytes(defender_announced)==pass_announced_bytes,
+       "Prepared pass defender preserves the temporarily stacked ball variant");
+ const auto prepared_pass_bytes=bytes(prepared_pass_defender);std::istringstream prepared_pass_stream(prepared_pass_bytes);
+ check(static_cast<unsigned char>(prepared_pass_bytes[10])==132 && bytes(load_phase_session(prepared_pass_stream))==prepared_pass_bytes,
+       "Prepared pass defender survives version66 snapshot roundtrip");
+ auto short_pass=prepared_pass_bytes;short_pass.pop_back();rejects([&]{std::istringstream old(short_pass);load_phase_session(old);});
+ auto downgraded_pass=prepared_pass_bytes;downgraded_pass[10]=static_cast<char>(131);
+ rejects([&]{std::istringstream old(downgraded_pass);load_phase_session(old);});
+ rejects([&]{prepare_area_pass_defender(prepared_pass_defender,50);});
+ auto pass_compare_input=prepared_pass_defender;pass_compare_input.action->power=1;
+ pass_compare_input.current.field.random_first=0;pass_compare_input.current.field.random_second=0;
+ const AreaPassComparisonContent pass_comparison{1,64,0,{100,50,25,0}};
+ const auto pass_comparison_before=bytes(pass_compare_input);
+ const auto compared_pass=compare_area_pass_defender(pass_compare_input,256,0,pass_comparison);
+ check(static_cast<unsigned>(compared_pass.phase)==117 && compared_pass.area_contact && compared_pass.area_contact->strength==64 &&
+       compared_pass.area_contact->loss==16 && compared_pass.area_contact->score==1 && compared_pass.area_contact->result==3 &&
+       compared_pass.action->menu_route==0 &&
+       compared_pass.area_pass_contact->saved_ball_variant==pass_compare_input.area_pass_contact->saved_ball_variant &&
+       bytes(pass_compare_input)==pass_comparison_before,"Pass defender comparison saves original strength, score and result without applying the outcome");
+ const auto compared_pass_bytes=bytes(compared_pass);std::istringstream compared_pass_stream(compared_pass_bytes);
+ check(bytes(load_phase_session(compared_pass_stream))==compared_pass_bytes,"Compared pass defender snapshot roundtrips");
+ rejects([&]{compare_area_pass_defender(compared_pass,256,0,pass_comparison);});
+ rejects([&]{compare_area_pass_defender(pass_compare_input,256,6,pass_comparison);});
+ const auto restored_pass=restore_area_pass_ball_variant(compared_pass);
+ check(static_cast<unsigned>(restored_pass.phase)==118 && restored_pass.recovery->ball_variant==compared_pass.area_pass_contact->saved_ball_variant &&
+       restored_pass.area_contact->result==3 && restored_pass.current.field.ball_owner==compared_pass.current.field.ball_owner &&
+       bytes(compared_pass)==compared_pass_bytes,"Pass contact restores the stacked ball variant before handling the result");
+ const auto restored_pass_bytes=bytes(restored_pass);std::istringstream restored_pass_stream(restored_pass_bytes);
+ check(bytes(load_phase_session(restored_pass_stream))==restored_pass_bytes,"Restored pass contact snapshot roundtrips");
+ rejects([&]{restore_area_pass_ball_variant(restored_pass);});
+ const auto pass_handler=acknowledge_area_pass_result(restored_pass,64,0);
+ check(static_cast<unsigned>(pass_handler.phase)==119 && pass_handler.control->facing==64 && pass_handler.control->motion_requested==0 &&
+       pass_handler.area_contact->result==3 && pass_handler.recovery->ball_variant==restored_pass.recovery->ball_variant &&
+       bytes(restored_pass)==restored_pass_bytes,"Area pass result acknowledgement preserves the result and restored ball variant");
+ const auto pass_handler_bytes=bytes(pass_handler);std::istringstream pass_handler_stream(pass_handler_bytes);
+ check(bytes(load_phase_session(pass_handler_stream))==pass_handler_bytes,"Area pass result handler entry snapshot roundtrips");
+ rejects([&]{acknowledge_area_pass_result(pass_handler,64,0);});
+ rejects([&]{acknowledge_area_pass_result(restored_pass,1,0);});
+ auto blocked_pass_input=pass_handler;blocked_pass_input.area_contact->result=2;blocked_pass_input.area_sequence_result=2;
+ blocked_pass_input.current.field.roster[1].type=1;blocked_pass_input.current.field.motion[field_motion_index(1)].x=120<<8;
+ blocked_pass_input.current.field.motion[field_motion_index(1)].y=120<<8;
+ auto block_experience=*dispatch_data.experience;block_experience.reward_factors[2]=64;
+ const auto blocked_pass_before=bytes(blocked_pass_input);
+ const auto blocked_pass=advance_area_pass_blocked(blocked_pass_input,block_experience);
+ check(static_cast<unsigned>(blocked_pass.phase)==124 && blocked_pass.current.field.ball_x==120 && blocked_pass.current.field.ball_y==120 &&
+       blocked_pass.current.field.ball_cell==blocked_pass_input.current.field.ball_cell &&
+       (blocked_pass.ball_trajectory->x&255)==(blocked_pass_input.ball_trajectory->x&255) &&
+       blocked_pass.experience->totals[0]==blocked_pass_input.experience->totals[0]+1 && bytes(blocked_pass_input)==blocked_pass_before,
+       "Blocked pass rewards defender and moves ball while retaining the original stale cell");
+ const auto blocked_pass_bytes=bytes(blocked_pass);std::istringstream blocked_pass_stream(blocked_pass_bytes);
+ check(bytes(load_phase_session(blocked_pass_stream))==blocked_pass_bytes,"Blocked pass snapshot roundtrips");
+ rejects([&]{advance_area_pass_blocked(blocked_pass,block_experience);});
+ auto terminal3_input=pass_handler;terminal3_input.current.clock.remaining=100;terminal3_input.current.clock.extra_time=0;
+ ContactPreludeContent terminal_clock{};terminal_clock.field_elapsed[4]=2;
+ const auto terminal3_before=bytes(terminal3_input);
+ const auto terminal3=advance_area_pass_terminal(terminal3_input,terminal_clock,block_experience);
+ check(static_cast<unsigned>(terminal3.phase)==125 && terminal3.current.clock.remaining==98 && terminal3.current.field.elapsed==2 &&
+       terminal3.experience->totals[0]==terminal3_input.experience->totals[0]+1 && bytes(terminal3_input)==terminal3_before,
+       "Captured pass result awards the defender and advances terminal time once");
+ auto terminal2_input=blocked_pass;terminal2_input.current.clock.remaining=100;terminal2_input.current.clock.extra_time=0;
+ const auto terminal2=advance_area_pass_terminal(terminal2_input,terminal_clock,block_experience);
+ check(static_cast<unsigned>(terminal2.phase)==125 && terminal2.current.clock.remaining==98 && terminal2.current.field.ball_cell==blocked_pass.current.field.ball_cell &&
+       terminal2.experience->totals[0]==terminal2_input.experience->totals[0]+1,"Blocked pass applies the second original defender reward and terminal time");
+ const auto terminal2_bytes=bytes(terminal2);std::istringstream terminal2_stream(terminal2_bytes);
+ check(bytes(load_phase_session(terminal2_stream))==terminal2_bytes,"Terminal pass clock snapshot roundtrips");
+ rejects([&]{advance_area_pass_terminal(terminal2,terminal_clock,block_experience);});
+ const auto blocked_recovery=enter_area_pass_blocked_recovery(terminal2);
+ check(static_cast<unsigned>(blocked_recovery.phase)==134 && !blocked_recovery.current.field.selected_defenders &&
+       blocked_recovery.current.field.elapsed==2 && blocked_recovery.current.field.ball_cell==terminal2.current.field.ball_cell &&
+       bytes(terminal2)==terminal2_bytes,"Blocked pass clears the defender queue before recovery without changing its stale cell");
+ const auto blocked_recovery_bytes=bytes(blocked_recovery);std::istringstream blocked_recovery_stream(blocked_recovery_bytes);
+ check(bytes(load_phase_session(blocked_recovery_stream))==blocked_recovery_bytes,"Blocked pass recovery entry snapshot roundtrips");
+ rejects([&]{enter_area_pass_blocked_recovery(blocked_recovery);});
+ auto pass_recovery_fixture=blocked_recovery;pass_recovery_fixture.current.field.random_first=0;pass_recovery_fixture.current.field.random_second=0;
+ for(auto& actor:pass_recovery_fixture.current.field.motion){actor.x=120<<8;actor.y=120<<8;actor.status=0;}
+ const auto pass_recovery_before=bytes(pass_recovery_fixture);
+ const auto pass_recovered=advance_session_area_pass_blocked_recovery(pass_recovery_fixture,area6_race_profiles,area6_race_movement);
+ check(static_cast<unsigned>(pass_recovered.state.phase)==135 && pass_recovered.recipient && !pass_recovered.state.current.field.elapsed &&
+       pass_recovered.state.area_pass_contact && bytes(pass_recovery_fixture)==pass_recovery_before,
+       "Blocked pass recovery selects a new owner while preserving pass history");
+ const auto pass_recovered_bytes=bytes(pass_recovered.state);std::istringstream pass_recovered_stream(pass_recovered_bytes);
+ check(bytes(load_phase_session(pass_recovered_stream))==pass_recovered_bytes,"Blocked pass recovered owner snapshot roundtrips");
+ rejects([&]{advance_session_area_pass_blocked_recovery(pass_recovered.state,area6_race_profiles,area6_race_movement);});
+ const auto pass_recovery_control=continue_session_area_pass_blocked_recovery(pass_recovered.state,0,0);
+ check(static_cast<unsigned>(pass_recovery_control.phase)==137 && pass_recovery_control.current.field.ball_owner==pass_recovered.state.current.field.ball_owner &&
+       pass_recovery_control.control->facing==0 && bytes(pass_recovered.state)==pass_recovered_bytes,
+       "Ordinary blocked pass recovery reaches control entry after presentation acknowledgement");
+ rejects([&]{continue_session_area_pass_blocked_recovery(pass_recovery_control,0,0);});
+ const auto pass_recovery_ready=prepare_session_area_pass_blocked_control(pass_recovery_control);
+ check(static_cast<unsigned>(pass_recovery_ready.state.phase)==138 && pass_recovery_ready.state.current.field.ball_owner==pass_recovery_control.current.field.ball_owner &&
+       pass_recovery_ready.state.control->decision_timer==10 && pass_recovery_ready.state.area_pass_contact,
+       "Blocked pass recovered owner reaches prepared player control");
+ const auto pass_recovery_ready_bytes=bytes(pass_recovery_ready.state);std::istringstream pass_recovery_ready_stream(pass_recovery_ready_bytes);
+ check(bytes(load_phase_session(pass_recovery_ready_stream))==pass_recovery_ready_bytes,"Blocked pass prepared control snapshot roundtrips");
+ rejects([&]{prepare_session_area_pass_blocked_control(pass_recovery_ready.state);});
+ ControlMovementContent blocked_input_content{};
+ const auto blocked_poll=poll_session_area_pass_capture(pass_recovery_ready.state,0,0,area6_race_profiles,area6_race_movement,blocked_input_content);
+ check(static_cast<unsigned>(blocked_poll.state.phase)==139 && blocked_poll.state.control->decision_timer==9 && blocked_poll.state.area_pass_contact,
+       "Blocked pass recovered owner accepts an idle control poll");
+ const auto blocked_menu=poll_session_area_pass_capture(pass_recovery_ready.state,64,64,area6_race_profiles,area6_race_movement,blocked_input_content);
+ check(static_cast<unsigned>(blocked_menu.state.phase)==140 && blocked_menu.menu_requested,"Blocked pass recovered owner can request the action menu");
+ const auto terminal3_bytes=bytes(terminal3);const auto captured_pass=capture_area_pass_defender(terminal3);
+ check(static_cast<unsigned>(captured_pass.state.phase)==128 && captured_pass.state.current.field.ball_owner==1 &&
+       captured_pass.state.current.field.side==0 && captured_pass.request_possession_sound &&
+       bytes(terminal3)==terminal3_bytes,"Captured pass transfers possession to the defender and requests the side-change sound");
+ const auto captured_pass_bytes=bytes(captured_pass.state);std::istringstream captured_pass_stream(captured_pass_bytes);
+ check(bytes(load_phase_session(captured_pass_stream))==captured_pass_bytes,"Captured pass snapshot roundtrips");
+ rejects([&]{capture_area_pass_defender(captured_pass.state);});
+ const auto pass_capture_control=continue_area_pass_capture(captured_pass.state,area6_race_profiles,area6_race_movement,64,0);
+ check(static_cast<unsigned>(pass_capture_control.phase)==129 && pass_capture_control.current.field.ball_owner==1 &&
+       pass_capture_control.current.field.side==0 && !pass_capture_control.current.field.elapsed &&
+       pass_capture_control.control->facing==64 && bytes(captured_pass.state)==captured_pass_bytes,
+       "Captured area pass advances field movement before control entry");
+ const auto capture_control_bytes=bytes(pass_capture_control);std::istringstream capture_control_stream(capture_control_bytes);
+ check(bytes(load_phase_session(capture_control_stream))==capture_control_bytes,"Captured pass control entry snapshot roundtrips");
+ rejects([&]{continue_area_pass_capture(pass_capture_control,area6_race_profiles,area6_race_movement,64,0);});
+ const auto pass_capture_ready=prepare_session_area_pass_capture_control(pass_capture_control);
+ check(static_cast<unsigned>(pass_capture_ready.state.phase)==130 && pass_capture_ready.state.current.field.ball_owner==1 &&
+       !pass_capture_ready.state.current.field.selected_defenders && pass_capture_ready.state.control->decision_timer==10 &&
+       pass_capture_ready.state.area_pass_contact && bytes(pass_capture_control)==capture_control_bytes,
+       "Captured pass prepares player control while retaining prior pass context");
+ const auto pass_ready_bytes=bytes(pass_capture_ready.state);std::istringstream pass_ready_stream(pass_ready_bytes);
+ check(bytes(load_phase_session(pass_ready_stream))==pass_ready_bytes,"Captured pass prepared control snapshot roundtrips");
+ rejects([&]{prepare_session_area_pass_capture_control(pass_capture_ready.state);});
+ ControlMovementContent pass_input_content{};
+ const auto pass_poll=poll_session_area_pass_capture(pass_capture_ready.state,0,0,area6_race_profiles,area6_race_movement,pass_input_content);
+ check(static_cast<unsigned>(pass_poll.state.phase)==131 && pass_poll.state.control->decision_timer==9 &&
+       pass_poll.state.area_pass_contact && bytes(pass_capture_ready.state)==pass_ready_bytes,"Captured pass accepts an idle control poll");
+ const auto pass_menu_poll=poll_session_area_pass_capture(pass_capture_ready.state,64,64,area6_race_profiles,area6_race_movement,pass_input_content);
+ check(static_cast<unsigned>(pass_menu_poll.state.phase)==132 && pass_menu_poll.menu_requested && pass_menu_poll.state.area_pass_contact,
+       "Captured pass control input reaches the action menu boundary");
+ ActionMenuContent pass_menu_content{};
+ const auto reopened_pass_menu=open_area_pass_human_action_menu(pass_menu_poll.state,pass_menu_content);
+ check(reopened_pass_menu.state.phase==FieldSessionPhase::human_action_menu && reopened_pass_menu.state.current.field.ball_owner==1 &&
+       !reopened_pass_menu.state.area_pass_contact && !reopened_pass_menu.state.ball_trajectory,
+       "Opening a new action menu completes the prior pass context");
+ rejects([&]{open_area_pass_human_action_menu(reopened_pass_menu.state,pass_menu_content);});
+ auto pass_move_input=pass_capture_ready.state;pass_move_input.control->decision_timer=0;
+ const auto pass_move_poll=poll_session_area_pass_capture(pass_move_input,1,0,area6_race_profiles,area6_race_movement,pass_input_content);
+ check(static_cast<unsigned>(pass_move_poll.state.phase)==133 && pass_move_poll.decision_step && pass_move_poll.moved_player==1 &&
+       pass_move_poll.state.area_pass_contact,"Captured pass timer expiry moves to the control-clock boundary");
+ GoalkeeperProfiles pass_keepers{};pass_keepers.skills.resize(1);
+ WorldStepContent pass_world{};pass_world.stamina_curve.fill(1000);
+ const auto pass_control_tick=advance_area_pass_control_tick(pass_move_poll.state,dispatch_data.field_players,pass_keepers,pass_world);
+ check(static_cast<unsigned>(pass_control_tick.state.phase)==142 && pass_control_tick.state.current.field.elapsed==1 &&
+       pass_control_tick.state.area_pass_contact,"Captured pass control tick reaches the field-round boundary");
+ std::array<LogicalButtons,22> pass_world_inputs{};
+ const auto pass_field_round=advance_area_pass_field_round(pass_control_tick.state,area6_race_profiles,area6_race_movement,
+  pass_input_content,pass_world,pass_world_inputs);
+ check(static_cast<unsigned>(pass_field_round.state.phase)==131 && pass_field_round.consumed_polls==22 &&
+       pass_field_round.state.area_pass_contact,"Captured pass field round returns to the control poll");
+ pass_world_inputs[0]={64,64};
+ const auto pass_world_menu=advance_area_pass_field_round(pass_control_tick.state,area6_race_profiles,area6_race_movement,
+  pass_input_content,pass_world,pass_world_inputs);
+ check(static_cast<unsigned>(pass_world_menu.state.phase)==132 && pass_world_menu.consumed_polls==1,
+       "Captured pass field round stops when the action menu is requested");
+ auto pass_nonterminal_input=pass_handler;pass_nonterminal_input.area_contact->result=1;pass_nonterminal_input.area_sequence_result=1;
+ pass_nonterminal_input.current.clock.remaining=100;pass_nonterminal_input.current.clock.extra_time=0;
+ ContactPreludeContent pass_clock{};pass_clock.field_elapsed[5]=1;pass_clock.defender_status[2]=7;
+ const auto nonterminal_before=bytes(pass_nonterminal_input);
+ const auto pass_nonterminal=advance_area_pass_nonterminal(pass_nonterminal_input,pass_clock,*dispatch_data.experience);
+ check(static_cast<unsigned>(pass_nonterminal.phase)==120 && pass_nonterminal.action->power==0 &&
+       pass_nonterminal.current.clock.remaining==99 && pass_nonterminal.current.field.elapsed==1 &&
+       pass_nonterminal.current.field.motion[field_motion_index(1)].status==7 &&
+       pass_nonterminal.experience->totals[0]==pass_nonterminal_input.experience->totals[0]+1 &&
+       bytes(pass_nonterminal_input)==nonterminal_before,"Nonterminal pass result applies loss, carrier experience and defender clock once");
+ const auto pass_nonterminal_bytes=bytes(pass_nonterminal);std::istringstream pass_nonterminal_stream(pass_nonterminal_bytes);
+ check(bytes(load_phase_session(pass_nonterminal_stream))==pass_nonterminal_bytes,"Nonterminal pass result snapshot roundtrips");
+ rejects([&]{advance_area_pass_nonterminal(pass_nonterminal,pass_clock,*dispatch_data.experience);});
+ auto pass_added=pass_nonterminal_input;pass_added.current.clock.remaining=1;pass_added.current.clock.extra_time=5;
+ const auto waiting_pass=advance_area_pass_nonterminal(pass_added,pass_clock,*dispatch_data.experience);
+ const auto resumed_pass=resume_area_pass_added_time(waiting_pass);
+ check(static_cast<unsigned>(waiting_pass.phase)==121 && resumed_pass.phase==FieldSessionPhase::area_pass_nonterminal_done &&
+       resumed_pass.current.clock.remaining==waiting_pass.current.clock.remaining && resumed_pass.experience->totals==waiting_pass.experience->totals,
+       "Area pass added-time acknowledgement resumes without reapplying clock or reward");
+ rejects([&]{resume_area_pass_added_time(resumed_pass);});
+ auto pass_added_script=waiting_pass;pass_added_script.current.clock.script_flags|=128;
+ pass_added_script.control->travel_accumulator=42;pass_added_script.control->display_parameter=9;pass_added_script.control->motion_requested=2;
+ rejects([&]{resume_area_pass_added_time(pass_added_script);});
+ auto two_pass_defenders=pass_nonterminal;two_pass_defenders.current.field.selected_defenders=2;
+ two_pass_defenders.scheduling->selected_ids[1]=2;const auto two_pass_before=bytes(two_pass_defenders);
+ const auto next_pass_defender=advance_area_pass_defender(two_pass_defenders);
+ check(next_pass_defender.phase==FieldSessionPhase::area_pass_defenders_pending && next_pass_defender.area_defender_cursor==1 &&
+       next_pass_defender.current.field.elapsed==1 && next_pass_defender.scheduling->selected_ids[1]==2 &&
+       !next_pass_defender.area_contact && !next_pass_defender.area_pass_contact && bytes(two_pass_defenders)==two_pass_before,
+       "Nonterminal pass result advances to the next queued defender without losing elapsed time");
+ const auto second_pass_announced=acknowledge_area_pass_defender_announcement(next_pass_defender);
+ const auto second_pass_prepared=prepare_area_pass_defender(second_pass_announced,50);
+ const auto second_pass_compared=compare_area_pass_defender(second_pass_prepared,256,0,pass_comparison);
+ check(second_pass_prepared.recovery->opposing_player==2 && second_pass_compared.area_contact->cursor==1 &&
+       second_pass_compared.current.field.elapsed==1,"A later queued pass defender keeps the cursor and accumulated time");
+ const auto second_pass_bytes=bytes(second_pass_compared);std::istringstream second_pass_stream(second_pass_bytes);
+ check(bytes(load_phase_session(second_pass_stream))==second_pass_bytes,"Later queued pass defender comparison roundtrips");
+ const auto pass_defenders_done=advance_area_pass_defender(pass_nonterminal);
+ check(static_cast<unsigned>(pass_defenders_done.phase)==123 && pass_defenders_done.area_defender_cursor==1 &&
+       !pass_defenders_done.current.field.selected_defenders && !pass_defenders_done.current.field.elapsed &&
+       pass_defenders_done.current.field.ball_owner==pass_nonterminal.current.field.ball_owner,
+       "Last nonterminal pass defender clears selection and accumulated time before recipient transfer");
+ const auto pass_queue_received=continue_area_already_arrived(pass_defenders_done);
+ check(pass_queue_received.phase==FieldSessionPhase::area_pass_received && pass_queue_received.current.field.ball_owner==pass_defenders_done.area_ai_target->recipient &&
+       !pass_queue_received.area_defender_cursor,"Exhausted pass queue transfers possession to the recipient");
+ rejects([&]{advance_area_pass_defender(pass_defenders_done);});
+ auto invalid_pass_comparison=pass_comparison;invalid_pass_comparison.range=0;
+ rejects([&]{compare_area_pass_defender(pass_compare_input,256,0,invalid_pass_comparison);});
+ check(bytes(pass_compare_input)==pass_comparison_before,"Rejected pass comparison leaves its input unchanged");
+ rejects([&]{begin_prepared_area_action_flight(area_flight,ack,movement.geometry,area_velocity,&*dispatch_data.experience);});
+ rejects([&]{advance_prepared_session_ball_cell(area_flight);});
+ auto bad_area_facing=ack;bad_area_facing.facing=1;
+ rejects([&]{begin_prepared_area_action_flight(area_flight_input,bad_area_facing,movement.geometry,area_velocity,&*dispatch_data.experience);});
+ auto bad_area_cell=area_flight_input;bad_area_cell.current.field.ball_cell=0;
+ rejects([&]{begin_prepared_area_action_flight(bad_area_cell,ack,movement.geometry,area_velocity,&*dispatch_data.experience);});
+ check(bytes(area_flight_input)==flight_before,"Rejected area flight preserves source snapshot");
+ auto all_skipped_timed=advance_session_area_prefix_clock(skipped,0).state;
+ const auto all_skipped_dispatch=advance_session_area_result_dispatch(all_skipped_timed,dispatch_data);
+ check(all_skipped_dispatch.route==0 && all_skipped_dispatch.state.area_sequence_result==0 &&
+       all_skipped_dispatch.state.phase==FieldSessionPhase::keeper_area_attack_continuation,
+       "All skipped defenders retain the original initial result and continue the attack");
+ auto unknown_sequence=prefix_saved.state;unknown_sequence.area_sequence_result=255;
+ rejects([&]{advance_session_area_result_dispatch(unknown_sequence,dispatch_data);});
+ auto legacy_unknown_bytes=bytes(prefix_saved.state);legacy_unknown_bytes[10]=static_cast<char>(129);legacy_unknown_bytes.pop_back();
+ std::istringstream legacy_unknown_input(legacy_unknown_bytes);const auto legacy_unknown=load_phase_session(legacy_unknown_input);
+ check(legacy_unknown.area_sequence_result==255,"Version63 exhausted prefixes remain readable without inventing the last result");
+ rejects([&]{advance_session_area_result_dispatch(legacy_unknown,dispatch_data);});
+ auto direct_area=terminal_exit.state;direct_area.area_contact->result=3;direct_area.area_sequence_result=3;direct_area.area_contact->defense_action=2;
+ direct_area.area_defense->actions[direct_area.area_contact->cursor]=2;
+ direct_area.recovery->opposing_player=direct_area.scheduling->selected_ids[direct_area.area_contact->cursor];
+ direct_area.current.field.roster[direct_area.recovery->opposing_player].type=1;
+ direct_area.experience=ExperienceState{};dispatch_data.experience=ExperienceContent{};
+ dispatch_data.experience->stage_bases[0]=4;dispatch_data.experience->reward_factors[2]=64;
+ const auto direct_area_before=bytes(direct_area);
+ const auto direct_capture=advance_session_area_result_dispatch(direct_area,dispatch_data);
+ check(direct_capture.route==3 && direct_capture.state.phase==FieldSessionPhase::player_control &&
+       direct_capture.state.current.field.ball_owner==1 && direct_capture.state.current.field.side==0 &&
+       direct_capture.state.current.field.selected_defenders==direct_area.current.field.selected_defenders &&
+       direct_capture.reward && direct_capture.reward->award==1 && direct_capture.state.experience->totals[0]==1 &&
+       direct_capture.request_possession_sound && bytes(direct_area)==direct_area_before,
+       "Area result3/action2 awards once then transfers possession directly");
+ rejects([&]{advance_session_area_result_dispatch(direct_capture.state,dispatch_data);});
+ auto loose_area=direct_area;loose_area.area_contact->defense_action=4;loose_area.area_defense->actions[loose_area.area_contact->cursor]=4;
+ const auto loose_ready=advance_session_area_result_dispatch(loose_area,dispatch_data);
+ check(loose_ready.route==2 && loose_ready.state.phase==FieldSessionPhase::keeper_area_recovery_ready &&
+       loose_ready.state.current.field.side==loose_area.current.field.side && loose_ready.reward &&
+       loose_ready.state.experience->totals[0]==1,"Area result3/action4 awards once and waits for selected recovery");
+ auto nonreward_loose=loose_area;nonreward_loose.area_contact->result=2;nonreward_loose.area_sequence_result=2;
+ const auto result2_ready=advance_session_area_result_dispatch(nonreward_loose,dispatch_data);
+ check(result2_ready.route==2 && !result2_ready.reward && result2_ready.state.experience->totals[0]==0,
+       "Area result2 enters recovery without the result3 experience award");
+ PlayerProfileMappings area_recovery_profiles{};FieldPhaseContent area_recovery_movement=movement;
+ auto recover_area=loose_ready.state;recover_area.current.field.random_first=0;recover_area.current.field.random_second=0;
+ recover_area.current.field.ball_x=204;recover_area.current.field.ball_y=100;
+ for(auto& motion:recover_area.current.field.motion){motion.x=120<<8;motion.y=120<<8;}
+ recover_area.current.field.motion[field_motion_index(2)].x=204<<8;
+ recover_area.current.field.motion[field_motion_index(2)].y=100<<8;
+ const auto recovered_area=advance_session_area_result_recovery(recover_area,area_recovery_profiles,area_recovery_movement);
+ check(recovered_area.state.phase==FieldSessionPhase::keeper_area_recovered_owner &&
+       recovered_area.state.current.field.ball_owner==2 && recovered_area.state.current.field.side==0 &&
+       recovered_area.state.current.field.selected_defenders==recover_area.current.field.selected_defenders &&
+       recovered_area.state.experience->totals[0]==1 && recovered_area.recipient,
+       "Area loose recovery chooses possession once and does not repeat experience");
+ const auto area_before=bytes(recovered_area.state);
+ const auto area_keeper=continue_session_recovery(recovered_area.state);
+ check(area_keeper.phase==FieldSessionPhase::keeper_interaction &&
+       area_keeper.current.field.selected_defenders==recovered_area.state.current.field.selected_defenders &&
+       area_keeper.scheduling->selected_ids==recovered_area.state.scheduling->selected_ids &&
+       bytes(recovered_area.state)==area_before,
+       "Area recovered-owner keeper gate preserves selected players and input");
+ auto area_keeper_bytes=bytes(area_keeper);std::istringstream area_keeper_input(area_keeper_bytes);
+ check(bytes(load_phase_session(area_keeper_input))==area_keeper_bytes,"Area keeper gate snapshot roundtrip");
+ auto area_keeper_old=area_keeper_bytes;area_keeper_old[10]=static_cast<char>(129);area_keeper_old.pop_back();
+ rejects([&]{std::istringstream old(area_keeper_old);load_phase_session(old);});
+ auto area_ordinary=recovered_area.state;area_ordinary.current.field.ball_x=100;area_ordinary.current.field.ball_y=120;
+ rejects([&]{continue_session_recovery(area_ordinary);});
+ const auto ordinary_before=bytes(area_ordinary);
+ const auto ordinary_tail=continue_session_area_ordinary_recovery(area_ordinary,64);
+ check(ordinary_tail.phase==FieldSessionPhase::player_control && ordinary_tail.control->facing==64 &&
+       ordinary_tail.current.field.selected_defenders==area_ordinary.current.field.selected_defenders &&
+       ordinary_tail.scheduling->selected_ids==area_ordinary.scheduling->selected_ids &&
+       bytes(area_ordinary)==ordinary_before,"Area ordinary prepared tail preserves selection and captures facing");
+ const auto ordinary_bytes=bytes(ordinary_tail);std::istringstream ordinary_input(ordinary_bytes);
+ check(bytes(load_phase_session(ordinary_input))==ordinary_bytes,"Area ordinary control handoff roundtrip");
+ auto story_area=area_ordinary;story_area.recovery->game_mode=4;story_area.current.field.side=0;
+ story_area.current.field.roster[story_area.current.field.ball_owner].type=2;
+ story_area.current.field.motion[field_motion_index(story_area.current.field.ball_owner)].x=128<<8;
+ rejects([&]{continue_session_area_ordinary_recovery(story_area,64);});
+ const auto story_before=bytes(story_area);
+ const auto story_tail=continue_session_area_story_recovery(story_area,64);
+ check(story_tail.phase==FieldSessionPhase::story_transition && story_tail.control->facing==64 &&
+       story_tail.current.field.selected_defenders==story_area.current.field.selected_defenders &&
+       story_tail.scheduling->selected_ids==story_area.scheduling->selected_ids && bytes(story_area)==story_before,
+       "Area story prepared tail preserves selection and captures facing");
+ const auto story_bytes=bytes(story_tail);std::istringstream story_input(story_bytes);
+ check(bytes(load_phase_session(story_input))==story_bytes,"Area story handoff snapshot roundtrip");
+ auto story_old=story_bytes;story_old[10]=static_cast<char>(129);story_old.pop_back();
+ rejects([&]{std::istringstream old(story_old);load_phase_session(old);});
+ auto story_kickoff=story_area;story_kickoff.kickoff_formation=KickoffFormationContext{{124,132}};
+ const auto story_kickoff_tail=continue_session_area_story_recovery(story_kickoff,0);
+ check(story_kickoff_tail.kickoff_formation && story_kickoff_tail.control->facing==0,
+       "Area story handoff retains kickoff keeper coordinates");
+ rejects([&]{continue_session_area_story_recovery(area_ordinary,64);});
+ rejects([&]{continue_session_area_story_recovery(recovered_area.state,64);});
+ rejects([&]{continue_session_area_story_recovery(story_area,1);});
+ rejects([&]{continue_session_area_story_recovery(story_tail,64);});
+ rejects([&]{continue_session_area_ordinary_recovery(recovered_area.state,64);});
+ rejects([&]{continue_session_area_ordinary_recovery(area_ordinary,1);});
+ rejects([&]{continue_session_area_ordinary_recovery(ordinary_tail,64);});
+ rejects([&]{continue_session_recovery(area_keeper);});
+ const auto recovered_result2=advance_session_area_result_recovery(result2_ready.state,area_recovery_profiles,area_recovery_movement);
+ check(recovered_result2.state.phase==FieldSessionPhase::keeper_area_recovered_owner &&
+       recovered_result2.state.experience->totals[0]==0,"Area result2 recovers without an experience award");
+ auto boundary_area=loose_ready.state;boundary_area.current.field.random_first=0;boundary_area.current.field.random_second=3;
+ const auto boundary_recovery=advance_session_area_result_recovery(boundary_area,area_recovery_profiles,area_recovery_movement);
+ check(boundary_recovery.state.phase==FieldSessionPhase::boundary_restart &&
+       boundary_recovery.state.current.field.selected_defenders==0 && !boundary_recovery.recipient,
+       "Area recovery clears its selected prefix when jitter takes the ball out of bounds");
+ auto no_area_reward=loose_area;auto missing_reward=dispatch_data;missing_reward.experience.reset();
+ const auto no_reward_before=bytes(no_area_reward);
+ rejects([&]{advance_session_area_result_dispatch(no_area_reward,missing_reward);});
+ check(bytes(no_area_reward)==no_reward_before,"Missing reached area reward content rejects atomically");
+ for(const auto& item:{continued.state,all_skipped_dispatch.state,direct_capture.state,loose_ready.state,
+                       recovered_area.state,recovered_result2.state}) {
+  const auto saved=bytes(item);std::istringstream input(saved);
+  check(saved.size()==414 && static_cast<unsigned char>(saved[10])==(item.area_defense && item.phase==FieldSessionPhase::keeper_area_attack_continuation ? 131 : 130) &&
+        bytes(load_phase_session(input))==saved,"Final area result and possession snapshots roundtrip in version64");
+ }
  auto terminal_dispatch=terminal_exit.state;terminal_dispatch.current.field.elapsed=0;
  check(preview_area_result_dispatch(terminal_dispatch,dispatch_data).route==2,"Terminal result2 routes to recovery");
- terminal_dispatch.area_contact->result=3;
+ terminal_dispatch.area_contact->result=3;terminal_dispatch.area_sequence_result=3;
  check(preview_area_result_dispatch(terminal_dispatch,dispatch_data).route==3,"Terminal result3 routes to original terminal handler");
  prefix_input.current.clock.remaining=1;prefix_input.current.clock.extra_time=5;
  const auto prefix_pause=advance_session_area_prefix_clock(prefix_input,3);
@@ -682,7 +1228,7 @@ int main(){try{
  std::istringstream old_defense_stream(old_defense_entry);
  check(bytes(load_phase_session(old_defense_stream))==bytes(defense_menu),"Legacy l defensive entry loads");
  auto initialized_bytes=bytes(initialized_defense);
- for(unsigned size=372;size<413;++size) {
+ for(unsigned size=372;size<414;++size) {
   auto truncated=initialized_bytes;truncated.resize(size);
   rejects([&]{std::istringstream stream(truncated);load_phase_session(stream);});
  }

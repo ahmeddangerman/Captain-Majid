@@ -1,5 +1,6 @@
 #include "captain/area_ai_session.hpp"
 #include "captain/player_movement.hpp"
+#include "captain/defender_selection.hpp"
 #include <stdexcept>
 namespace captain {
 AreaDispatchPreview preview_area_result_dispatch(const PhaseSessionState& input,const ShotContent& content) {
@@ -8,6 +9,85 @@ AreaDispatchPreview preview_area_result_dispatch(const PhaseSessionState& input,
   throw std::invalid_argument("Area dispatch needs a ready result and original movement content");
  const auto route=input.phase==FieldSessionPhase::keeper_area_terminal_result ? input.area_contact->result : 0;
  return {advance_field_phase(input.current.field,content.field_players,*content.movement),static_cast<std::uint8_t>(route)};
+}
+AreaResultDispatch advance_session_area_result_dispatch(const PhaseSessionState& input,const ShotContent& content) {
+ validate_phase_session(input);
+ if((input.phase!=FieldSessionPhase::keeper_area_prefix_clock_done && input.phase!=FieldSessionPhase::keeper_area_terminal_result) || !content.movement)
+  throw std::invalid_argument("Area dispatch needs a ready result and original movement content");
+ const bool terminal=input.phase==FieldSessionPhase::keeper_area_terminal_result;
+ const auto result=terminal ? input.area_contact->result : input.area_sequence_result;
+ if((terminal && result<2) || (!terminal && result>1))
+  throw std::invalid_argument("Area dispatch needs a known final sequence result");
+ const auto movement=advance_field_phase(input.current.field,content.field_players,*content.movement);
+ AreaResultDispatch dispatched{input,movement,std::nullopt,0,false};
+ auto& state=dispatched.state;
+ state.current.field=movement.state;
+ if(!terminal) {
+  if(input.action->action!=4 && input.action->action!=6)state.area_defense.reset();
+  state.phase=FieldSessionPhase::keeper_area_attack_continuation;
+ } else {
+  const auto& contact=*input.area_contact;
+  const auto defender=input.scheduling->selected_ids[contact.cursor];
+  if(result==3) {
+   if(!input.experience || !content.experience)
+    throw std::invalid_argument("Area result3 dispatch requires experience state and content");
+   auto reward=award_player_experience(*input.experience,state.current.field.roster[defender].type,2,*content.experience);
+   state.experience=reward.state;
+   dispatched.reward=reward;
+  }
+  if(result==3 && contact.defense_action==2) {
+   const auto side=static_cast<std::uint8_t>(defender<11 ? 0 : 11);
+   dispatched.request_possession_sound=side!=state.current.field.side;
+   state.current.field.ball_owner=defender;
+   state.current.field.side=side;
+   state.keeper_area.reset();state.area_defense.reset();state.area_ai_target.reset();state.area_contact.reset();
+   state.area_defender_cursor=0;state.area_sequence_result=255;
+   state.action=ActionContext{};
+   state.phase=FieldSessionPhase::player_control;
+   dispatched.route=3;
+  } else {
+   state.phase=FieldSessionPhase::keeper_area_recovery_ready;
+   dispatched.route=2;
+  }
+ }
+ validate_phase_session(state);
+ return dispatched;
+}
+PhaseSessionState continue_session_area_action6(const PhaseSessionState& input,std::uint8_t facing,std::uint8_t motion,const AreaAction6DestinationContent& content,const ExperienceContent* experience) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_attack_continuation || input.action->action!=6 || (facing!=0 && facing!=64))
+  throw std::invalid_argument("Area action6 needs a saved continuation and acknowledged presentation");
+ const auto& f=input.current.field;const auto& p=content.positions[f.random_first&7u];
+ const auto x=static_cast<std::uint8_t>((f.ball_x&128u)?p[0]^255u:p[0]);
+ const auto y=static_cast<std::uint8_t>((f.ball_y&128u)?p[1]^255u:p[1]);
+ const auto cell=field_cell_at(x,y);if(cell==255)throw std::invalid_argument("Area action6 destination is outside the represented field");
+ auto state=input;
+ if(input.current.field.selected_defenders) {
+  if(!experience || !input.experience)throw std::invalid_argument("Area continuation requires experience content");
+  state.experience=award_player_experience(*input.experience,f.roster[f.ball_owner].type,1,*experience).state;
+ }
+ state.current.field.ball_x=x;state.current.field.ball_y=y;state.current.field.ball_cell=cell;
+ state.area_ai_target->cell=cell;state.control->facing=facing;state.control->motion_requested=motion;
+ state.keeper_area.reset();state.phase=FieldSessionPhase::area_action6_destination_pending;
+ validate_phase_session(state);return state;
+}
+PhaseSessionState continue_session_area_action4(const PhaseSessionState& input,std::uint8_t facing,std::uint8_t motion,const ExperienceContent* experience) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::keeper_area_attack_continuation || input.action->action!=4 || !input.area_defense || (facing!=0 && facing!=64))
+  throw std::invalid_argument("Area action4 needs retained defender choices and acknowledged presentation");
+ auto state=input;
+ if(input.current.field.selected_defenders) {
+  if(!experience || !input.experience)throw std::invalid_argument("Area continuation requires experience content");
+  state.experience=award_player_experience(*input.experience,input.current.field.roster[input.current.field.ball_owner].type,1,*experience).state;
+ }
+ std::array<std::uint8_t,5> filtered{};unsigned count=0;
+ for(unsigned i=0;i<input.current.field.selected_defenders;++i)
+  if(input.area_defense->actions[i]==5)filtered[count++]=input.scheduling->selected_ids[i];
+ if(count){state.current.field.selected_defenders=static_cast<std::uint8_t>(count);state.scheduling->selected_ids=filtered;}
+ state.recovery->ball_variant=0;state.control->facing=facing;state.control->motion_requested=motion;
+ state.keeper_area.reset();
+ state.phase=count?FieldSessionPhase::area_action4_encounters_pending:FieldSessionPhase::area_action4_control_pending;
+ validate_phase_session(state);return state;
 }
 PreparedAreaDefender prepare_area_defender(const FieldPlayerRecord& player,std::uint8_t attack,
  std::uint8_t attack_subtype,std::uint8_t variant,std::uint8_t defense,
@@ -128,6 +208,7 @@ PhaseSessionState resolve_session_area_defender(const PhaseSessionState& input,c
  const auto result=compare_area_defender({id,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},input.action->action,input.recovery->attack_subtype,input.recovery->ball_variant,defense,input.area_defense->subtypes[cursor],input.action->power,input.current.field.random_first,input.current.field.random_second,content);
  auto state=input;state.current.field.roster[id].stamina=result.defender.energy.stamina;
  state.recovery->opposing_player=id;const auto& c=result.comparison;
+ state.area_sequence_result=c.result_code;
  state.area_contact=AreaContactContext{cursor,defense,c.subtype,result.defender.preparation.move_effect,c.defender_power,result.defender.energy.cost,c.strength,c.loss,c.score,c.result_code,result.defender.energy.weakened};
  state.phase=FieldSessionPhase::keeper_area_defender_compared;validate_phase_session(state);return state;
 }
@@ -145,6 +226,7 @@ ActionMenuResult announce_prepared_area_defenders(const PhaseSessionState& input
  }
  result.presentation.push_back({ControlPresentationKind::script,4});
  result.presentation.push_back({ControlPresentationKind::wait_frames,1});
+ state.area_sequence_result=0;
  state.control->facing=facing;state.control->motion_requested=16;
  state.phase=FieldSessionPhase::keeper_area_defenders_announced;
  validate_phase_session(state);return result;
@@ -153,6 +235,7 @@ ActionMenuResult begin_prepared_area_defense(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_attack_prepared)throw std::invalid_argument("Area defense entry requires prepared attack");
  ActionMenuResult result{input};result.presentation.push_back({ControlPresentationKind::script,14});
+ result.state.area_sequence_result=0;result.state.area_defender_cursor=0;
  result.state.control->motion_requested=input.recovery->ball_variant==1 ? 2 : 0;result.state.phase=FieldSessionPhase::keeper_area_defense_entry;
  validate_phase_session(result.state);return result;
 }

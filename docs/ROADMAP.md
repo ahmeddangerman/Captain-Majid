@@ -2,8 +2,8 @@
 
 **Purpose:** English working reference for the project owner and ChatGPT. This is the canonical source for roadmap stages, dependencies, decisions, and status. The Arabic fan page presents the same milestones briefly and with more excitement, without changing their meaning or progress status.
 
-**Last reviewed:** 2026-10-28
-**Current project status:** ROM analysis and native feasibility work are in progress. The native session now reaches an ordinary prepared shot from the field-action menu; defender choices, shot flight, and a complete playable match remain to be built. See [ENGINE_PROGRESS.md](ENGINE_PROGRESS.md) and [NATIVE_ACTION_MENU.md](NATIVE_ACTION_MENU.md).
+**Last reviewed:** 2026-11-05
+**Current project status:** Native staged match flows reach supported shot, defender, keeper and possession boundaries. A complete playable match remains unfinished. See [PORT_STATUS.md](PORT_STATUS.md) and [WORK_LOG.md](WORK_LOG.md).
 **Schedule:** No dates or delivery estimates are set. ROM analysis and a native feasibility milestone must inform estimates first.
 
 ## Project goal
@@ -17,6 +17,26 @@ The intended product is a PC port: players should be able to play the same game 
 Initial desktop targets are Windows and Linux. A faithful reconstruction of the NES game's behavior is the reference; an emulator may be used during development to check behavior. The project should not be described as a completed decompilation or port until its corresponding work and checks are done.
 
 ## Roadmap at a glance
+
+### Playable match checkpoints
+
+These scoped checkpoints describe evidence for supported paths, not overall game completion. See the work log for exact coverage and observer limits.
+
+| Milestone | Status | Completion check | Depends on |
+| --- | --- | --- | --- |
+| Original comparison harness | Done | Controlled original CPU observations compare represented native state. | Private reference ROM and research tools |
+| Basic saved control and action menu | Done | Supported kickoff/control input reaches a saved prepared shot; replay checks pass. | Match state and content profiles |
+| Ordered area defenders and final dispatch | Done | Supported sequences and final possession/recovery routes match controlled original observations. | Area selection, contact, timing and saved state |
+| Area recovered-owner keeper-area trace | Done | Observe the original next boundary from sampled keeper-area selected recoveries and record inputs and limits. | Area recovery and original observer |
+| Area recovered-owner other routes | Done | Trace constructed ordinary-field and story-gate continuations, including selected-defender state; two sampled cases pass. | Area recovery and original observer |
+| Area recovered-owner next boundaries | Done | Sampled keeper-area, ordinary-field and story entries match original represented state and retain selected defenders; story execution remains separate. | Continuation traces |
+| Area attack continuation: pass | Partial | Sampled defender outcomes, later defenders, capture and ordinary blocked recovery reach prepared control; compare remaining recovery, clock and keeper routes and live presentation. | Final area dispatch |
+| Area attack continuation: actions 4 and 6 | Partial | Complete action 4 encounters and action 6 keeper/story routes; supported action 6 races and ordinary control preparation match sampled original states. | Defender choices, recovery and control |
+| Area continuation into match control | Partial | Sampled capture and blocked recovery reach prepared control and ordinary field rounds; correct the capture-to-new-shot flight flag mismatch, then compare further actions and resolve contact, keeper, story and restart paths. | Pass and action 4/6 continuations |
+| Shot, flight and keeper outcomes | Partial | Join supported actions through flight, keeper outcome, score or possession in one saved flow, checked against original. | Control, defender and presentation boundaries |
+| Restarts, periods and story gates | Partial | Resolve required restart, period and story transitions and resume the match against original observations. | Possession and clock boundaries |
+| Live match scheduling and presentation | Partial | Input, frame timing, randomness, graphics and audio drive the connected rules in an interactive match. | Connected match phases and original timing evidence |
+| Complete playable match | Not started | Start, play to full time, show the result and restart a match with supported controls. | All required match routes and live runtime |
 
 Stages 0 and 1 are **In progress**; later stages are **Planned**. The diagram shows order and dependencies, not an estimate or promise of dates. Online support, text expansion, right-to-left Arabic, quality-of-life options, mod hooks, and graphics hooks must shape the foundation early; their complete player-facing features arrive as the core game becomes playable.
 

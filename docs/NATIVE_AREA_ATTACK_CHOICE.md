@@ -1,5 +1,46 @@
 # Opponent action after area defense selection
 
+## 2026-11-05 ? first queued pass defender preparation and comparison
+
+Phase116 captures the first selected defender, the temporarily stacked ball
+variant, and the cost left by acknowledged original presentation. Phase117
+saves the first comparison before original `$8870` result handling. The caller
+supplies captured defender power and comparison context as well as private
+`CMJPASS1` data exported by `tools/export_area_pass_comparison.py`; these
+inputs are not yet produced by a live presentation engine. Version66 marker132
+appends the three-byte context while older snapshots retain their existing
+format. The original comparisons, test counts and limits are in WORK_LOG.
+
+## 2026-11-05 ? acknowledged pass defender announcement
+
+From phase114, `ack-area-pass-defender` saves phase115 at original `$8845`,
+after an explicitly acknowledged announcement and before the original pushes
+`$044E`. The ball variant remains in the normal recovery context; no original
+stack state has been consumed or lost at this boundary. The 12 constructed
+comparisons and coverage limits are recorded in WORK_LOG. Presentation is not
+actually rendered; preparation, contact, and flag restoration remain pending.
+
+## 2026-11-04 ? defended pass entry
+
+Normal area pass arrivals with queued defenders enter phase114 at original
+`$8840`, before the first defender presentation; possession, ordered IDs and
+flight context remain unchanged, and the defender cursor is zero. Twelve
+constructed original traces checked owner, selected prefix and cursor; native
+serialization preserved all other bytes. The original later temporarily saves
+`$044E` on the 6502 stack; its contact and restoration are not implemented.
+
+## 2026-11-04 ? continued saved area paths
+
+Saved phases 98/99 advance flag1 flight and resolve the cell callback; phases
+100/101/105 cover unopposed recipient and keeper preparation. Action4 phases
+102/103 retain filtered encounters or the control boundary. Action6 phases
+104, 106?110 and 113 cover destination, race, ordinary winner/timeout recovery,
+and prepared control. Phase93 preserves action4/6 defender choices in marker131
+snapshots. The common continuation applies original carrier experience selector1
+when selected count is nonzero before action1/4/6; old field-only comparisons did
+not cover that award. See WORK_LOG for exact current coverage and limitations.
+None of these boundaries runs the original presentation engine or live input.
+
 The completed defensive menu returns to bank26:8B8F. Route2 continues at8978,
 whose first call enters the stats bank's8006→8609 dispatcher. With opponent
 possession it runs875D to choose the attacking action before returning at897D.
@@ -350,3 +391,75 @@ Sixty original CPU comparisons match the complete represented field across
 C606 with frozen input randomness and explicit host frame acknowledgements.
 Evidence: `area-dispatch-original.log`. Full Make check/all pass. Saved movement
 and actual downstream result/possession handling remain next.
+
+## Area action 1 flight setup compatibility — 2026-11-04
+
+Code inspection compared the ten constructed original action 1 flight observations
+with `begin_prepared_session_ball_flight`. The shared direction and velocity
+calculations and the two original boundary addresses offer reusable building
+blocks, but the existing saved session operation is specifically a shot path:
+
+- It accepts phase46, not area attack phase93. Phase93 retains keeper-area and
+  area-target context; shot flight phases require a `ShotFlightContext` and their
+  own phase-specific validation.
+- Area action 1 stores a recipient and cell. Original `$E059` refreshes the cell
+  from the recipient's position; the native saved area target must currently agree
+  with that position. The observed recipient255 no-target case is outside the
+  supported native action 1 snapshot, which requires recipient12..21.
+- The existing setup takes explicit X/Y fractional bytes and requires the ball
+  cell to agree with its integer coordinates. Those constraints also need an
+  explicit source and original comparison for the area path.
+- Original area observations have `$061B` flag1; the existing trajectory is
+  initialized with flag0 and validation rejects nonzero flags. The existing shot
+  context also requires counter255, while the traced area entry can set `$061A`
+  to 38 when the relevant flag is set. These distinctions cannot be discarded.
+- For an already-matching cell, the existing shot path saves phase50 with zeroed
+  unused velocity; the original leaves stale velocity untouched. Area-specific
+  downstream use of those bytes remains unverified. In the ten area observations,
+  two reached this early return and eight reached initialized flight.
+
+The earlier area observations used constructed inputs and cooperative frame
+acknowledgements; this is a code-level compatibility assessment, not an
+area-to-native flight comparison or evidence of live presentation. Next compare
+the reusable numeric helpers against controlled area original setup, then design
+saved state and subsequent callbacks around the area-specific flags and routes.
+
+## Saved area action 1 flight setup — 2026-11-04
+
+`begin_prepared_area_action_flight` connects saved phase93 to area-only phase96
+at `$E773`, or phase97 at `$E7CF` when already at the destination. It refreshes
+the saved recipient's target cell, retains recipient/cost and the observed
+counter (255 or 38), records flight flag1, clears selected count and elapsed,
+and saves 16-bit position and velocity. The host explicitly supplies fractional
+coordinates, the already-calculated distance, post-presentation facing and
+motion, and previous velocity bytes. Early return preserves the supplied previous
+velocity; the normal path calculates new velocity. Inputs are not mutated on
+failure. Existing shot stepping rejects these new area phases.
+
+Snapshot version65 uses marker131 only for phases96/97 and keeps the 414-byte
+layout; other phases continue writing version64. Older versions reject the new
+phases. `--begin-area-flight FILE LX LY DIST FACING MOTION VXLO VXHI VYLO VYHI`
+and the corresponding interactive command expose the prepared boundary.
+
+Twelve constructed area-flag numeric setups matched original direction and
+velocity. Twenty-four constructed saved setups matched original represented
+field, trajectory, destination, counter, recipient and captured presentation
+values: results0/1, counter variants, three fractional pairs, and normal/early
+return. Interactive replay matched the batch snapshot. Full native CMake build,
+45 compiled C++ test executables and snapshot roundtrip/downgrade tests passed.
+The original comparison used one selected defender, one recipient and elapsed0;
+it did not compare unused selected-ID storage after the count was cleared. It
+used explicit cooperative presentation acknowledgements and frozen randomness,
+not live rendering, audio, NMI, frame timing or area flight callbacks.
+
+## Defended pass return to control - 2026-11-05
+
+Sampled pass defender outcomes now reach captured or ordinary blocked recovery,
+prepared control and ordinary field rounds. Menu entry and basic shot preparation
+matched two constructed original cases for each path. Captured-pass new-shot
+setup has a known mismatch: original $061B remains 1 and native initializes the
+new trajectory flag to 0. Both sampled variants match other represented fields
+and trajectory values through the first numeric flight cell, but the subsequent
+callback is not verified. Trace its uses and preserve the flag across saved
+states before extending this continuation. See WORK_LOG for the exact sample
+counts, failed fixture attempts, clock and presentation limitations.

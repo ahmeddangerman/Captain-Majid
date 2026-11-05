@@ -4,13 +4,15 @@
 #include <stdexcept>
 #include <utility>
 namespace captain {
-ClearanceRaceResult resolve_session_clearance_race(const PhaseSessionState& input,
+namespace {
+ClearanceRaceResult resolve_race(const PhaseSessionState& input,
     const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,
-    const ClearanceRaceContent& content) {
+    const ClearanceRaceContent& content,bool area) {
     validate_phase_session(input);
-    if(input.phase!=FieldSessionPhase::capture_clearance_flight)
+    if(input.phase!=(area ? FieldSessionPhase::area_action6_destination_pending : FieldSessionPhase::capture_clearance_flight))
         throw std::invalid_argument("Clearance race requires prepared flight setup");
     auto state=input;
+    if(area)state.clearance_flight=ClearanceFlightContext{4};
     auto& field=state.current.field;
     field.elapsed=1;
     NearestFieldPlayerInput nearest{field.side,field.ball_x,field.ball_y,field.ball_owner,
@@ -48,9 +50,26 @@ ClearanceRaceResult resolve_session_clearance_race(const PhaseSessionState& inpu
         auto& owner=field.motion[field_motion_index(*winner)];
         owner.x=static_cast<std::uint16_t>((owner.x&255u)|(unsigned(field.ball_x)<<8));
         owner.y=static_cast<std::uint16_t>((owner.y&255u)|(unsigned(field.ball_y)<<8));
-        state.phase=FieldSessionPhase::clearance_race_winner;
-    } else state.phase=FieldSessionPhase::clearance_race_timeout;
+        state.phase=area ? FieldSessionPhase::area_action6_race_winner : FieldSessionPhase::clearance_race_winner;
+    } else state.phase=area ? FieldSessionPhase::area_action6_race_timeout : FieldSessionPhase::clearance_race_timeout;
     validate_phase_session(state);
     return {std::move(state),rounds,winner,music,script};
+}
+}
+ClearanceRaceResult resolve_session_clearance_race(const PhaseSessionState& input,const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,const ClearanceRaceContent& content) {
+ return resolve_race(input,mappings,movement,content,false);
+}
+ClearanceRaceResult resolve_session_area_action6_race(const PhaseSessionState& input,const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,const ClearanceRaceContent& content) {
+ return resolve_race(input,mappings,movement,content,true);
+}
+PhaseSessionState continue_session_area_action6_winner(const PhaseSessionState& input,std::uint8_t facing,std::uint8_t motion) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::area_action6_race_winner || (facing!=0 && facing!=64))
+  throw std::invalid_argument("Area action6 winner needs acknowledged presentation");
+ const auto& f=input.current.field;
+ if(f.ball_y>=96 && f.ball_y<160 && (f.ball_x<80 || f.ball_x>=176))
+  throw std::invalid_argument("Area action6 winner awaits keeper-area continuation");
+ auto state=input;state.control->facing=facing;state.control->motion_requested=motion;
+ state.phase=FieldSessionPhase::area_action6_control_pending;validate_phase_session(state);return state;
 }
 }

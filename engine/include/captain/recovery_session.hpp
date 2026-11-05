@@ -24,10 +24,24 @@ RecoverySessionResult advance_session_selected_recovery(const PhaseSessionState&
 RecoverySessionResult advance_session_clearance_recovery(const PhaseSessionState& input,
     const std::vector<RecoveryDefender>& selected,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement);
+RecoverySessionResult advance_session_area_result_recovery(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement);
+RecoverySessionResult advance_session_area_action6_recovery(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement);
+RecoverySessionResult advance_session_area_pass_blocked_recovery(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement);
+PhaseSessionState continue_session_area_pass_blocked_recovery(const PhaseSessionState& input,std::uint8_t facing,std::uint8_t motion);
+PhaseSessionState continue_session_area_action6_recovery(const PhaseSessionState& input,std::uint8_t facing,std::uint8_t motion);
 PhaseSessionState continue_session_selected_recovery(const PhaseSessionState& input);
-// Explicit prepared continuation after ownership writes. Unknown goalkeeper,
-// restart and story handling remain typed boundaries; waits do not run here.
+// Explicit prepared continuation after ownership writes. Area recovery supports
+// only the immediate keeper-area gate; ordinary/story area tails reject. Waits
+// do not run here.
 PhaseSessionState continue_session_recovery(const PhaseSessionState& post_presentation);
+// Prepared ordinary-area handoff after host acknowledgement; facing is captured
+// from that presentation. Keeper-area and story routes remain separate.
+PhaseSessionState continue_session_area_ordinary_recovery(const PhaseSessionState& input, std::uint8_t facing);
+PhaseSessionState continue_session_area_story_recovery(const PhaseSessionState& input, std::uint8_t facing);
 // Numeric area setup before the original8B73 presentation/menu.
 PhaseSessionState prepare_session_keeper_area(const PhaseSessionState& input);
+PhaseSessionState prepare_area_pass_keeper(const PhaseSessionState& input);
 }

@@ -37,6 +37,7 @@ def main():
  out=a.output_dir.resolve()
  if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private data must stay outside checkout')
  out.mkdir(parents=True,exist_ok=False);prg=rom[16:262160]
+ binary=str((Path('build/captain-phase-session.exe') if Path('build/captain-phase-session.exe').exists() else Path('build/captain-phase-session')).resolve())
  seed=bytearray(dict(defense_entries(prg,a.keeper_ram.read_bytes()))['active']);seed[0x61e]=1;seed[0x60b:0x60f]=bytes((6,255,255,255));seed[0x606:0x60a]=bytes(4)
  _,prepared=observe_area_attack_choice(prg,seed,prepare_attack=True);_,announced=trace_area_attack_presentation(prg,prepared,announce=True)
  _,base,_=trace_area_sequence(prg,announced,until='next');cost=prepared[0x43f:0x441]
@@ -56,18 +57,18 @@ def main():
      original,boundary=observe(prg,raw);wanted=saved(original,90+boundary,cost);actual=target.read_bytes()
      if int(run.stdout)!=boundary or actual!=wanted:raise RuntimeError(f'{label}: boundary {run.stdout.strip()} != {boundary}, offsets {[(i,x,y)for i,(x,y)in enumerate(zip(actual,wanted))if x!=y]}')
      automatic=out/f'{label}-automatic.cmjsession'
-     run=subprocess.run(['build/captain-phase-session',str(a.pack.resolve()),str(source),'--advance-profiled-area-prefix-clock','--capture',str(automatic)],capture_output=True,text=True,timeout=10)
+     run=subprocess.run([binary,str(a.pack.resolve()),str(source),'--advance-profiled-area-prefix-clock','--capture',str(automatic)],capture_output=True,text=True,timeout=10)
      if run.returncode or automatic.read_bytes()!=wanted:raise RuntimeError(f'{label}: automatic selection mismatch: {run.stderr}')
      oldpack=a.pack.with_name('japanese-cycle-v19-area-comparison.cmjpack')
      if len(results)==0:
       rejected=out/'missing-timing.cmjsession'
-      missing=subprocess.run(['build/captain-phase-session',str(oldpack),str(source),'--advance-profiled-area-prefix-clock','--capture',str(rejected)],capture_output=True,text=True,timeout=10)
+      missing=subprocess.run([binary,str(oldpack),str(source),'--advance-profiled-area-prefix-clock','--capture',str(rejected)],capture_output=True,text=True,timeout=10)
       if not missing.returncode or rejected.exists():raise RuntimeError('Missing timing content accepted')
       broken=out/'truncated.cmjpack';broken.write_bytes(a.pack.read_bytes()[:-1]);bad=out/'truncated-result.cmjsession'
-      malformed=subprocess.run(['build/captain-phase-session',str(broken),str(source),'--advance-profiled-area-prefix-clock','--capture',str(bad)],capture_output=True,text=True,timeout=10)
+      malformed=subprocess.run([binary,str(broken),str(source),'--advance-profiled-area-prefix-clock','--capture',str(bad)],capture_output=True,text=True,timeout=10)
       if not malformed.returncode or bad.exists():raise RuntimeError('Truncated timing content accepted')
       replay=out/'replay.cmjsession'
-      repeated=subprocess.run(['build/captain-phase-session',str(a.pack.resolve()),str(automatic),'--advance-profiled-area-prefix-clock','--capture',str(replay)],capture_output=True,text=True,timeout=10)
+      repeated=subprocess.run([binary,str(a.pack.resolve()),str(automatic),'--advance-profiled-area-prefix-clock','--capture',str(replay)],capture_output=True,text=True,timeout=10)
       if not repeated.returncode or replay.exists():raise RuntimeError('Automatic clock replay accepted')
      results.append({'action':action,'remaining':remaining,'extra':extra,'random':random,'boundary':boundary});boundaries.add(boundary)
  if boundaries!={0,1,2}:raise RuntimeError(f'Missing clock boundary: {boundaries}')

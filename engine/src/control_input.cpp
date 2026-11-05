@@ -4,6 +4,28 @@
 #include <utility>
 
 namespace captain {
+ControlPollResult poll_session_area_pass_capture(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed,
+ const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control_content) {
+ validate_phase_session(input);
+ const bool blocked=input.phase==FieldSessionPhase::area_pass_blocked_control_ready || input.phase==FieldSessionPhase::area_pass_blocked_control_wait;
+ if((input.phase!=FieldSessionPhase::area_pass_capture_control_ready && input.phase!=FieldSessionPhase::area_pass_capture_control_wait && !blocked) ||
+    (blocked && input.current.field.side!=0))
+  throw std::invalid_argument("Captured pass polling needs prepared control");
+ auto prepared=input;prepared.phase=FieldSessionPhase::control_ready;
+ prepared.area_ai_target.reset();prepared.area_contact.reset();prepared.area_pass_contact.reset();
+ prepared.shot_flight.reset();prepared.ball_trajectory.reset();prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+ auto result=poll_session_control(prepared,held,pressed,primary,movement,control_content);auto& state=result.state;
+ state.area_ai_target=input.area_ai_target;state.area_contact=input.area_contact;state.area_pass_contact=input.area_pass_contact;
+ state.shot_flight=input.shot_flight;state.ball_trajectory=input.ball_trajectory;
+ state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+ state.ball_trajectory->x=static_cast<std::uint16_t>((unsigned(state.current.field.ball_x)<<8)|(input.ball_trajectory->x&255u));
+ state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(state.current.field.ball_y)<<8)|(input.ball_trajectory->y&255u));
+ state.phase=blocked ? (result.menu_requested ? FieldSessionPhase::area_pass_blocked_action_menu :
+  result.decision_step ? FieldSessionPhase::area_pass_blocked_clock_pending : FieldSessionPhase::area_pass_blocked_control_wait) :
+  (result.menu_requested ? FieldSessionPhase::area_pass_capture_action_menu :
+  result.decision_step ? FieldSessionPhase::area_pass_capture_clock_pending : FieldSessionPhase::area_pass_capture_control_wait);
+ validate_phase_session(state);return result;
+}
 ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::uint8_t held, std::uint8_t pressed) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::field_round_pending)

@@ -17,6 +17,32 @@ enum class FieldSessionPhase : std::uint8_t {
     shot_dispatch_added_time = 26, shot_dispatch_ready = 27,
     selected_ball_recovery = 28, selected_defense_animation = 29, selected_restart_entry = 30,
     selected_recovered_owner = 31, selected_boundary_restart = 32, capture_clearance_flight = 33, clearance_race_winner = 34, clearance_race_timeout = 35, clearance_recovery_ready = 36, clearance_recovered_owner = 37, selected_field_restart = 38, selected_goal_restart = 39, restart_options = 40, restart_tactics = 41, restart_options_done = 42, selected_attack_presentation = 43, attack_clock_added_time = 44, shot_approach_ready = 45, shot_flight_pending = 46, ball_advance_ready = 47, ball_cell_callback = 48, ball_arrival_callback = 49, ball_already_arrived = 50, shot_loose_recovery = 51, shot_keeper_entry = 52, keeper_presentation_pending = 53, stunned_keeper_pending = 54, stunned_keeper_decided = 55, keeper_decided = 56, keeper_possession = 57, keeper_punch_recovery = 58, goal_celebration_pending = 59, goal_kickoff_pending = 60, kickoff_formation_placed = 61, kickoff_receiver_selected = 62, kickoff_ball_placed = 63, kickoff_control_pending = 64, keeper_area_prepared = 65, keeper_area_defense_pending = 66, keeper_area_defense_initial = 67, keeper_area_choices_done = 68, keeper_area_defense_ready = 69, keeper_area_defense_poll = 70, keeper_area_defense_preparation = 71, keeper_area_defense_complete = 72, keeper_area_special_ready = 73, keeper_area_special_poll = 74, keeper_area_special_decided = 75, keeper_area_special_inspected = 76, keeper_area_special_redrawn = 77, keeper_area_ai_chosen = 78, keeper_area_attack_prepared = 79, keeper_area_defense_entry = 80, keeper_area_defenders_announced = 81, keeper_area_defender_compared = 82, keeper_area_contact_clock_done = 83, keeper_area_contact_added_time = 84, keeper_area_contact_period_end = 85, keeper_area_contact_presented = 86, keeper_area_defender_next = 87, keeper_area_prefix_done = 88, keeper_area_terminal_result = 89, keeper_area_prefix_clock_done = 90, keeper_area_prefix_added_time = 91, keeper_area_prefix_period_end = 92
+    , keeper_area_attack_continuation = 93, keeper_area_recovery_ready = 94,
+    keeper_area_recovered_owner = 95, area_ball_advance_ready = 96, area_ball_already_arrived = 97,
+    area_ball_cell_callback = 98, area_ball_arrival_callback = 99, area_pass_received = 100,
+    area_pass_keeper_entry = 101, area_action4_encounters_pending = 102, area_action4_control_pending = 103,
+    area_action6_destination_pending = 104, area_pass_keeper_prepared = 105,
+    area_action6_race_winner = 106, area_action6_race_timeout = 107,
+    area_action6_control_pending = 108, area_action6_recovered_owner = 109,
+    area_action6_recovered_control = 110, area_action6_control_ready = 113,
+    area_pass_defenders_pending = 114, area_pass_defender_announced = 115,
+    area_pass_defender_prepared = 116, area_pass_defender_compared = 117,
+    area_pass_variant_restored = 118, area_pass_result_handler_entry = 119,
+    area_pass_nonterminal_done = 120, area_pass_nonterminal_added_time = 121,
+    area_pass_nonterminal_period_end = 122, area_pass_defenders_done = 123,
+    area_pass_blocked_positioned = 124, area_pass_terminal_clock_done = 125,
+    area_pass_terminal_added_time = 126, area_pass_terminal_period_end = 127,
+    area_pass_defender_captured = 128, area_pass_capture_control_entry = 129,
+    area_pass_capture_control_ready = 130, area_pass_capture_control_wait = 131,
+    area_pass_capture_action_menu = 132, area_pass_capture_clock_pending = 133,
+    area_pass_blocked_recovery_entry = 134, area_pass_blocked_recovered_owner = 135,
+    area_pass_blocked_boundary = 136, area_pass_blocked_control_entry = 137,
+    area_pass_blocked_control_ready = 138, area_pass_blocked_control_wait = 139,
+    area_pass_blocked_action_menu = 140, area_pass_blocked_clock_pending = 141,
+    area_pass_capture_field_round = 142, area_pass_capture_goal_area = 143,
+    area_pass_capture_added_time = 144, area_pass_capture_period_end = 145,
+    area_pass_blocked_field_round = 146, area_pass_blocked_goal_area = 147,
+    area_pass_blocked_added_time = 148, area_pass_blocked_period_end = 149
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;
@@ -62,6 +88,7 @@ struct AreaContactContext {
     std::uint8_t strength=0,loss=0,score=0,result=0;
     bool weakened=false;
 };
+struct AreaPassContactContext { std::uint8_t saved_ball_variant=0; std::uint16_t captured_cost=0; };
 struct PhaseSessionState {
     ContactPreludeState current;
     FieldSessionPhase phase = FieldSessionPhase::field;
@@ -90,7 +117,9 @@ struct PhaseSessionState {
     struct AreaAiTarget { std::uint8_t recipient=0,cell=0; std::uint16_t cost=0; };
     std::optional<AreaAiTarget> area_ai_target{};
     std::optional<AreaContactContext> area_contact{};
+    std::optional<AreaPassContactContext> area_pass_contact{};
     std::uint8_t area_defender_cursor=0;
+    std::uint8_t area_sequence_result=255;
 };
 struct PhaseSessionResult {
     PhaseSessionState state;

@@ -4,6 +4,15 @@
 #include <stdexcept>
 
 namespace captain {
+ActionMenuResult open_area_pass_human_action_menu(const PhaseSessionState& input,const ActionMenuContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::area_pass_capture_action_menu && input.phase!=FieldSessionPhase::area_pass_blocked_action_menu)
+  throw std::invalid_argument("Area pass action menu requires a saved menu request");
+ auto state=input;state.phase=FieldSessionPhase::action_menu_pending;
+ state.area_ai_target.reset();state.area_contact.reset();state.area_pass_contact.reset();
+ state.shot_flight.reset();state.ball_trajectory.reset();state.area_defender_cursor=0;state.area_sequence_result=255;
+ validate_phase_session(state);return open_human_action_menu(state,content);
+}
 ActionMenuResult continue_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_area_special_redrawn)

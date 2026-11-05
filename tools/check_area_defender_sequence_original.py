@@ -11,13 +11,19 @@ from trace_area_defender_sequence import trace_area_sequence
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def saved(raw,phase,cost,comparison=None,cursor=None):
+def saved(raw,phase,cost,comparison=None,cursor=None,sequence_result=None):
  data=bytearray(checkpoint(raw,phase));data[396:398]=cost
  index=raw[0x616] if cursor is None else cursor
  data[412]=index
  if comparison is not None:
   c=comparison
   data[398:412]=bytes((1,index,raw[0x60b+index],c['subtype'],c['effect'],c['power']&255,c['power']>>8,c['cost']&255,c['cost']>>8,c['strength'],c['loss'],c['score'],c['result'],c['weakened']))
+ data[10]=130
+ final_result=0 if phase==81 else comparison['result'] if comparison is not None else raw[0x612]
+ if sequence_result is not None:final_result=sequence_result
+ if phase in (87,88,90,91,92) and final_result>1:final_result=0
+ if final_result>3:final_result=255
+ data.append(final_result)
  return bytes(data)
 
 
@@ -43,7 +49,7 @@ def main():
  if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private outputs must stay outside checkout')
  out.mkdir(parents=True,exist_ok=False)
  prg=rom[16:262160];seeds=dict(defense_entries(prg,a.keeper_ram.read_bytes()))
- binary='build/captain-phase-session';pack=str(a.pack.resolve());results=[];codes=set();slots=set();contacts=skips=0
+ binary=str((Path('build/captain-phase-session.exe') if Path('build/captain-phase-session.exe').exists() else Path('build/captain-phase-session')).resolve());pack=str(a.pack.resolve());results=[];codes=set();slots=set();contacts=skips=0
  patterns=((4,4,4,4),(2,4,2,4),(5,6,5,6),(6,4,5,2),(2,6,4,5),(5,5,4,6))
  for count in (1,4):
   for variant in (1,2):
@@ -65,7 +71,7 @@ def main():
        raw[0x5f7:0x5f9]=(449).to_bytes(2,'little');raw[0x5f9]=0;raw[0x517]=0 if random==0 else 64
        raw[0x5fc]=13;raw[0x638]=(((raw[0x306+12*13]-48)>>3)*12+((raw[0x308+12*13]-80)>>3))
        name=f'n{count}-v{variant}-p{pattern_id}-a{attack}-w{power}-r{random}'
-       source=out/f'{name}-entry.cmjsession';source.write_bytes(saved(raw,81,cost,cursor=0));commands=[]
+       source=out/f'{name}-entry.cmjsession';source.write_bytes(saved(raw,81,cost,cursor=0));commands=[];last_result=0
        for cursor in range(count):
         action=raw[0x60b+cursor];slots.add(cursor)
         target=out/f'{name}-s{cursor}-next.cmjsession'
@@ -74,7 +80,7 @@ def main():
          phase=87 if report['boundary']=='next_defender' else 88
          if report['boundary']not in ('next_defender','prefix_done'):raise RuntimeError('Unexpected skip boundary')
          actual,requests=run_step(binary,pack,source,target,'--skip-area-defender');commands.append('skip-area-defender')
-         matches(actual,saved(after,phase,cost),name+' skip')
+         matches(actual,saved(after,phase,cost,sequence_result=last_result),name+' skip')
          if requests!=report['requests']:raise RuntimeError('Skip wait requests differ')
          skips+=1
         else:
@@ -82,6 +88,7 @@ def main():
          actual,_=run_step(binary,pack,source,contact_path,'--resolve-area-defender');commands.append('resolve-area-defender')
          m,c=observe_contact(prg,raw);m[0x612]=c.y
          comparison={'power':m[0x32]|m[0x33]<<8,'cost':m[0x43f]|m[0x440]<<8,'effect':m[0x445],'strength':m[0x71],'loss':m[0x619],'score':c.a,'result':c.y,'subtype':m[0x43e],'weakened':int(bool(m[0x3a]&128))}
+         last_result=c.y
          matches(actual,saved(bytes(m.ram[:2048]),82,cost,comparison),name+' contact');codes.add(c.y)
          clock_path=out/f'{name}-s{cursor}-clock.cmjsession'
          clock_report,clock_raw,_=trace_area_sequence(prg,raw,until='clock',cursor=cursor)
@@ -97,7 +104,7 @@ def main():
          report,after,_=trace_area_sequence(prg,raw,until='next',cursor=cursor)
          phase={'next_defender':87,'prefix_done':88,'terminal_result':89}[report['boundary']]
          actual,requests=run_step(binary,pack,presented,target,'--advance-area-defender');commands.append('advance-area-defender')
-         matches(actual,saved(after,phase,cost,comparison if phase==89 else None),name+' advance')
+         matches(actual,saved(after,phase,cost,comparison if phase==89 else None,sequence_result=last_result),name+' advance')
          if requests!=report['requests'][2:]:raise RuntimeError('Next defender wait differs')
          contacts+=1
         if phase in (88,89):

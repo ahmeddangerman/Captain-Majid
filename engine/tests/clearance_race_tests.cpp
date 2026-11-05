@@ -32,7 +32,7 @@ int main(){
  check(r.state.current.field.motion[field_motion_index(13)].x==((60<<8)|23) &&
   r.state.current.clock.remaining==449 && r.state.experience->totals[0]==7 &&
   r.state.current.field.elapsed==1 && bytes(s)==before,"Fractions/time/experience/input preserved");
- auto encoded=bytes(r.state);check(encoded.size()==413 && static_cast<unsigned char>(encoded[10])==129,"Session59 format");
+ auto encoded=bytes(r.state);check(encoded.size()==414 && static_cast<unsigned char>(encoded[10])==130,"Session64 format");
  std::istringstream saved(encoded);check(bytes(load_phase_session(saved))==encoded,"Winner snapshot");
  auto original=s;s=r.state;rejects(run);s=original;
  s.current.field.motion[field_motion_index(13)].x=80<<8;r=run();

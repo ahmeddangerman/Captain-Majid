@@ -12,4 +12,8 @@ struct ClearanceRaceResult {
 ClearanceRaceResult resolve_session_clearance_race(const PhaseSessionState& input,
     const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,
     const ClearanceRaceContent& race);
+ClearanceRaceResult resolve_session_area_action6_race(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,
+    const ClearanceRaceContent& race);
+PhaseSessionState continue_session_area_action6_winner(const PhaseSessionState& input,std::uint8_t facing,std::uint8_t motion);
 }

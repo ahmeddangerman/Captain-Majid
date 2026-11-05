@@ -1619,3 +1619,538 @@ Daily website note updated separately; engine/private research remains local.
   Evidence: area-dispatch-original.log. Full Make check/all pass. Next: saved
   movement boundary and original result/possession handling. Overall progress
   remains unmeasured.
+
+## 2026-11-03 — final area sequence timing and possession
+
+- Connected the final movement step to saved area-result dispatch. Results 0/1
+  continue the attack; result 3 with defense action 2 awards selector-2
+  experience once and transfers possession directly; result 2 and result 3 with
+  action 4 enter selected loose-ball recovery. The recovery wrapper commits the
+  selected recipient, preserves selected IDs on the interior recovered-owner
+  phase, and clears selected IDs and prior kickoff metadata on the boundary
+  restart route. Added `--dispatch-area-result` and `--recover-area-result` CLI
+  operations and interactive commands.
+- Snapshot version64 uses marker130 and is414bytes. Earlier formats remain
+  readable. Version63 exhausted-sequence snapshots do not contain the final
+  result, so they load with an unknown-result sentinel and reject dispatch
+  rather than infer the result.
+- Original ROM verification: all 720 complete defender sequences match,
+  covering 696 contacts, 748 skipped entries, all four result codes, and
+  selected slots. Separate comparisons match 100 final dispatch states and 60
+  selected recovery continuations (original owner handoff or boundary restart).
+  `keeper-save-session-tests.exe`, the native CMake build, and all compiled
+  `*-tests.exe` executables pass.
+- The first 720-sequence rerun exposed a comparison-fixture bug: it dropped the
+  saved prior-result byte across skipped choices. The fixture and comparison
+  script now preserve that byte; the final 720-sequence rerun passed. No blocker
+  remains in the tested sequence, dispatch, or selected recovery paths.
+- Pending: live renderer/action presentation, a running host frame loop, and
+  runtime randomness are not covered by these comparisons (they use explicit
+  frame acknowledgements and frozen randomness). A complete playable match is
+  still unverified. Next: trace and connect the gameplay step after these
+  possession/recovery boundaries against the original, then continue the
+  remaining restart/keeper/story and shot/goal integration. Keep presentation
+  and live timing as pending. Overall completion remains unmeasured.
+
+## 2026-11-04 — sampled area recovered-owner keeper-area trace
+
+- Updated the existing `ROADMAP.md` with scoped playable-match checkpoints,
+  dependencies and completion checks. Corrected the stale latest dispatch and
+  Windows test descriptions in `PORT_STATUS.md`; preserved the older work.
+- New original CPU observations: 12 constructed selected-recovery tails reached
+  the keeper-area interaction at bank26 `$8B4A`, preserving selected count 1;
+  all 12 had zero host-frame waits in this tail. Cases included result 2/action 2
+  and result 3/action 4, four random-byte pairs, and two sampled attack powers
+  (some generated states repeat). An assertion check confirmed these counts and
+  boundaries. Private script and output: `trace-area-recovered-tail-20261104.py`
+  and `area-recovered-tail-20261104.json` in the analysis directory.
+- The trace uses constructed inputs and cooperative acknowledgements, with no
+  NMI, audio, PPU or real frame timing. It did not compare a new native tail;
+  ordinary-field, story-gate, other selected counts and broader coverage remain
+  untested. The existing virtual environment could not launch its missing Python
+  3.12 runtime; Blender's bundled Python with the existing py65 package ran the
+  observation and assertion check successfully.
+- Previously reported, not rerun today: 720 defender sequences, 100 final
+  dispatch states and 60 recovery continuations matched the original; native
+  CMake build and compiled C++ tests passed. Next: trace ordinary-field and
+  story-gate area recovered-owner continuations before implementing the tail.
+  No complete match or overall percentage is claimed.
+
+## 2026-11-04 — sampled ordinary and story area recovery tails
+
+- Starting from an original result 2/action 2 area recovered-owner state with one
+  selected defender, constructed two interior-ball variants for the original
+  continuation at `$8C31`. The ordinary variant reached player-control handoff
+  at `$C60F`; the game-mode 4 story variant reached `$8E86`. Both retained the
+  selected count of 1 and required 72 cooperative host-frame acknowledgements.
+- The observer exited successfully and an independent assertion check passed for
+  both routes, selected counts and acknowledgement counts. Private research
+  files: `trace-area-recovered-routes-20261104.py` and
+  `area-recovered-routes-20261104.json` in the analysis directory. These are two
+  constructed cases, not a native comparison or evidence of live frame timing,
+  NMI, audio or rendering. Different owners, sides, selected counts and boundary
+  inputs remain untested.
+- Updated the existing roadmap and port status. Next: implement one bounded area
+  recovered-owner continuation using these original observations, with saved
+  state validation and controlled comparisons before extending coverage. The
+  complete playable match remains unfinished; overall completion is unmeasured.
+
+## 2026-11-04 — saved area recovery to keeper interaction
+
+- Connected `continue-recovery` from area recovered-owner phase95 to the existing
+  keeper-interaction phase7 when the ball is in the original keeper-area gate.
+  The selected prefix and the rest of the saved state remain intact. Area recovery
+  outside this gate still rejects atomically; ordinary/story tails remain pending.
+  A version64 snapshot can retain selected defenders at this phase; older formats
+  reject that combination. No new snapshot bytes or version were introduced.
+- New original comparison: 12 constructed area keeper continuations matched the
+  original represented field and preserved the complete native snapshot apart
+  from its phase. The original selected count and IDs were unchanged. Inputs
+  covered result 2/action 2 and result 3/action 4, four random-byte pairs and
+  two attack-power variants; some constructed states repeat. Evidence is in the
+  private analysis folder: `compare-area-keeper-continuation-20261104.py` and
+  `area-keeper-continuation-20261104-retry/verification.json`.
+- The regression first failed at the unavailable continuation, then passed after
+  implementation. Full native CMake build passed; all 45 compiled C++ test
+  executables passed. The first ROM comparison failed to launch the session CLI
+  because `libunwind.dll` was unavailable in the sandbox; it passed with the
+  installed toolchain runtime on PATH outside the sandbox. A CTest attempt could
+  not find `ctest.exe`; direct execution of the 45 test executables was used.
+- This is a prepared original CPU boundary with frozen randomness, not live
+  presentation or a complete match. Next: implement the ordinary-field area
+  recovered-owner tail with explicit prepared presentation acknowledgements,
+  original comparison and atomic rejection of the unimplemented story route.
+  Overall completion remains unmeasured.
+
+## 2026-11-04 — prepared ordinary area recovery continuation
+
+- Added `continue_session_area_ordinary_recovery` and CLI / interactive
+  `continue-area-ordinary-recovery FACING` for area recovered-owner phase95.
+  It accepts captured facing 0 or 64 after an explicit prepared presentation
+  acknowledgement, preserves selected defenders and commits player-control
+  phase1. Keeper-area and story-gate inputs reject without changing input;
+  those routes retain separate continuations. Snapshot version64 is unchanged.
+- Eleven constructed original CPU comparisons matched the represented field,
+  retained selected prefix and captured final facing across both possession
+  sides, ordinary positions and sampled keeper/story thresholds. Native saved
+  output differed from input only in phase and captured facing. Observer waits
+  were acknowledged cooperatively; this does not implement live presentation,
+  NMI, audio or real timing. Private evidence: `inspect-area-ordinary-tail-20261104.py`,
+  `compare-area-ordinary-continuation-20261104.py`, and
+  `area-ordinary-continuation-20261104/verification.json`.
+- Test-first regression failed to link while the new operation was absent; the
+  focused test passed after implementation. The full native CMake build passed;
+  all 45 compiled C++ test executables passed. Story rejection and snapshot
+  roundtrip are covered. The area story route and broader original coverage
+  remain pending. Next: trace and connect the area story-gate continuation with
+  selected defenders retained, then compare the represented original state.
+  A complete playable match remains unfinished; overall completion is unmeasured.
+
+## 2026-11-04 — prepared area recovery story-gate entry
+
+- Added `continue_session_area_story_recovery` and CLI / interactive
+  `continue-area-story-recovery FACING`. From area recovered-owner phase95 it
+  checks the original story gate after the keeper-area gate, accepts captured
+  facing 0 or 64 and commits story-transition phase8 with selected defenders
+  retained. The operation rejects non-story, keeper-area, invalid facing and
+  repeated inputs without changing them. Captured kickoff formation is retained.
+- Version64 snapshots can retain selected defenders in phase8; earlier versions
+  reject that combination. No snapshot bytes or version were added. Native tests
+  cover snapshot roundtrip, old-version rejection and kickoff retention.
+- Ten constructed original CPU comparisons matched the represented field,
+  selected prefix and captured facing for two owners and five positions. The
+  native saved snapshot changed only in phase and captured facing. The original
+  observer uses cooperative presentation acknowledgements; no live timing,
+  rendering, audio or story scene execution is claimed. Evidence remains private:
+  `compare-area-story-continuation-20261104.py` and
+  `area-story-continuation-20261104/verification.json`.
+- The test-first regression failed to link before implementation, then the
+  focused test passed. Full native CMake build and all 45 compiled C++ test
+  executables passed. Broader original inputs and the story scene remain pending.
+  Next: trace the original next boundary for area attack continuation (phase93).
+  The complete playable match remains unfinished; overall completion is unmeasured.
+
+## 2026-11-04 — initial area attack result dispatch trace
+
+- Observed original bank26 `$8A6F` through the first result-table destination
+  after `$8A72`, starting from a constructed saved area prefix with elapsed0.
+  Manually selected attack bytes 1, 4 and 6 and result bytes 0 and 1 produced
+  six cases; every case reached `$8A80`, in 23 instructions with no host frame
+  waits. An assertion check confirmed all combinations and destinations.
+- The action bytes were constructed at the dispatch boundary rather than each
+  being generated through a complete action sequence. The observer preserves CPU
+  execution across movement and table dispatch; it uses frozen randomness and
+  cooperative acknowledgements, with no NMI, audio, PPU or live frame timing.
+  This is original-only evidence, not a new native comparison or implementation.
+- Private evidence: `inspect-area-attack-tail-20261104.py`,
+  `trace-area-attack-dispatch-20261104.py` and
+  `area-attack-dispatch-20261104.json` in the analysis directory. Next: trace
+  original `$8A80` including its `$8BBA` call and subsequent action dispatch,
+  before connecting a native continuation. Overall completion is unmeasured.
+
+## 2026-11-04 — area attack action dispatch trace
+
+- In six constructed original traces, action bytes 1, 4 and 6 with result 0 or
+  1 pass through `$8A80`, return from `$8BBA` to `$8A83`, and reach the action
+  jump table at `$8A8B`. At the indirect jump, action 1 selected `$C612`, action
+  4 selected `$C627`, and action 6 selected `$C62D` for both results. A separate
+  assertion check passed for all six combinations and recorded checkpoints.
+- The observer counted 162, 59 and 71 cooperative frame acknowledgements for
+  actions 1, 4 and 6 respectively in these constructed cases. The actions were
+  set at a shared dispatch checkpoint; no complete action chain, native match,
+  live rendering, audio, NMI or actual frame timing is verified. A preliminary
+  diagnostic recorded later bank26 reentries; those are not the jump targets.
+- Private evidence: `trace-area-action-targets-20261104.py`, its underlying
+  `trace-area-attack-action-20261104.py`, and
+  `area-attack-action-targets-20261104.json` in the analysis folder. No native
+  code changed. Next: trace the action 1 `$C612` handler to its next meaningful
+  gameplay boundary before deciding how to connect the continuation. Overall
+  completion remains unmeasured.
+
+## 2026-11-04 — area action 1 entry trace
+
+- Traced four constructed action 1 entries from `$8A6F`, varying result 0/1 and
+  bit 7 of `$0628`, through `$C612` and bank30 `$DE52` to `$DE5E`. At this
+  boundary `$061A` was 255 when bit 7 was clear, or 38 when set. A separate
+  assertion check confirmed all four cases and the observed banks/values.
+- Each constructed run used 162 cooperative host-frame acknowledgements before
+  this boundary. Inputs were modified at the shared dispatch checkpoint rather
+  than generated by complete action chains. NMI, audio, PPU and live frame
+  timing are not emulated; no native comparison or new gameplay code is claimed.
+- Private evidence: `inspect-area-action1-entry-20261104.py`,
+  `trace-area-action1-entry-20261104.py` and `area-action1-entry-20261104.json`
+  in the analysis directory. Next: trace the shared `$E059` call from `$DE5E`
+  and identify the next durable gameplay boundary before implementing this path.
+  Overall completion remains unmeasured.
+
+## 2026-11-04 — area action 1 shared recipient-cell call
+
+- Traced eight constructed original cases through action 1's `$DE5E` call to
+  `$E059` and its return at `$DE61`, with results 0/1 and recipients 12, 13, 21
+  or 255. Selected recipients at positions (80,100), (128,124), and (200,150)
+  produced cell bytes 50, 125 and 236; recipient 255 preserved the prior cell 77.
+  An independent assertion check passed for all eight cases. The call added no
+  host waits after entry in these observations.
+- Inputs were constructed at a common dispatch checkpoint. The observer uses
+  frozen randomness and cooperative presentation acknowledgements; NMI, audio,
+  PPU, live timing, full action flow and a native continuation are not covered.
+  No native code changed or C++ tests ran for this original-only research task.
+- Private evidence: `trace-area-action1-shared-20261104.py`,
+  `trace-area-action1-positions-20261104.py` and
+  `area-action1-positions-20261104.json`. Next: trace `$DF8B`, called at `$DE61`,
+  to identify the next original gameplay boundary. Overall completion remains
+  unmeasured.
+
+## 2026-11-04 — area action 1 distance-related call
+
+- Traced eight constructed action 1 cases through `$DF8B` at `$DE61` to its
+  return at `$DE64`. For target-cell values 50, 125, 236 and 77, with ball at
+  (204,124), the original wrote 5, 4, 3 and 5 respectively to `$062B`, for both
+  result bytes 0 and 1. All eight passed an assertion check, retained `$0638`,
+  and added no host waits during the call in these observations.
+- Static inspection shows a calculation based on target-cell coordinates, ball
+  position and a lookup table; these sampled values do not establish exhaustive
+  arithmetic or boundary coverage. Inputs are constructed, and the observer uses
+  cooperative acknowledgements and frozen randomness. No native comparison,
+  live timing, audio, PPU or complete action execution is claimed.
+- Private evidence: `inspect-area-action1-df8b-20261104.py`,
+  `trace-area-action1-distance-20261104.py` and
+  `area-action1-distance-20261104.json`. No native code changed or C++ tests ran.
+  Next: trace original `$DE64` through the `$E73E` call to its next durable
+  boundary. Overall completion remains unmeasured.
+
+## 2026-11-04 — area action 1 initial flight boundary
+
+- Ten constructed original traces continued from `$DE64` through `$E73E`:
+  eight reached flight setup `$E773`, and two already-at-target cases reached
+  early return `$E7CF`. All entered with one selected defender and exited with
+  zero; elapsed was zero both before and after, and `$061B` was 1. No additional
+  host waits occurred inside this setup in these samples. An assertion check
+  passed for all ten cases. The early-return cases do not establish velocity.
+- These observations use constructed recipients/results, cooperative presentation
+  acknowledgements and frozen randomness; NMI, PPU, audio, live timing and full
+  action execution are outside scope. No native comparison or C++ test was run.
+  Existing native saved flight is a shot path with flag 0; the area action's flag
+  1 must be accounted for before reuse is claimed.
+- Private evidence: `inspect-area-flight-setup-20261104.py`,
+  `trace-area-action1-flight-20261104.py` and
+  `area-action1-flight-20261104.json`. Next: compare area flight setup requirements
+  with the native saved-flight path, including destination, fractions, flag 1 and
+  early return, before implementing any connection. Overall completion remains
+  unmeasured.
+
+## 2026-11-04 — area versus saved shot flight assessment
+
+- Inspected the actual saved-flight implementation, session validation and the
+  ten existing original area-flight observations. The numeric direction/velocity
+  helpers and `$E773`/`$E7CF` boundaries are candidates for reuse, but phase46,
+  shot context, flag0 and counter255 assumptions prevent direct reuse for
+  phase93 area action 1, whose observed flag is 1 and whose counter can be 38.
+- Area recipient/cell context is distinct: the original refreshes the target
+  cell from the recipient, and recipient255 is outside native action 1's saved
+  12..21 recipient range. Low X/Y fractions are explicit setup inputs; early
+  return preserves stale original velocity while shot snapshots normalize unused
+  velocity to zero. Area downstream use of those bytes remains unverified.
+- Rechecked the existing observation report: 10 cases, flag1, eight `$E773`
+  and two `$E7CF` boundaries, with selection and elapsed zero after setup. This
+  was a report assertion and source inspection, not a new ROM/native comparison,
+  build or C++ test. Added the compatibility details to
+  `NATIVE_AREA_ATTACK_CHOICE.md`; no gameplay code changed.
+- Next: compare the reusable direction/velocity helpers with original area
+  action 1 setup using explicit fractions, then map the saved flag/counter and
+  early-return requirements before connecting phase93. Broader match behavior,
+  live presentation and overall completion remain unmeasured.
+
+## 2026-11-04 — saved area action 1 flight setup
+
+- Compared reusable native direction/velocity helpers with the original `$E73E`
+  setup using flag1: 12 constructed cases matched, covering four target cells
+  and three fractional-coordinate pairs. Evidence is private in
+  `area-flight-numeric-20261104.json` and its private comparison helper.
+- Connected phase93 action1 to area-only phase96 (`$E773`) or phase97 (`$E7CF`).
+  Preserves the area recipient/cost, destination, 255/38 counter, flag1 and
+  explicitly supplied post-presentation facing/motion/distance/fractions. Clears
+  selected count and elapsed. Early return preserves explicitly supplied prior
+  velocity. Existing shot movement rejects these phases pending area-specific
+  original callback research. Added batch and interactive area-flight commands.
+- Version65 marker131, with the existing 414-byte layout, is written only for
+  phases96/97; other phases still use version64. Tests cover normal/early
+  roundtrip, old-version rejection, stale velocity, special counter, invalid
+  input, replay rejection and input immutability.
+- Twenty-four constructed original/native saved setups match represented field,
+  trajectory, recipient, destination, counter and captured presentation values.
+  Coverage is results0/1, two counter variants, three fraction pairs and
+  normal/early paths, with one selected defender, recipient13 and elapsed0.
+  Interactive replay matches the batch snapshot. Evidence remains private in
+  `area-flight-session-20261104-final2/verification.json` and its comparison
+  helper. The first interactive replay attempt failed because its test fixture
+  quoted a save path incorrectly; the corrected rerun passed.
+- Full native CMake build and all 45 compiled C++ test executables passed.
+  Cooperative acknowledgements and frozen randomness are not live presentation;
+  original unused selected-ID bytes after count0 were not compared. Original
+  area movement/callback behavior, moving-recipient cases, NMI, rendering, audio
+  and real timing remain pending. Next: trace and compare the first area flight
+  step and its flag1 callbacks before connecting further saved phases. Overall
+  completion remains unmeasured.
+
+
+## 2026-11-04 ? area flight, action outcomes and control boundaries
+
+- Connected action1 flag1 flight steps and the cell callback to saved phases.
+  Twelve pure numeric and 12 saved first-step comparisons matched the original;
+  60 constructed cell-selection comparisons matched selected prefix and field
+  state, including random thresholds, stunned players and replay rejection.
+- Connected already-at-target and zero-defender normal arrival to recipient
+  transfer and keeper entry/preparation. Twelve early-arrival, 12 normal-arrival,
+  12 recipient-to-keeper, and 12 keeper-setup original comparisons passed at
+  their represented boundaries. Defender-queued arrival remains unsupported;
+  keeper menu/polling and presentation are not connected.
+- Retained choices across phase93 for actions4/6 using marker131/version65.
+  Eight constructed action4 boundaries matched filtering/preserved prefixes and
+  field state. Action4 encounters and the resulting control path are pending.
+- Action6 destination and race paths are connected: 16 cases at each of two
+  vertical halves matched destination/field and experience, six races matched
+  field/candidates/time, four winner and two timeout-recovery control handoffs
+  matched, and six prepared ordinary-control setups matched represented state.
+  Keeper-area and story recovery, control input and restart routes remain open.
+- Found that prior action1/4/6 continuation comparisons omitted experience:
+  the original awards carrier selector1 when the selected count is nonzero.
+  Added this award atomically before each action branch, preserving replay and
+  missing-content rejection. Re-ran 24 action1 setups (including interactive
+  replay), eight action4 boundaries and 32 action6 destinations with experience
+  bytes included: all matched. The six control-setup comparisons also include
+  represented experience; the previous attempt failed on the missing award.
+- Windows CMake build passed, focused keeper-save-session checks passed, and
+  all 45 compiled C++ test executables passed (zero failed). A sandboxed CTest
+  invocation could not access the toolchain; running each executable with the
+  compiler runtime available outside the sandbox completed successfully. Four
+  initial sandboxed comparison runs likewise could not launch native children;
+  the outside-sandbox reruns above passed. No claim is made about live frames,
+  random scheduling, rendering, audio or a complete playable match.
+- Next: trace and compare defended arrival handling, then implement its saved
+  boundary; continue the action4 encounters and action6 keeper/story transitions
+  only after original observations. Preserve existing incomplete work. Overall
+  completion remains unmeasured.
+- A subsequent focused test also verifies that zero selected defenders skips the
+  award without content. Its first fixture failed validation because it retained
+  the old selected cursors; after correcting both cursors, the rebuilt focused
+  executable passed. The 45-executable suite above ran before this test-only
+  fixture addition; no production code changed afterward. `git diff --check`
+  passed before the final test-only addition.
+
+
+## 2026-11-04 ? defended area pass entry
+
+- Traced normal defended arrival from original `$8835` to `$8840`: a nonzero
+  selected count resets `$0616` to zero before the first defender presentation.
+  Later code temporarily pushes `$044E`, clears it, selects a defender and
+  enters contact; that later behavior was inspected but is not implemented.
+- `continue-area-already-arrived` now saves phase114 for a normal arrival with
+  queued defenders, preserving possession, flight and selected IDs. Empty arrivals
+  still transfer to the recipient. Already-at-target snapshots with queued
+  defenders reject, as do replay and invalid phase inputs. New phase114 requires
+  a selected defender and uses existing marker131 snapshots.
+- Twelve constructed original comparisons covered counts 1, 2 and 4, both
+  prior sequence results and two counter variants. Original owner, selected
+  count/ordered IDs and cursor matched; all other native snapshot bytes were
+  checked for preservation, not compared against the original. The private
+  report is `area-defended-arrival-entry-20261104/verification.json`.
+- Test-first focused check failed as expected before the implementation because
+  defended arrivals were rejected; it passed after implementation, including
+  snapshot roundtrip, replay rejection and unchanged input. The Windows CMake
+  build passed and all 45 compiled C++ test executables passed. Initial full
+  build had an enum-display warning; the switch was updated and rebuilt cleanly.
+- Still pending: presentation, contact and all outcome branches for queued
+  defenders, followed by possession/keeper flow. The original temporary stack
+  value must survive any future saved boundary. Frame, RNG, audio and rendering
+  remain unverified; complete playable match and overall percentage remain
+  unmeasured. Next: trace the first defender preparation/contact and its saved
+  state requirements, then compare a narrowly scoped implementation.
+
+
+## 2026-11-05 ? first queued area-pass defender announcement
+
+- Traced original `$8840` through the announcement return at `$8845`; in six
+  exploratory cases (selected counts 1/2/4, ball variants 1/2), each used one
+  cooperatively acknowledged frame, preserved the variant and had the original
+  stack restored. The next instructions push `$044E` and clear it.
+- Added phase115 and batch/interactive `ack-area-pass-defender` to save that
+  post-announcement, pre-push boundary. The source snapshot is untouched; the
+  ball variant, possession, ordered selection, trajectory and cursor remain
+  available for the later contact. Replay is rejected and marker131 snapshots
+  roundtrip. This acknowledges presentation rather than executing it.
+- Twelve constructed original/native comparisons covered selected counts 1, 2,
+  4, two prior sequence results and two ball variants. Owner, selected prefix,
+  cursor and variant matched. Represented field and experience remained
+  unchanged independently in each implementation; other native snapshot bytes
+  were checked for preservation, not compared directly against the original.
+  Evidence: private `area-defended-announcement-20261104/verification.json`.
+- The test-first focused session test failed as intended on the unimplemented
+  operation, then passed after implementation, including roundtrip and replay.
+  Before that expected failure, an initial test build failed due to duplicate
+  local test variable names; renaming the fixture variables fixed the build.
+  The full Windows CMake build passed; all 45 compiled C++ test executables
+  passed (zero failed). The original comparison passed 12/12 after resuming.
+- Still pending: selecting/preparing the first defender, contact comparison,
+  restoring the temporary flag and processing results. No live frame timing,
+  audio or rendering was verified; a complete playable match remains unfinished
+  and overall completion is unmeasured. Next: trace defender preparation and
+  preserve the temporary flag across the next saved boundary.
+
+
+## 2026-11-05 ? first queued pass defender preparation and contact
+
+- Traced the original after `$8845`: it pushes `$044E` on the 6502 stack,
+  clears it, selects the first queued defender, sets defense action2/subtype0,
+  and calls presentation script7 before reaching `$886D`. The pass contact
+  then uses `$888D`/`$8EE9` and `$8132`, not the earlier keeper-area contact
+  entry. The caller restores the stacked variant after the result; that
+  restoration and the outcome handler are not implemented in this increment.
+- Added saved phase116 with selected defender, cleared active ball variant,
+  explicit captured original presentation cost, and a context preserving the
+  stacked variant. Phase117 saves comparison power, subtype, randomized
+  strength, loss, score and result, without running the result handler.
+  Defender scratch power (`$32/$33`) and context (`$0621`) are explicit
+  captured inputs. Private comparison table values are exported from the
+  verified original by `tools/export_area_pass_comparison.py` to `CMJPASS1`.
+  Existing saved states retain their previous formats; the new phases use
+  marker132/version66 with a three-byte appended context. Roundtrip, old
+  version rejection, truncation, replay and atomic invalid-input checks passed.
+- Twelve constructed preparation comparisons covered selected counts 1/2/4,
+  two prior results and both ball variants; selected defender, owner, ordered
+  prefix, saved stack value and captured cost matched. Unchanged native
+  snapshot bytes were checked for preservation.
+- Contact comparisons: 96 constructed cases varied both ball variants, four
+  attack powers, three captured defender powers and four random-byte pairs;
+  two threshold sweeps of 65 and 191 cases varied attack power with one
+  variant/defender/random setting. All 352 matched original defender strength,
+  subtype, loss, score, result and preserved variant; all four result codes
+  appeared across the runs. These are controlled instruction observations with
+  supplied scratch inputs, not an end-to-end live match or full roster survey.
+  Private reports are `area-defended-preparation-20261105/verification.json`,
+  `area-pass-contact-comparison-20261105/verification.json`,
+  `area-pass-contact-thresholds-20261105/verification.json`, and
+  `area-pass-contact-thresholds-20261105-v2/verification.json`. Exported
+  comparison content matched the private table used in the tests byte for byte.
+- Both test-first additions failed on their unimplemented stubs, then passed.
+  Full Windows CMake build and all 45 compiled C++ test executables passed;
+  `git diff --check` passed before this documentation update.
+- Next: trace and implement result handling and restoration of the temporarily
+  saved variant. Repeated defenders, automatic production of captured scratch
+  inputs, live frame/presentation/audio and full-match play remain unverified.
+  Overall completion remains unmeasured.
+
+## 2026-11-05 - defended-pass outcomes and prepared return to control
+
+- Added saved restoration of the temporarily stacked ball variant, defender
+  outcome acknowledgements, nonterminal clock/reward handling, subsequent
+  defender selection and recipient transfer. Terminal outcomes now connect
+  sampled blocked-ball and defender-capture paths to prepared control and an
+  ordinary field round. Captured control can enter the ordinary action menu and
+  prepare a basic shot. Presentation values remain supplied or acknowledged;
+  this does not run the original presentation engine.
+- Constructed original/native comparisons: 96 variant restorations (results
+  0/1/3), 8 handler entries (all four results), 4 normal nonterminal clocks,
+  4 added-time entries, 4 period ends and 4 nonterminal added-time resumes;
+  20 next-defender cases and 8 recipient transfers; 2 blocked repositionings,
+  4 terminal clocks and 4 terminal added-time entries/resumes; 2 each recovery
+  entry, recovered owner, recovered control and blocked control setup; 2 each
+  capture, capture continuation and capture control setup. These are narrow
+  constructed samples, not exhaustive or live-game coverage.
+- For each of capture and blocked recovery, 12 first control polls, 12 timer
+  expiry polls, 12 ordinary clock cases and 12 ordinary field rounds matched the
+  represented original state. Capture also matched 2 each goal-area, added-time
+  and period-end clock entries without kickoff metadata, 6 field-round menu
+  interruptions (two ball variants and three positions), 2 direct menu openings
+  and 2 ordinary shot preparations. The original retains flight flag $061B at
+  menu entry; native clears historical flight context, so its behavior through
+  subsequent flight must be checked before claiming an end-to-end match.
+- Rechecked the 352 prior defender-contact samples after synchronizing original
+  scratch inputs: 96 plus threshold sweeps of 65 and 191 matched, covering all
+  result codes. Fixed the native captured calculation context ($0621): earlier
+  comparisons omitted this field and it had incorrectly remained 2. A focused
+  regression failed before the correction and passed afterward. Some comparison
+  fixtures initially failed because scratch inputs or keeper profile types were
+  inconsistent; corrected fixtures produced the results above. A field-menu
+  report initially raised a KeyError after assertions; the corrected run
+  completed. Private evidence remains in ../Captain-Majid-analysis.
+- Fresh Windows CMake build: exit 0 (no work to do). All 45 compiled C++ test
+  executables: 45 passed, 0 failed. `git diff --check` passed before this entry.
+  Historical runs should not be confused with these fresh checks.
+- Not yet verified: blocked-recovery menu and shot follow-up, boundary recovery,
+  blocked-control goal/added-time/period branches, terminal period-end against
+  the original, kickoff-metadata goal/clock paths, and live frame/random/audio
+  scheduling. Active-control added time is rejected: the synthetic original
+  observer exited to $0001 and needs further tracing. Field-contact, special and
+  story interruptions are rejected atomically. Action 4 encounters, action 6
+  keeper/story paths and a complete playable match remain unfinished. Next:
+  compare blocked menu entry and trace new-action flight flags, then continue
+  only with behavior supported by original observations. Overall completion is
+  unmeasured.
+
+### Follow-up: menu and new shot after defended pass
+
+- Two constructed blocked-recovery cases (ball variants 1 and 2) matched the
+  represented original fields through action-menu opening, ordinary shot choice
+  and basic shot preparation. The first sandboxed comparison could not launch
+  its native subprocess; the outside-sandbox rerun passed. Evidence:
+  private `area-pass-blocked-menu-shot-20261105-v2/verification.json`.
+- Two capture cases matched represented field/control bytes through shot clock,
+  result dispatch and shot destination. An initial attempt used an exporter
+  that does not accept these phases; its corrected comparison passed. Original
+  $061B remained 1 at each of these boundaries.
+- Extending that trace to new shot flight setup found a genuine mismatch in
+  the first tested variant: represented field bytes matched, but original
+  trajectory flag $061B was 1 and native trajectory flag was 0. Native menu
+  entry discards the historical flight context and its shot setup initializes
+  the flag to zero. The second variant was not reached after the assertion.
+  The effect on later callbacks remains untraced; do not claim the new shot
+  flight is faithful. Private failed evidence:
+  `area-pass-capture-shot-followup-20261105-v3`. Next trace the flag's uses and
+  design a backward-compatible saved-state representation before connecting
+  further behavior. No native fix was made for this mismatch.
+- A follow-up intentionally excluded the known differing flag from comparison
+  and continued both variants through setup and the first numeric flight cell.
+  Both matched represented field and the other trajectory bytes; original flag
+  remained 1 and native 0. This does not verify the subsequent callback. Private
+  evidence: `area-pass-capture-shot-followup-20261105-v4/verification.json`.

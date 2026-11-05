@@ -33,6 +33,7 @@ struct ActionMenuResult {
     std::optional<std::uint8_t> special_cursor_y{};
 };
 ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
+ActionMenuResult open_area_pass_human_action_menu(const PhaseSessionState& input,const ActionMenuContent& content);
 // Route2 only, after acknowledged area presentation; facing is captured explicitly.
 ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,
  std::uint8_t facing,const ActionMenuContent& content);

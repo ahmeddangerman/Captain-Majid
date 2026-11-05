@@ -24,4 +24,6 @@ ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::u
 ControlPollResult poll_session_control(const PhaseSessionState& input,
     std::uint8_t held, std::uint8_t pressed, const PlayerProfileMappings& primary,
     const FieldPhaseContent& movement, const ControlMovementContent& control_content);
+ControlPollResult poll_session_area_pass_capture(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed,
+ const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control_content);
 }
