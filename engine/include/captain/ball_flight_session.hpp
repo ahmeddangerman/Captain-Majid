@@ -2,14 +2,17 @@
 #include "captain/phase_session.hpp"
 #include "captain/ball_step.hpp"
 #include "captain/defender_contact.hpp"
+#include "captain/flight_contact.hpp"
 namespace captain {
 struct AreaFlightAcknowledgement {
  std::uint8_t x_fraction,y_fraction,distance,facing,motion;
  std::uint16_t prior_vx,prior_vy;
 };
+PhaseSessionState begin_session_area_action4_restart_flight(const PhaseSessionState& input,std::uint8_t captured_recipient,std::uint8_t captured_x_fraction,std::uint8_t captured_y_fraction,std::uint8_t captured_distance,const MovementGeometryContent& geometry,const BallVelocityContent& velocity);
 PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& input,
  const AreaFlightAcknowledgement& acknowledgement,const MovementGeometryContent& geometry,
  const BallVelocityContent& velocity,const ExperienceContent* experience);
+PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity);
 PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& input,
  std::uint8_t x_fraction,std::uint8_t y_fraction,const MovementGeometryContent& geometry,
  const BallVelocityContent& velocity);
@@ -17,6 +20,9 @@ PhaseSessionState continue_session_unopposed_arrival(const PhaseSessionState& in
 PhaseSessionState resolve_session_ball_cell(const PhaseSessionState& input);
 PhaseSessionState resolve_session_area_ball_cell(const PhaseSessionState& input);
 PhaseSessionState continue_area_already_arrived(const PhaseSessionState& input);
+PhaseSessionState recover_session_sampled_loose_shot_result2(const PhaseSessionState& input,const ContactPreludeContent& clock,const ExperienceContent& experience);
+PhaseSessionState compare_session_sampled_loose_shot_defender(const PhaseSessionState& input,std::uint16_t captured_power,const FlightContactContent& content);
+PhaseSessionState prepare_session_sampled_loose_shot_defender(const PhaseSessionState& input);
 PhaseSessionState acknowledge_area_pass_defender_announcement(const PhaseSessionState& input);
 PhaseSessionState prepare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_cost);
 struct AreaPassComparisonContent { std::uint8_t range,offset,eligibility; std::array<std::uint8_t,4> thresholds; };

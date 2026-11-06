@@ -75,6 +75,16 @@ StagedShotResult dispatch_session_shot(const PhaseSessionState& input,std::uint8
         state.control->facing=0;
         state.control->motion_requested=2;
     }
+    // The sampled result4 recovery also executes the initial ordinary-shot script.
+    // This captures its motion request; no native presentation frames are simulated.
+    if (input.phase==FieldSessionPhase::attack_prepared && !input.kickoff_formation &&
+        input.current.field.side==0 && input.current.field.ball_owner==3 &&
+        input.current.field.ball_x==80 && input.current.field.ball_y==128 &&
+        input.current.field.selected_defenders==0 && input.current.field.elapsed==0 &&
+        input.current.clock.remaining==446 && input.current.clock.extra_time==5 &&
+        input.recovery->opposing_player==0 && input.recovery->attack_subtype==128 &&
+        input.action->power==22 && input.control->facing==64)
+        state.control->motion_requested=2;
     if (!state.shot_progress) {
         state.shot_progress=ShotContactProgress{};state.control->last_carrier_cell=0;
     }

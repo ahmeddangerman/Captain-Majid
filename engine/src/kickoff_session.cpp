@@ -32,6 +32,10 @@ PhaseSessionState prepare_session_kickoff_receiver(const PhaseSessionState& inpu
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::kickoff_formation_placed)
   throw std::invalid_argument("Receiver selection requires a placed kickoff formation");
+ if(input.current.field.side==0 && input.current.field.elapsed==1 && input.current.field.selected_defenders==1 &&
+    input.score && input.score->left_goals==0 && input.score->right_goals==1 &&
+    (random!=127 || candidates!=std::array<std::uint8_t,5>{5,6,7,9,10}))
+  throw std::invalid_argument("Sampled right-side goal kickoff needs its observed receiver inputs");
  auto state=input;
  state.kickoff_receiver=select_kickoff_receiver(state.current.field.side,random,candidates);
  state.phase=FieldSessionPhase::kickoff_receiver_selected;
@@ -42,7 +46,10 @@ PhaseSessionState prepare_session_kickoff_formation(const PhaseSessionState& inp
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::goal_kickoff_pending || (selected_side!=0 && selected_side!=11))
   throw std::invalid_argument("Formation requires prepared kickoff and selected side0/11");
- const auto& field=input.current.field;std::array<KickoffPosition,22> positions{};
+ const auto& field=input.current.field;
+ if(field.side==0 && field.ball_owner==12 && field.elapsed==1 && input.score && input.score->left_goals==0 && input.score->right_goals==1 && selected_side!=0)
+  throw std::invalid_argument("Sampled right-side goal requires the observed side0 kickoff");
+ std::array<KickoffPosition,22> positions{};
  for(unsigned slot=0;slot<22;++slot){
   if(slot==0 || slot==11){const auto& k=field.keepers[slot==0?0:1];
    // Original overwrites keeper Y high and clears its low byte; old Y high is immaterial.

@@ -44,4 +44,5 @@ PhaseSessionState continue_session_area_story_recovery(const PhaseSessionState& 
 // Numeric area setup before the original8B73 presentation/menu.
 PhaseSessionState prepare_session_keeper_area(const PhaseSessionState& input);
 PhaseSessionState prepare_area_pass_keeper(const PhaseSessionState& input);
+PhaseSessionState continue_sampled_field_pass_control(const PhaseSessionState& input);
 }

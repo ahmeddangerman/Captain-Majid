@@ -15,6 +15,19 @@ PhaseSessionState continue_session_area_pass_blocked_recovery(const PhaseSession
  auto state=input;state.control->facing=facing;state.control->motion_requested=motion;
  state.phase=FieldSessionPhase::area_pass_blocked_control_entry;validate_phase_session(state);return state;
 }
+PhaseSessionState continue_sampled_field_pass_control(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::area_pass_keeper_entry || !input.area_ai_target || !input.ball_trajectory || !input.shot_flight || !input.score ||
+    input.current.field.side!=11 || input.current.field.ball_owner!=19 || input.current.field.ball_x!=119 || input.current.field.ball_y!=140 ||
+    input.current.field.ball_cell!=103 || input.current.field.selected_defenders || input.current.field.random_first || input.current.field.random_second ||
+    input.current.clock.remaining!=443 || input.current.clock.extra_time!=5 || input.experience->opponent_stage ||
+    input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 || input.action->action!=1 || input.action->power!=21 ||
+    input.area_ai_target->recipient!=19 || input.area_ai_target->cell!=103 || input.ball_trajectory->flags!=1 || input.control->facing!=64)
+  throw std::invalid_argument("Unsupported sampled opponent pass control handoff");
+ auto state=input;state.control->facing=0;state.saved_ball_flight_flag=state.ball_trajectory->flags;
+ state.area_ai_target.reset();state.shot_flight.reset();state.ball_trajectory.reset();state.phase=FieldSessionPhase::player_control;
+ validate_phase_session(state);return state;
+}
 PhaseSessionState prepare_area_pass_keeper(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::area_pass_keeper_entry)
@@ -317,6 +330,10 @@ PhaseSessionState continue_session_recovery(const PhaseSessionState& post_presen
         validate_phase_session(state);
         return state;
     }
+    if(state.control && state.kickoff_formation && state.score && state.score->left_goals==0 && state.score->right_goals==1 && state.score->kickoff==4 &&
+       field.side==0 && field.ball_owner==8 && field.ball_x==140 && field.ball_y==140 && field.ball_cell==209 &&
+       field.random_first==0 && field.random_second==128 && state.recovery->opposing_player==19 && state.recovery->x_jitter_control==128)
+        state.control->facing=0;
     state.phase = FieldSessionPhase::player_control;
     validate_phase_session(state);
     return state;

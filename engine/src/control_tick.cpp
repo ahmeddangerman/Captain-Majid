@@ -5,6 +5,54 @@
 #include <utility>
 
 namespace captain {
+ControlTickResult resume_area_action4_added_time(const PhaseSessionState& input,
+ const FieldPlayerProfiles& profiles,const GoalkeeperProfiles& keepers,const WorldStepContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::area_action4_added_time)
+  throw std::invalid_argument("Area action4 added-time resume needs a saved presentation boundary");
+ auto prepared=input;prepared.phase=FieldSessionPhase::control_added_time;
+ prepared.area_ai_target.reset();prepared.area_defense.reset();prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+ auto result=resume_control_added_time(prepared,profiles,keepers,content);auto& state=result.state;
+ if(state.phase!=FieldSessionPhase::field_round_pending)
+  throw std::invalid_argument("Area action4 added-time goal interruption requires original tracing");
+ state.area_ai_target=input.area_ai_target;state.area_defense=input.area_defense;
+ state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+ state.phase=FieldSessionPhase::area_action4_field_round;validate_phase_session(state);return result;
+}
+FieldRoundResult advance_area_action4_field_round(const PhaseSessionState& input,
+ const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,const WorldStepContent& world,
+ const std::array<LogicalButtons,22>& inputs) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::area_action4_field_round)
+  throw std::invalid_argument("Area action4 field round requires a completed control clock");
+ auto prepared=input;prepared.phase=FieldSessionPhase::field_round_pending;
+ prepared.area_ai_target.reset();prepared.area_defense.reset();prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+ auto result=advance_control_field_round(prepared,primary,movement,control,world,inputs);auto& state=result.state;
+ if(state.phase!=FieldSessionPhase::control_ready)
+  throw std::invalid_argument("Area action4 field round interruption requires original tracing");
+ state.area_ai_target=input.area_ai_target;state.area_defense=input.area_defense;
+ state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+ state.phase=FieldSessionPhase::area_action4_control_wait;validate_phase_session(state);return result;
+}
+ControlTickResult advance_area_action4_control_tick(const PhaseSessionState& input,
+ const FieldPlayerProfiles& profiles,const GoalkeeperProfiles& keepers,const WorldStepContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::area_action4_control_clock)
+  throw std::invalid_argument("Area action4 control clock requires a saved input decision");
+ auto prepared=input;prepared.phase=FieldSessionPhase::control_clock_pending;
+ prepared.area_ai_target.reset();prepared.area_defense.reset();prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+ auto result=advance_control_tick(prepared,profiles,keepers,content);auto& state=result.state;
+ state.area_ai_target=input.area_ai_target;state.area_defense=input.area_defense;
+ state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+ switch(state.phase) {
+  case FieldSessionPhase::field_round_pending:state.phase=FieldSessionPhase::area_action4_field_round;break;
+  case FieldSessionPhase::goal_area_action:state.phase=FieldSessionPhase::area_action4_goal_area;break;
+  case FieldSessionPhase::control_added_time:state.phase=FieldSessionPhase::area_action4_added_time;break;
+  case FieldSessionPhase::period_end:state.phase=FieldSessionPhase::area_action4_period_end;break;
+  default:throw std::invalid_argument("Unsupported area action4 control clock boundary");
+ }
+ validate_phase_session(state);return result;
+}
 FieldRoundResult advance_area_pass_field_round(const PhaseSessionState& input,const PlayerProfileMappings& primary,const FieldPhaseContent& movement,
  const ControlMovementContent& control,const WorldStepContent& world,const std::array<LogicalButtons,22>& inputs) {
  validate_phase_session(input);

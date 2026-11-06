@@ -1,5 +1,14 @@
 # Opponent action after area defense selection
 
+## 2026-11-05 - action4 no-encounter goalkeeper preparation
+
+After the sampled goal-area entry, phases169-171 save the selected keeper,
+acknowledged presentation and captured action6 cost and power. Twelve constructed
+original/native cases matched each boundary. Presentation is acknowledged, not
+rendered. The subsequent original-only trace reached stamina handling for an
+exhausted keeper; stamina and outcome are not yet implemented for this route.
+See WORK_LOG for the precise fixture and verification limits.
+
 ## 2026-11-05 ? first queued pass defender preparation and comparison
 
 Phase116 captures the first selected defender, the temporarily stacked ball
@@ -456,10 +465,21 @@ not live rendering, audio, NMI, frame timing or area flight callbacks.
 
 Sampled pass defender outcomes now reach captured or ordinary blocked recovery,
 prepared control and ordinary field rounds. Menu entry and basic shot preparation
-matched two constructed original cases for each path. Captured-pass new-shot
-setup has a known mismatch: original $061B remains 1 and native initializes the
-new trajectory flag to 0. Both sampled variants match other represented fields
-and trajectory values through the first numeric flight cell, but the subsequent
-callback is not verified. Trace its uses and preserve the flag across saved
-states before extending this continuation. See WORK_LOG for the exact sample
-counts, failed fixture attempts, clock and presentation limitations.
+matched two constructed original cases for each path. The formerly lost $061B
+flag is now retained across menu and shot snapshots (marker133). Two constructed
+capture cases match represented original field/control and trajectory through ten
+flight cells and empty keeper entry. Two constructed retained-flag empty loose
+arrivals also match through recovery; six defended arrivals match through first
+defender preparation. A guarded zero-range result0 now supports ordered defenders,
+ordinary timing and saved added-time/period-end boundaries. Other defender
+inputs/outcomes remain unfinished. See WORK_LOG for exact
+sample counts, failed fixture attempts and presentation limitations.
+
+## Action4 field and control continuation - 2026-11-05
+
+Six constructed action4 cases match the original first shared field-encounter
+entry. When no encounters remain, two original cases match prepared control; a
+narrow input, clock and ordinary field-round loop has further sampled checks.
+Goal-area and period-end remain saved boundaries; added-time resume is sampled.
+Encounter execution, field interruptions and live presentation remain unfinished.
+See WORK_LOG for exact counts and fixture limitations.

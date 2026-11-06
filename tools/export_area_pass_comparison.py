@@ -12,6 +12,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('rom', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument('--attack-action', type=int, choices=(0, 1), default=1)
     args = parser.parse_args()
     rom = args.rom.read_bytes()
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
@@ -22,7 +23,8 @@ def main():
     memory = ObservedCartridge(rom[16:262160], bytes(2048), None, set())
     memory.registers[6:8] = [26, 27]
     pointer = memory[0x8D9D] | memory[0x8D9E] << 8
-    values = [memory[pointer + 12], memory[pointer + 13], memory[0x88F1]]
+    index = args.attack_action * 4 + 2
+    values = [memory[pointer + index * 2], memory[pointer + index * 2 + 1], memory[0x88EB + index]]
     values.extend(memory[0x8294 + index] for index in range(4))
     with output.open('x', encoding='utf-8') as stream:
         stream.write('CMJPASS1\n' + ' '.join(map(str, values)) + '\n')

@@ -3,6 +3,9 @@
 #include "captain/ball_recovery.hpp"
 
 namespace captain {
+struct ControlSetupResult;
+ControlSetupResult prepare_session_area_action4_restart_pass_control(const PhaseSessionState& input);
+ControlSetupResult prepare_session_area_action4_control(const PhaseSessionState& input);
 enum class ControlPresentationKind : std::uint8_t { display, script, field_map, sprite, clear_overlay, wait_frames };
 struct ControlPresentationRequest {
     ControlPresentationKind kind;

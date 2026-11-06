@@ -3,6 +3,28 @@
 #include <stdexcept>
 
 namespace captain {
+ControlSetupResult prepare_session_area_action4_restart_pass_control(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ const auto& f=input.current.field;
+ if(input.phase!=FieldSessionPhase::area_pass_received || input.shot_flight->counter!=77 ||
+    input.area_ai_target->recipient!=15 || f.ball_owner!=15 || f.side!=11 || f.ball_x!=124 || f.ball_y!=124 || f.ball_cell!=113)
+  throw std::invalid_argument("Unsupported sampled restart pass control entry");
+ auto state=input;state.phase=FieldSessionPhase::player_control;state.area_ai_target.reset();
+ state.shot_flight.reset();state.ball_trajectory.reset();state.action=ActionContext{};
+ state.area_defender_cursor=0;state.area_sequence_result=255;
+ return prepare_session_control(state);
+}
+ControlSetupResult prepare_session_area_action4_control(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::area_action4_control_entry)
+  throw std::invalid_argument("Area action4 control setup requires its saved control entry");
+ auto prepared=input;prepared.phase=FieldSessionPhase::player_control;
+ prepared.area_ai_target.reset();prepared.area_defense.reset();prepared.area_defender_cursor=0;prepared.area_sequence_result=255;
+ auto result=prepare_session_control(prepared);auto& state=result.state;
+ state.area_ai_target=input.area_ai_target;state.area_defense=input.area_defense;
+ state.area_defender_cursor=input.area_defender_cursor;state.area_sequence_result=input.area_sequence_result;
+ state.phase=FieldSessionPhase::area_action4_control_ready;validate_phase_session(state);return result;
+}
 namespace {
 ControlSetupResult prepare_area_pass_control(const PhaseSessionState& input,FieldSessionPhase expected,FieldSessionPhase output) {
     validate_phase_session(input);

@@ -44,6 +44,14 @@ int main() {
  s=initial;s.current.field.selected_defenders=0;s.scheduling->selected_ids.fill(0);
  r=dispatch_session_shot(s,1);
  check(r.state.current.clock.remaining==450 && r.state.current.field.elapsed==2,"No defender timing");
+ // Captured result4 recovery: the original initial shot presentation requests motion2.
+ auto sampled=s;sampled.current.field.ball_owner=3;sampled.current.field.ball_x=80;sampled.current.field.ball_y=128;
+ sampled.current.field.ball_cell=54;sampled.current.field.elapsed=0;sampled.current.clock.remaining=446;
+ sampled.current.clock.extra_time=5;sampled.recovery->opposing_player=0;sampled.recovery->attack_subtype=128;
+ sampled.control->facing=64;sampled.action->power=22;
+ auto sampled_dispatch=dispatch_session_shot(sampled,1);
+ check(sampled_dispatch.state.control->motion_requested==2 && sampled_dispatch.state.control->facing==64,
+  "Result4 recovered ordinary shot acknowledges observed motion2");
  // Pause after first failed contact and save its exact cursor; second remains unvisited.
  s=initial;s.current.clock.remaining=1;s.current.clock.extra_time=5;c.player_id=12;
  r=step();check(static_cast<unsigned>(r.state.phase)==24,"Failed contact added-time pause");

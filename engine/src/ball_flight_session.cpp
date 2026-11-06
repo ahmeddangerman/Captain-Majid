@@ -14,6 +14,7 @@ PhaseSessionState resume_area_pass_added_time(const PhaseSessionState& input) {
  validate_phase_session(input);auto state=input;
  if(input.phase==FieldSessionPhase::area_pass_nonterminal_added_time)state.phase=FieldSessionPhase::area_pass_nonterminal_done;
  else if(input.phase==FieldSessionPhase::area_pass_terminal_added_time)state.phase=FieldSessionPhase::area_pass_terminal_clock_done;
+ else if(input.phase==FieldSessionPhase::shot_pass_added_time)state.phase=FieldSessionPhase::shot_pass_nonterminal_done;
  else throw std::invalid_argument("No area pass added-time wait to resume");
  if(state.current.clock.script_flags&128u)throw std::invalid_argument("Area pass active-control added-time resume is not yet supported");
  validate_phase_session(state);return state;
@@ -62,6 +63,15 @@ PhaseSessionState advance_area_pass_blocked(const PhaseSessionState& input,const
 }
 PhaseSessionState advance_area_pass_defender(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::shot_pass_nonterminal_done) {
+  auto state=input;++state.area_defender_cursor;state.area_contact.reset();state.area_pass_contact.reset();state.area_sequence_result=255;
+  if(state.area_defender_cursor<state.current.field.selected_defenders)state.phase=FieldSessionPhase::shot_pass_defenders_pending;
+  else {
+   state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);state.current.field.elapsed=0;
+   state.phase=FieldSessionPhase::shot_pass_defenders_done;
+  }
+  validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::area_pass_nonterminal_done)
   throw std::invalid_argument("Area pass defender continuation needs a completed nonterminal result");
  auto state=input;++state.area_defender_cursor;state.area_contact.reset();state.area_pass_contact.reset();state.area_sequence_result=255;
@@ -75,6 +85,15 @@ PhaseSessionState advance_area_pass_defender(const PhaseSessionState& input) {
 PhaseSessionState advance_area_pass_nonterminal(const PhaseSessionState& input,const ContactPreludeContent& clock_content,
  const ExperienceContent& experience_content) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::shot_pass_result_handler_entry) {
+  auto state=input;
+  state.experience=award_player_experience(*input.experience,input.current.field.roster[input.current.field.ball_owner].type,1,experience_content).state;
+  const auto applied=apply_contact_prelude({state.current,state.recovery->opposing_player,2,true},clock_content);
+  state.current=applied.state;
+  state.phase=applied.clock.continuation==ClockContinuation::period_end ? FieldSessionPhase::shot_pass_period_end :
+   applied.clock.continuation==ClockContinuation::added_time_presentation ? FieldSessionPhase::shot_pass_added_time : FieldSessionPhase::shot_pass_nonterminal_done;
+  validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::area_pass_result_handler_entry || input.area_contact->result>1 || !input.experience)
   throw std::invalid_argument("Area pass nonterminal handler requires a result 0 or 1 and experience");
  auto state=input;
@@ -88,6 +107,10 @@ PhaseSessionState advance_area_pass_nonterminal(const PhaseSessionState& input,c
 }
 PhaseSessionState acknowledge_area_pass_result(const PhaseSessionState& input,std::uint8_t facing,std::uint8_t motion) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::shot_pass_variant_restored && (facing==0 || facing==64)) {
+  auto state=input;state.control->facing=facing;state.control->motion_requested=motion;
+  state.phase=FieldSessionPhase::shot_pass_result_handler_entry;validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::area_pass_variant_restored || (facing!=0 && facing!=64))
   throw std::invalid_argument("Area pass result needs restored variant and captured presentation");
  auto state=input;state.control->facing=facing;state.control->motion_requested=motion;
@@ -95,6 +118,10 @@ PhaseSessionState acknowledge_area_pass_result(const PhaseSessionState& input,st
 }
 PhaseSessionState restore_area_pass_ball_variant(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::shot_pass_defender_compared) {
+  auto state=input;state.recovery->ball_variant=state.area_pass_contact->saved_ball_variant;
+  state.phase=FieldSessionPhase::shot_pass_variant_restored;validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::area_pass_defender_compared)
   throw std::invalid_argument("Area pass variant restoration requires a saved comparison");
  auto state=input;state.recovery->ball_variant=state.area_pass_contact->saved_ball_variant;
@@ -103,6 +130,15 @@ PhaseSessionState restore_area_pass_ball_variant(const PhaseSessionState& input)
 PhaseSessionState compare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_power,
  std::uint8_t captured_context,const AreaPassComparisonContent& content) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::shot_pass_defender_prepared) {
+  if(captured_context || content.range || content.offset || (content.eligibility&128u) ||
+     unsigned(input.current.field.random_first)+input.current.field.random_second>1)
+   throw std::invalid_argument("Unsupported shot pass zero-range comparison input");
+  const auto result=classify_score(255,content.thresholds);
+  auto state=input;state.action->menu_route=0;state.area_sequence_result=result;
+  state.area_contact=AreaContactContext{input.area_defender_cursor,2,0,0,captured_power,input.area_pass_contact->captured_cost,0,0,255,result,false};
+  state.phase=FieldSessionPhase::shot_pass_defender_compared;validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::area_pass_defender_prepared || captured_context>=6)
   throw std::invalid_argument("Area pass comparison requires a prepared defender");
  const auto id=input.recovery->opposing_player;
@@ -115,17 +151,91 @@ PhaseSessionState compare_area_pass_defender(const PhaseSessionState& input,std:
 }
 PhaseSessionState prepare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_cost) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::shot_pass_defender_announced && input.saved_ball_flight_flag && input.recovery->ball_variant==0) {
+  auto state=input;state.area_pass_contact=AreaPassContactContext{0,captured_cost};
+  state.recovery->opposing_player=state.scheduling->selected_ids[state.area_defender_cursor];state.phase=FieldSessionPhase::shot_pass_defender_prepared;
+  validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::area_pass_defender_announced || input.recovery->ball_variant<1 || input.recovery->ball_variant>2)
   throw std::invalid_argument("Area pass defender preparation needs an announced defender and ball variant");
  auto state=input;state.area_pass_contact=AreaPassContactContext{input.recovery->ball_variant,captured_cost};
  state.recovery->ball_variant=0;state.recovery->opposing_player=state.scheduling->selected_ids[state.area_defender_cursor];
  state.phase=FieldSessionPhase::area_pass_defender_prepared;validate_phase_session(state);return state;
 }
+PhaseSessionState recover_session_sampled_loose_shot_result2(const PhaseSessionState& input,const ContactPreludeContent& clock,const ExperienceContent& experience) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::sampled_loose_shot_defender_compared || !input.experience || !input.control ||
+    input.current.clock.remaining!=445 || input.current.clock.extra_time || input.current.clock.flags || input.current.clock.script_flags || input.current.clock.ball_mode ||
+    clock.field_elapsed[0]!=2)
+  throw std::invalid_argument("Unsupported sampled loose-shot result2 clock");
+ const auto& defender=input.current.field.motion[field_motion_index(19)];
+ if((defender.x>>8)!=140 || (defender.y>>8)!=140)
+  throw std::invalid_argument("Unsupported sampled loose-shot defender position");
+ auto state=input;state.control->facing=64;state.control->motion_requested=0;const auto type=input.current.field.roster[19].type;
+ state.experience=award_player_experience(*state.experience,type,2,experience).state;
+ state.current.field.ball_x=140;state.current.field.ball_y=140;
+ state.experience=award_player_experience(*state.experience,type,2,experience).state;
+ const auto applied=apply_contact_prelude({state.current,19,0,false},clock);
+ if(applied.clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Unsupported sampled loose-shot clock continuation");
+ state.current=applied.state;state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
+ state.shot_flight.reset();state.ball_trajectory.reset();state.area_contact.reset();state.area_defender_cursor=0;state.area_sequence_result=255;
+ state.phase=FieldSessionPhase::ball_recovery;validate_phase_session(state);return state;
+}
+PhaseSessionState compare_session_sampled_loose_shot_defender(const PhaseSessionState& input,std::uint16_t captured_power,const FlightContactContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::sampled_loose_shot_defender_prepared || captured_power!=19 || input.action->power!=11 || input.action->menu_route ||
+    content.defense_actions[0]!=0 || content.eligibility[0]!=128 || content.variation[0]!=std::array<std::uint8_t,2>{192,64} ||
+    content.thresholds[0]!=std::array<std::uint8_t,4>{154,96,48,0})
+  throw std::invalid_argument("Unsupported sampled loose-shot comparison input");
+ const auto result=compare_defender_contact({input.action->power,captured_power,input.current.field.random_first,input.current.field.random_second,
+  content.variation[0][0],content.variation[0][1],false,true,0,19,0,content.thresholds[0]});
+ if(result.result_code!=2 || result.strength!=9 || result.loss!=2 || result.score!=78 || result.subtype)
+  throw std::invalid_argument("Sampled loose-shot comparison disagrees with traced result");
+ auto state=input;state.area_contact=AreaContactContext{0,0,0,0,captured_power,0,result.strength,result.loss,result.score,result.result_code,false};
+ state.area_sequence_result=result.result_code;state.phase=FieldSessionPhase::sampled_loose_shot_defender_compared;
+ validate_phase_session(state);return state;
+}
+PhaseSessionState prepare_session_sampled_loose_shot_defender(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::shot_pass_defender_announced || input.saved_ball_flight_flag || input.area_defender_cursor ||
+    input.scheduling->selected_ids[0]!=19 || input.recovery->ball_variant)
+  throw std::invalid_argument("Unsupported sampled loose-shot defender preparation");
+ auto state=input;state.recovery->opposing_player=19;state.phase=FieldSessionPhase::sampled_loose_shot_defender_prepared;
+ validate_phase_session(state);return state;
+}
 PhaseSessionState acknowledge_area_pass_defender_announcement(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::shot_pass_defenders_pending) {
+  auto state=input;state.phase=FieldSessionPhase::shot_pass_defender_announced;
+  validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::area_pass_defenders_pending)
   throw std::invalid_argument("Area pass defender announcement requires a pending defender");
  auto state=input;state.phase=FieldSessionPhase::area_pass_defender_announced;
+ validate_phase_session(state);return state;
+}
+PhaseSessionState begin_session_area_action4_restart_flight(const PhaseSessionState& input,
+ std::uint8_t recipient,std::uint8_t low_x,std::uint8_t low_y,std::uint8_t distance,
+ const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
+ validate_phase_session(input);
+ const auto& f=input.current.field;
+ if(input.phase!=FieldSessionPhase::area_action4_restart_pass_entry || recipient!=15 || low_x || low_y || distance!=4 ||
+    f.ball_x!=52 || f.ball_y!=172 || f.ball_cell!=11 || f.selected_defenders!=1 || f.elapsed!=19 ||
+    field_cell_at(f.motion[field_motion_index(recipient)].x>>8,f.motion[field_motion_index(recipient)].y>>8)!=113)
+  throw std::invalid_argument("Unsupported captured action4 restart flight setup");
+ auto state=input;
+ state.action->action=1;state.action->power=input.area_action4_restart_power->power;
+ state.recovery->attack_subtype=0;
+ state.area_ai_target=PhaseSessionState::AreaAiTarget{recipient,113,input.area_action4_restart_power->cost};
+ state.shot_flight=ShotFlightContext{distance,113,*input.area_action4_restart_pass_counter,false};
+ BallTrajectoryContext t{static_cast<std::uint16_t>(unsigned(f.ball_x)<<8),static_cast<std::uint16_t>(unsigned(f.ball_y)<<8),0,0,0,1};
+ t.direction=calculate_player_direction({t.x,t.y,113,0},f.ball_cell,geometry);
+ const auto v=calculate_ball_velocity(t.direction,velocity);t.vx=v.x;t.vy=v.y;
+ state.recovery->x_jitter_control=t.direction;state.ball_trajectory=t;state.saved_ball_flight_flag=1;
+ state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);state.current.field.elapsed=0;
+ state.area_defense.reset();state.area_contact.reset();state.area_action4_restart.reset();
+ state.area_action4_restart_power.reset();state.area_action4_restart_pass_counter.reset();
+ state.area_defender_cursor=0;state.area_sequence_result=255;state.phase=FieldSessionPhase::area_ball_advance_ready;
  validate_phase_session(state);return state;
 }
 PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& input,
@@ -158,6 +268,23 @@ PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& inp
  }
  state.ball_trajectory=t;validate_phase_session(state);return state;
 }
+PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::sampled_field_ai_pass_target || x_fraction!=127 || y_fraction!=0)
+  throw std::invalid_argument("Unsupported sampled opponent pass flight input");
+ const auto& field=input.current.field;const auto pass=*input.sampled_field_pass;
+ if(field_cell_at(field.ball_x,field.ball_y)!=field.ball_cell || field.ball_cell==pass.destination)
+  throw std::invalid_argument("Sampled pass flight requires a distinct coherent ball cell");
+ auto state=input;state.sampled_field_pass.reset();
+ state.area_ai_target=PhaseSessionState::AreaAiTarget{pass.recipient,pass.destination,0};
+ state.shot_flight=ShotFlightContext{pass.distance,pass.destination,pass.counter,false};
+ BallTrajectoryContext t{static_cast<std::uint16_t>((unsigned(field.ball_x)<<8)|x_fraction),
+  static_cast<std::uint16_t>((unsigned(field.ball_y)<<8)|y_fraction),0,0,input.recovery->x_jitter_control,1};
+ t.direction=calculate_player_direction({t.x,t.y,pass.destination,0},field.ball_cell,geometry);
+ const auto v=calculate_ball_velocity(t.direction,velocity);t.vx=v.x;t.vy=v.y;
+ state.recovery->x_jitter_control=t.direction;state.ball_trajectory=t;state.phase=FieldSessionPhase::area_ball_advance_ready;
+ validate_phase_session(state);return state;
+}
 PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& input,
  std::uint8_t low_x,std::uint8_t low_y,const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
  validate_phase_session(input);
@@ -168,7 +295,7 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
   throw std::invalid_argument("Flight requires coherent current ball coordinates/cell");
  auto state=input;
  BallTrajectoryContext t{static_cast<std::uint16_t>((unsigned(f.ball_x)<<8)|low_x),
-  static_cast<std::uint16_t>((unsigned(f.ball_y)<<8)|low_y),0,0,input.recovery->x_jitter_control,0};
+  static_cast<std::uint16_t>((unsigned(f.ball_y)<<8)|low_y),0,0,input.recovery->x_jitter_control,input.saved_ball_flight_flag};
  state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
  state.current.field.elapsed=0;state.shot_progress.reset();
  if(f.ball_cell==input.shot_flight->destination)state.phase=FieldSessionPhase::ball_already_arrived;
@@ -181,6 +308,16 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
 }
 PhaseSessionState continue_session_unopposed_arrival(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::shot_pass_defenders_done) {
+  auto state=input;state.area_defender_cursor=0;
+  state.phase=input.shot_flight->loose_ball ? FieldSessionPhase::shot_loose_recovery : FieldSessionPhase::shot_keeper_entry;
+  validate_phase_session(state);return state;
+ }
+ if(input.phase==FieldSessionPhase::ball_arrival_callback && (input.saved_ball_flight_flag || input.shot_flight->loose_ball) &&
+    input.current.field.side==0 && input.current.field.selected_defenders) {
+  auto state=input;state.area_defender_cursor=0;state.phase=FieldSessionPhase::shot_pass_defenders_pending;
+  validate_phase_session(state);return state;
+ }
  if((input.phase!=FieldSessionPhase::ball_arrival_callback && input.phase!=FieldSessionPhase::ball_already_arrived) ||
     input.current.field.selected_defenders)
   throw std::invalid_argument("Arrival still has pending defender encounters or is not complete");

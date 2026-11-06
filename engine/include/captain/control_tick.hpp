@@ -16,6 +16,10 @@ ControlTickResult advance_control_tick(const PhaseSessionState& input,
     const FieldPlayerProfiles& field, const GoalkeeperProfiles& keepers, const WorldStepContent& content);
 ControlTickResult advance_area_pass_control_tick(const PhaseSessionState& input,
     const FieldPlayerProfiles& field, const GoalkeeperProfiles& keepers, const WorldStepContent& content);
+ControlTickResult advance_area_action4_control_tick(const PhaseSessionState& input,
+    const FieldPlayerProfiles& field, const GoalkeeperProfiles& keepers, const WorldStepContent& content);
+ControlTickResult resume_area_action4_added_time(const PhaseSessionState& input,
+    const FieldPlayerProfiles& field, const GoalkeeperProfiles& keepers, const WorldStepContent& content);
 ControlTickResult resume_control_added_time(const PhaseSessionState& post_presentation,
     const FieldPlayerProfiles& field, const GoalkeeperProfiles& keepers, const WorldStepContent& content);
 struct LogicalButtons { std::uint8_t held = 0, pressed = 0; };
@@ -29,6 +33,10 @@ FieldRoundResult advance_control_field_round(const PhaseSessionState& input,
     const ControlMovementContent& control, const WorldStepContent& world,
     const std::array<LogicalButtons, 22>& inputs);
 FieldRoundResult advance_area_pass_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement,
+    const ControlMovementContent& control,const WorldStepContent& world,
+    const std::array<LogicalButtons,22>& inputs);
+FieldRoundResult advance_area_action4_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement,
     const ControlMovementContent& control,const WorldStepContent& world,
     const std::array<LogicalButtons,22>& inputs);

@@ -3,6 +3,8 @@
 #include "captain/control_input.hpp"
 #include "captain/action_menu.hpp"
 #include "captain/staged_shot.hpp"
+#include "captain/ball_flight_session.hpp"
+#include "captain/recovery_session.hpp"
 #include "captain/phase_session_io.hpp"
 #include <sstream>
 #include <iostream>
@@ -67,6 +69,130 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(round_stream))==round_bytes,"Kickoff field-round snapshot roundtrips");
  auto old_round=round_bytes;old_round[10]='W';old_round.resize(370);
  rejects([&]{std::istringstream i(old_round);load_phase_session(i);});
+ // Original sampled stage0 opponent cell decision captures action1/subtype0.
+ auto ai=control_ready;ai.phase=FieldSessionPhase::ai_cell_decision;ai.current.field.side=11;
+ ai.current.field.ball_owner=16;ai.current.field.ball_x=141;ai.current.field.ball_y=148;ai.current.field.ball_cell=140;
+ ai.current.field.random_first=0;ai.current.field.random_second=0;ai.current.field.elapsed=1;
+ ai.current.clock.remaining=443;ai.current.clock.extra_time=5;ai.current.clock.script_flags=128;ai.current.clock.ball_mode=128;ai.control->controlled_player=6;ai.control->last_carrier_cell=140;
+ ai.current.field.roster[16].type=23;ai.experience->opponent_stage=0;ai.score=MatchScoreContext{1,0,4};
+ ai.recovery->attack_subtype=128;ai.recovery->special_owner_flags=0;ai.control->facing=0;ai.control->display_parameter=2;ai.control->motion_requested=1;ai.action->action=0;ai.action->power=22;
+ const auto ai_before=bytes(ai);auto chosen=capture_sampled_field_ai_choice(ai,1,0);
+ check(static_cast<unsigned>(chosen.phase)==194 && chosen.action->action==1 && chosen.recovery->attack_subtype==0 &&
+       chosen.action->power==22 && bytes(ai)==ai_before,"Sampled opponent AI captures observed action and subtype atomically");
+ auto chosen_bytes=bytes(chosen);std::istringstream chosen_stream(chosen_bytes);
+ check(bytes(load_phase_session(chosen_stream))==chosen_bytes,"Sampled AI choice roundtrips");
+ rejects([&]{capture_sampled_field_ai_choice(ai,2,0);});rejects([&]{capture_sampled_field_ai_choice(chosen,1,0);});
+ auto other_ai=ai;other_ai.current.field.random_first=1;rejects([&]{capture_sampled_field_ai_choice(other_ai,1,0);});
+ auto prepared_ai=capture_sampled_field_ai_preparation(chosen,128,21);
+ check(static_cast<unsigned>(prepared_ai.phase)==195 && prepared_ai.action->action==1 && prepared_ai.action->power==21 &&
+       prepared_ai.recovery->attack_subtype==128 && bytes(chosen)==chosen_bytes,
+       "Sampled opponent preparation captures observed subtype and power");
+ auto ai_prepared_bytes=bytes(prepared_ai);std::istringstream ai_prepared_stream(ai_prepared_bytes);
+ check(bytes(load_phase_session(ai_prepared_stream))==ai_prepared_bytes,"Sampled AI preparation roundtrips");
+ rejects([&]{capture_sampled_field_ai_preparation(chosen,128,22);});rejects([&]{capture_sampled_field_ai_preparation(prepared_ai,128,21);});
+ auto acknowledged_ai=acknowledge_sampled_field_ai_presentation(prepared_ai);
+ check(static_cast<unsigned>(acknowledged_ai.phase)==196 && acknowledged_ai.current.clock.script_flags==0 &&
+       acknowledged_ai.current.clock.ball_mode==0 && bytes(prepared_ai)==ai_prepared_bytes,
+       "Sampled opponent presentation acknowledges observed flags without changing input");
+ auto acknowledged_bytes=bytes(acknowledged_ai);std::istringstream acknowledged_stream(acknowledged_bytes);
+ check(bytes(load_phase_session(acknowledged_stream))==acknowledged_bytes,"Sampled AI presentation roundtrips");
+ rejects([&]{acknowledge_sampled_field_ai_presentation(acknowledged_ai);});
+ auto dispatched_ai=advance_sampled_field_ai_dispatch(acknowledged_ai);
+ check(static_cast<unsigned>(dispatched_ai.phase)==197 && dispatched_ai.control->last_carrier_cell==0 &&
+       bytes(acknowledged_ai)==acknowledged_bytes,"Sampled opponent dispatch clears the original carrier-cell scratch");
+ auto dispatched_bytes=bytes(dispatched_ai);std::istringstream dispatched_stream(dispatched_bytes);
+ check(bytes(load_phase_session(dispatched_stream))==dispatched_bytes,"Sampled AI dispatch roundtrips");
+ rejects([&]{advance_sampled_field_ai_dispatch(dispatched_ai);});
+ auto captured_field=dispatched_ai.current.field;captured_field.elapsed=0;captured_field.movement_region=140;
+ captured_field.motion[0].x=0x5f15;captured_field.motion[0].status=1;
+ captured_field.motion[field_motion_index(19)].x=0x7700;captured_field.motion[field_motion_index(19)].y=0x8c00;
+ auto pass_presented=acknowledge_sampled_field_ai_pass_presentation(dispatched_ai,captured_field);
+ check(static_cast<unsigned>(pass_presented.phase)==198 && pass_presented.current.field.elapsed==0 &&
+       pass_presented.current.field.movement_region==140 && pass_presented.current.field.motion[0].x==0x5f15 &&
+       pass_presented.current.field.motion[0].status==1 && bytes(dispatched_ai)==dispatched_bytes,
+       "Sampled pass presentation records explicitly captured field effects");
+ auto pass_presented_bytes=bytes(pass_presented);std::istringstream pass_presented_stream(pass_presented_bytes);
+ check(bytes(load_phase_session(pass_presented_stream))==pass_presented_bytes,"Sampled pass presentation roundtrips");
+ auto altered_field=captured_field;altered_field.ball_owner=17;
+ rejects([&]{acknowledge_sampled_field_ai_pass_presentation(dispatched_ai,altered_field);});
+ rejects([&]{acknowledge_sampled_field_ai_pass_presentation(pass_presented,captured_field);});
+ auto pass_handoff=acknowledge_sampled_field_ai_pass_handoff(pass_presented);
+ check(static_cast<unsigned>(pass_handoff.phase)==199 && pass_handoff.recovery->ball_variant==1 && pass_handoff.recovery->special_owner_flags==0 &&
+       pass_handoff.control->facing==64 && pass_handoff.control->last_carrier_cell==128 &&
+       pass_handoff.control->display_parameter==0 && pass_handoff.control->motion_requested==0 &&
+       bytes(pass_presented)==pass_presented_bytes,"Sampled pass handoff records original control effects");
+ auto pass_handoff_bytes=bytes(pass_handoff);std::istringstream pass_handoff_stream(pass_handoff_bytes);
+ check(bytes(load_phase_session(pass_handoff_stream))==pass_handoff_bytes,"Sampled pass handoff roundtrips");
+ rejects([&]{acknowledge_sampled_field_ai_pass_handoff(pass_handoff);});
+ auto pass_target=capture_sampled_field_pass_target(pass_handoff,19,103,255,3);
+ check(static_cast<unsigned>(pass_target.phase)==200 && pass_target.sampled_field_pass && pass_target.sampled_field_pass->recipient==19 &&
+       pass_target.sampled_field_pass->destination==103 && pass_target.sampled_field_pass->counter==255 && pass_target.sampled_field_pass->distance==3 && bytes(pass_handoff)==pass_handoff_bytes,
+       "Sampled pass target advances without changing input");
+ auto pass_target_bytes=bytes(pass_target);std::istringstream pass_target_stream(pass_target_bytes);
+ check(bytes(load_phase_session(pass_target_stream))==pass_target_bytes,"Sampled pass target roundtrips");
+ auto old_pass_target=pass_target_bytes;old_pass_target[10]=static_cast<char>(131);rejects([&]{std::istringstream old(old_pass_target);load_phase_session(old);});
+ check(static_cast<unsigned char>(pass_target_bytes[10])==138,"Sampled pass target uses version72 marker");
+ auto truncated_pass_target=pass_target_bytes;truncated_pass_target.pop_back();rejects([&]{std::istringstream bad(truncated_pass_target);load_phase_session(bad);});
+ auto corrupt_pass_target=pass_target_bytes;corrupt_pass_target[corrupt_pass_target.size()-4]=18;rejects([&]{std::istringstream bad(corrupt_pass_target);load_phase_session(bad);});
+ auto misplaced_pass_receiver=pass_handoff;misplaced_pass_receiver.current.field.motion[field_motion_index(19)].x=0x5000;
+ rejects([&]{capture_sampled_field_pass_target(misplaced_pass_receiver,19,103,255,3);});
+ auto invalid_saved_target=pass_target;invalid_saved_target.current.field.motion[field_motion_index(19)].x=0x5000;
+ rejects([&]{bytes(invalid_saved_target);});
+
+ rejects([&]{capture_sampled_field_pass_target(pass_handoff,18,103,255,3);});
+ rejects([&]{capture_sampled_field_pass_target(pass_target,19,103,255,3);});
+ MovementGeometryContent pass_geometry{};pass_geometry.direction_thresholds.fill(65535);
+ BallVelocityContent pass_velocity{};pass_velocity.quarter_wave.fill(256);
+ auto pass_flight=begin_sampled_field_pass_flight(pass_target,127,0,pass_geometry,pass_velocity);
+ check(pass_flight.phase==FieldSessionPhase::area_ball_advance_ready && !pass_flight.sampled_field_pass &&
+       pass_flight.area_ai_target && pass_flight.area_ai_target->recipient==19 && pass_flight.area_ai_target->cell==103 &&
+       pass_flight.shot_flight && pass_flight.shot_flight->counter==255 && pass_flight.shot_flight->distance==3 &&
+       pass_flight.ball_trajectory && pass_flight.ball_trajectory->flags==1 && bytes(pass_target)==pass_target_bytes,
+       "Sampled pass enters shared numeric flight with captured recipient and flag");
+ auto pass_flight_bytes=bytes(pass_flight);std::istringstream pass_flight_stream(pass_flight_bytes);
+ check(bytes(load_phase_session(pass_flight_stream))==pass_flight_bytes,"Sampled pass flight roundtrips");
+ rejects([&]{begin_sampled_field_pass_flight(pass_target,126,0,pass_geometry,pass_velocity);});
+ rejects([&]{begin_sampled_field_pass_flight(pass_flight,127,0,pass_geometry,pass_velocity);});
+ auto received_pass=pass_flight;received_pass.phase=FieldSessionPhase::area_pass_keeper_entry;
+ received_pass.current.field.ball_owner=19;received_pass.current.field.ball_x=119;received_pass.current.field.ball_y=140;received_pass.current.field.ball_cell=103;
+ received_pass.ball_trajectory->x=0x7700;received_pass.ball_trajectory->y=0x8c00;
+ const auto received_bytes=bytes(received_pass);auto passed_control=continue_sampled_field_pass_control(received_pass);
+ check(passed_control.phase==FieldSessionPhase::player_control && passed_control.current.field.ball_owner==19 &&
+       passed_control.control->facing==0 && passed_control.saved_ball_flight_flag==1 && !passed_control.area_ai_target &&
+       !passed_control.shot_flight && !passed_control.ball_trajectory && bytes(received_pass)==received_bytes,
+       "Sampled received pass reaches control while retaining original flight flag");
+ auto passed_control_bytes=bytes(passed_control);std::istringstream passed_control_stream(passed_control_bytes);
+ check(bytes(load_phase_session(passed_control_stream))==passed_control_bytes,"Sampled pass control roundtrips");
+ rejects([&]{continue_sampled_field_pass_control(passed_control);});
+ auto received_ready=prepare_session_control(passed_control).state;
+ auto received_contact=received_ready;received_contact.phase=FieldSessionPhase::field_contact_pending;
+ received_contact.current.field.elapsed=1;received_contact.current.field.selected_defenders=3;
+ received_contact.scheduling->selected_ids={3,7,8,0,0};
+ auto received_contact_bytes=bytes(received_contact);std::istringstream received_contact_stream(received_contact_bytes);
+ check(bytes(load_phase_session(received_contact_stream))==received_contact_bytes && received_contact.kickoff_formation &&
+       received_contact.saved_ball_flight_flag==1,"Field contact retains kickoff keeper positions and prior pass flag");
+ auto sampled_contact=received_contact;sampled_contact.current.field.ball_x=112;sampled_contact.current.clock.remaining=440;sampled_contact.current.clock.script_flags=0;sampled_contact.current.clock.ball_mode=0;
+ sampled_contact.control->display_parameter=2;sampled_contact.control->motion_requested=1;
+ auto sampled_contact_bytes=bytes(sampled_contact);auto contact_presented=acknowledge_sampled_opponent_contact_presentation(sampled_contact);
+ check(static_cast<unsigned>(contact_presented.phase)==201 && contact_presented.control->display_parameter==0 &&
+       contact_presented.control->motion_requested==0 && contact_presented.current.field.selected_defenders==3 &&
+       contact_presented.saved_ball_flight_flag==1 && bytes(sampled_contact)==sampled_contact_bytes,
+       "Sampled opponent contact acknowledges original presentation control effects");
+ auto contact_presented_bytes=bytes(contact_presented);std::istringstream contact_presented_stream(contact_presented_bytes);
+ check(bytes(load_phase_session(contact_presented_stream))==contact_presented_bytes,"Sampled contact presentation roundtrips");
+ rejects([&]{acknowledge_sampled_opponent_contact_presentation(contact_presented);});
+ auto altered_contact=sampled_contact;altered_contact.scheduling->selected_ids[0]=4;
+ rejects([&]{acknowledge_sampled_opponent_contact_presentation(altered_contact);});
+
+
+
+
+
+
+
+
+
+
  auto menu=apply_control_buttons(control_ready,64,0).state;
  auto opened=open_human_action_menu(menu,ActionMenuContent{}).state;
  check(opened.phase==FieldSessionPhase::human_action_menu && opened.kickoff_formation &&

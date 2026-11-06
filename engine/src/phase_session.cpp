@@ -38,15 +38,28 @@ PhaseSessionResult finish(PhaseSessionState state, PendingTerminalContact contac
 }
 
 void validate_phase_session(const PhaseSessionState& state) {
+    if(state.saved_ball_flight_flag>1)throw std::invalid_argument("Unsupported saved ball flight flag");
     if ((state.current.field.side != 0 && state.current.field.side != 11) ||
-        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 149 ||
+        state.current.field.ball_owner > 21 || static_cast<unsigned>(state.phase) > 201 ||
         static_cast<unsigned>(state.phase)==111 || static_cast<unsigned>(state.phase)==112)
         throw std::invalid_argument("Unsupported phase session state");
     const auto phase = static_cast<unsigned>(state.phase);
+    const bool shot_pass_context=(phase>=152 && phase<=156) || phase==158 || phase==159;
+    const bool shot_pass_compared=(phase>=153 && phase<=156) || phase==158 || phase==159;
     const bool area_flight=(phase>=96 && phase<=101) || phase==105 || (phase>=114 && phase<=149);
     const bool pass_capture_tick=phase>=142 && phase<=145;
     const bool pass_blocked_tick=phase>=146 && phase<=149;
-    const bool area_action4=phase==102 || phase==103;
+    const bool area_action4=phase==102 || phase==103 || (phase>=160 && phase<=187) || phase==190 || phase==191 || phase==192 || phase==193;
+    if(bool(state.area_action4_restart)!=((phase>=179 && phase<=186) || phase==192 || phase==193) ||
+       (state.area_action4_restart && ((phase==192 || phase==193) ? (state.area_action4_restart->action!=9 || state.area_action4_restart->subtype!=128 || state.area_action4_restart->choice!=5 || state.current.field.ball_owner!=20) :
+       (state.area_action4_restart->action!=1 || state.area_action4_restart->subtype || state.area_action4_restart->choice!=6 || state.current.field.ball_owner!=14))))
+        throw std::invalid_argument("Invalid captured action4 restart choice");
+    if(bool(state.area_action4_restart_power)!=((phase>=181 && phase<=186) || phase==192 || phase==193) ||
+       (state.area_action4_restart_power && (state.area_action4_restart_power->cost!=((phase==192 || phase==193) ? 40 : 20) || state.area_action4_restart_power->power!=21)))
+        throw std::invalid_argument("Invalid action4 restart action power");
+    if(bool(state.area_action4_restart_pass_counter)!=(phase==186) ||
+       (state.area_action4_restart_pass_counter && *state.area_action4_restart_pass_counter!=77))
+        throw std::invalid_argument("Invalid action4 restart pass counter");
     const bool area_action6=phase==104 || (phase>=106 && phase<=110) || phase==113;
     const bool area_action6_race=(phase>=106 && phase<=110) || phase==113;
     const bool area_setup=phase==65 || phase==105;
@@ -66,8 +79,22 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Initial area defense requires its captured choice arrays");
     if(phase==93 && state.area_defense)for(unsigned i=0;i<state.current.field.selected_defenders;++i)
         if(state.area_defense->actions[i]>6)throw std::invalid_argument("Area continuation needs all captured defender choices");
-    if(area_action4 && (!state.action || state.action->action!=4 || !state.recovery || state.recovery->ball_variant || state.current.field.side!=11 || !state.current.field.selected_defenders || state.current.field.selected_defenders>4))
+    if(area_action4 && (!state.action || state.action->action!=4 || !state.recovery || state.recovery->ball_variant || state.current.field.side!=11 || ((phase>=162 && phase<=168) ? state.current.field.selected_defenders!=0 : !state.current.field.selected_defenders) || state.current.field.selected_defenders>4))
         throw std::invalid_argument("Area action4 boundary needs its retained defender choices");
+    if(phase==160 && state.action->menu_route!=0)
+        throw std::invalid_argument("Area action4 field entry needs its reset comparison route");
+    if(phase==165 && state.current.field.elapsed!=1)
+        throw std::invalid_argument("Area action4 field round requires elapsed1");
+    if(phase==166 && (state.current.field.elapsed!=1 || state.current.clock.ball_mode || state.current.clock.script_flags))
+        throw std::invalid_argument("Area action4 goal-area boundary requires its cleared control flags");
+    if(phase==167 && (state.current.clock.remaining || !state.current.clock.extra_time || state.current.clock.ball_mode || (state.current.clock.script_flags&64u)))
+        throw std::invalid_argument("Invalid area action4 added-time boundary");
+    if(phase==168 && state.current.clock.remaining)throw std::invalid_argument("Invalid area action4 period-end boundary");
+    if(((phase>=169 && phase<=187) || phase==190 || phase==191 || phase==192 || phase==193) && (!state.scheduling || state.current.field.selected_defenders!=1 || state.scheduling->selected_ids[0]!=0 ||
+       state.recovery->opposing_player!=0 || state.action->menu_route!=3 || state.current.field.elapsed!=((phase>=182 && phase<=186)?19:1)))
+        throw std::invalid_argument("Area action4 keeper entry requires the selected side0 goalkeeper");
+    if(phase==170 && (!state.control || (state.control->facing!=0 && state.control->facing!=64)))
+        throw std::invalid_argument("Area action4 keeper presentation requires captured facing");
     if(phase==67 || phase==69) {
         if(!state.current.field.selected_defenders || state.current.field.selected_defenders>4 || state.action->cursor || state.area_defense->pressed)
             throw std::invalid_argument("Area defense initialization requires a nonempty prefix and cursor0");
@@ -131,7 +158,11 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Invalid queued pass defender cursor");
     if(phase==123 && (state.current.field.selected_defenders || !state.area_defender_cursor || state.area_defender_cursor>4 || state.current.field.elapsed))
         throw std::invalid_argument("Completed pass defenders need cleared selection and time");
-    if(bool(state.area_pass_contact)!=((phase>=116 && phase<=122) || (phase>=124 && phase<=149)))throw std::invalid_argument("Prepared pass defender needs saved context");
+    if(bool(state.area_pass_contact)!=((phase>=116 && phase<=122) || (phase>=124 && phase<=149) || shot_pass_context))throw std::invalid_argument("Prepared pass defender needs saved context");
+    if(shot_pass_context && (!state.recovery || !state.scheduling || state.area_pass_contact->saved_ball_variant!=0 ||
+       state.recovery->ball_variant!=0 || state.area_defender_cursor>=state.current.field.selected_defenders ||
+       state.recovery->opposing_player!=state.scheduling->selected_ids[state.area_defender_cursor]))
+        throw std::invalid_argument("Shot pass defender preparation needs its zero stacked variant and selected defender");
     if(((phase>=116 && phase<=122) || (phase>=124 && phase<=149)) && (!state.recovery || !state.scheduling || state.area_pass_contact->saved_ball_variant<1 || state.area_pass_contact->saved_ball_variant>2 ||
        (phase>=118 ? (((phase>=130 && phase<=133) || phase>=138) ? state.recovery->ball_variant!=0 : state.recovery->ball_variant!=state.area_pass_contact->saved_ball_variant) : state.recovery->ball_variant!=0) || (((phase>=130 && phase<=133) || pass_capture_tick) ? state.recovery->opposing_player!=state.current.field.ball_owner : phase>=138 ? state.recovery->opposing_player>10 : phase>=134 ? (state.recovery->opposing_player<1 || state.recovery->opposing_player>10) : state.recovery->opposing_player!=state.scheduling->selected_ids[state.area_defender_cursor])))
         throw std::invalid_argument("Invalid prepared pass defender context");
@@ -155,7 +186,29 @@ void validate_phase_session(const PhaseSessionState& state) {
                 throw std::invalid_argument("Area AI target cell disagrees with saved player position");
         }
     }
-    if(bool(state.area_contact)!=((phase>=82 && phase<=86) || phase==89 || phase==94 || (phase>=117 && phase<=122) || (phase>=124 && phase<=149)))throw std::invalid_argument("Area comparison requires saved contact context");
+    if(bool(state.area_contact)!=((phase>=82 && phase<=86) || phase==89 || phase==94 || (phase>=117 && phase<=122) || (phase>=124 && phase<=149) || shot_pass_compared || phase==171 || phase==172 || phase==173 || phase==174 || phase==175 || phase==176 || phase==177 || phase==178 || phase==179 || phase==180 || phase==181 || phase==182 || phase==183 || phase==184 || phase==185 || phase==186 || phase==187 || phase==189 || phase==190 || phase==191 || phase==192 || phase==193))throw std::invalid_argument("Area comparison requires saved contact context");
+    if((phase==171 || phase==172) && (state.area_contact->cursor || state.area_contact->defense_action!=6 || state.area_contact->defense_subtype ||
+       state.area_contact->effect || state.area_contact->strength || state.area_contact->loss || state.area_contact->score ||
+       state.area_contact->result || (phase==171 && state.area_contact->weakened)))
+        throw std::invalid_argument("Invalid captured action4 goalkeeper preparation");
+    if(((phase>=173 && phase<=187) || phase==190 || phase==191 || phase==192 || phase==193) && (state.area_contact->cursor || state.area_contact->defense_action!=6 ||
+       (state.area_contact->defense_subtype!=0 && state.area_contact->defense_subtype!=128) ||
+       state.area_contact->effect || state.area_contact->loss!=state.area_contact->strength/4 ||
+       (state.area_contact->result>1 && state.area_contact->result!=4) || state.area_sequence_result!=state.area_contact->result))
+        throw std::invalid_argument("Invalid action4 goalkeeper comparison context");
+    if(((phase==175 || phase==187) && state.area_contact->result!=0) || ((phase>=176 && phase<=186) && state.area_contact->result!=1))
+        throw std::invalid_argument("Action4 goalkeeper handler requires its corresponding result");
+    if((phase==190 || phase==191 || phase==192 || phase==193) && state.area_contact->result!=4)throw std::invalid_argument("Sampled keeper restart requires result4");
+    if((phase==191 || phase==192 || phase==193) && (state.current.field.ball_owner!=20 || state.current.field.ball_x!=68 || state.current.field.ball_y!=132 || state.current.field.ball_cell!=30))throw std::invalid_argument("Invalid captured result4 restart formation");
+    if(phase==187 && (!state.score || state.score->left_goals!=0 || state.score->right_goals!=1 || state.score->kickoff!=0))throw std::invalid_argument("Invalid sampled result0 goal score");
+    if(phase==183 && (state.current.clock.remaining || !state.current.clock.extra_time || state.current.clock.ball_mode || (state.current.clock.script_flags&64u)))
+        throw std::invalid_argument("Invalid action4 restart added-time boundary");
+    if(phase==184 && state.current.clock.remaining)throw std::invalid_argument("Invalid action4 restart period-end boundary");
+    if(shot_pass_compared && (!state.action || !state.area_pass_contact || state.area_contact->cursor!=state.area_defender_cursor || state.area_contact->defense_action!=2 ||
+       state.area_contact->defense_subtype || state.area_contact->effect || state.area_contact->cost!=state.area_pass_contact->captured_cost ||
+       state.area_contact->strength || state.area_contact->loss || state.area_contact->score!=255 || state.area_contact->result ||
+       state.area_contact->weakened || state.area_sequence_result || state.action->menu_route))
+        throw std::invalid_argument("Invalid shot pass zero-range comparison");
     if(phase==84 && (state.current.clock.remaining || !state.current.clock.extra_time ||
        state.current.clock.ball_mode || (state.current.clock.script_flags&64u)))
         throw std::invalid_argument("Invalid area contact added-time boundary");
@@ -170,7 +223,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        (phase==87 && !state.area_defender_cursor) ||
        (phase==89 && state.area_contact->result<2))
         throw std::invalid_argument("Invalid saved area defender cursor or exit");
-    if(state.area_contact && !((phase>=117 && phase<=122) || (phase>=124 && phase<=149))) {
+    if(state.area_contact && !((phase>=117 && phase<=122) || (phase>=124 && phase<=149) || shot_pass_compared || phase==171 || phase==172 || phase==173 || phase==174 || phase==175 || phase==176 || phase==177 || phase==178 || phase==179 || phase==180 || phase==181 || phase==182 || phase==183 || phase==184 || phase==185 || phase==186 || phase==187 || phase==189 || phase==190 || phase==191 || phase==192 || phase==193)) {
         const auto& c=*state.area_contact;
         if(c.cursor!=state.area_defender_cursor || c.cursor>=state.current.field.selected_defenders ||
            state.recovery->opposing_player!=state.scheduling->selected_ids[c.cursor] ||
@@ -204,23 +257,23 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Invalid saved final area sequence result");
     if(phase==68 && state.current.field.selected_defenders)
         throw std::invalid_argument("Empty area defense completion requires no selected players");
-    if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59 || area_flight))
+    if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59 || (phase>=150 && phase<=159) || phase==188 || phase==189 || area_flight))
         throw std::invalid_argument("Flight setup requires exactly one shot context");
-    if (state.shot_flight && (state.shot_flight->destination >= 240 || (state.shot_flight->counter != 255 && !(area_flight && state.shot_flight->counter==38)) || (area_flight && (state.shot_flight->destination!=state.area_ai_target->cell || state.shot_flight->loose_ball))))
+    if (state.shot_flight && (state.shot_flight->destination >= 240 || (state.shot_flight->counter != 255 && !(area_flight && (state.shot_flight->counter==38 || state.shot_flight->counter==77))) || (area_flight && (state.shot_flight->destination!=state.area_ai_target->cell || state.shot_flight->loose_ball))))
         throw std::invalid_argument("Unsupported initial shot flight context");
-    const bool trajectory=(phase>=47 && phase<=56) || phase==59 || area_flight;
+    const bool trajectory=(phase>=47 && phase<=56) || phase==59 || (phase>=150 && phase<=159) || phase==188 || phase==189 || area_flight;
     if(bool(state.ball_trajectory)!=trajectory)
         throw std::invalid_argument("Numeric flight requires exactly one trajectory context");
     if(state.ball_trajectory) {
         const auto& t=*state.ball_trajectory;const auto& f=state.current.field;
-        if(!state.recovery || !state.scheduling || t.flags!=(area_flight?1:0) || t.direction!=state.recovery->x_jitter_control ||
+        if(!state.recovery || !state.scheduling || t.flags!=(area_flight?1:state.saved_ball_flight_flag) || t.direction!=state.recovery->x_jitter_control ||
             (t.x>>8)!=f.ball_x || (t.y>>8)!=f.ball_y ||
-            (!(((phase>=124 && phase<=127) || (phase>=134 && phase<=137)) && state.area_sequence_result==2) && field_cell_at(f.ball_x,f.ball_y)!=f.ball_cell) || (f.elapsed && !((phase>=114 && phase<=122) || (phase>=124 && phase<=128) || (phase>=131 && phase<=133) || phase==134 || phase==136 || (phase>=139 && phase<=141) || pass_capture_tick || pass_blocked_tick)) ||
+            (!(((phase>=124 && phase<=127) || (phase>=134 && phase<=137)) && state.area_sequence_result==2) && field_cell_at(f.ball_x,f.ball_y)!=f.ball_cell) || (f.elapsed && !((phase>=114 && phase<=122) || (phase>=124 && phase<=128) || (phase>=131 && phase<=133) || phase==134 || phase==136 || (phase>=139 && phase<=141) || (phase>=150 && phase<=156) || phase==158 || phase==159 || pass_capture_tick || pass_blocked_tick)) ||
             ((phase==50 || phase==51 || phase==52 || phase==54 || phase==55) && f.selected_defenders) ||
             (phase==47 && (!t.vx && !t.vy)) ||
             (phase==47 && f.ball_cell==state.shot_flight->destination) ||
             (phase==48 && f.ball_cell==state.shot_flight->destination) ||
-            (((phase>=49 && phase<=56) || phase==59 || phase==97) && f.ball_cell!=state.shot_flight->destination) ||
+            (((phase>=49 && phase<=56) || phase==59 || phase==97 || (phase>=150 && phase<=159) || phase==188 || phase==189) && f.ball_cell!=state.shot_flight->destination) ||
             (phase==96 && (f.ball_cell==state.shot_flight->destination || (!t.vx && !t.vy))) ||
             (phase==97 && f.selected_defenders) ||
             (phase==98 && f.ball_cell==state.shot_flight->destination) ||
@@ -230,6 +283,31 @@ void validate_phase_session(const PhaseSessionState& state) {
             (phase==50 && (t.vx || t.vy)))
             throw std::invalid_argument("Unsupported numeric flight boundary");
     }
+    const bool sampled_kickoff_loose_defenders=(phase==150 || phase==151 || phase==188 || phase==189) && !state.saved_ball_flight_flag && state.shot_flight && state.shot_flight->loose_ball &&
+       state.current.field.side==0 && state.current.field.ball_owner==7 && state.current.field.ball_x==188 && state.current.field.ball_y==124 &&
+       state.current.field.ball_cell==209 && state.current.field.random_first==0 && state.current.field.random_second==128 &&
+       state.current.field.selected_defenders==2 && state.scheduling && state.scheduling->selected_ids[0]==19 && state.scheduling->selected_ids[1]==14 &&
+       state.score && state.score->left_goals==0 && state.score->right_goals==1 && state.score->kickoff==4 && state.kickoff_formation;
+    if(((phase>=150 && phase<=156) || phase==158 || phase==159 || phase==188 || phase==189) && ((!state.saved_ball_flight_flag && !sampled_kickoff_loose_defenders) || state.current.field.side!=0 ||
+       !state.current.field.selected_defenders || state.current.field.selected_defenders>5 || state.area_defender_cursor>=state.current.field.selected_defenders))
+        throw std::invalid_argument("Shot pass defenders require a nonempty side0 prefix and valid cursor");
+    if((phase==188 || phase==189) && (!sampled_kickoff_loose_defenders || state.area_defender_cursor || state.area_sequence_result!=(phase==188 ? 255 : 2) ||
+       !state.recovery || state.recovery->opposing_player!=19 || state.recovery->ball_variant))
+        throw std::invalid_argument("Prepared sampled loose-shot defender requires the first observed player");
+    if(phase==189 && (!state.area_contact || state.area_contact->cursor || state.area_contact->defense_action || state.area_contact->defense_subtype ||
+       state.area_contact->effect || state.area_contact->defender_power!=19 || state.area_contact->cost || state.area_contact->strength!=9 ||
+       state.area_contact->loss!=2 || state.area_contact->score!=78 || state.area_contact->result!=2 || state.area_contact->weakened))
+        throw std::invalid_argument("Unsupported sampled loose-shot comparison");
+    if(phase>=150 && phase<=152 && state.area_sequence_result!=255)
+        throw std::invalid_argument("Pending shot pass defender must not retain the prior result");
+    if(phase==157 && (!state.saved_ball_flight_flag || state.current.field.side!=0 || state.current.field.selected_defenders ||
+       state.current.field.elapsed || !state.area_defender_cursor || state.area_defender_cursor>5 || state.area_sequence_result!=255))
+        throw std::invalid_argument("Completed shot pass defenders require a cleared prefix and elapsed time");
+    if(phase==158 && (state.current.clock.remaining || !state.current.clock.extra_time || state.current.clock.ball_mode || (state.current.clock.script_flags&64u)))
+        throw std::invalid_argument("Invalid shot pass added-time boundary");
+    if(phase==159 && state.current.clock.remaining)throw std::invalid_argument("Invalid shot pass period-end boundary");
+    if(phase==155 && (!state.control || (state.control->facing!=0 && state.control->facing!=64)))
+        throw std::invalid_argument("Shot pass result needs captured facing");
     if((phase==51 && !state.shot_flight->loose_ball) || (((phase>=52 && phase<=56) || phase==59) && state.shot_flight->loose_ball))
         throw std::invalid_argument("Flight return phase does not match saved loose/keeper route");
     if(bool(state.keeper_decision)!=(phase==55 || phase==56 || phase==59) ||
@@ -237,11 +315,41 @@ void validate_phase_session(const PhaseSessionState& state) {
         state.keeper_decision->result_code>(phase==55?1:3) || state.keeper_decision->defense_action>3 ||
         (phase==55 && (state.keeper_decision->defense_action || state.keeper_decision->defense_subtype || state.keeper_decision->effect)))))
         throw std::invalid_argument("Stunned keeper decision needs one valid result/cursor context");
-    const bool keeper_selected=phase==53 || phase==56 || (phase==59 && !state.current.field.keepers[1].stun);
+    if((phase>=194 && phase<=200) && (!state.action || !state.recovery || !state.control || !state.experience || !state.score ||
+       !state.kickoff_formation || state.current.field.side!=11 || state.current.field.ball_owner!=16 ||
+       state.current.field.ball_x!=141 || state.current.field.ball_y!=148 || state.current.field.ball_cell!=140 ||
+       state.current.field.roster[16].type!=23 || state.current.field.selected_defenders ||
+       state.current.field.random_first || state.current.field.random_second || state.experience->opponent_stage ||
+       state.current.clock.remaining!=443 || state.current.clock.extra_time!=5 || state.control->last_carrier_cell!=(phase>=199 ? 128 : phase>=197 ? 0 : 140) ||
+       state.score->left_goals!=1 || state.score->right_goals!=0 || state.score->kickoff!=4 ||
+       state.current.clock.script_flags!=(phase>=196 ? 0 : 128) || state.current.clock.ball_mode!=(phase>=196 ? 0 : 128) ||
+       (phase>=198 && (state.current.field.elapsed!=0 || state.current.field.movement_region!=140)) ||
+       (phase>=199 && (state.recovery->special_owner_flags!=0 || state.recovery->ball_variant!=1 || state.control->facing!=64 || state.control->display_parameter!=0 || state.control->motion_requested!=0)) ||
+       state.action->action!=1 || state.action->power!=(phase==194 ? 22 : 21) || state.recovery->attack_subtype!=(phase==194 ? 0 : 128)))
+        throw std::invalid_argument("Invalid sampled opponent AI choice state");
+    if(bool(state.sampled_field_pass)!=(phase==200) || (state.sampled_field_pass &&
+       (state.sampled_field_pass->recipient!=19 || state.sampled_field_pass->destination!=103 ||
+        state.sampled_field_pass->counter!=255 || state.sampled_field_pass->distance!=3)))
+        throw std::invalid_argument("Invalid sampled opponent pass target context");
+    if(phase==200) {
+        const auto& recipient=state.current.field.motion[field_motion_index(state.sampled_field_pass->recipient)];
+        if(field_cell_at(static_cast<std::uint8_t>(recipient.x>>8),static_cast<std::uint8_t>(recipient.y>>8))!=state.sampled_field_pass->destination)
+            throw std::invalid_argument("Sampled opponent pass target disagrees with receiver position");
+    }
+    if(phase==201 && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling ||
+       !state.kickoff_formation || state.saved_ball_flight_flag!=1 || state.current.field.side!=11 || state.current.field.ball_owner!=19 ||
+       state.current.field.ball_x!=112 || state.current.field.ball_y!=140 || state.current.field.ball_cell!=103 || state.current.field.elapsed!=1 ||
+       state.current.field.selected_defenders!=3 || state.scheduling->selected_ids!=std::array<std::uint8_t,5>{3,7,8,0,0} ||
+       state.current.field.random_first || state.current.field.random_second || state.experience->opponent_stage ||
+       state.current.clock.remaining!=440 || state.current.clock.extra_time!=5 || state.current.clock.script_flags || state.current.clock.ball_mode ||
+       state.score->left_goals!=1 || state.score->right_goals!=0 || state.score->kickoff!=4 ||
+       state.control->display_parameter || state.control->motion_requested || state.action->action!=1 || state.action->power!=21))
+        throw std::invalid_argument("Invalid sampled opponent contact presentation");
+    const bool keeper_selected=phase==53 || phase==56 || ((phase>=169 && phase<=187) || phase==190 || phase==191 || phase==192 || phase==193) || (phase==59 && !state.current.field.keepers[1].stun);
     const bool keeper_possession=phase==57;
     const bool goal_restart=phase==60;
     const bool kickoff_placed=phase>=61 && phase<=64;
-    const bool kickoff_shot=phase==1 || phase==2 || phase==6 || phase==7 || (phase==8 && state.current.field.selected_defenders) || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53 || (phase>=56 && phase<=60) || phase==95 || area_flight || area_action4 || area_action6 || area_state;
+    const bool kickoff_shot=(phase>=194 && phase<=201) || phase==15 || phase==1 || phase==2 || phase==6 || phase==7 || (phase==8 && state.current.field.selected_defenders) || phase==27 || phase==43 || (phase>=45 && phase<=53) || (phase>=56 && phase<=60) || phase==95 || (phase>=150 && phase<=159) || phase==188 || phase==189 || area_flight || area_action4 || area_action6 || area_state;
     if((kickoff_placed && !state.kickoff_formation) ||
        (!kickoff_placed && !(phase>=9 && phase<=13) && !(phase>=18 && phase<=20) && !kickoff_shot && state.kickoff_formation))
         throw std::invalid_argument("Kickoff formation phase needs captured keeper positions");
@@ -256,7 +364,11 @@ void validate_phase_session(const PhaseSessionState& state) {
            field.ball_cell!=field_cell_at(field.ball_x,field.ball_y))
             throw std::invalid_argument("Kickoff ball must be at the initial carrier");
     }
-    if(kickoff_placed && (!state.score || state.score->kickoff!=4 || !state.scheduling ||
+    const bool sampled_right_goal_formation=(phase>=61 && phase<=64) && state.score && state.score->left_goals==0 && state.score->right_goals==1 && state.score->kickoff==4 &&
+       state.current.field.side==0 && state.current.field.ball_owner==(phase==64 ? 7 : 8) && (phase==61 || (state.kickoff_receiver && *state.kickoff_receiver==7)) && state.current.field.elapsed==1 && state.current.field.selected_defenders==1 &&
+       state.scheduling && state.scheduling->selected_ids[0]==0 && state.recovery && state.recovery->opposing_player==0 &&
+       state.current.field.random_first==127 && state.current.field.random_second==128 && !state.current.field.keepers[1].penalty;
+    if(kickoff_placed && !sampled_right_goal_formation && (!state.score || state.score->kickoff!=4 || !state.scheduling ||
        (phase==64 ? state.current.field.ball_owner!=*state.kickoff_receiver :
                     state.current.field.ball_owner!=state.current.field.side+8) || state.current.field.elapsed ||
        state.current.field.selected_defenders>1 || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=11)))
@@ -286,7 +398,13 @@ void validate_phase_session(const PhaseSessionState& state) {
        (state.current.field.selected_defenders && (!state.scheduling || state.scheduling->selected_ids[0]!=11)) ||
        (state.current.field.keepers[1].stun && (state.keeper_decision->defense_action || state.keeper_decision->defense_subtype || state.keeper_decision->effect))))
         throw std::invalid_argument("Goal celebration needs a scored keeper result and matching normal/stunned prefix");
-    if(goal_restart && (!state.score || state.score->kickoff!=4 || state.current.clock.ball_mode!=0 ||
+    const bool sampled_right_goal_restart=goal_restart && state.score && state.score->left_goals==0 && state.score->right_goals==1 && state.score->kickoff==4 &&
+       state.current.clock.ball_mode==0 && state.current.field.side==0 && state.current.field.ball_owner==12 && state.current.field.elapsed==1 &&
+       state.current.field.ball_x==56 && state.current.field.ball_y==124 && state.current.field.ball_cell==17 &&
+       state.current.field.random_first==127 && state.current.field.random_second==128 && state.current.field.selected_defenders==1 &&
+       state.scheduling && state.scheduling->selected_ids[0]==0 && state.recovery && state.recovery->opposing_player==0 &&
+       !state.current.field.keepers[0].timer && !state.current.field.keepers[0].penalty && !state.current.field.keepers[0].stun;
+    if(goal_restart && !sampled_right_goal_restart && (!state.score || state.score->kickoff!=4 || state.current.clock.ball_mode!=0 ||
        state.current.field.side!=11 || state.current.field.ball_owner<1 || state.current.field.ball_owner>10 ||
        state.current.field.elapsed || state.current.field.selected_defenders>1 || !state.scheduling || !state.recovery ||
        state.recovery->opposing_player!=11 || state.current.field.keepers[1].timer || state.current.field.keepers[1].penalty ||
@@ -390,7 +508,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         if (!transitional_clearance && !goal_restart && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;
-        if (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176)
+        if (phase!=177 && phase!=178 && phase!=179 && (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176))
             throw std::invalid_argument("Recovered-owner continuation requires an interior ball");
     }
     if (static_cast<unsigned>(state.phase) >= 9 && (!state.control || !state.experience))
@@ -429,9 +547,9 @@ void validate_phase_session(const PhaseSessionState& state) {
         (static_cast<unsigned>(state.phase) >= 19 ||
          (state.phase == FieldSessionPhase::human_action_menu && (state.action->cursor & 128u))))
         throw std::invalid_argument("Unsupported captured action ID");
-    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && !post_possession && !area_state) || state.action->menu_route >= 6))
+    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && !post_possession && !area_state && !(phase>=194 && phase<=201)) || state.action->menu_route >= 6))
         throw std::invalid_argument("Human attacking menu requires captured action context and side0");
-    if (static_cast<unsigned>(state.phase) >= 20 && !area_flight && !area_action4 && !area_action6 && phase!=78 && phase!=79 && phase!=80 && phase!=81 && phase!=82 && phase!=83 && phase!=84 && phase!=85 && phase!=86 && phase!=87 && phase!=88 && phase!=89 && phase!=90 && phase!=91 && phase!=92 && phase!=93 && phase!=94 && state.action->action != 0)
+    if (static_cast<unsigned>(state.phase) >= 20 && !(phase>=194 && phase<=201) && !area_flight && !area_action4 && !area_action6 && phase!=78 && phase!=79 && phase!=80 && phase!=81 && phase!=82 && phase!=83 && phase!=84 && phase!=85 && phase!=86 && phase!=87 && phase!=88 && phase!=89 && phase!=90 && phase!=91 && phase!=92 && phase!=93 && phase!=94 && state.action->action != 0)
         throw std::invalid_argument("Only ordinary shots are supported at attack-prepared phase");
 }
 

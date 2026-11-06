@@ -42,7 +42,18 @@ enum class FieldSessionPhase : std::uint8_t {
     area_pass_capture_field_round = 142, area_pass_capture_goal_area = 143,
     area_pass_capture_added_time = 144, area_pass_capture_period_end = 145,
     area_pass_blocked_field_round = 146, area_pass_blocked_goal_area = 147,
-    area_pass_blocked_added_time = 148, area_pass_blocked_period_end = 149
+    area_pass_blocked_added_time = 148, area_pass_blocked_period_end = 149,
+    shot_pass_defenders_pending = 150, shot_pass_defender_announced = 151,
+    shot_pass_defender_prepared = 152, shot_pass_defender_compared = 153,
+    shot_pass_variant_restored = 154, shot_pass_result_handler_entry = 155,
+    shot_pass_nonterminal_done = 156, shot_pass_defenders_done = 157,
+    shot_pass_added_time = 158, shot_pass_period_end = 159,
+    area_action4_field_entry = 160, area_action4_control_entry = 161,
+    area_action4_control_ready = 162, area_action4_control_wait = 163,
+    area_action4_control_clock = 164, area_action4_field_round = 165,
+    area_action4_goal_area = 166, area_action4_added_time = 167, area_action4_period_end = 168,
+    area_action4_keeper_entry = 169, area_action4_keeper_presented = 170,
+    area_action4_keeper_prepared = 171, area_action4_keeper_stamina_done = 172, area_action4_keeper_compared = 173, area_action4_keeper_dispatch_entry = 174, area_action4_keeper_result0_entry = 175, area_action4_keeper_result1_recovery = 176, area_action4_keeper_result1_boundary_check = 177, area_action4_keeper_result1_restart_entry = 178, area_action4_keeper_restart_prepared = 179, area_action4_keeper_restart_formation = 180, area_action4_keeper_restart_power = 181, area_action4_restart_clock_done = 182, area_action4_restart_added_time = 183, area_action4_restart_period_end = 184, area_action4_restart_action1_entry = 185, area_action4_restart_pass_entry = 186, area_action4_keeper_result0_goal = 187, sampled_loose_shot_defender_prepared = 188, sampled_loose_shot_defender_compared = 189, sampled_keeper_result4_restart = 190, sampled_keeper_result4_formation = 191, sampled_keeper_result4_action = 192, sampled_keeper_result4_extra_time = 193, sampled_field_ai_choice = 194, sampled_field_ai_prepared = 195, sampled_field_ai_presented = 196, sampled_field_ai_dispatch = 197, sampled_field_ai_pass_presented = 198, sampled_field_ai_pass_handoff = 199, sampled_field_ai_pass_target = 200, sampled_opponent_contact_presented = 201
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;
@@ -88,6 +99,9 @@ struct AreaContactContext {
     std::uint8_t strength=0,loss=0,score=0,result=0;
     bool weakened=false;
 };
+struct AreaAction4RestartContext { std::uint8_t action=0,subtype=0,choice=0; };
+struct AreaAction4RestartPowerContext { std::uint16_t cost=0,power=0; };
+struct SampledFieldPassContext { std::uint8_t recipient=0,destination=0,counter=0,distance=0; };
 struct AreaPassContactContext { std::uint8_t saved_ball_variant=0; std::uint16_t captured_cost=0; };
 struct PhaseSessionState {
     ContactPreludeState current;
@@ -103,6 +117,7 @@ struct PhaseSessionState {
     std::optional<ClearanceRaceContext> clearance_race{};
     std::optional<RestartOptionsContext> restart_options{};
     std::optional<ShotFlightContext> shot_flight{};
+    std::optional<SampledFieldPassContext> sampled_field_pass{};
     std::optional<BallTrajectoryContext> ball_trajectory{};
     std::optional<KeeperDecisionContext> keeper_decision{};
     std::optional<MatchScoreContext> score{};
@@ -117,9 +132,13 @@ struct PhaseSessionState {
     struct AreaAiTarget { std::uint8_t recipient=0,cell=0; std::uint16_t cost=0; };
     std::optional<AreaAiTarget> area_ai_target{};
     std::optional<AreaContactContext> area_contact{};
+    std::optional<AreaAction4RestartContext> area_action4_restart{};
+    std::optional<AreaAction4RestartPowerContext> area_action4_restart_power{};
+    std::optional<std::uint8_t> area_action4_restart_pass_counter{};
     std::optional<AreaPassContactContext> area_pass_contact{};
     std::uint8_t area_defender_cursor=0;
     std::uint8_t area_sequence_result=255;
+    std::uint8_t saved_ball_flight_flag=0;
 };
 struct PhaseSessionResult {
     PhaseSessionState state;

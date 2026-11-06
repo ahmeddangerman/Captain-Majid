@@ -1,4 +1,5 @@
 #include "captain/phase_session_io.hpp"
+#include "captain/field_state_io.hpp"
 #include "captain/shot_content.hpp"
 #include "captain/area_ai_session.hpp"
 #include "captain/recovery_session.hpp"
@@ -51,6 +52,14 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::control_clock_pending: return "control clock step pending";
     case captain::FieldSessionPhase::action_menu_pending: return "action menu pending";
     case captain::FieldSessionPhase::ai_cell_decision: return "opposing-carrier cell decision pending";
+    case captain::FieldSessionPhase::sampled_field_ai_choice: return "sampled opponent AI choice captured; preparation pending";
+    case captain::FieldSessionPhase::sampled_field_ai_prepared: return "sampled opponent attack prepared; presentation pending";
+    case captain::FieldSessionPhase::sampled_field_ai_presented: return "sampled opponent presentation acknowledged; field attack pending";
+    case captain::FieldSessionPhase::sampled_field_ai_dispatch: return "sampled opponent pass dispatch pending";
+    case captain::FieldSessionPhase::sampled_field_ai_pass_presented: return "sampled opponent pass presentation captured; pass handler pending";
+    case captain::FieldSessionPhase::sampled_field_ai_pass_handoff: return "sampled opponent pass handoff; flight pending";
+    case captain::FieldSessionPhase::sampled_field_ai_pass_target: return "sampled opponent pass target captured; flight setup pending";
+    case captain::FieldSessionPhase::sampled_opponent_contact_presented: return "sampled opponent contact presented; action selection pending";
     case captain::FieldSessionPhase::field_round_pending: return "field round pending";
     case captain::FieldSessionPhase::control_added_time: return "control added-time presentation pending";
     case captain::FieldSessionPhase::field_contact_pending: return "nearby field contact pending";
@@ -83,6 +92,16 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::shot_approach_ready: return "ordinary shot approach ready";
     case captain::FieldSessionPhase::shot_flight_pending: return "shot flight setup ready; scheduling pending";
     case captain::FieldSessionPhase::ball_already_arrived: return "ball was already at destination; return without arrival callback";
+    case captain::FieldSessionPhase::shot_pass_defenders_pending: return "shot arrival queued pass defenders; defender announcement pending";
+    case captain::FieldSessionPhase::shot_pass_defender_announced: return "shot pass defender announced; preparation pending";
+    case captain::FieldSessionPhase::shot_pass_defender_prepared: return "shot pass defender prepared; comparison pending";
+    case captain::FieldSessionPhase::shot_pass_defender_compared: return "shot pass defender compared; result handler pending";
+    case captain::FieldSessionPhase::shot_pass_variant_restored: return "shot pass variant restored; result presentation pending";
+    case captain::FieldSessionPhase::shot_pass_result_handler_entry: return "shot pass result acknowledged; nonterminal handler pending";
+    case captain::FieldSessionPhase::shot_pass_nonterminal_done: return "shot pass defender result handled; next defender pending";
+    case captain::FieldSessionPhase::shot_pass_defenders_done: return "shot pass defenders complete; arrival continuation pending";
+    case captain::FieldSessionPhase::shot_pass_added_time: return "shot pass added-time presentation pending";
+    case captain::FieldSessionPhase::shot_pass_period_end: return "shot pass period-end presentation pending";
     case captain::FieldSessionPhase::shot_loose_recovery: return "loose flight presentation/recovery pending";
     case captain::FieldSessionPhase::keeper_area_defense_poll: return "defensive input sampled; next poll pending";
     case captain::FieldSessionPhase::keeper_area_prefix_clock_done: return "area prefix clock complete; possession dispatch pending";
@@ -98,6 +117,40 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::area_pass_received: return "area pass recipient selected; handoff pending";
     case captain::FieldSessionPhase::area_pass_keeper_entry: return "area pass keeper interaction entry pending";
     case captain::FieldSessionPhase::area_action4_encounters_pending: return "area action4 defender encounters pending";
+    case captain::FieldSessionPhase::area_action4_field_entry: return "area action4 field encounter setup pending";
+    case captain::FieldSessionPhase::area_action4_control_entry: return "area action4 player control setup pending";
+    case captain::FieldSessionPhase::area_action4_control_ready: return "area action4 player control prepared; input pending";
+    case captain::FieldSessionPhase::area_action4_control_wait: return "area action4 control input wait pending";
+    case captain::FieldSessionPhase::area_action4_control_clock: return "area action4 input accepted; control clock pending";
+    case captain::FieldSessionPhase::area_action4_field_round: return "area action4 control clock complete; field round pending";
+    case captain::FieldSessionPhase::area_action4_goal_area: return "area action4 goal-area action pending";
+    case captain::FieldSessionPhase::area_action4_added_time: return "area action4 added-time presentation pending";
+    case captain::FieldSessionPhase::area_action4_period_end: return "area action4 period-end presentation pending";
+    case captain::FieldSessionPhase::area_action4_keeper_entry: return "area action4 goalkeeper entry; presentation pending";
+    case captain::FieldSessionPhase::area_action4_keeper_presented: return "area action4 goalkeeper presentation acknowledged; decision pending";
+    case captain::FieldSessionPhase::area_action4_keeper_prepared: return "area action4 goalkeeper preparation captured; stamina and comparison pending";
+    case captain::FieldSessionPhase::area_action4_keeper_stamina_done: return "area action4 goalkeeper stamina applied; comparison pending";
+    case captain::FieldSessionPhase::area_action4_keeper_compared: return "area action4 goalkeeper comparison saved; outcome presentation pending";
+    case captain::FieldSessionPhase::area_action4_keeper_dispatch_entry: return "area action4 goalkeeper outcome dispatch entry; result handler pending";
+    case captain::FieldSessionPhase::area_action4_keeper_result0_entry: return "area action4 goalkeeper result0 continuation entry";
+    case captain::FieldSessionPhase::area_action4_keeper_result1_recovery: return "area action4 goalkeeper result1 loose recovery entry";
+    case captain::FieldSessionPhase::area_action4_keeper_result1_boundary_check: return "area action4 goalkeeper result1 ball boundary check";
+    case captain::FieldSessionPhase::area_action4_keeper_result1_restart_entry: return "area action4 goalkeeper result1 restart entry";
+    case captain::FieldSessionPhase::area_action4_keeper_restart_prepared: return "area action4 goalkeeper restart choice captured";
+    case captain::FieldSessionPhase::area_action4_keeper_restart_formation: return "area action4 goalkeeper restart formation captured";
+    case captain::FieldSessionPhase::area_action4_keeper_restart_power: return "area action4 goalkeeper restart action power prepared";
+    case captain::FieldSessionPhase::area_action4_restart_clock_done: return "area action4 restart clock advanced; action dispatch pending";
+    case captain::FieldSessionPhase::area_action4_restart_added_time: return "area action4 restart added-time presentation pending";
+    case captain::FieldSessionPhase::area_action4_restart_period_end: return "area action4 restart period end pending";
+    case captain::FieldSessionPhase::area_action4_restart_action1_entry: return "area action4 restart action1 entry";
+    case captain::FieldSessionPhase::sampled_keeper_result4_extra_time: return "sampled keeper result4 extra time updated";
+    case captain::FieldSessionPhase::sampled_keeper_result4_action: return "sampled keeper result4 action captured";
+    case captain::FieldSessionPhase::sampled_keeper_result4_formation: return "sampled keeper result4 formation captured";
+    case captain::FieldSessionPhase::sampled_keeper_result4_restart: return "sampled keeper result4 restart branch";
+    case captain::FieldSessionPhase::sampled_loose_shot_defender_compared: return "sampled loose-shot defender compared";
+    case captain::FieldSessionPhase::sampled_loose_shot_defender_prepared: return "sampled loose-shot defender prepared";
+    case captain::FieldSessionPhase::area_action4_keeper_result0_goal: return "area action4 keeper result0 goal scored";
+    case captain::FieldSessionPhase::area_action4_restart_pass_entry: return "area action4 restart pass entry";
     case captain::FieldSessionPhase::area_action4_control_pending: return "area action4 control setup pending";
     case captain::FieldSessionPhase::area_action6_destination_pending: return "area action6 destination chosen; continuation pending";
     case captain::FieldSessionPhase::area_pass_keeper_prepared: return "area pass keeper interaction prepared; menu presentation pending";
@@ -369,7 +422,9 @@ void setup_control(captain::PhaseSessionState& state) {
 }
 void poll_control(captain::PhaseSessionState& state, const captain::ShotContent& content, unsigned held, unsigned pressed) {
     if (!content.control_movement) throw std::invalid_argument("Control polling requires version7 speed content");
-    const auto result = (state.phase==captain::FieldSessionPhase::area_pass_capture_control_ready || state.phase==captain::FieldSessionPhase::area_pass_capture_control_wait || state.phase==captain::FieldSessionPhase::area_pass_blocked_control_ready || state.phase==captain::FieldSessionPhase::area_pass_blocked_control_wait)
+    const auto result = (state.phase==captain::FieldSessionPhase::area_action4_control_ready || state.phase==captain::FieldSessionPhase::area_action4_control_wait)
+        ? captain::poll_session_area_action4_control(state,static_cast<std::uint8_t>(held),static_cast<std::uint8_t>(pressed),content.field_players,*content.movement,*content.control_movement)
+        : (state.phase==captain::FieldSessionPhase::area_pass_capture_control_ready || state.phase==captain::FieldSessionPhase::area_pass_capture_control_wait || state.phase==captain::FieldSessionPhase::area_pass_blocked_control_ready || state.phase==captain::FieldSessionPhase::area_pass_blocked_control_wait)
         ? captain::poll_session_area_pass_capture(state,static_cast<std::uint8_t>(held),static_cast<std::uint8_t>(pressed),content.field_players,*content.movement,*content.control_movement)
         : captain::poll_session_control(state, static_cast<std::uint8_t>(held),static_cast<std::uint8_t>(pressed), content.field_players, *content.movement, *content.control_movement);
     state = result.state;
@@ -384,7 +439,11 @@ void poll_control(captain::PhaseSessionState& state, const captain::ShotContent&
 void advance_control(captain::PhaseSessionState& state, const captain::ShotContent& content, bool resume_time) {
     if (!content.world_step) throw std::invalid_argument("Control cycle requires version8 stamina content");
     const bool pass_clock=state.phase==captain::FieldSessionPhase::area_pass_capture_clock_pending || state.phase==captain::FieldSessionPhase::area_pass_blocked_clock_pending;
-    const auto result = pass_clock && !resume_time
+    const auto result = state.phase==captain::FieldSessionPhase::area_action4_added_time && resume_time
+        ? captain::resume_area_action4_added_time(state,content.field_players,content.goalkeepers,*content.world_step)
+        : state.phase==captain::FieldSessionPhase::area_action4_control_clock && !resume_time
+        ? captain::advance_area_action4_control_tick(state,content.field_players,content.goalkeepers,*content.world_step)
+        : pass_clock && !resume_time
         ? captain::advance_area_pass_control_tick(state,content.field_players,content.goalkeepers,*content.world_step)
         : resume_time
         ? captain::resume_control_added_time(state, content.field_players, content.goalkeepers, *content.world_step)
@@ -401,7 +460,8 @@ void advance_world_inputs(captain::PhaseSessionState& state, const captain::Shot
     if (!content.world_step || !content.control_movement)
         throw std::invalid_argument("World round requires version8 speed content");
     const bool pass_round=state.phase==captain::FieldSessionPhase::area_pass_capture_field_round || state.phase==captain::FieldSessionPhase::area_pass_blocked_field_round;
-    const auto result = pass_round ? captain::advance_area_pass_field_round(state,content.field_players,*content.movement,*content.control_movement,*content.world_step,inputs) :
+    const auto result = state.phase==captain::FieldSessionPhase::area_action4_field_round ? captain::advance_area_action4_field_round(state,content.field_players,*content.movement,*content.control_movement,*content.world_step,inputs) :
+        pass_round ? captain::advance_area_pass_field_round(state,content.field_players,*content.movement,*content.control_movement,*content.world_step,inputs) :
         captain::advance_control_field_round(state, content.field_players,*content.movement,*content.control_movement,*content.world_step,inputs);
     state = result.state;
     std::cout << "World round | polls " << result.consumed_polls << " | moved " << result.moved_players
@@ -696,7 +756,8 @@ int main(int argc, char** argv) {
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n"
                      "Area recovery: --continue-area-ordinary-recovery FACING | --continue-area-story-recovery FACING\n"
                      "Area actions: --continue-area-action4 FACING MOTION | --continue-area-action6 FILE FACING MOTION | --continue-area-pass-received | --prepare-area-pass-keeper\n"
-                     "Area flight: --begin-area-flight FILE LX LY DIST FACING MOTION VXLO VXHI VYLO VYHI | --advance-area-ball-cell | --resolve-area-ball-cell | --continue-area-already-arrived | --ack-area-pass-defender | --prepare-area-pass-defender COSTLO COSTHI | --compare-area-pass-defender FILE POWERLO POWERHI CONTEXT\n";
+                     "AI: --ack-sampled-opponent-contact | --continue-sampled-field-pass-control | --begin-sampled-field-pass-flight FILE XLOW YLOW | --capture-sampled-field-pass-target RECIPIENT DEST COUNTER DISTANCE | --ack-sampled-field-ai-pass-handoff | --ack-sampled-field-ai-pass-presentation FILE | --advance-sampled-field-ai-dispatch | --ack-sampled-field-ai-presentation | --capture-sampled-field-ai-preparation SUBTYPE POWER | --capture-sampled-field-ai-choice ACTION SUBTYPE\n"
+                     "Area flight: --recover-sampled-keeper-result4-action | --advance-sampled-keeper-result4-extra-time | --prepare-sampled-keeper-result4-action ACTION SUBTYPE CONTEXT COST POWER | --ack-sampled-keeper-result4-formation FILE | --route-sampled-keeper-result4 CARRY SIDE | --recover-sampled-loose-shot-result2 | --compare-sampled-loose-shot-defender | --prepare-sampled-loose-shot-defender | --continue-area-action4-keeper-result0-goal | --prepare-area-action4-keeper-result0-goal | --begin-area-action4-restart-flight FILE | --prepare-area-action4-restart-pass-control | --begin-area-flight FILE LX LY DIST FACING MOTION VXLO VXHI VYLO VYHI | --advance-area-ball-cell | --resolve-area-ball-cell | --continue-area-already-arrived | --ack-area-pass-defender | --prepare-area-pass-defender COSTLO COSTHI | --compare-area-pass-defender FILE POWERLO POWERHI CONTEXT | --begin-area-action4-encounters | --continue-area-action4-control | --prepare-area-action4-control | --ack-area-action4-restart-pass | --resume-area-action4-restart-clock | --dispatch-area-action4-restart | --advance-area-action4-restart-clock | --prepare-area-action4-restart-power | --compute-area-action4-restart-formation TABLE | --ack-area-action4-restart-formation FIELD | --prepare-area-action4-keeper-restart OWNER ACTION SUBTYPE CHOICE | --route-area-action4-keeper-restart | --advance-area-action4-keeper-jitter | --continue-area-action4-keeper-result ACTION | --ack-area-action4-keeper-result | --compare-area-action4-keeper POWER ACTION SUBTYPE ADJUSTMENT | --spend-area-action4-keeper-stamina | --begin-area-action4-keeper | --ack-area-action4-keeper FACING MOTION | --prepare-area-action4-keeper COSTLO COSTHI POWERLO POWERHI\n";
         return 2;
     }
     try {
@@ -707,7 +768,7 @@ int main(int argc, char** argv) {
         bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false, run_continue_clearance = false, run_restart_route = false, run_restart_options = false, run_attack_clock = false, run_resume_attack = false, run_approach = false, run_ball_step=false, run_ball_cell=false, run_arrival=false, run_shot_recovery=false, run_keeper_entry=false, run_keeper_save=false, run_punch_recovery=false, run_goal_restart=false, run_kickoff_ball=false, run_kickoff_handoff=false, run_keeper_area=false,run_area_defense_prompt=false,run_prepare_area_defense=false,run_inspect_area_defense=false,run_open_area_special=false,run_resolve_area_special=false,run_redraw_area_special=false,run_continue_area_special=false,run_area_ai=false,run_area_attack=false,run_area_defense_entry=false;
         std::optional<std::array<std::uint8_t,2>> stunned_thresholds;
         std::optional<std::array<std::uint8_t,3>> keeper_choice,goal_baseline;
-        std::optional<std::string> flight_file,kickoff_file,area_flight_file,area_action6_file,area_action6_race_file;
+        std::optional<std::string> flight_file,kickoff_file,area_flight_file,restart_flight_file,area_action6_file,area_action6_race_file,area_action4_restart_field,area_action4_restart_table,sampled_result4_formation_file;
         std::array<unsigned,2> area_action6_ack{};
         std::array<unsigned,9> area_flight_input{};
         std::optional<unsigned> area_announce_facing,area_ordinary_facing,area_story_facing;
@@ -720,14 +781,22 @@ int main(int argc, char** argv) {
         bool run_area_contact=false,run_area_clock=false,run_area_clock_resume=false;
         bool run_area_result_dispatch=false,run_area_result_recovery=false,run_area_ball_step=false,run_area_ball_cell=false,run_area_pass_received=false,run_area_pass_keeper=false,run_prepare_area_pass_keeper=false,run_area_action6_recover=false,run_area_action6_control=false,run_area_pass_announcement=false;
         std::optional<unsigned> area_sequence_operation,area_prefix_elapsed;
-        bool resume_area_prefix=false,run_profiled_area_prefix=false;
+        bool resume_area_prefix=false,run_profiled_area_prefix=false,run_area_action4_field_entry=false,run_area_action4_control_entry=false,run_area_action4_control_ready=false,run_area_action4_keeper=false,run_area_action4_keeper_stamina=false,run_area_action4_keeper_result_ack=false,run_area_action4_keeper_jitter=false,run_area_action4_keeper_restart=false,run_area_action4_restart_power=false,run_area_action4_restart_clock=false,run_area_action4_restart_resume=false,run_area_action4_restart_dispatch=false,run_area_action4_restart_pass=false,run_area_action4_restart_pass_control=false,run_area_action4_result0_goal=false,run_area_action4_postgoal=false,run_sampled_loose_defender=false,run_compare_sampled_loose_defender=false,run_recover_sampled_loose_result2=false,run_sampled_result4_extra_time=false,run_recover_sampled_result4_action=false;
         unsigned kickoff_side=0;
         std::optional<std::array<std::uint8_t,6>> kickoff_receiver;
         std::array<unsigned,2> flight_fractions{};
-        std::optional<std::array<unsigned,2>> restart_input,area_action4_ack,area_action6_winner_ack,area_action6_recovery_ack;
+        std::optional<std::array<unsigned,2>> restart_input,area_action4_ack,area_action4_keeper_ack,sampled_keeper_result4,area_action6_winner_ack,area_action6_recovery_ack;
+        std::optional<std::array<unsigned,5>> sampled_result4_action;
+        std::optional<std::array<unsigned,4>> area_action4_keeper_prep,area_action4_keeper_compare,area_action4_keeper_restart_prep;
+        std::optional<unsigned> area_action4_keeper_result_action;
         std::optional<std::string> selected_recovery_file, clearance_file, race_file;
         std::optional<std::array<unsigned,4>> staged_input;
         std::optional<unsigned> dispatch_elapsed, unopposed_attack;
+        std::optional<std::array<unsigned,2>> sampled_field_ai,sampled_field_ai_prep;
+        bool sampled_field_ai_ack=false,sampled_field_ai_dispatch=false,sampled_field_ai_pass_handoff=false,sampled_field_pass_control=false,sampled_opponent_contact_ack=false;
+        std::optional<std::string> sampled_field_ai_pass_field;
+        std::optional<std::array<unsigned,4>> sampled_field_pass_target;
+        std::optional<std::string> sampled_field_pass_flight_file;std::array<unsigned,2> sampled_field_pass_fractions{};
         std::optional<unsigned> code, defender, elapsed;
         std::optional<unsigned> menu_pressed,area_menu_facing,area_defense_blink,area_defense_pressed,area_special_pressed;
         std::optional<std::array<unsigned, 2>> poll_input;
@@ -753,6 +822,7 @@ int main(int argc, char** argv) {
                 if(i+10>=argc || area_flight_file)throw std::invalid_argument("Expected area flight file and nine bytes");
                 area_flight_file=argv[++i];for(auto& v:area_flight_input)v=number(argv[++i]);
             }
+            else if (option == "--begin-area-action4-restart-flight") { if(i+1>=argc || restart_flight_file)throw std::invalid_argument("Expected restart flight velocity file");restart_flight_file=argv[++i]; }
             else if (option == "--advance-area-ball-cell") {if(run_area_ball_step)throw std::invalid_argument("Repeated area ball step");run_area_ball_step=true;}
             else if (option == "--resolve-area-ball-cell") {if(run_area_ball_cell)throw std::invalid_argument("Repeated area ball callback");run_area_ball_cell=true;}
             else if (option == "--ack-area-pass-defender") {if(run_area_pass_announcement)throw std::invalid_argument("Repeated area defender announcement");run_area_pass_announcement=true;}
@@ -793,6 +863,68 @@ int main(int argc, char** argv) {
             else if (option == "--continue-area-action4") {
                 if(i+2>=argc || area_action4_ack)throw std::invalid_argument("Expected captured facing and motion");
                 const auto facing=number(argv[++i]);const auto motion=number(argv[++i]);area_action4_ack=std::array<unsigned,2>{facing,motion};
+            }
+            else if (option == "--begin-area-action4-encounters") {if(run_area_action4_field_entry)throw std::invalid_argument("Repeated action4 field entry");run_area_action4_field_entry=true;}
+            else if (option == "--continue-area-action4-control") {if(run_area_action4_control_entry)throw std::invalid_argument("Repeated action4 control entry");run_area_action4_control_entry=true;}
+            else if (option == "--prepare-area-action4-control") {if(run_area_action4_control_ready)throw std::invalid_argument("Repeated action4 control setup");run_area_action4_control_ready=true;}
+            else if (option == "--resume-area-action4-restart-clock") {if(run_area_action4_restart_resume)throw std::invalid_argument("Repeated restart added-time resume");run_area_action4_restart_resume=true;}
+            else if (option == "--recover-sampled-loose-shot-result2") {if(run_recover_sampled_loose_result2)throw std::invalid_argument("Repeated loose-shot recovery entry");run_recover_sampled_loose_result2=true;}
+            else if (option == "--compare-sampled-loose-shot-defender") {if(run_compare_sampled_loose_defender)throw std::invalid_argument("Repeated loose-shot comparison");run_compare_sampled_loose_defender=true;}
+            else if (option == "--prepare-sampled-loose-shot-defender") {if(run_sampled_loose_defender)throw std::invalid_argument("Repeated loose-shot defender preparation");run_sampled_loose_defender=true;}
+            else if (option == "--continue-area-action4-keeper-result0-goal") {if(run_area_action4_postgoal)throw std::invalid_argument("Repeated post-goal handoff");run_area_action4_postgoal=true;}
+            else if (option == "--prepare-area-action4-keeper-result0-goal") {if(run_area_action4_result0_goal)throw std::invalid_argument("Repeated result0 goal");run_area_action4_result0_goal=true;}
+            else if (option == "--prepare-area-action4-restart-pass-control") {if(run_area_action4_restart_pass_control)throw std::invalid_argument("Repeated restart pass control");run_area_action4_restart_pass_control=true;}
+            else if (option == "--ack-area-action4-restart-pass") {if(run_area_action4_restart_pass)throw std::invalid_argument("Repeated restart pass acknowledgment");run_area_action4_restart_pass=true;}
+            else if (option == "--dispatch-area-action4-restart") {if(run_area_action4_restart_dispatch)throw std::invalid_argument("Repeated restart action dispatch");run_area_action4_restart_dispatch=true;}
+            else if (option == "--advance-area-action4-restart-clock") {if(run_area_action4_restart_clock)throw std::invalid_argument("Repeated restart clock advance");run_area_action4_restart_clock=true;}
+            else if (option == "--prepare-area-action4-restart-power") {if(run_area_action4_restart_power)throw std::invalid_argument("Repeated restart power preparation");run_area_action4_restart_power=true;}
+            else if (option == "--compute-area-action4-restart-formation") {
+                if(i+1>=argc || area_action4_restart_table)throw std::invalid_argument("Expected private restart formation table");
+                area_action4_restart_table=argv[++i];
+            }
+            else if (option == "--ack-area-action4-restart-formation") {
+                if(i+1>=argc || area_action4_restart_field)throw std::invalid_argument("Expected captured restart field file");
+                area_action4_restart_field=argv[++i];
+            }
+            else if (option == "--recover-sampled-keeper-result4-action") {if(run_recover_sampled_result4_action)throw std::invalid_argument("Repeated result4 recovery");run_recover_sampled_result4_action=true;}
+            else if (option == "--advance-sampled-keeper-result4-extra-time") {if(run_sampled_result4_extra_time)throw std::invalid_argument("Repeated result4 extra-time update");run_sampled_result4_extra_time=true;}
+            else if (option == "--prepare-sampled-keeper-result4-action") {
+                if(i+5>=argc || sampled_result4_action)throw std::invalid_argument("Expected captured action, subtype, context, cost and power");
+                std::array<unsigned,5> values{};for(auto& v:values)v=number(argv[++i]);
+                if(values[0]>255 || values[1]>255 || values[2]>255 || values[3]>65535 || values[4]>65535)throw std::invalid_argument("Invalid captured action values");
+                sampled_result4_action=values;
+            }
+            else if (option == "--ack-sampled-keeper-result4-formation") { if(i+1>=argc || sampled_result4_formation_file)throw std::invalid_argument("Expected captured result4 formation file");sampled_result4_formation_file=argv[++i]; }
+            else if (option == "--route-sampled-keeper-result4") {
+                if(i+2>=argc || sampled_keeper_result4)throw std::invalid_argument("Expected captured carry and side");
+                const auto carry=number(argv[++i]),side=number(argv[++i]);if(carry>1 || side>255)throw std::invalid_argument("Invalid captured branch");
+                sampled_keeper_result4=std::array<unsigned,2>{carry,side};
+            }
+            else if (option == "--prepare-area-action4-keeper-restart") {
+                if(i+4>=argc || area_action4_keeper_restart_prep)throw std::invalid_argument("Expected captured restart recipient, action, subtype, choice");
+                std::array<unsigned,4> values{};for(auto& value:values){value=number(argv[++i]);if(value>255)throw std::invalid_argument("Invalid captured restart value");}area_action4_keeper_restart_prep=values;
+            }
+            else if (option == "--route-area-action4-keeper-restart") {if(run_area_action4_keeper_restart)throw std::invalid_argument("Repeated keeper restart route");run_area_action4_keeper_restart=true;}
+            else if (option == "--advance-area-action4-keeper-jitter") {if(run_area_action4_keeper_jitter)throw std::invalid_argument("Repeated keeper jitter");run_area_action4_keeper_jitter=true;}
+            else if (option == "--continue-area-action4-keeper-result") {
+                if(i+1>=argc || area_action4_keeper_result_action)throw std::invalid_argument("Expected captured attack action");
+                const auto action=number(argv[++i]);if(action>255)throw std::invalid_argument("Invalid captured attack action");area_action4_keeper_result_action=action;
+            }
+            else if (option == "--ack-area-action4-keeper-result") {if(run_area_action4_keeper_result_ack)throw std::invalid_argument("Repeated keeper result acknowledgment");run_area_action4_keeper_result_ack=true;}
+            else if (option == "--spend-area-action4-keeper-stamina") {if(run_area_action4_keeper_stamina)throw std::invalid_argument("Repeated keeper stamina");run_area_action4_keeper_stamina=true;}
+            else if (option == "--compare-area-action4-keeper") {
+                if(i+4>=argc || area_action4_keeper_compare)throw std::invalid_argument("Expected captured attack power, action, subtype, adjustment");
+                std::array<unsigned,4> values{};for(auto& value:values)value=number(argv[++i]);area_action4_keeper_compare=values;
+                if(values[0]>65535 || values[1]>255 || values[2]>255 || values[3]>255)throw std::invalid_argument("Invalid captured keeper comparison input");
+            }
+            else if (option == "--begin-area-action4-keeper") {if(run_area_action4_keeper)throw std::invalid_argument("Repeated action4 keeper entry");run_area_action4_keeper=true;}
+            else if (option == "--ack-area-action4-keeper") {
+                if(i+2>=argc || area_action4_keeper_ack)throw std::invalid_argument("Expected captured keeper facing and motion");
+                const auto facing=number(argv[++i]);const auto motion=number(argv[++i]);area_action4_keeper_ack=std::array<unsigned,2>{facing,motion};
+            }
+            else if (option == "--prepare-area-action4-keeper") {
+                if(i+4>=argc || area_action4_keeper_prep)throw std::invalid_argument("Expected captured keeper cost and power bytes");
+                std::array<unsigned,4> values{};for(auto& value:values)value=number(argv[++i]);area_action4_keeper_prep=values;
             }
             else if (option == "--continue-area-action6") {
                 if(i+3>=argc || area_action6_file)throw std::invalid_argument("Expected content file, facing and motion");
@@ -957,6 +1089,33 @@ int main(int argc, char** argv) {
                 const auto pressed = number(argv[++i]);
                 world_input = std::array<unsigned, 2>{held, pressed};
             }
+            else if (option == "--ack-sampled-opponent-contact") {if(sampled_opponent_contact_ack)throw std::invalid_argument("Duplicate contact acknowledgement");sampled_opponent_contact_ack=true;}
+            else if (option == "--continue-sampled-field-pass-control") {if(sampled_field_pass_control)throw std::invalid_argument("Duplicate pass control handoff");sampled_field_pass_control=true;}
+            else if (option == "--begin-sampled-field-pass-flight") {
+                if(i+3>=argc || sampled_field_pass_flight_file)throw std::invalid_argument("Expected velocity file and captured ball fractions");
+                sampled_field_pass_flight_file=argv[++i];for(auto& value:sampled_field_pass_fractions)value=number(argv[++i]);
+            }
+            else if (option == "--capture-sampled-field-pass-target") {
+                if (i+4>=argc || sampled_field_pass_target) throw std::invalid_argument("Expected captured recipient, destination, counter and distance");
+                std::array<unsigned,4> values{};for(auto& value:values)value=number(argv[++i]);sampled_field_pass_target=values;
+            }
+            else if (option == "--ack-sampled-field-ai-pass-handoff") { if(sampled_field_ai_pass_handoff)throw std::invalid_argument("Duplicate AI pass handoff");sampled_field_ai_pass_handoff=true; }
+            else if (option == "--ack-sampled-field-ai-pass-presentation") {
+                if (++i>=argc || sampled_field_ai_pass_field) throw std::invalid_argument("Expected captured pass field file");
+                sampled_field_ai_pass_field=argv[i];
+            }
+            else if (option == "--advance-sampled-field-ai-dispatch") { if(sampled_field_ai_dispatch)throw std::invalid_argument("Duplicate AI dispatch");sampled_field_ai_dispatch=true; }
+            else if (option == "--ack-sampled-field-ai-presentation") { if(sampled_field_ai_ack)throw std::invalid_argument("Duplicate AI presentation acknowledgement");sampled_field_ai_ack=true; }
+            else if (option == "--capture-sampled-field-ai-preparation") {
+                if (i + 2 >= argc || sampled_field_ai_prep) throw std::invalid_argument("Expected captured AI subtype and power");
+                const auto subtype=number(argv[++i]);const auto power=number(argv[++i]);
+                sampled_field_ai_prep=std::array<unsigned,2>{subtype,power};
+            }
+            else if (option == "--capture-sampled-field-ai-choice") {
+                if (i + 2 >= argc || sampled_field_ai) throw std::invalid_argument("Expected captured AI action and subtype");
+                const auto action=number(argv[++i]);const auto subtype=number(argv[++i]);
+                sampled_field_ai=std::array<unsigned,2>{action,subtype};
+            }
             else if (option == "--poll-control") {
                 if (i + 2 >= argc || poll_input) throw std::invalid_argument("Expected one --poll-control HELD PRESSED");
                 const auto held = number(argv[++i]);
@@ -977,8 +1136,8 @@ int main(int argc, char** argv) {
                 else { subtype = number(argv[i]); defense_options = true; }
             } else throw std::invalid_argument("Unknown session option");
         }
-        if (unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) + unsigned(run_recovery) +
-            unsigned(run_continue_recovery) + unsigned(bool(area_ordinary_facing)) + unsigned(bool(area_story_facing)) + unsigned(bool(area_flight_file)) + unsigned(run_area_ball_step) + unsigned(run_area_ball_cell) + unsigned(run_area_pass_received) + unsigned(run_area_pass_keeper) + unsigned(run_area_pass_announcement) + unsigned(run_area_pass_restore) + unsigned(run_area_pass_nonterminal) + unsigned(run_area_pass_next) + unsigned(run_area_pass_blocked) + unsigned(run_area_pass_terminal) + unsigned(run_area_pass_capture) + unsigned(run_area_pass_capture_control) + unsigned(run_area_pass_blocked_control) + unsigned(run_area_pass_resume) + unsigned(run_area_pass_recovery) + unsigned(run_area_pass_recover) + unsigned(bool(area_pass_capture_ack)) + unsigned(bool(area_pass_recovery_ack)) + unsigned(bool(area_pass_cost)) + unsigned(bool(area_pass_result_ack)) + unsigned(bool(area_pass_compare_file)) + unsigned(run_prepare_area_pass_keeper) + unsigned(bool(area_action4_ack)) + unsigned(bool(area_action6_file)) + unsigned(bool(area_action6_race_file)) + unsigned(bool(area_action6_winner_ack)) + unsigned(run_area_action6_recover) + unsigned(bool(area_action6_recovery_ack)) + unsigned(run_area_action6_control) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
+        if (unsigned(sampled_opponent_contact_ack) + unsigned(sampled_field_pass_control) + unsigned(bool(sampled_field_pass_flight_file)) + unsigned(bool(sampled_field_pass_target)) + unsigned(sampled_field_ai_pass_handoff) + unsigned(bool(sampled_field_ai_pass_field)) + unsigned(sampled_field_ai_dispatch) + unsigned(sampled_field_ai_ack) + unsigned(bool(sampled_field_ai_prep)) + unsigned(bool(sampled_field_ai)) + unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) + unsigned(run_recovery) +
+            unsigned(run_continue_recovery) + unsigned(bool(area_ordinary_facing)) + unsigned(bool(area_story_facing)) + unsigned(bool(area_flight_file)) + unsigned(bool(restart_flight_file)) + unsigned(run_area_ball_step) + unsigned(run_area_ball_cell) + unsigned(run_area_pass_received) + unsigned(run_area_pass_keeper) + unsigned(run_area_pass_announcement) + unsigned(run_area_pass_restore) + unsigned(run_area_pass_nonterminal) + unsigned(run_area_pass_next) + unsigned(run_area_pass_blocked) + unsigned(run_area_pass_terminal) + unsigned(run_area_pass_capture) + unsigned(run_area_pass_capture_control) + unsigned(run_area_pass_blocked_control) + unsigned(run_area_pass_resume) + unsigned(run_area_pass_recovery) + unsigned(run_area_pass_recover) + unsigned(bool(area_pass_capture_ack)) + unsigned(bool(area_pass_recovery_ack)) + unsigned(bool(area_pass_cost)) + unsigned(bool(area_pass_result_ack)) + unsigned(bool(area_pass_compare_file)) + unsigned(run_prepare_area_pass_keeper) + unsigned(bool(area_action4_ack)) + unsigned(run_area_action4_field_entry) + unsigned(run_area_action4_control_entry) + unsigned(run_area_action4_control_ready) + unsigned(run_area_action4_keeper) + unsigned(run_area_action4_keeper_stamina) + unsigned(run_area_action4_keeper_result_ack) + unsigned(run_area_action4_keeper_jitter) + unsigned(run_area_action4_keeper_restart) + unsigned(bool(area_action4_keeper_restart_prep)) + unsigned(bool(area_action4_restart_field)) + unsigned(bool(area_action4_restart_table)) + unsigned(run_area_action4_restart_power) + unsigned(run_area_action4_restart_clock) + unsigned(run_area_action4_restart_resume) + unsigned(run_area_action4_restart_dispatch) + unsigned(run_area_action4_restart_pass) + unsigned(run_area_action4_restart_pass_control) + unsigned(run_area_action4_result0_goal) + unsigned(run_area_action4_postgoal) + unsigned(run_sampled_loose_defender) + unsigned(run_compare_sampled_loose_defender) + unsigned(run_recover_sampled_loose_result2) + unsigned(run_sampled_result4_extra_time) + unsigned(run_recover_sampled_result4_action) + unsigned(bool(sampled_keeper_result4)) + unsigned(bool(sampled_result4_formation_file)) + unsigned(bool(sampled_result4_action)) + unsigned(bool(area_action4_keeper_result_action)) + unsigned(bool(area_action4_keeper_compare)) + unsigned(bool(area_action4_keeper_ack)) + unsigned(bool(area_action4_keeper_prep)) + unsigned(bool(area_action6_file)) + unsigned(bool(area_action6_race_file)) + unsigned(bool(area_action6_winner_ack)) + unsigned(run_area_action6_recover) + unsigned(bool(area_action6_recovery_ack)) + unsigned(run_area_action6_control) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
             unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
             unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) + unsigned(run_arrival) + unsigned(run_shot_recovery) + unsigned(run_keeper_entry) + unsigned(bool(stunned_thresholds)) + unsigned(bool(keeper_choice)) + unsigned(run_keeper_save) + unsigned(run_punch_recovery) + unsigned(bool(goal_baseline)) + unsigned(run_goal_restart) + unsigned(bool(kickoff_file)) + unsigned(bool(kickoff_receiver)) + unsigned(run_kickoff_ball) + unsigned(run_kickoff_handoff) + unsigned(run_keeper_area) + unsigned(bool(area_menu_facing)) + unsigned(bool(area_defense_blink)) + unsigned(run_area_defense_prompt) + unsigned(bool(area_defense_pressed)) + unsigned(run_prepare_area_defense) + unsigned(run_inspect_area_defense) + unsigned(run_open_area_special) + unsigned(bool(area_special_pressed)) + unsigned(run_resolve_area_special) + unsigned(run_redraw_area_special) + unsigned(run_continue_area_special) + unsigned(run_area_ai) + unsigned(run_area_attack) + unsigned(run_area_defense_entry) + unsigned(bool(area_announce_facing)) + unsigned(run_area_contact) + unsigned(run_area_clock) + unsigned(run_area_clock_resume) + unsigned(run_area_result_dispatch) + unsigned(run_area_result_recovery) + unsigned(bool(area_sequence_operation)) + unsigned(bool(area_prefix_elapsed)) + unsigned(resume_area_prefix) + unsigned(run_profiled_area_prefix) > 1)
@@ -998,6 +1157,7 @@ int main(int argc, char** argv) {
         if (area_ordinary_facing) state=captain::continue_session_area_ordinary_recovery(state,*area_ordinary_facing);
         if (area_story_facing) state=captain::continue_session_area_story_recovery(state,*area_story_facing);
         if (area_flight_file) begin_area_flight(state,content,*area_flight_file,area_flight_input);
+        if (restart_flight_file) { if(!content.movement)throw std::invalid_argument("Restart flight requires movement geometry"); state=captain::begin_session_area_action4_restart_flight(state,15,0,0,4,content.movement->geometry,read_ball_velocity(*restart_flight_file)); }
         if (run_area_ball_step) state=captain::advance_prepared_area_ball_cell(state).state;
         if (run_area_ball_cell) state=captain::resolve_session_area_ball_cell(state);
         if (run_area_pass_received) state=captain::continue_area_already_arrived(state);
@@ -1037,6 +1197,54 @@ int main(int argc, char** argv) {
         if (run_area_pass_keeper) state=captain::continue_area_pass_received(state);
         if (run_prepare_area_pass_keeper) state=captain::prepare_area_pass_keeper(state);
         if (area_action4_ack) state=captain::continue_session_area_action4(state,(*area_action4_ack)[0],(*area_action4_ack)[1],content.experience ? &*content.experience : nullptr);
+        if (run_area_action4_field_entry) state=captain::begin_session_area_action4_encounters(state);
+        if (run_area_action4_control_entry) state=captain::continue_session_area_action4_control(state);
+        if (run_area_action4_control_ready) state=captain::prepare_session_area_action4_control(state).state;
+        if (run_area_action4_keeper) state=captain::begin_session_area_action4_keeper(state);
+        if (run_area_action4_keeper_stamina) state=captain::spend_session_area_action4_keeper_stamina(state);
+        if (run_area_action4_keeper_result_ack) state=captain::acknowledge_session_area_action4_keeper_result(state);
+        if (run_area_action4_keeper_jitter) state=captain::advance_session_area_action4_keeper_result1_jitter(state);
+        if (run_area_action4_keeper_restart) state=captain::route_session_area_action4_keeper_result1_restart(state);
+        if (run_area_action4_restart_power) state=captain::prepare_session_area_action4_restart_power(state,true,content);
+        if (run_area_action4_restart_clock) state=captain::advance_session_area_action4_restart_clock(state).state;
+        if (run_area_action4_restart_resume) state=captain::resume_session_area_action4_restart_added_time(state);
+        if (run_area_action4_restart_dispatch) state=captain::dispatch_session_area_action4_restart(state);
+        if (run_area_action4_restart_pass) state=captain::acknowledge_session_area_action4_restart_pass(state);
+        if (run_area_action4_restart_pass_control) state=captain::prepare_session_area_action4_restart_pass_control(state).state;
+        if (run_recover_sampled_loose_result2) { if(!content.contact || !content.experience)throw std::invalid_argument("Missing private clock or experience content");state=captain::recover_session_sampled_loose_shot_result2(state,*content.contact,*content.experience); }
+        if (run_compare_sampled_loose_defender) { if(!content.flight)throw std::invalid_argument("Missing private flight comparison content");state=captain::compare_session_sampled_loose_shot_defender(state,19,*content.flight); }
+        if (run_sampled_loose_defender) state=captain::prepare_session_sampled_loose_shot_defender(state);
+        if (run_area_action4_postgoal) state=captain::continue_session_area_action4_keeper_result0_goal(state);
+        if (run_area_action4_result0_goal) { if(!content.experience)throw std::invalid_argument("Result0 goal requires experience data");state=captain::prepare_session_area_action4_keeper_result0_goal(state,*content.experience); }
+        if (area_action4_restart_table) {
+            std::ifstream table(*area_action4_restart_table,std::ios::binary);if(!table)throw std::invalid_argument("Cannot open private restart formation table");
+            captain::AreaAction4RestartFormationContent formation{};
+            for(auto& cell:formation.cells){const auto value=table.get();if(value==std::char_traits<char>::eof())throw std::invalid_argument("Truncated restart formation table");cell=static_cast<std::uint8_t>(value);}
+            const auto owner=table.get();if(owner==std::char_traits<char>::eof() || table.peek()!=std::char_traits<char>::eof())throw std::invalid_argument("Invalid restart formation table length");
+            formation.owner_cell=static_cast<std::uint8_t>(owner);state=captain::compute_session_area_action4_restart_formation(state,formation);
+        }
+        if (area_action4_restart_field) {
+            std::ifstream captured(*area_action4_restart_field,std::ios::binary);
+            if(!captured)throw std::invalid_argument("Cannot open captured restart field");
+            state=captain::acknowledge_session_area_action4_restart_formation(state,captain::load_field_state(captured));
+        }
+        if (run_recover_sampled_result4_action) {if(!content.experience)throw std::invalid_argument("Missing private experience content");state=captain::recover_session_sampled_keeper_result4_action(state,*content.experience);}
+        if (run_sampled_result4_extra_time) state=captain::advance_session_sampled_keeper_result4_extra_time(state);
+        if (sampled_result4_action) state=captain::prepare_session_sampled_keeper_result4_action(state,(*sampled_result4_action)[0],(*sampled_result4_action)[1],(*sampled_result4_action)[2],(*sampled_result4_action)[3],(*sampled_result4_action)[4]);
+        if (sampled_result4_formation_file) {
+            std::ifstream captured(*sampled_result4_formation_file,std::ios::binary);
+            if(!captured)throw std::invalid_argument("Cannot open captured result4 formation");
+            state=captain::acknowledge_session_sampled_keeper_result4_formation(state,captain::load_field_state(captured));
+        }
+        if (sampled_keeper_result4) state=captain::route_session_sampled_keeper_result4(state,(*sampled_keeper_result4)[0]!=0,(*sampled_keeper_result4)[1]);
+        if (area_action4_keeper_restart_prep) state=captain::prepare_session_area_action4_keeper_restart(state,(*area_action4_keeper_restart_prep)[0],(*area_action4_keeper_restart_prep)[1],(*area_action4_keeper_restart_prep)[2],(*area_action4_keeper_restart_prep)[3]);
+        if (area_action4_keeper_result_action) {
+            if(!content.experience)throw std::invalid_argument("Keeper result handler requires experience content");
+            state=captain::continue_session_area_action4_keeper_result(state,*area_action4_keeper_result_action,*content.experience);
+        }
+        if (area_action4_keeper_compare) state=captain::compare_session_area_action4_keeper(state,(*area_action4_keeper_compare)[0],(*area_action4_keeper_compare)[1],(*area_action4_keeper_compare)[2],(*area_action4_keeper_compare)[3]);
+        if (area_action4_keeper_ack) state=captain::acknowledge_session_area_action4_keeper(state,(*area_action4_keeper_ack)[0],(*area_action4_keeper_ack)[1]);
+        if (area_action4_keeper_prep) state=captain::prepare_session_area_action4_keeper(state,(*area_action4_keeper_prep)[0] | ((*area_action4_keeper_prep)[1]<<8),(*area_action4_keeper_prep)[2] | ((*area_action4_keeper_prep)[3]<<8));
         if (area_action6_file) continue_area_action6(state,*area_action6_file,area_action6_ack[0],area_action6_ack[1],content);
         if (area_action6_race_file) clearance_race_file(state,content,*area_action6_race_file,true);
         if (area_action6_winner_ack) state=captain::continue_session_area_action6_winner(state,(*area_action6_winner_ack)[0],(*area_action6_winner_ack)[1]);
@@ -1087,6 +1295,24 @@ int main(int argc, char** argv) {
         if(area_announce_facing){const auto result=captain::announce_prepared_area_defenders(state,*area_announce_facing);state=result.state;for(const auto& r:result.presentation){std::cout<<"Presentation request "<<unsigned(r.kind)<<" | id "<<unsigned(r.id)<<" | slot "<<unsigned(r.slot)<<'\n';}}
         if(run_area_defense_entry){const auto entry=captain::begin_prepared_area_defense(state);state=entry.state;for(const auto& r:entry.presentation)std::cout<<"Presentation request "<<unsigned(r.kind)<<" | id "<<unsigned(r.id)<<" | slot "<<unsigned(r.slot)<<'\n';}
         if(run_area_attack)state=captain::prepare_session_area_attack(state,content);
+        if(sampled_field_ai)state=captain::capture_sampled_field_ai_choice(state,(*sampled_field_ai)[0],(*sampled_field_ai)[1]);
+        if(sampled_field_ai_prep)state=captain::capture_sampled_field_ai_preparation(state,(*sampled_field_ai_prep)[0],(*sampled_field_ai_prep)[1]);
+        if(sampled_field_ai_ack)state=captain::acknowledge_sampled_field_ai_presentation(state);
+        if(sampled_field_ai_dispatch)state=captain::advance_sampled_field_ai_dispatch(state);
+        if(sampled_field_ai_pass_handoff)state=captain::acknowledge_sampled_field_ai_pass_handoff(state);
+        if(sampled_field_pass_control)state=captain::continue_sampled_field_pass_control(state);
+        if(sampled_opponent_contact_ack)state=captain::acknowledge_sampled_opponent_contact_presentation(state);
+        if(sampled_field_pass_target)state=captain::capture_sampled_field_pass_target(state,(*sampled_field_pass_target)[0],(*sampled_field_pass_target)[1],(*sampled_field_pass_target)[2],(*sampled_field_pass_target)[3]);
+        if(sampled_field_pass_flight_file) {
+            if(!content.movement)throw std::invalid_argument("Missing movement geometry");
+            const auto velocity=read_ball_velocity(*sampled_field_pass_flight_file);
+            state=captain::begin_sampled_field_pass_flight(state,sampled_field_pass_fractions[0],sampled_field_pass_fractions[1],content.movement->geometry,velocity);
+        }
+        if(sampled_field_ai_pass_field) {
+            std::ifstream captured(*sampled_field_ai_pass_field,std::ios::binary);
+            if(!captured)throw std::invalid_argument("Cannot open captured pass field");
+            state=captain::acknowledge_sampled_field_ai_pass_presentation(state,captain::load_field_state(captured));
+        }
         if(run_area_ai){if(!content.ai_area_choice)throw std::invalid_argument("Missing private AI content");state=captain::choose_session_area_action(state,*content.ai_area_choice);}
         if(run_continue_area_special)continue_area_special(state,content);
         if(run_redraw_area_special)redraw_area_special(state,content);
@@ -1118,7 +1344,7 @@ int main(int argc, char** argv) {
         if (!capture.empty()) save(capture, state);
         if (!interactive) return 0;
         std::cout << "Commands: state, contact/rewarded-contact CODE DEFENDER ACTION SUBTYPE, resume, recover, continue-recovery, setup-control, poll-control HELD PRESSED, advance-control, resume-control-time, advance-world HELD PRESSED, advance-world-file FILE, open-action-menu, menu-input PRESSED, prepare-basic-shot, shot-defenders-file FILE, step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2, resume-shot-clock, dispatch-shot ELAPSED, resolve-shot-result, recover-selected-file FILE, continue-selected-recovery, prepare-clearance-file FILE, clearance-race-file FILE, continue-clearance, begin-ball-flight FILE LOWX LOWY, continue-flight-arrival, recover-shot-loose, prepare-kickoff-formation FILE SIDE, continue-prepared-goal-restart, prepare-scored-goal LEFT RIGHT KICKOFF, resolve-keeper-save, recover-keeper-punch, poll-keeper-area-special PRESSED, open-keeper-area-special, inspect-keeper-area-defense, prepare-keeper-area-defense, poll-keeper-area-defense PRESSED, open-keeper-area-defense, begin-keeper-area-defense BLINK, open-prepared-keeper-area-menu FACING, prepare-keeper-area, prepare-keeper-entry, resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM, resolve-stunned-keeper T0 T1, resolve-ball-cell, advance-ball-cell, prepare-shot-approach, continue-unopposed-attack ACTION, continue-prepared-attack, resume-attack-clock, dispatch-area-result, recover-area-result, route-selected-restart, open-prepared-restart-options, restart-options-input HELD PRESSED, advance N, save NEW.cmjsession, quit\n";
-        std::cout << "Area flight: begin-area-flight FILE LX LY DIST FACING MOTION VXLO VXHI VYLO VYHI; advance-area-ball-cell; resolve-area-ball-cell; continue-area-already-arrived; ack-area-pass-defender; prepare-area-pass-defender COSTLO COSTHI; compare-area-pass-defender FILE POWERLO POWERHI CONTEXT\n"
+        std::cout << "Area flight: begin-area-flight FILE LX LY DIST FACING MOTION VXLO VXHI VYLO VYHI; advance-area-ball-cell; resolve-area-ball-cell; continue-area-already-arrived; ack-area-pass-defender; prepare-area-pass-defender COSTLO COSTHI; compare-area-pass-defender FILE POWERLO POWERHI CONTEXT; begin-area-action4-encounters; continue-area-action4-control; prepare-area-action4-control\n"
                      "Area actions: continue-area-action4 FACING MOTION; continue-area-action6 FILE FACING MOTION; continue-area-pass-received; prepare-area-pass-keeper\n";
         std::string line;
         while (std::cout << "> " && std::getline(std::cin, line)) {
@@ -1212,6 +1438,26 @@ int main(int argc, char** argv) {
                     std::string second;
                     if(!(input>>value>>second) || (input>>extra))throw std::invalid_argument("Expected captured facing and motion");
                     state=captain::continue_session_area_action4(state,number(value),number(second),content.experience ? &*content.experience : nullptr);show(state);
+                } else if (command == "begin-area-action4-encounters") {
+                    if(input>>extra)throw std::invalid_argument("Expected no arguments");
+                    state=captain::begin_session_area_action4_encounters(state);show(state);
+                } else if (command == "continue-area-action4-control") {
+                    if(input>>extra)throw std::invalid_argument("Expected no arguments");
+                    state=captain::continue_session_area_action4_control(state);show(state);
+                } else if (command == "prepare-area-action4-control") {
+                    if(input>>extra)throw std::invalid_argument("Expected no arguments");
+                    state=captain::prepare_session_area_action4_control(state).state;show(state);
+                } else if (command == "begin-area-action4-keeper") {
+                    if(input>>extra)throw std::invalid_argument("Expected no arguments");
+                    state=captain::begin_session_area_action4_keeper(state);show(state);
+                } else if (command == "ack-area-action4-keeper") {
+                    std::string second;
+                    if(!(input>>value>>second) || (input>>extra))throw std::invalid_argument("Expected captured keeper facing and motion");
+                    state=captain::acknowledge_session_area_action4_keeper(state,number(value),number(second));show(state);
+                } else if (command == "prepare-area-action4-keeper") {
+                    std::string second,third,fourth;
+                    if(!(input>>value>>second>>third>>fourth) || (input>>extra))throw std::invalid_argument("Expected captured keeper cost and power bytes");
+                    state=captain::prepare_session_area_action4_keeper(state,number(value) | (number(second)<<8),number(third) | (number(fourth)<<8));show(state);
                 } else if (command == "prepare-area-pass-keeper") {
                     if(input>>extra)throw std::invalid_argument("Expected no arguments");
                     state=captain::prepare_area_pass_keeper(state);show(state);

@@ -7,6 +7,7 @@
 #include "captain/defender_selection.hpp"
 #include "captain/clearance_race.hpp"
 #include "captain/control_session.hpp"
+#include "captain/kickoff_session.hpp"
 #include <sstream>
 #include <iostream>
 #include <cstdlib>
@@ -435,11 +436,422 @@ int main(){try{
        action4_encounter.current.field.selected_defenders==action4_dispatch.state.current.field.selected_defenders &&
        action4_encounter.recovery->ball_variant==0 && bytes(action4_dispatch.state)==action4_bytes,
        "Area action4 retains defenders choosing action5 and clears the ball variant");
+ const auto action4_encounter_bytes=bytes(action4_encounter);
+ const auto action4_field_entry=begin_session_area_action4_encounters(action4_encounter);
+ check(static_cast<unsigned>(action4_field_entry.phase)==160 && action4_field_entry.action->menu_route==0 &&
+       action4_field_entry.current.field.selected_defenders==action4_encounter.current.field.selected_defenders &&
+       bytes(action4_encounter)==action4_encounter_bytes,"Area action4 clears the original field route before encounters");
+ const auto action4_field_bytes=bytes(action4_field_entry);std::istringstream action4_field_stream(action4_field_bytes);
+ check(bytes(load_phase_session(action4_field_stream))==action4_field_bytes,"Area action4 field entry snapshot roundtrips");
+ rejects([&]{begin_session_area_action4_encounters(action4_field_entry);});
+ auto action4_field_flagged=action4_field_entry;action4_field_flagged.saved_ball_flight_flag=1;
+ const auto action4_flagged_bytes=bytes(action4_field_flagged);std::istringstream action4_flagged_stream(action4_flagged_bytes);
+ check(bytes(load_phase_session(action4_flagged_stream))==action4_flagged_bytes,"Area action4 field entry preserves a retained flight flag");
+ auto action4_bad_version=action4_field_bytes;action4_bad_version[10]=static_cast<char>(133);
+ rejects([&]{std::istringstream old(action4_bad_version);load_phase_session(old);});
+ auto action4_bad_route=action4_field_entry;action4_bad_route.action->menu_route=2;
+ rejects([&]{bytes(action4_bad_route);});
  auto action4_skips=action4_dispatch.state;for(unsigned i=0;i<action4_skips.current.field.selected_defenders;++i)action4_skips.area_defense->actions[i]=6;
  const auto action4_control=continue_session_area_action4(action4_skips,0,0,&*dispatch_data.experience);
  check(action4_control.phase==FieldSessionPhase::area_action4_control_pending &&
        action4_control.current.field.selected_defenders==action4_skips.current.field.selected_defenders,
        "Area action4 without choice5 preserves the original prefix before control");
+ const auto action4_control_bytes=bytes(action4_control);
+ const auto action4_control_entry=continue_session_area_action4_control(action4_control);
+ check(static_cast<unsigned>(action4_control_entry.phase)==161 && bytes(action4_control)==action4_control_bytes,
+       "Area action4 no-encounter route saves the original control entry");
+ const auto action4_control_ready=prepare_session_area_action4_control(action4_control_entry);
+ check(static_cast<unsigned>(action4_control_ready.state.phase)==162 &&
+       action4_control_ready.state.current.field.selected_defenders==0 && action4_control_ready.state.area_defense,
+       "Area action4 control setup clears selection and preserves action context");
+ const auto action4_ready_bytes=bytes(action4_control_ready.state);std::istringstream action4_ready_stream(action4_ready_bytes);
+ check(bytes(load_phase_session(action4_ready_stream))==action4_ready_bytes,"Area action4 control snapshot roundtrips");
+ ControlMovementContent action4_input{};
+ const auto action4_poll=poll_session_area_action4_control(action4_control_ready.state,0,0,dispatch_data.field_players,*dispatch_data.movement,action4_input);
+ check(static_cast<unsigned>(action4_poll.state.phase)==163 && action4_poll.state.control->decision_timer==9 &&
+       bytes(action4_control_ready.state)==action4_ready_bytes,"Area action4 idle input poll preserves the saved state");
+ const auto action4_polled_bytes=bytes(action4_poll.state);std::istringstream action4_polled_stream(action4_polled_bytes);
+ check(bytes(load_phase_session(action4_polled_stream))==action4_polled_bytes,"Area action4 input poll snapshot roundtrips");
+ auto action4_expired=action4_control_ready.state;action4_expired.control->decision_timer=0;
+ const auto action4_expired_bytes=bytes(action4_expired);
+ const auto action4_tick=poll_session_area_action4_control(action4_expired,0,0,dispatch_data.field_players,*dispatch_data.movement,action4_input);
+ check(static_cast<unsigned>(action4_tick.state.phase)==164 && action4_tick.decision_step &&
+       bytes(action4_expired)==action4_expired_bytes,"Action4 timer expiry saves the pending clock without mutating input");
+ auto action4_clock_input=action4_tick.state;
+ for(unsigned id=0;id<=10;++id)action4_clock_input.current.field.roster[id].type=1;
+ FieldPlayerProfiles action4_field_profiles{};action4_field_profiles.skills.resize(1);
+ GoalkeeperProfiles action4_goalkeepers{};action4_goalkeepers.skills.resize(1);WorldStepContent action4_world{};
+ action4_world.stamina_curve.fill(1000);
+ const auto action4_clock_before=bytes(action4_clock_input);
+ const auto action4_clocked=advance_area_action4_control_tick(action4_clock_input,action4_field_profiles,action4_goalkeepers,action4_world);
+ check(static_cast<unsigned>(action4_clocked.state.phase)==165 && action4_clocked.state.current.field.elapsed==1 &&
+       bytes(action4_clock_input)==action4_clock_before,"Action4 ordinary clock reaches a saved field round");
+ auto action4_goal_clock=action4_clock_input;action4_goal_clock.kickoff_formation.reset();action4_goal_clock.current.field.ball_x=56;
+ action4_goal_clock.current.field.ball_y=124;action4_goal_clock.current.field.ball_cell=17;
+ const auto action4_goal=advance_area_action4_control_tick(action4_goal_clock,action4_field_profiles,action4_goalkeepers,action4_world);
+ check(static_cast<unsigned>(action4_goal.state.phase)==166,
+       "Action4 goal-area clock saves its original interruption");
+ const auto action4_goal_bytes=bytes(action4_goal.state);
+ const auto action4_keeper=begin_session_area_action4_keeper(action4_goal.state);
+ check(static_cast<unsigned>(action4_keeper.phase)==169 && action4_keeper.current.field.selected_defenders==1 &&
+       action4_keeper.scheduling->selected_ids[0]==0 && action4_keeper.recovery->opposing_player==0 &&
+       action4_keeper.action->menu_route==3 && bytes(action4_goal.state)==action4_goal_bytes,
+       "Action4 keeper entry saves the opposing keeper and comparison route");
+ const auto action4_keeper_bytes=bytes(action4_keeper);std::istringstream action4_keeper_stream(action4_keeper_bytes);
+ check(bytes(load_phase_session(action4_keeper_stream))==action4_keeper_bytes,"Action4 keeper entry snapshot roundtrips");
+ rejects([&]{begin_session_area_action4_keeper(action4_keeper);});
+ const auto action4_keeper_presented=acknowledge_session_area_action4_keeper(action4_keeper,0,0);
+ check(static_cast<unsigned>(action4_keeper_presented.phase)==170 && action4_keeper_presented.control->facing==0 &&
+       action4_keeper_presented.control->motion_requested==0 && bytes(action4_keeper)==action4_keeper_bytes,
+       "Action4 keeper presentation acknowledges captured facing and motion");
+ const auto action4_presented_bytes=bytes(action4_keeper_presented);std::istringstream action4_presented_stream(action4_presented_bytes);
+ check(bytes(load_phase_session(action4_presented_stream))==action4_presented_bytes,"Action4 keeper presentation snapshot roundtrips");
+ rejects([&]{acknowledge_session_area_action4_keeper(action4_keeper_presented,0,0);});
+ const auto action4_keeper_prepared=prepare_session_area_action4_keeper(action4_keeper_presented,50,8);
+ check(static_cast<unsigned>(action4_keeper_prepared.phase)==171 && action4_keeper_prepared.area_contact &&
+       action4_keeper_prepared.area_contact->defense_action==6 && action4_keeper_prepared.area_contact->cost==50 &&
+       action4_keeper_prepared.area_contact->defender_power==8 && bytes(action4_keeper_presented)==action4_presented_bytes,
+       "Action4 keeper preparation preserves captured ordinary inputs");
+ const auto action4_keeper_prepared_bytes=bytes(action4_keeper_prepared);std::istringstream action4_keeper_prepared_stream(action4_keeper_prepared_bytes);
+ check(bytes(load_phase_session(action4_keeper_prepared_stream))==action4_keeper_prepared_bytes,"Action4 keeper preparation snapshot roundtrips");
+ rejects([&]{prepare_session_area_action4_keeper(action4_keeper_prepared,50,8);});
+ for (unsigned stamina : {49u,50u,51u}) {
+  auto energy_input=action4_keeper_prepared;energy_input.current.field.roster[0].type=1;energy_input.current.field.roster[0].stamina=stamina;
+  const auto before=bytes(energy_input);const auto spent=spend_session_area_action4_keeper_stamina(energy_input);
+  check(static_cast<unsigned>(spent.phase)==172 && spent.current.field.roster[0].stamina==(stamina==51?1:0) &&
+        spent.area_contact->weakened==(stamina==49) && bytes(energy_input)==before,
+        "Action4 keeper stamina matches the original threshold and preserves input");
+  for (auto random : {std::array<unsigned,2>{127,128},std::array<unsigned,2>{255,255}}) {
+   auto comparison_input=spent;comparison_input.current.field.random_first=random[0];comparison_input.current.field.random_second=random[1];
+   const auto comparison_before=bytes(comparison_input);
+   const auto compared=compare_session_area_action4_keeper(comparison_input,22,0,128,0);
+   const bool special=stamina!=49 && random[0]==255;
+   const unsigned strength=stamina==49 ? 0 : (special ? 11 : 5);
+   check(static_cast<unsigned>(compared.phase)==173 && compared.area_contact->strength==strength &&
+         compared.area_contact->loss==strength/4 && compared.area_contact->score==(special?128:255) &&
+         compared.area_contact->result==(special?1:0) && compared.area_contact->defense_subtype==(special?128:0) &&
+         compared.area_sequence_result==(special?1:0) && bytes(comparison_input)==comparison_before,
+         "Keeper comparison records observed score and result without changing its input");
+   const auto comparison_saved=bytes(compared);std::istringstream comparison_stream(comparison_saved);
+   check(bytes(load_phase_session(comparison_stream))==comparison_saved,"Keeper comparison snapshot roundtrips");
+   rejects([&]{compare_session_area_action4_keeper(compared,22,0,128,0);});
+   const auto dispatched=acknowledge_session_area_action4_keeper_result(compared);
+   check(static_cast<unsigned>(dispatched.phase)==174 && dispatched.area_contact->result==compared.area_contact->result &&
+         bytes(compared)==comparison_saved,"Keeper result acknowledgment preserves the comparison before dispatch");
+   const auto dispatch_saved=bytes(dispatched);std::istringstream dispatch_stream(dispatch_saved);
+   check(bytes(load_phase_session(dispatch_stream))==dispatch_saved,"Keeper result dispatch boundary roundtrips");
+   rejects([&]{acknowledge_session_area_action4_keeper_result(dispatched);});
+   auto handler_input=dispatched;handler_input.current.field.ball_owner=12;handler_input.current.field.roster[12].type=1;
+   handler_input.current.field.keepers[0].stun=0;handler_input.experience=ExperienceState{};
+   const auto handler_before=bytes(handler_input);
+   const auto handled=continue_session_area_action4_keeper_result(handler_input,0,*dispatch_data.experience);
+   check(static_cast<unsigned>(handled.phase)==(special?176:175) && handled.current.field.keepers[0].stun==6 &&
+         handled.experience->totals[0]==1 && bytes(handler_input)==handler_before,
+         "Keeper handler awards carrier experience and reaches the observed result route");
+   const auto handler_saved=bytes(handled);std::istringstream handler_stream(handler_saved);
+   check(bytes(load_phase_session(handler_stream))==handler_saved,"Keeper handler boundary roundtrips");
+   rejects([&]{continue_session_area_action4_keeper_result(handled,0,*dispatch_data.experience);});
+   rejects([&]{continue_session_area_action4_keeper_result(handler_input,1,*dispatch_data.experience);});
+   if(!special && random[0]==127) {
+    auto goal_input=handled;goal_input.current.field.ball_x=56;goal_input.current.field.ball_y=124;goal_input.current.field.ball_cell=17;
+    goal_input.current.clock.remaining=446;goal_input.current.clock.extra_time=0;goal_input.current.clock.script_flags=0;goal_input.current.clock.ball_mode=0;
+    goal_input.score=MatchScoreContext{0,0,0};
+    const auto goal_before=bytes(goal_input);const auto goal=prepare_session_area_action4_keeper_result0_goal(goal_input,*dispatch_data.experience);
+    const auto expected=award_player_experience(*goal_input.experience,goal_input.current.field.roster[12].type,0,*dispatch_data.experience).state;
+    check(static_cast<unsigned>(goal.phase)==187 && goal.score && goal.score->left_goals==0 && goal.score->right_goals==1 &&
+          goal.experience->totals==expected.totals && bytes(goal_input)==goal_before,
+          "Keeper result0 awards goal experience and increments the sampled right score once");
+    const auto goal_saved=bytes(goal);std::istringstream goal_stream(goal_saved);
+    check(bytes(load_phase_session(goal_stream))==goal_saved,"Keeper result0 goal snapshot roundtrips");
+    const auto restart=continue_session_area_action4_keeper_result0_goal(goal);
+    check(restart.phase==FieldSessionPhase::goal_kickoff_pending && restart.current.field.side==0 &&
+          restart.current.field.keepers[0].stun==0 && restart.score->right_goals==1 && restart.score->kickoff==4 &&
+          !restart.area_ai_target && !restart.area_defense && !restart.area_contact && bytes(goal)==goal_saved,
+          "Sampled right-side goal enters the opposing kickoff boundary after cleanup");
+    check(restart.action && restart.action->action==0 && restart.action->menu_route==3 &&
+          restart.action->cursor==128 && restart.action->flash_counter==128 && restart.action->power==22,
+          "Post-goal handoff retains the original ordinary-action scratch state");
+    const auto restart_bytes=bytes(restart);std::istringstream restart_input(restart_bytes);
+    check(bytes(load_phase_session(restart_input))==restart_bytes,"Right-side post-goal kickoff snapshot roundtrips");
+    KickoffFormationContent kickoff{};kickoff.on_ball.fill(0);kickoff.off_ball.fill(13);
+    const auto formation=prepare_session_kickoff_formation(restart,0,kickoff);
+    check(formation.phase==FieldSessionPhase::kickoff_formation_placed && formation.current.field.ball_owner==8 &&
+          formation.current.field.elapsed==1 && formation.current.field.selected_defenders==1 &&
+          formation.scheduling->selected_ids[0]==0 && formation.current.field.keepers[1].penalty==0 && bytes(restart)==restart_bytes,
+          "Right-side goal prepares the side0 kickoff formation with retained elapsed and selection");
+    const auto formation_bytes=bytes(formation);std::istringstream formation_stream(formation_bytes);
+    check(bytes(load_phase_session(formation_stream))==formation_bytes,"Right-side goal kickoff formation snapshot roundtrips");
+    const auto kickoff_receiver=prepare_session_kickoff_receiver(formation,127,{5,6,7,9,10});
+    check(kickoff_receiver.phase==FieldSessionPhase::kickoff_receiver_selected && *kickoff_receiver.kickoff_receiver==7 &&
+          kickoff_receiver.current.field.elapsed==1 && kickoff_receiver.scheduling->selected_ids[0]==0,
+          "Right-side goal kickoff selects the observed side0 receiver while retaining pending field state");
+    rejects([&]{prepare_session_kickoff_receiver(formation,126,{5,6,7,9,10});});
+    rejects([&]{prepare_session_kickoff_receiver(formation,127,{5,6,7,9,11});});
+    const auto kickoff_ball=prepare_session_kickoff_ball(kickoff_receiver);
+    const auto kickoff_handoff=continue_prepared_session_kickoff(kickoff_ball);
+    check(kickoff_handoff.phase==FieldSessionPhase::kickoff_control_pending && kickoff_handoff.current.field.ball_owner==7 &&
+          kickoff_handoff.control->controlled_player==1 && kickoff_handoff.current.field.elapsed==1,
+          "Acknowledged side0 kickoff transfers possession to receiver7");
+    const auto kickoff_ready=prepare_session_control(kickoff_handoff).state;
+    check(kickoff_ready.phase==FieldSessionPhase::control_ready && kickoff_ready.current.field.ball_owner==7 &&
+          kickoff_ready.current.field.selected_defenders==0 && kickoff_ready.current.field.elapsed==1 &&
+          kickoff_ready.kickoff_formation && !kickoff_ready.kickoff_receiver,
+          "Right-side goal kickoff reaches regular control after clearing the prior keeper selection");
+    const auto ready_bytes=bytes(kickoff_ready);std::istringstream ready_stream(ready_bytes);
+    check(bytes(load_phase_session(ready_stream))==ready_bytes,"Right-side kickoff control snapshot roundtrips");
+    rejects([&]{prepare_session_kickoff_formation(restart,11,kickoff);});
+    rejects([&]{continue_session_area_action4_keeper_result0_goal(restart);});
+    rejects([&]{prepare_session_area_action4_keeper_result0_goal(goal,*dispatch_data.experience);});
+    auto unsupported=goal_input;unsupported.score->right_goals=1;
+    rejects([&]{prepare_session_area_action4_keeper_result0_goal(unsupported,*dispatch_data.experience);});
+   }
+   if(special) {
+    auto jitter_input=handled;jitter_input.current.field.ball_x=56;jitter_input.current.field.ball_y=124;
+    const auto jitter_before=bytes(jitter_input);const auto jittered=advance_session_area_action4_keeper_result1_jitter(jitter_input);
+    check(static_cast<unsigned>(jittered.phase)==177 && jittered.current.field.ball_x==32 && jittered.current.field.ball_y==100 &&
+          jittered.recovery->x_jitter_control==131 && bytes(jitter_input)==jitter_before,
+          "Keeper result1 jitter reaches the original boundary check without mutating input");
+    const auto jitter_saved=bytes(jittered);std::istringstream jitter_stream(jitter_saved);
+    check(bytes(load_phase_session(jitter_stream))==jitter_saved,"Keeper result1 jitter boundary roundtrips");
+    rejects([&]{advance_session_area_action4_keeper_result1_jitter(jittered);});
+    auto route_input=jittered;route_input.current.field.keepers[0]={0,0,0,6};route_input.current.field.keepers[1]={7,1,79,0};
+    const auto route_before=bytes(route_input);const auto routed=route_session_area_action4_keeper_result1_restart(route_input);
+    check(static_cast<unsigned>(routed.phase)==178 && routed.current.field.keepers[0].stun==0 &&
+          routed.current.field.keepers[1].penalty==0 && bytes(route_input)==route_before,
+          "Keeper result1 boundary reaches the sampled original restart route");
+    const auto route_saved=bytes(routed);std::istringstream route_stream(route_saved);
+    check(bytes(load_phase_session(route_stream))==route_saved,"Keeper result1 restart entry roundtrips");
+    rejects([&]{route_session_area_action4_keeper_result1_restart(routed);});
+    const auto restart_ready=prepare_session_area_action4_keeper_restart(routed,14,1,0,6);
+    check(static_cast<unsigned>(restart_ready.phase)==179 && restart_ready.current.field.ball_owner==14 &&
+          restart_ready.area_action4_restart && restart_ready.area_action4_restart->action==1 &&
+          restart_ready.area_action4_restart->subtype==0 && restart_ready.area_action4_restart->choice==6 && bytes(routed)==route_saved,
+          "Keeper restart records the observed new owner and captured action");
+    const auto restart_saved=bytes(restart_ready);std::istringstream restart_stream(restart_saved);
+    check(bytes(load_phase_session(restart_stream))==restart_saved && static_cast<unsigned char>(restart_saved[10])==135,"Captured keeper restart choice roundtrips with version69");
+    auto old_restart=restart_saved;old_restart[10]=static_cast<char>(134);
+    rejects([&]{std::istringstream old_stream(old_restart);load_phase_session(old_stream);});
+    rejects([&]{prepare_session_area_action4_keeper_restart(restart_ready,14,1,0,6);});
+    rejects([&]{prepare_session_area_action4_keeper_restart(routed,15,1,0,6);});
+    auto captured_field=restart_ready.current.field;captured_field.ball_x=52;captured_field.ball_y=172;captured_field.ball_cell=11;
+    captured_field.motion[0].x=static_cast<std::uint16_t>((captured_field.motion[0].x&255u)|(60u<<8));
+    const auto positioned=acknowledge_session_area_action4_restart_formation(restart_ready,captured_field);
+    check(static_cast<unsigned>(positioned.phase)==180 && positioned.current.field.ball_x==52 &&
+          positioned.current.field.ball_y==172 && (positioned.current.field.motion[0].x>>8)==60 && bytes(restart_ready)==restart_saved,
+          "Captured restart formation and ball are saved before the action");
+    const auto positioned_saved=bytes(positioned);std::istringstream positioned_stream(positioned_saved);
+    check(bytes(load_phase_session(positioned_stream))==positioned_saved,"Restart formation snapshot roundtrips");
+    rejects([&]{acknowledge_session_area_action4_restart_formation(positioned,captured_field);});
+    auto bad_field=captured_field;bad_field.roster[0].stamina++;
+    rejects([&]{acknowledge_session_area_action4_restart_formation(restart_ready,bad_field);});
+    AreaAction4RestartFormationContent formation{};formation.cells.fill(255);formation.cells[12]=0;formation.owner_cell=228;
+    const auto computed=compute_session_area_action4_restart_formation(restart_ready,formation);
+    check(static_cast<unsigned>(computed.phase)==180 && computed.current.field.ball_x==52 && computed.current.field.ball_y==172 &&
+          (computed.current.field.motion[0].x>>8)==204 && (computed.current.field.motion[0].y>>8)==172 &&
+          bytes(restart_ready)==restart_saved,"Restart formation computes observed side reflection and owner placement");
+    const auto computed_saved=bytes(computed);std::istringstream computed_stream(computed_saved);
+    check(bytes(load_phase_session(computed_stream))==computed_saved,"Computed restart formation snapshot roundtrips");
+    auto invalid_formation=formation;invalid_formation.cells[0]=1;
+    rejects([&]{compute_session_area_action4_restart_formation(restart_ready,invalid_formation);});
+    auto power_input=computed;power_input.current.field.roster[14].type=1;power_input.current.field.roster[14].stamina=100;
+    ShotContent restart_power_content{};restart_power_content.field_players.skills.resize(1);
+    restart_power_content.field_players.skills[0].fill(20);restart_power_content.attack.skill_selectors[1]={1,1,1};
+    restart_power_content.attack.moves[1]={{0,0,20,0}};restart_power_content.attack.strength_curve.fill(21);
+    const auto power_before=bytes(power_input);const auto power_ready=prepare_session_area_action4_restart_power(power_input,true,restart_power_content);
+    check(static_cast<unsigned>(power_ready.phase)==181 && power_ready.area_action4_restart_power &&
+          power_ready.area_action4_restart_power->cost==20 && power_ready.area_action4_restart_power->power==21 && bytes(power_input)==power_before,
+          "Restart action saves calculated cost and power without mutating input");
+    const auto power_saved=bytes(power_ready);std::istringstream power_stream(power_saved);
+    check(static_cast<unsigned char>(power_saved[10])==136 && bytes(load_phase_session(power_stream))==power_saved,
+          "Restart power snapshot uses version70 and roundtrips");
+    auto old_power=power_saved;old_power[10]=static_cast<char>(135);
+    rejects([&]{std::istringstream old_stream(old_power);load_phase_session(old_stream);});
+    rejects([&]{prepare_session_area_action4_restart_power(power_ready,true,restart_power_content);});
+    rejects([&]{prepare_session_area_action4_restart_power(power_input,false,restart_power_content);});
+    for(auto v : {std::array<unsigned,5>{446,0,182,428,1},std::array<unsigned,5>{18,0,183,0,13},
+                  std::array<unsigned,5>{17,0,183,0,13},std::array<unsigned,5>{0,50,182,0,33},
+                  std::array<unsigned,5>{0,1,184,0,2}}) {
+     auto clock_input=power_ready;clock_input.current.clock={};clock_input.current.clock.remaining=v[0];clock_input.current.clock.extra_time=v[1];
+     clock_input.current.field.elapsed=1;clock_input.current.shared_recovery_flags=0;clock_input.current.shared_recovery_timer=0;
+     const auto clock_before=bytes(clock_input);const auto clock_out=advance_session_area_action4_restart_clock(clock_input);
+     check(static_cast<unsigned>(clock_out.state.phase)==v[2] && clock_out.state.current.clock.remaining==v[3] &&
+           clock_out.state.current.clock.extra_time==v[4] && clock_out.state.current.field.elapsed==19 && bytes(clock_input)==clock_before,
+           "Restart action advances the observed clock and interruption boundary");
+     const auto clock_saved=bytes(clock_out.state);std::istringstream clock_stream(clock_saved);
+     check(bytes(load_phase_session(clock_stream))==clock_saved,"Restart action clock snapshot roundtrips");
+     rejects([&]{advance_session_area_action4_restart_clock(clock_out.state);});
+     if(v[2]==183) {
+      const auto resumed=resume_session_area_action4_restart_added_time(clock_out.state);
+      check(static_cast<unsigned>(resumed.phase)==182 && resumed.current.clock.remaining==0 && resumed.current.clock.extra_time==13 &&
+            resumed.current.field.elapsed==19 && bytes(clock_out.state)==clock_saved,"Restart added time resumes without repeating the clock");
+      rejects([&]{resume_session_area_action4_restart_added_time(resumed);});
+      const auto after_resume=dispatch_session_area_action4_restart(resumed);
+      check(static_cast<unsigned>(after_resume.phase)==185,"Resumed restart reaches action1 dispatch");
+     }
+     if(v[2]==182) {
+      const auto dispatched_restart=dispatch_session_area_action4_restart(clock_out.state);
+      check(static_cast<unsigned>(dispatched_restart.phase)==185 && bytes(clock_out.state)==clock_saved,
+            "Restart action1 reaches its original dispatch entry");
+      const auto dispatch_bytes=bytes(dispatched_restart);std::istringstream dispatch_stream(dispatch_bytes);
+      check(bytes(load_phase_session(dispatch_stream))==dispatch_bytes,"Restart action dispatch snapshot roundtrips");
+      rejects([&]{dispatch_session_area_action4_restart(dispatched_restart);});
+      const auto pass_entry=acknowledge_session_area_action4_restart_pass(dispatched_restart);
+      check(static_cast<unsigned>(pass_entry.phase)==186 && pass_entry.area_action4_restart_pass_counter &&
+            *pass_entry.area_action4_restart_pass_counter==77 && bytes(dispatched_restart)==dispatch_bytes,
+            "Restart action reaches the sampled pass entry with its counter");
+      const auto pass_bytes=bytes(pass_entry);std::istringstream pass_stream(pass_bytes);
+      check(static_cast<unsigned char>(pass_bytes[10])==137 && bytes(load_phase_session(pass_stream))==pass_bytes,
+            "Restart pass entry snapshot uses version71 and roundtrips");
+      auto old_pass=pass_bytes;old_pass[10]=static_cast<char>(136);
+      rejects([&]{std::istringstream old_stream(old_pass);load_phase_session(old_stream);});
+      rejects([&]{acknowledge_session_area_action4_restart_pass(pass_entry);});
+      auto flight_input=pass_entry;auto& pass_recipient=flight_input.current.field.motion[field_motion_index(15)];
+      pass_recipient.x=124u<<8;pass_recipient.y=124u<<8;
+      const auto flight_before=bytes(flight_input);BallVelocityContent flight_velocity{};flight_velocity.quarter_wave.fill(256);
+      const auto flight=begin_session_area_action4_restart_flight(flight_input,15,0,0,4,movement.geometry,flight_velocity);
+      check(flight.phase==FieldSessionPhase::area_ball_advance_ready && flight.shot_flight && flight.shot_flight->counter==77 &&
+            flight.shot_flight->destination==113 && flight.area_ai_target->recipient==15 && flight.ball_trajectory && flight.ball_trajectory->flags==1 &&
+            flight.current.field.selected_defenders==0 && flight.current.field.elapsed==0 && bytes(flight_input)==flight_before,
+            "Restart pass enters shared flag1 flight with the captured recipient and counter");
+      const auto flight_saved=bytes(flight);std::istringstream flight_stream(flight_saved);
+      check(bytes(load_phase_session(flight_stream))==flight_saved,"Restart pass flight snapshot roundtrips");
+      auto received=flight;received.phase=FieldSessionPhase::area_pass_received;received.current.field.ball_owner=15;
+      received.current.field.ball_x=124;received.current.field.ball_y=124;received.current.field.ball_cell=113;
+      received.ball_trajectory->x=124u<<8;received.ball_trajectory->y=124u<<8;
+      const auto received_before=bytes(received);const auto ready=prepare_session_area_action4_restart_pass_control(received);
+      check(ready.state.phase==FieldSessionPhase::control_ready && ready.state.current.field.ball_owner==15 &&
+            ready.state.current.clock.ball_mode==128 && ready.state.current.clock.script_flags==128 &&
+            !ready.state.shot_flight && !ready.state.ball_trajectory && !ready.state.area_ai_target && bytes(received)==received_before,
+            "Restart pass recipient enters player control with consumed flight state");
+      rejects([&]{prepare_session_area_action4_restart_pass_control(flight);});
+      rejects([&]{begin_session_area_action4_restart_flight(flight_input,16,0,0,4,movement.geometry,flight_velocity);});
+      rejects([&]{begin_session_area_action4_restart_flight(flight,15,0,0,4,movement.geometry,flight_velocity);});
+     }
+     if(v[2]==184)rejects([&]{dispatch_session_area_action4_restart(clock_out.state);});
+    }
+    auto unknown_clock=power_ready;unknown_clock.current.clock.remaining=19;unknown_clock.current.clock.extra_time=0;
+    rejects([&]{advance_session_area_action4_restart_clock(unknown_clock);});
+   }
+  }
+  for (auto penalty : {0u,1u,25u,79u,80u,127u,255u}) {
+   auto override_input=spent;override_input.current.field.ball_owner=12;
+   override_input.current.field.random_first=0;override_input.current.field.random_second=0;
+   override_input.current.field.keepers[1].penalty=penalty;
+   const auto override_before=bytes(override_input);const auto overridden=compare_session_area_action4_keeper(override_input,22,0,128,0);
+   check(static_cast<unsigned>(overridden.phase)==173 && overridden.area_contact->result==4 && overridden.area_sequence_result==4 &&
+         overridden.current.field.keepers[1].penalty==0 && bytes(override_input)==override_before,
+         "Observed keeper override records result4 and clears the sampled penalty");
+   const auto override_saved=bytes(overridden);std::istringstream override_stream(override_saved);
+   check(bytes(load_phase_session(override_stream))==override_saved,"Keeper override snapshot roundtrips");
+   const auto override_dispatch=acknowledge_session_area_action4_keeper_result(overridden);
+   check(static_cast<unsigned>(override_dispatch.phase)==174 && override_dispatch.area_contact->result==4 &&
+         override_dispatch.current.field.keepers[1].penalty==0 && bytes(overridden)==override_saved,
+         "Keeper result4 acknowledgment preserves override state before dispatch");
+   if(stamina==50 && penalty==79) {
+    auto result4_input=override_dispatch;result4_input.current.field.ball_x=56;result4_input.current.field.ball_y=124;result4_input.current.field.ball_cell=17;
+    result4_input.current.clock.remaining=446;result4_input.current.clock.extra_time=0;result4_input.current.clock.flags=0;
+    result4_input.current.clock.script_flags=0;result4_input.current.clock.ball_mode=0;
+    const auto result4_before=bytes(result4_input);const auto result4_restart=route_session_sampled_keeper_result4(result4_input,true,0);
+    check(static_cast<unsigned>(result4_restart.phase)==190 && result4_restart.area_contact->result==4 && bytes(result4_input)==result4_before,
+          "Sampled keeper result4 records its observed opposing restart branch");
+    const auto result4_bytes=bytes(result4_restart);std::istringstream result4_stream(result4_bytes);
+    check(bytes(load_phase_session(result4_stream))==result4_bytes,"Sampled keeper result4 restart snapshot roundtrips");
+    auto result4_field=result4_restart.current.field;result4_field.ball_owner=20;result4_field.ball_x=68;result4_field.ball_y=132;result4_field.ball_cell=30;
+    auto& result4_owner=result4_field.motion[field_motion_index(20)];result4_owner.x=static_cast<std::uint16_t>((result4_owner.x&255u)|(68u<<8));
+    result4_owner.y=static_cast<std::uint16_t>((result4_owner.y&255u)|(132u<<8));
+    const auto result4_formation=acknowledge_session_sampled_keeper_result4_formation(result4_restart,result4_field);
+    check(static_cast<unsigned>(result4_formation.phase)==191 && result4_formation.current.field.ball_owner==20 &&
+          result4_formation.current.field.ball_x==68 && result4_formation.current.field.ball_y==132 && bytes(result4_restart)==result4_bytes,
+          "Sampled result4 records the captured restart formation after acknowledged presentation");
+    const auto result4_formation_bytes=bytes(result4_formation);std::istringstream result4_formation_stream(result4_formation_bytes);
+    check(bytes(load_phase_session(result4_formation_stream))==result4_formation_bytes,"Result4 formation snapshot roundtrips");
+    const auto result4_action=prepare_session_sampled_keeper_result4_action(result4_formation,9,128,5,40,21);
+    check(static_cast<unsigned>(result4_action.phase)==192 && result4_action.area_action4_restart &&
+          result4_action.area_action4_restart->action==9 && result4_action.area_action4_restart->subtype==128 && result4_action.area_action4_restart->choice==5 &&
+          result4_action.area_action4_restart_power && result4_action.area_action4_restart_power->cost==40 && result4_action.area_action4_restart_power->power==21 &&
+          bytes(result4_formation)==result4_formation_bytes,"Result4 saves the explicitly captured original restart action and power");
+    const auto result4_action_bytes=bytes(result4_action);std::istringstream result4_action_stream(result4_action_bytes);
+    check(bytes(load_phase_session(result4_action_stream))==result4_action_bytes,"Result4 action snapshot roundtrips");
+    for(const auto& pair : {std::array<unsigned,2>{446,0},std::array<unsigned,2>{5,0},std::array<unsigned,2>{4,0},
+                            std::array<unsigned,2>{0,50},std::array<unsigned,2>{0,1},std::array<unsigned,2>{446,250},
+                            std::array<unsigned,2>{446,251},std::array<unsigned,2>{446,255}}) {
+     auto time_input=result4_action;time_input.current.clock.remaining=pair[0];time_input.current.clock.extra_time=pair[1];
+     const auto time_before=bytes(time_input);const auto timed=advance_session_sampled_keeper_result4_extra_time(time_input);
+     check(static_cast<unsigned>(timed.phase)==193 && timed.current.clock.remaining==pair[0] &&
+           timed.current.clock.extra_time==static_cast<std::uint8_t>(pair[1]+5) && timed.current.field.elapsed==1 && bytes(time_input)==time_before,
+           "Result4 captured action adds five to the original extra-time byte without advancing the match clock");
+     const auto timed_bytes=bytes(timed);std::istringstream timed_stream(timed_bytes);
+     check(bytes(load_phase_session(timed_stream))==timed_bytes,"Result4 extra-time snapshot roundtrips");
+     rejects([&]{advance_session_sampled_keeper_result4_extra_time(timed);});
+    }
+    auto recovery_input=advance_session_sampled_keeper_result4_extra_time(result4_action);
+    recovery_input.current.field.keepers[0]={0,0,0,0};recovery_input.current.field.roster[0].type=1;
+    recovery_input.control->display_parameter=2;
+    const auto recovery_input_bytes=bytes(recovery_input);
+    const auto result4_recovered=recover_session_sampled_keeper_result4_action(recovery_input,*dispatch_data.experience);
+    const auto result4_expected_exp=award_player_experience(*recovery_input.experience,1,3,*dispatch_data.experience).state;
+    check(result4_recovered.phase==FieldSessionPhase::ball_recovery && result4_recovered.current.field.ball_x==80 &&
+          result4_recovered.current.field.ball_y==128 && result4_recovered.current.field.ball_cell==30 &&
+          !result4_recovered.current.field.selected_defenders && result4_recovered.current.field.keepers[0].timer==7 &&
+          result4_recovered.current.field.keepers[0].penalty_duration==4 && result4_recovered.current.field.keepers[0].penalty==79 &&
+          result4_recovered.experience->totals==result4_expected_exp.totals && result4_recovered.action->action==9 &&
+          result4_recovered.action->power==21 && result4_recovered.recovery->attack_subtype==128 &&
+          result4_recovered.control->display_parameter==0 && bytes(recovery_input)==recovery_input_bytes,
+          "Sampled result4 action reaches the original loose recovery boundary");
+    const auto result4_recovery_bytes=bytes(result4_recovered);std::istringstream result4_recovery_stream(result4_recovery_bytes);
+    check(bytes(load_phase_session(result4_recovery_stream))==result4_recovery_bytes,"Result4 recovery snapshot roundtrips");
+    rejects([&]{recover_session_sampled_keeper_result4_action(result4_recovered,*dispatch_data.experience);});
+    auto unknown_result4_time=result4_action;unknown_result4_time.current.clock.remaining=6;
+    rejects([&]{advance_session_sampled_keeper_result4_extra_time(unknown_result4_time);});
+    auto old_result4_action=result4_action_bytes;old_result4_action[10]=static_cast<char>(135);
+    rejects([&]{std::istringstream old_stream(old_result4_action);load_phase_session(old_stream);});
+    rejects([&]{prepare_session_sampled_keeper_result4_action(result4_action,9,128,5,40,21);});
+    rejects([&]{prepare_session_sampled_keeper_result4_action(result4_formation,9,128,5,41,21);});
+    rejects([&]{acknowledge_session_sampled_keeper_result4_formation(result4_formation,result4_field);});
+    auto bad_result4_field=result4_field;bad_result4_field.roster[1].stamina++;
+    rejects([&]{acknowledge_session_sampled_keeper_result4_formation(result4_restart,bad_result4_field);});
+    rejects([&]{route_session_sampled_keeper_result4(result4_restart,true,0);});
+    rejects([&]{route_session_sampled_keeper_result4(result4_input,false,0);});
+    rejects([&]{route_session_sampled_keeper_result4(result4_input,true,11);});
+   }
+   rejects([&]{continue_session_area_action4_keeper_result(override_dispatch,0,*dispatch_data.experience);});
+  }
+  auto unknown=spent;unknown.current.field.random_first=2;unknown.current.field.random_second=2;
+  const auto unknown_before=bytes(unknown);rejects([&]{compare_session_area_action4_keeper(unknown,22,0,128,0);});
+  auto known=spent;known.current.field.random_first=127;known.current.field.random_second=128;
+  const auto known_before=bytes(known);rejects([&]{compare_session_area_action4_keeper(known,23,0,128,0);});
+  rejects([&]{compare_session_area_action4_keeper(known,22,0,128,1);});
+  check(bytes(known)==known_before,"Unobserved keeper scratch inputs reject atomically");
+  check(bytes(unknown)==unknown_before,"Unobserved keeper comparison rejects atomically");
+  const auto saved=bytes(spent);std::istringstream stream(saved);
+  check(bytes(load_phase_session(stream))==saved,"Action4 keeper stamina boundary roundtrips");
+  rejects([&]{spend_session_area_action4_keeper_stamina(spent);});
+  check(bytes(spent)==saved,"Repeated keeper stamina request is atomic");
+ }
+
+ auto action4_added_clock=action4_clock_input;action4_added_clock.kickoff_formation.reset();action4_added_clock.current.clock.remaining=1;action4_added_clock.current.clock.extra_time=5;
+ auto unsupported_keeper=action4_keeper_prepared;unsupported_keeper.current.field.roster[0].type=1;unsupported_keeper.current.field.roster[0].stamina=52;
+ const auto unsupported_bytes=bytes(unsupported_keeper);rejects([&]{spend_session_area_action4_keeper_stamina(unsupported_keeper);});
+ check(bytes(unsupported_keeper)==unsupported_bytes,"Unobserved keeper stamina rejects atomically");
+ const auto action4_added_wait=advance_area_action4_control_tick(action4_added_clock,action4_field_profiles,action4_goalkeepers,action4_world);
+ check(static_cast<unsigned>(action4_added_wait.state.phase)==167,
+       "Action4 added-time clock saves its original interruption");
+ const auto action4_added_before=bytes(action4_added_wait.state);
+ const auto action4_added_resumed=resume_area_action4_added_time(action4_added_wait.state,action4_field_profiles,action4_goalkeepers,action4_world);
+ check(static_cast<unsigned>(action4_added_resumed.state.phase)==165 && !action4_added_resumed.state.current.clock.remaining &&
+       bytes(action4_added_wait.state)==action4_added_before,"Action4 added-time resume reaches field round without repeating the clock");
+ auto action4_period_clock=action4_clock_input;action4_period_clock.kickoff_formation.reset();action4_period_clock.current.clock.remaining=0;action4_period_clock.current.clock.extra_time=0;
+ check(static_cast<unsigned>(advance_area_action4_control_tick(action4_period_clock,action4_field_profiles,action4_goalkeepers,action4_world).state.phase)==168,
+       "Action4 period-end clock saves its original interruption");
+ const auto action4_clocked_bytes=bytes(action4_clocked.state);std::istringstream action4_clocked_stream(action4_clocked_bytes);
+ check(bytes(load_phase_session(action4_clocked_stream))==action4_clocked_bytes,"Action4 clock snapshot roundtrips");
+ std::array<LogicalButtons,22> action4_world_inputs{};
+ const auto action4_world_round=advance_area_action4_field_round(action4_clocked.state,dispatch_data.field_players,*dispatch_data.movement,
+  action4_input,action4_world,action4_world_inputs);
+ check(static_cast<unsigned>(action4_world_round.state.phase)==163 && action4_world_round.consumed_polls==22 &&
+       bytes(action4_clocked.state)==action4_clocked_bytes,"Action4 field round returns to the input wait");
+ rejects([&]{continue_session_area_action4_control(action4_control_entry);});
+ rejects([&]{prepare_session_area_action4_control(action4_control_ready.state);});
  auto action4_legacy=action4_dispatch.state;action4_legacy.area_defense.reset();
  const auto legacy4_bytes=bytes(action4_legacy);std::istringstream legacy4_stream(legacy4_bytes);
  check(static_cast<unsigned char>(legacy4_bytes[10])==130 && bytes(load_phase_session(legacy4_stream))==legacy4_bytes,
@@ -759,6 +1171,17 @@ int main(){try{
  check(reopened_pass_menu.state.phase==FieldSessionPhase::human_action_menu && reopened_pass_menu.state.current.field.ball_owner==1 &&
        !reopened_pass_menu.state.area_pass_contact && !reopened_pass_menu.state.ball_trajectory,
        "Opening a new action menu completes the prior pass context");
+ check(reopened_pass_menu.state.saved_ball_flight_flag==1,
+       "Opening the action menu preserves the original ball flight flag");
+ const auto reopened_pass_bytes=bytes(reopened_pass_menu.state);std::istringstream reopened_pass_stream(reopened_pass_bytes);
+ check(load_phase_session(reopened_pass_stream).saved_ball_flight_flag==1,
+       "The retained ball flight flag survives snapshot reload");
+ auto invalid_retained=reopened_pass_bytes;invalid_retained.back()=2;
+ rejects([&]{std::istringstream bad(invalid_retained);load_phase_session(bad);});
+ auto truncated_retained=reopened_pass_bytes;truncated_retained.pop_back();
+ rejects([&]{std::istringstream bad(truncated_retained);load_phase_session(bad);});
+ auto downgraded_retained=reopened_pass_bytes;downgraded_retained[10]=static_cast<char>(132);
+ rejects([&]{std::istringstream bad(downgraded_retained);load_phase_session(bad);});
  rejects([&]{open_area_pass_human_action_menu(reopened_pass_menu.state,pass_menu_content);});
  auto pass_move_input=pass_capture_ready.state;pass_move_input.control->decision_timer=0;
  const auto pass_move_poll=poll_session_area_pass_capture(pass_move_input,1,0,area6_race_profiles,area6_race_movement,pass_input_content);

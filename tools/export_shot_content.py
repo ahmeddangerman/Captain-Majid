@@ -12,7 +12,18 @@ def word(memory, address):
     return memory[address] | memory[address + 1] << 8
 
 
-def export_data(rom):
+def selected_team_bytes(stats, team_id):
+    """Read a caller-selected, original team record; selection remains external."""
+    if team_id not in (3, 4, 5, 6):
+        raise ValueError('Only traced team IDs 3..6 are supported')
+    pointer = word(stats, 0xBAB2 + 2 * (team_id - 3))
+    size = max(stats[0x818E:0x8199]) + 1
+    if not (0x8000 <= pointer and pointer + size <= 0xC000):
+        raise ValueError('Selected team record is outside the mapped team banks')
+    return bytes(stats[pointer:pointer + size])
+
+
+def export_data(rom, team_id=None):
     if len(rom) != 393232 or rom[:4] != b'NES\x1a' or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
         raise ValueError('ROM does not match verified Japanese reference')
     prg = rom[16:262160]
@@ -36,7 +47,7 @@ def export_data(rom):
     data.extend(stats[0x95D6 + 4 * i] for i in range(35))
     vector([stats[0x9662 + 12 * i] for i in range(221)])
     data.extend(stats[0x818E:0x8199])
-    vector([])  # Runtime generic-team selection is not yet imported.
+    vector([] if team_id is None else selected_team_bytes(stats, team_id))
     data.extend(struct.pack('<H', 256))
     for profile in range(256):
         data.extend(stats[0x9FCE + 24 * profile:0x9FCE + 24 * profile + 31])
@@ -180,17 +191,18 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('rom', type=Path)
     parser.add_argument('output', type=Path)
+    parser.add_argument('--team-id', type=int, help='Explicit observed opposing team ID (3..6)')
     args = parser.parse_args()
     if args.output.suffix != '.cmjpack':
         parser.error('Output must use the .cmjpack extension (ignored by Git)')
     try:
-        data = export_data(args.rom.read_bytes())
+        data = export_data(args.rom.read_bytes(), args.team_id)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError) as error:
         parser.exit(1, f'Export stopped: {error}\n')
     print(f'Exported {len(data)} bytes to {args.output}; private data-only development pack.')
-    print('Generic team selection, graphics, audio and text are not included.')
+    print('Team selection must be supplied by the caller; graphics, audio and text are not included.')
 
 
 if __name__ == '__main__':

@@ -45,6 +45,15 @@ int main(){try{
  check(static_cast<unsigned>(unopposed.state.phase)==45 && unopposed.state.current.clock.remaining==447 &&
   unopposed.state.current.field.motion[field_motion_index(12)].status==9 &&
   unopposed.state.shot_progress->cursor==0,"Unopposed uses explicit captured defending action");
+ auto sampled=s;sampled.current.field.side=0;sampled.current.field.ball_owner=3;
+ sampled.current.field.ball_x=80;sampled.current.field.ball_y=128;sampled.current.clock.remaining=445;
+ sampled.current.clock.extra_time=5;sampled.current.field.elapsed=0;sampled.current.field.random_first=0;
+ sampled.current.field.random_second=0;sampled.recovery->opposing_player=0;sampled.recovery->attack_subtype=128;
+ sampled.action->power=22;sampled.control->motion_requested=2;
+ auto sampled_attack=continue_prepared_session_attack(sampled,c,9);
+ check(sampled_attack.state.phase==FieldSessionPhase::shot_approach_ready && sampled_attack.state.current.clock.remaining==445 &&
+       sampled_attack.state.current.field.elapsed==0,"Captured action9 uses observed zero elapsed at keeper0");
+ auto unsupported=sampled;unsupported.recovery->opposing_player=11;rejects([&]{continue_prepared_session_attack(unsupported,c,9);});
  rejects([&]{continue_prepared_session_attack(s,c,7);});
  s.current.clock.remaining=1;s.current.clock.extra_time=5;unopposed=continue_prepared_session_attack(s,c,2);
  encoded=bytes(unopposed.state);std::istringstream zero_save(encoded);

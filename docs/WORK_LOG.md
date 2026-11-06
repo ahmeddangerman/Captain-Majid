@@ -2154,3 +2154,526 @@ Daily website note updated separately; engine/private research remains local.
   Both matched represented field and the other trajectory bytes; original flag
   remained 1 and native 0. This does not verify the subsequent callback. Private
   evidence: `area-pass-capture-shot-followup-20261105-v4/verification.json`.
+
+## 2026-11-05 - retain defended-pass flight flag
+
+- Found the prior pass context was discarded at action-menu opening while the
+  original $061B flag remained 1. Retain that flag in phase state and marker133
+  snapshots, then use it for a subsequent prepared shot. Existing snapshots
+  still read with zero as their historical default. Added validation of invalid,
+  truncated and downgraded retained-flag snapshots.
+- Two constructed capture variants match original represented field/control and
+  trajectory, including flag 1, through shot preparation, ten flight cells,
+  callbacks and empty goalkeeper entry. Two blocked-recovery variants match
+  menu/basic-shot fields while retaining flag 1. The samples use cooperative
+  presentation and frozen inputs, not live frames. Private reports:
+  `area-pass-shot-caller-compare-20261105-v2/verification.json` and
+  `area-pass-blocked-menu-flag-fixed-20261105/verification.json`.
+- Original empty arrival callback with flag 0 versus 1 matched represented field
+  and processor status in two constructed variants; real shot return reached
+  $DD1C. Retained-flag loose arrival rejects atomically until compared. Defender
+  arrival, broader menus, additional keeper paths and live match remain unverified.
+- Continued both capture variants through keeper setup, a normal keeper decision
+  and goal/scorer reward, then acknowledged post-goal cleanup to kickoff pending;
+  represented fields, score and retained flag matched. A separate zero-shot-power
+  fixture reached result3 and keeper possession in both variants, matching the
+  represented fields and flag. These keeper decisions explicitly changed the
+  keeper to ordinary type1 in both original and native fixtures; the first attempt
+  with generic type0 failed because the private pack lacked its team profile.
+  Presentation/menu steps remain prepared acknowledgements. Private reports:
+  `area-pass-shot-restart-compare-20261105/verification.json` and
+  `area-pass-shot-save-compare-20261105/verification.json`.
+- Test first: the menu retention check failed before implementation; a separate
+  keeper-entry regression failed while the temporary arrival guard was in place,
+  then passed after the original trace justified the narrow path. A separate
+  guard regression failed before the guard was added. Initial comparison script
+  creation had a literal newline escape syntax error, fixed in the v2 report.
+  An unprivileged build could not access the installed toolchain; the approved
+  outside-sandbox build succeeded. The full Windows build passed; all 45 compiled
+  test executables passed after flag preservation and initial guard. After the
+  narrow keeper-entry change, the focused ball-flight test and a fresh full run
+  of all 45 compiled test executables passed (0 failures).
+- Next: compare retained-flag loose/defended arrivals, then trace remaining
+  defender, keeper, restart and clock routes toward a playable match. Overall
+  project completion is unmeasured.
+
+## 2026-11-05 - retained-flag empty loose recovery
+
+- Original tracing showed two sampled keeper catches enter the shared pass code
+  at $DE5E/$DE61/$DE64/$DE69, then transfer to player16 at $DE73 and reach
+  $E0DF. The observer acknowledged 145 host waits; this is research, not a
+  native keeper-distribution implementation. An attempted trace stopping at
+  $DE52 failed because this path enters at $DE5E. One original entry fixture
+  had out-of-field ball coordinates and needs further investigation before reuse.
+- Compared two constructed flag1, empty loose-shot flights from phase46 through
+  all eleven sampled numeric cells and the original $DD14 return. The fixture
+  explicitly sets side0 scratch context, ball position/destination and opposing
+  players; it is not an uninterrupted match. Both native results match original
+  represented field/control and trajectory. Original recovery and native
+  `recover-shot-loose` then matched represented field/control and retained flag
+  in both cases. Private reports: `area-pass-shot-loose-compare-20261105-v4`
+  and `area-pass-shot-loose-recovery-20261105`.
+- Removed the temporary retained-flag loose-arrival rejection, while preserving
+  the existing rejection for queued defenders. Fixed phase validation so saved
+  kickoff formation survives already-arrived and loose-recovery boundaries.
+  Original comparison first failed the temporary flag guard and then exposed the
+  formation validation failure; focused regression tests reproduced both before
+  the fixes and pass afterward. An earlier synthetic trace used mismatched
+  original scratch context and correctly returned the keeper path; the corrected
+  fixture is documented above.
+- Fresh Windows build and focused `ball-flight-session-tests.exe` passed. Full
+  45-executable suite and `git diff --check` are pending after this increment.
+  Defended arrivals, keeper distribution, live scheduling/presentation and a
+  complete playable match remain unfinished. Overall progress is unmeasured.
+
+## 2026-11-05 - retained-flag defended shot entry
+
+- A constructed side0 shot with retained flag1 can reach original $8835 with
+  up to five selected defenders, then resets cursor $0616 and enters $8840.
+  Added phase150 to save that ordered prefix, phase151 for an explicitly
+  acknowledged defender announcement, and phase152 for the first prepared
+  defender. The shot path can have stacked ball variant zero; marker133 now
+  preserves that valid zero-valued context and captured preparation cost.
+- Six constructed original/native comparisons (one, three or five selected
+  defenders, each with two earlier ball variants) matched represented fields,
+  ordered selection, cursor and saved state at entry, announcement and first
+  preparation. The first selected defender was 13 and captured cost was 50 in
+  these fixtures. Announcement used one cooperatively acknowledged wait. The
+  tests do not establish live presentation or broader roster coverage. Reports:
+  `area-pass-shot-defended-compare-20261105-n{1,3,5}`,
+  `area-pass-shot-announcement-compare-20261105-n{1,3,5}` and
+  `shot-pass-defender-prep-compare-20261105-n{1,3,5}` under private analysis.
+- A synthetic contact probe with shot action0, flag1 and nonzero frozen random
+  values did not return within 200000 instructions: the original repeatedly
+  subtracted a zero table value at $8D4C-$8D54. With random bytes 0/0 the two
+  sampled variants did return result0. This is a constructed, cooperatively
+  acknowledged state, not evidence that normal live gameplay hangs; live
+  presentation/NMI may produce different state. The first probe lacked an
+  informative timeout; a later one recorded the zero table value. Do not reuse
+  the action1 comparison table or implement this behavior without tracing valid
+  original input production and the action0 lookup. Contact and outcomes remain
+  pending, not silently simulated.
+- Regression tests first failed on unimplemented entry, announcement and
+  preparation; they passed after each addition. The fresh Windows CMake build
+  succeeded and all 45 compiled test executables passed, zero failures. New
+  progress remains local and uncommitted; GitHub still contains the prior backup.
+  Overall completion is unmeasured; a complete playable match remains unfinished.
+- Next investigate the action0 zero-range lookup and valid random/presentation
+  state, then compare first contact before processing its result or later
+  defenders. Keeper distribution and other match routes still need tracing.
+
+## 2026-11-05 - guarded shot-pass contacts and clock
+
+- Exporter now accepts `--attack-action 0` to export the original action0 table;
+  default action1 output was verified byte-for-byte against the earlier private
+  table. The action0 entry sampled has zero range, offset and eligibility.
+  For context0 and random-byte sums 0 or 1, original strength/loss were 0,
+  score255 and result0 in 120 controlled original/native comparisons: two
+  earlier ball variants, five shot powers, four defender powers and three random
+  pairs. Native explicitly rejects other ranges/offsets, eligible specials,
+  contexts and random inputs. A rejected input leaves the snapshot unchanged.
+- Added saved comparison, stacked-zero restoration, acknowledged result display,
+  ordinary clock/status/experience handling, next-defender selection and
+  completed-prefix return. Six constructed original comparisons matched each
+  initial handler/clock/next boundary for counts 1/3/5 and both earlier ball
+  variants. Two further full five-defender sequences matched represented fields,
+  experience, clock, cursor and retained flag through loose-arrival return;
+  original stale IDs were normalized after the count cleared. Presentation uses
+  explicit cooperative acknowledgement, not live timing.
+- Four constructed comparisons each matched added-time entry, period-end entry
+  and added-time resume (counts 1 and 5, two variants). Active-control added-time
+  resume remains explicitly rejected. The full-match period transition is not
+  implemented. Initial handler comparison scripts accidentally reused output
+  filenames twice; non-destructive v3 reruns passed. A PowerShell hash-comparison
+  syntax attempt failed before a corrected hash check passed.
+- The Windows CMake build passed and all 45 compiled C++ test executables passed
+  after the latest engine changes; `git diff --check` passed before these notes
+  with line-ending warnings. Work remains local and uncommitted. Earlier notes
+  about loose-arrival rejection and missing contact are historical; the scoped
+  paths above now exist. Other random conditions, other defender outcomes,
+  action4/6 routes, keeper distribution, live frame/RNG/audio/presentation and
+  complete playable match remain unfinished. Overall completion is unmeasured.
+
+## 2026-11-05 - action4 field entry and no-encounter control
+
+- Added marker134 saved action4 phases for the original $8044 field-encounter
+  setup and for the no-encounter $E0DF control entry, prepared control, input
+  wait, control clock, field round and goal/added-time/period boundaries.
+  Preserved filtered defender choices and original action context. No-encounter
+  added time can resume to an ordinary field round without repeating the clock.
+  AI-cell, field-contact, story and other untraced interruptions reject atomically.
+- Six constructed original/native comparisons matched the field-entry boundary
+  after $803C clears the comparison route; counts 1/2/4 and prior results0/1
+  were covered. Two no-encounter cases matched original control preparation.
+  Twelve cases each matched first input polls, timer-expiry polls, ordinary
+  clock and zero-input field rounds. Twelve cases each also matched goal-area,
+  added-time and period-end entries, plus twelve added-time resumes. Cases use
+  two prior results and six input masks; they are constructed, with cooperative
+  frame acknowledgements and no live presentation or RNG scheduling.
+- Clock comparisons supplied a valid type1 keeper profile in both original and
+  native fixtures. Goal/added/period comparisons explicitly omitted native
+  kickoff-formation metadata because generic control rejects those interruptions
+  with it; the first attempt exposed that restriction and was not counted as a
+  pass. The unit fixture was similarly corrected. Initial field-setup tracing
+  exceeded its instruction bound at $CB21 after 3407 cooperative waits; no
+  encounter continuation was inferred. Further trace must determine the needed
+  presentation/input behavior. Private reports: `area-action4-field-entry-compare-
+  20261105`, `area-action4-no-encounter-control-compare-20261105`,
+  `area-action4-control-poll-compare-20261105`, `area-action4-control-expiry-
+  compare-20261105`, `area-action4-control-clock-compare-20261105`,
+  `area-action4-field-round-compare-20261105`, `area-action4-{goal,added,period}-
+  compare-20261105-v2`, and `area-action4-added-resume-compare-20261105`.
+- Test-first checks failed on the unimplemented entries and clock routes, then
+  passed. Windows CMake build succeeded; all 45 compiled C++ tests passed with
+  zero failures. `git diff --check` passed with line-ending warnings before this
+  note. The code remains local and uncommitted. Complete match progress remains
+  unmeasured; encounter processing, kickoff-metadata interruptions, goal/period
+  continuation and live frame/audio/presentation remain unfinished.
+
+## 2026-11-05 - action4 goalkeeper preparation
+
+- Added marker134 phases169-171 and CLI operations for the sampled action4
+  no-encounter goal-area route: select keeper0 and route3, acknowledge captured
+  presentation facing/motion, and save observed action6/subtype0 with explicitly
+  captured 16-bit cost and power. The keeper-preparation snapshot roundtrips;
+  repeated operations reject without changing their input.
+- Twelve constructed original/native samples matched each entry, presentation
+  and preparation boundary (two prior results and six input masks). The selected
+  synthetic keeper profile was type1; the observed cost was 50 and power 8.
+  Presentation used 117 cooperative host waits per case; preparation used zero.
+  These observations are not live rendering, scheduling or broad roster coverage.
+  Private outputs: `area-action4-keeper-prep-compare-20261105`.
+- An original-only trace reached the next stamina boundary in the same twelve
+  constructed cases: represented field state was unchanged and scratch $3A
+  changed from 0 to 128. This covers an exhausted keeper only; stamina handling
+  and keeper comparison/outcome are not yet implemented for the action4 route.
+  Private output: `area-action4-keeper-stamina-trace-20261105`.
+- Verification run after these changes: Windows CMake build passed; focused
+  `keeper-save-session-tests.exe` passed; all 45 compiled `*-tests.exe` passed
+  (0 failed). The new preparation test failed against the initial stub before
+  implementation. Work remains local and uncommitted; private traces stay outside
+  Git. Next compare sufficient, exact and insufficient keeper energy against the
+  original before implementing stamina, then trace the keeper outcome. Encounter
+  execution, other interruptions, live presentation and a complete match remain
+  unfinished. Overall completion is unmeasured.
+
+## 2026-11-05 - action4 keeper stamina thresholds, original-only
+
+- Traced 36 constructed original cases at the existing action4 keeper preparation boundary: two prior results, six input masks, and stamina 49, 50 or 51 against captured cost 50 and power 8. Respectively the original produced stamina 0, 0 and 1; scratch $003A was 128 only for the insufficient case. These are controlled type1 keeper cases with cooperative presentation, not a live match. Private scripts, snapshots and result summary: `area-action4-keeper-thresholds-20261105` in the analysis directory; scripts retain their temporary output paths and must be redirected to fresh directories before rerun.
+- This is original-only evidence. No native stamina continuation, native comparison, outcome trace, focused test, or build was completed in this increment. Next implement and compare the saved stamina boundary, including atomic rejection and snapshot compatibility, then trace the keeper outcome. Overall completion remains unmeasured.
+
+## 2026-11-05 - action4 keeper stamina saved boundary
+
+- Added saved phase172 and CLI `--spend-area-action4-keeper-stamina`. For the observed type1 keeper, cost50/power8 and stamina 0/49/50/51 only, it applies the existing original-byte energy calculation, saves the weakened flag, and leaves its input unchanged. Other inputs and repeated calls reject atomically. Marker134 snapshots roundtrip; existing snapshot readers remain in place. Broader keeper profiles, costs and stamina values remain unverified and explicitly rejected.
+- The focused test failed against a placeholder before implementation, then passed; it checks 49/50/51, snapshot roundtrips, repeated calls and unsupported stamina rejection. Thirty-six constructed original/native snapshot comparisons passed, matching the original observed stamina and weakened flag, while checking all other snapshot bytes unchanged. These are controlled cases, not live-match parity.
+- Original-only probes continued those 36 constructed states to bank26 $8771, immediately after the $8148 call: A=255, Y=0 and scratch $003A=255 in each. Scratch $0032 was 0 for stamina49 and 8 for stamina50/51. This is a CPU boundary; its final gameplay outcome and broader inputs remain unknown and were not implemented. Private scripts, snapshots and summaries are in `area-action4-keeper-native-20261105`; scripts contain temporary output paths and need fresh output directories before rerun.
+- Windows `cmake --build build -j 2` passed. All 45 compiled `*-tests.exe` passed with zero failures. `ctest` was attempted but unavailable on PATH; direct executables were used instead. `git diff --check` passed with line-ending warnings before this log entry. No Linux Make checks or complete match were run. Next trace the original comparison inputs, random production and branches after $8771, then compare and implement only supported outcome boundaries. Overall completion remains unmeasured.
+
+## 2026-11-05 - action4 goalkeeper comparison, bounded outcomes
+
+- Traced 144 constructed original cases across stamina 49/50/51, two prior results, six input masks and four explicitly frozen random pairs. Original keeper comparison reads captured attacking power22, scratch action0/subtype128 and profile adjustment0; the saved action4 context does not itself represent all those scratch inputs. Its observed range/offset were 218/37 and thresholds 168/90/82/0. Original random production and live presentation were not run.
+- Added saved phase173 and `--compare-area-action4-keeper POWER ACTION SUBTYPE ADJUSTMENT`. The caller supplies the otherwise unrepresented captured inputs; only power22/action0/subtype128/adjustment0 and random pairs 127/128 or 255/255 are accepted. Existing deterministic comparison calculates strength, loss, score and subtype; the saved boundary records result0/1. Other inputs reject without mutation. Original prepared keeper power remains saved, even when weakened original scratch power is shifted.
+- Seventy-two constructed original/native full snapshot comparisons passed: 48 result0 and 24 result1. Original field and results were compared for each; strength/loss/subtype values were checked against separate focused scratch traces for the sampled categories. Snapshot roundtrip and atomic rejection checks passed. Test first failed against a placeholder, then passed after implementation. Marker134 retains the new phase and earlier readers remain supported.
+- The remaining 72 original-only cases with random 0/0 and 1/1 produced result4 and changed the represented opposing keeper penalty from79 to0 after $8E33/$C55A. That behavior is not implemented; do not infer it from result code alone. A dispatch probe with cooperative waits hit its 500000-instruction bound at $CD4C after 869 waits; final gameplay continuation remains unknown. Private traces, scripts and native comparisons: `area-action4-keeper-comparison-20261105` in the analysis directory; scripts retain temporary paths and need fresh output directories before rerunning.
+- Fresh Windows `cmake --build build -j 2` passed; all 45 compiled `*-tests.exe` passed with zero failures. Linux Make, live randomness/presentation and a complete match were not tested. Overall completion remains unmeasured. Next trace the result4 penalty/animation effects and result0/1 dispatch using valid presentation timing, then implement only observed boundaries.
+
+## 2026-11-05 - sampled action4 goalkeeper override
+
+- Original-only controlled traces varied the attacking side keeper penalty across 0, 1, 25, 79, 80, 127 and 255. With selected keeper0, owner12, captured attack power22/action0/subtype128/adjustment0 and random0/0, all seven reached result4 and cleared the attacking side keeper penalty to0; other represented field bytes remained unchanged. These are constructed states, not live match observations.
+- Extended saved phase173 to support the observed result4 path for random0/0 or1/1, owner12 and the seven sampled penalty values. Other new cases reject atomically. The comparison preserves prepared keeper power, calculates strength/loss/score, records result4, and clears that sampled penalty. Focused test failed before implementation and passed after it; snapshot roundtrips included.
+- Seventy-two original/native full snapshot comparisons matched result4 for stamina49/50/51, two prior results and six input masks at the two random pairs with penalty79. Seven additional original/native comparisons covered the penalty values above at stamina50/random0; separate original probes established those outputs. Windows `cmake --build build -j 2` passed, and all 45 compiled `*-tests.exe` passed. No Linux or live match checks were run.
+- A further presentation-dispatch diagnostic hit 500000 instructions after 869 cooperative waits at $CD4C, with result byte2; it did not establish the dispatch outcome or cause of non-return. Private scripts and comparisons are in `area-action4-keeper-override-20261105` in the analysis directory. Overall completion remains unmeasured; next investigate presentation scheduling and result dispatch, then continue match routes towards a full playable match.
+
+## 2026-11-05 - action4 goalkeeper result dispatch entry
+
+- Corrected the earlier non-return diagnosis: result4 dispatch enters $87D4, which was absent from the earlier probe's stop set; that probe continued into later gameplay and is not evidence of a presentation hang. Constructed original traces reached result0 $8789 after 182 cooperative waits (48 cases), result1 $879F after 246 waits (24 cases), and result4 $87D4 after 172 waits (72 cases). All 144 preserved represented field and sampled scratch values at the entry. Explicit cooperative waits are not live presentation.
+- Added saved phase174 and CLI `--ack-area-action4-keeper-result` for an explicit acknowledgment of the result presentation before its handler. It preserves the saved outcome and snapshot, rejects repeated calls atomically, and does not simulate presentation. The regression failed against a placeholder, then passed; 144 original/native full snapshot comparisons matched, including results0/1/4. Original traces and private reports are in `area-action4-keeper-dispatch-20261105` under the analysis directory.
+- Preliminary original-only single-case handler probes reached result0 $88F3 and result1 $8BDF, both changing the represented keeper0 stun from0 to6, and result4 $9366 unchanged. Those later paths are not implemented or broadly validated; continue tracing them before native changes. Windows CMake full build and all 45 compiled tests passed. Linux Make, live presentation/randomness and complete match remain unverified; overall progress remains unmeasured.
+
+## 2026-11-05 - action4 goalkeeper result0/1 handlers
+
+- Original controlled handler traces covered 72 cases at stamina49/50/51 and random127/128 or255/255, with two earlier results and six input masks. Result0 reached $88F3 in 48 cases; result1 reached $8BDF in 24. In all cases original awarded the carrier selector1 experience (sampled total3 to6) and set keeper0 stun0 to6; other represented field and sampled scratch bytes were unchanged. Handler execution used zero further cooperative waits after the saved result entry.
+- Added phases175/176 and `--continue-area-action4-keeper-result ACTION`, requiring captured original action0, owner12, observed random inputs, saved result0/1 and experience data. The handler awards experience once, sets keeper0 stun6 and saves the corresponding continuation; result4 and untraced inputs reject atomically. Original action0 is a separate captured scratch input from the retained action4 session. Regression failed against a placeholder before implementation and passed afterward, including snapshots and rejection.
+- Seventy-two original/native full snapshot comparisons matched original represented field and experience bytes. Windows full CMake build and all 45 compiled tests passed. Scripts and private comparisons are in `area-action4-keeper-handler-20261105` under the analysis directory. These are constructed original CPU cases, not live presentation, random scheduling or a complete match. Next trace result0 $88F3, result1 loose recovery $8BDF, and result4 $9366 to their next supported match boundaries. Overall completion remains unmeasured.
+
+## 2026-11-05 - action4 keeper result1 ball boundary check
+
+- Twenty-four controlled original result1 cases (stamina50/51, two prior results and six input masks) continued from $8BDF to $8CA4. With original ball56,124 and frozen random255/255, ball coordinates became32,100, jitter scratch $062C became131, and experience and other represented field bytes remained unchanged. No additional cooperative waits occurred in this segment; $8CA4 is before the boundary decision.
+- Added saved phase177 and CLI `--advance-area-action4-keeper-jitter` using existing byte-accurate jitter arithmetic. The implementation accepts only the observed owner12, ball56/124, random255/255 and initial jitter-control0; untraced inputs reject. Validation now permits the observed out-of-field ball specifically at phase177, with older checks unchanged. Focused regression failed against the placeholder, then exposed the existing interior-ball validator; after the scoped validator change it passed and snapshots roundtripped.
+- Twenty-four original/native full snapshot comparisons matched field, experience and jitter control. Windows full CMake build and all 45 compiled tests passed. Private traces and comparisons are in `area-action4-keeper-result1-jitter-20261105`. This is not yet the original boundary decision, live frame/presentation/random execution, or a full match. Next trace the $8CA4 boundary decision and its restart setup, as well as result0 and result4 continuations. Overall completion remains unmeasured.
+
+## 2026-11-05 - sampled action4 keeper result1 restart entry
+
+- Twenty-four controlled original cases continued from the prior out-of-field $8CA4 boundary check to bank26 $92EE without further host waits. In the sampled state, keeper0 stun6 became0 and keeper11 penalty79 became0; their other represented keeper fields, the rest of the field, experience, and jitter scratch were unchanged. The route is before restart presentation and setup.
+- Added saved phase178 and `--route-area-action4-keeper-restart`, restricted to the sampled side, owner, ball, random, jitter and complete represented keeper states. It preserves the existing state and atomically rejects other inputs; no general keeper reset is inferred. The focused regression failed against a placeholder then passed, including snapshot roundtrip and replay rejection. Twenty-four original/native full snapshots matched the original field, experience and jitter scratch at $92EE.
+- Windows full CMake build and all 45 compiled tests passed. Private traces and comparisons are in `area-action4-keeper-result1-restart-20261105` outside Git. A disassembly probe shows $92EE enters presentation and restart setup, but that continuation is unimplemented; trace it before connecting existing restart systems. Result0 and result4 tails, live timing/random/audio and a complete playable match remain unfinished; overall completion is unmeasured.
+
+## 2026-11-05 - sampled keeper restart choice capture
+
+- Twenty-four controlled original result1 restart cases continued from $92EE through two cooperative presentation sequences to $9318, with 193 host waits. The original selected ball owner14, action1, subtype0 and choice6; represented field and experience otherwise remained unchanged. The earlier action4 remains the native session origin; these newly captured original scratch values are stored separately and must not be mistaken for live AI execution.
+- Added phase179 and `--prepare-area-action4-keeper-restart OWNER ACTION SUBTYPE CHOICE`, limited to the observed 14/1/0/6 values and saved restart entry. It records the captured choice and owner after explicit acknowledgment, rejects unobserved inputs, and leaves its input unchanged. Session marker135/version69 appends the three-byte restart context; the updated reader continues to accept older snapshot formats and a downgraded new snapshot rejects. This does not run presentation or calculate the restart AI.
+- The focused test failed against a placeholder, then passed after implementation; 24 original/native full snapshots matched represented field, experience and captured action/subtype/choice at $9318. Windows full CMake build and all 45 compiled tests passed. Private observations and comparisons are in `area-action4-keeper-restart-choice-20261105`. Next trace the prepared action through $9E0D/$9C0F and its ensuing restart continuation, then address result0/result4 and the remaining match loop. Overall completion is unmeasured; a live playable match remains unfinished.
+
+## 2026-11-05 - captured action4 restart formation
+
+- Twenty-four controlled original restart-choice cases continued through $9E0D/$9C0F to $9335, using eight cooperative host waits. The ball moved from32,100 to52,172/cell11; player coordinate high bytes were repositioned in four observed formation variants, while represented experience and sampled action scratch were unchanged. Original placement calculations, frames and presentation are not implemented here.
+- Added phase180 and `--ack-area-action4-restart-formation FIELD` to accept an explicitly captured field snapshot. It requires the sampled starting and ball coordinates, preserves low coordinate bytes, player targets and statuses, and rejects unrelated field changes. It stores the supplied positions and retains the version69 restart choice. The caller is responsible for supplying a truthful captured formation; the code does not validate that all supplied positions match an original formation or compute them.
+- The focused regression failed against a placeholder and passed after implementation. Twenty-four original/native full snapshots matched the captured fields at $9335. Windows full CMake build and all 45 compiled tests passed. Private traces and comparisons are in `area-action4-restart-formation-20261105`. Next derive and implement original formation placement rather than relying on captured fields, then trace restart action execution and other keeper routes. Live frame/random/audio, a full match and overall completion remain unverified/unmeasured.
+
+## 2026-11-05 - computed sampled restart formation
+
+- Traced original $9E0D/$9BEE for restart choice6: it indexes a 22-cell formation table by side and player, substitutes the owner cell, converts cells to coordinates, and reflects coordinates for side11. The sampled keeper entries are skip markers, so this path does not infer unrepresented keeper coordinates. Original $9C0F then requests menu/presentation; the represented field did not change between $931E and $9335 in the sampled probe.
+- Added `--compute-area-action4-restart-formation TABLE`, which takes an explicit 23-byte private table (22 cells plus owner cell), computes field-player positions while preserving fractional bytes, and derives the ball position from the owner. The path is restricted to the sampled side11/owner14/choice6 and sampled ball destination; invalid cells and non-skipped keepers reject. It reaches the same phase180 as the captured alternative. The private table was not added to Git and is not a live content loader or full restart/AI implementation.
+- The focused test failed against a placeholder and passed after implementation. Twenty-four original/native complete snapshots matched four sampled formation variants using the private original-derived table. Windows full CMake build and all 45 compiled tests passed. Private table, observer and comparisons are in `area-action4-restart-placement-20261105` outside Git. Next trace the original restart action from $9335; broader formations, keeper positioning, live timing/randomness, other routes and a complete match remain unfinished. Overall completion is unmeasured.
+
+## 2026-11-05 - sampled restart action power
+
+- Twenty-four controlled original restart cases continued from $9335 to $9338 with incoming carry1 and zero further waits. Original action1/subtype0 preparation produced cost20 and power21, without changing represented field or experience. Inputs used side11, owner14 and explicitly frozen random255/255; presentation, the AI choice and prior formation were staged.
+- Added phase181 and `--prepare-area-action4-restart-power`. It calls the existing original-byte attack preparation using private content and captured carry1, accepts only the sampled action/side/random and cost20/power21 result, and retains the prior action4 session context separately. Marker136/version70 appends the two 16-bit values; older snapshot formats remain readable and a downgraded new snapshot rejects. Untraced inputs reject atomically.
+- Focused regression failed against the placeholder, then passed after implementation, including snapshot roundtrip and rejection. Twenty-four original/native full snapshots matched original field, experience, cost and power. Windows full CMake build and all 45 compiled tests passed. Private traces and comparisons are in `area-action4-restart-power-20261105`. Next trace the action presentation, flight/destination and subsequent possession route from $9338, then other keeper results and live match scheduling. Complete match progress remains unmeasured.
+
+- Follow-up original-only single-case probe continued from $9338 to $9342 with three cooperative waits. Represented elapsed changed1 to19, clock low byte190 to172 and $05F9 changed0 to1; other represented field and experience bytes did not change. This is one constructed sample, not a native comparison or live presentation. The probe is saved in the private restart-power analysis folder; compare additional clock/interrupt cases before implementing this continuation.
+
+## 2026-11-05 - sampled restart action clock and interruptions
+
+- Sixty controlled original cases followed the saved action1 restart from $9338 through the clock: 12 each at remaining/extra 446/0, 18/0, 17/0, 0/50 and 0/1, with two prior results and six input masks. Original first incremented $05F9 by1, added18 to field elapsed, applied clock/status recovery, and reached $9342 (24 ready), $D214 (24 added time), or $DA98 (12 period end). Some cases used three cooperative waits; original presentation, NMI and random production were not executed live.
+- Added saved phases182/183/184 and `--advance-area-action4-restart-clock`, reusing byte-accurate keeper recovery and match clock arithmetic. The operation is restricted to the five traced clock cases and sampled statuses; unknown inputs reject atomically. Version70 snapshots retain the restart context. Focused regression failed against a placeholder, then passed with snapshot/replay checks. Sixty original/native full snapshots matched field, clock and experience at the three boundaries.
+- Windows full CMake build and all 45 compiled tests passed. Private traces and comparisons are in `area-action4-restart-clock-20261105`. A separate single original-only ready-case probe found action1 dispatch reaches $9359 after $9342; later action execution and added-time resume are not yet implemented. Next compare and connect that dispatch and resume, then continue the other keeper and match routes. Overall completion remains unmeasured and there is no complete playable match.
+
+## 2026-11-05 - sampled restart resume and action dispatch
+
+- Twenty-four controlled original added-time cases (remaining17/18 before the clock) resumed from $D214 to $9342 after 45 cooperative waits, without changing represented field, clock, experience or sampled action scratch. Twenty-four ready cases reached the action1 dispatch entry $9359 from $9342 with zero further waits and no represented changes. These are constructed, frozen-random observations, not live presentation or gameplay.
+- Added `--resume-area-action4-restart-clock` to acknowledge the sampled added-time presentation without repeating the clock, and phase185 / `--dispatch-area-action4-restart` for the captured action1 dispatch entry. Only observed clock states are accepted; period-end and other cases reject atomically. The focused regression failed against a placeholder and passed after implementation, with snapshot and replay checks. Original/native full snapshots matched for 24 resume and 24 dispatch cases.
+- Windows full CMake build and all 45 compiled tests passed. Private traces and comparisons are in `area-action4-restart-dispatch-20261105`. Next trace action1 from $9359 into the original pass/possession route, and the other goalkeeper outcomes; a complete live match and overall percentage remain unverified/unmeasured.
+
+## 2026-11-05 - sampled restart pass entry
+
+- Twenty-four controlled original action1 dispatch cases reached $C615, immediately before $DE5E, after 40 cooperative waits. The original set $061A from255 to77; represented field, clock, experience and other sampled context remained unchanged. These cases use staged presentation and frozen random values, not a live match.
+- Added phase186 and `--ack-area-action4-restart-pass` to record the captured pass-entry counter77, limited to the two directly observed ready clock states. Snapshot marker137/version71 saves the new counter; the current reader still accepts older formats and a downgraded new snapshot rejects. Other contexts, including the added-time-resumed pass entry, remain untraced and reject. The focused regression failed against a placeholder and then passed with snapshot/replay checks.
+- Twenty-four original/native complete snapshot comparisons matched field, clock, experience and the observed pass counter. Windows full CMake build and all 45 compiled tests passed. Private traces and comparisons are in `area-action4-restart-pass-entry-20261105`. A single original-only probe continued through the shared $DE5E flight to $DE73 with 15 cooperative waits, clearing selected defenders and moving the ball; this later flight/recipient is not yet implemented for this restart. Next trace the flight setup and per-cell movement before connecting possession. Complete match progress remains unmeasured.
+
+
+### 2026-11-05 - Sampled action4 restart pass flight
+
+Connected phase186's observed action1 restart to the existing staged area flight, including the original counter77, recipient15, destination113 and flag1. The transition is restricted to the captured formation/trajectory case and reuses the existing numeric movement; no live presentation was implemented. A focused test first failed with the transition stub, then passed with the implementation, including saved-state round trip and invalid-entry checks.
+
+Controlled private original traces versus native: 24 setup cases (two clock states, six inputs and two prior results) matched represented field, clock, experience and numeric trajectory at $E773. Twelve ordinary-clock cases matched those categories again at $DE73 after 15 original cooperative waits. Intermediate cells, original animation/audio/random timing, other restart formations and ownership after $DE73 have not been compared here; native metadata was not compared to unrepresented original internals. Windows CMake build passed; all 45 compiled test executables passed. Private scripts and reports: ../Captain-Majid-analysis/area-action4-restart-flight-setup-20261105.
+
+Next: compare intermediate movement and recipient/control transfer against original, then continue remaining keeper outcomes and match situations into a verified full classic match. Overall progress percentage remains unmeasured.
+
+
+### 2026-11-05 - Sampled restart recipient control
+
+Original execution from $DE73 reaches $E0DF after 95 cooperative waits, with recipient15 becoming owner; 12 controlled original/native cases matched represented field, clock, experience and trajectory at that boundary. The original then reaches player-control-ready. Added a guarded transition from the saved recipient handoff into the existing general control setup, consuming no-longer-needed flight context. A focused regression failed before the implementation and passed afterward; the Windows build and all 45 compiled test executables passed. Twelve original/native cases matched represented field, clock and experience at control-ready. These comparisons do not cover live animation, sound, intermediate flight cells, or every possible restart and clock case.
+
+Next compare this path's intermediate flight cells and control input/clock progression, then continue remaining keeper outcomes and match routes. Full playable-match verification remains outstanding; overall percentage is unmeasured.
+
+
+### 2026-11-05 - Sampled restart control tick
+
+After the restart pass enters control, compared 36 cases spanning two prior outcomes, six earlier inputs and three current inputs. The represented field and clock matched original at the control-poll wait, after setting the decision timer to zero in both systems and polling again, and after the ensuing control clock tick to field-round pending. These are boundary comparisons, not full snapshot or real-time presentation comparisons. No additional gameplay implementation was needed. Next compare the original field update and intermediate flight cells; other keeper and match paths and an end-to-end playable match remain open. Evidence is private under ../Captain-Majid-analysis/area-action4-restart-flight-setup-20261105.
+
+
+### 2026-11-05 - Sampled restart field round
+
+After the sampled restart pass and control tick, ran a no-input field round in the original and native engine. In 36 cases the represented field and clock matched upon return to control-ready. This validates one staged path around the control loop, not a complete real-time match; intermediate ball-flight cells, different world inputs, other keeper outcomes and other match routes remain to be compared. Evidence remains private in ../Captain-Majid-analysis/area-action4-restart-flight-setup-20261105.
+
+
+### 2026-11-05 - Restart flight cells and field inputs
+
+For 12 original/native sampled restart flights, compared represented field, trajectory, clock and experience at each movement and callback boundary: 15 movement steps and 14 callbacks per case, 348 matches. Original waits were explicitly acknowledged with no scheduler/NMI execution. For the ensuing field round, 144 additional original/native cases used four repeated held/pressed input patterns (1/0, 2/0, 64/64, 128/128), three prior poll inputs, six earlier inputs and two prior outcomes. Represented field and clock matched upon control-ready in all cases. Other snapshot metadata, real-time audiovisual presentation, other restart formations and match paths were not covered. No code changed; the build and 45 tests were verified at the preceding checkpoint. Next investigate other goalkeeper outcomes and match situations. Private evidence: ../Captain-Majid-analysis/area-action4-restart-flight-setup-20261105.
+
+
+### 2026-11-05 - Sampled action4 keeper result0 goal
+
+From result0 $88F3, controlled original cases reached bank26 $85F0 after 191 cooperative presentation waits. With side11, owner12, ball56/124, frozen random127/128, clock446 and score0-0, the right score became1 and the carrier gained goal experience (sampled total6 to21); represented field and clock were unchanged. Thirty-six cases covered keeper stamina49/50/51, two preceding results and six earlier input masks. Earlier original trace probes with a smaller instruction bound timed out during presentation and are not evidence of a gameplay hang.
+
+Added guarded phase187 and `--prepare-area-action4-keeper-result0-goal`, using the existing goal experience calculation and score context. Only the sampled state is accepted; duplicate transitions and other scores reject atomically. Focused regression failed before the implementation, then passed including snapshot roundtrip. Thirty-six full native saved snapshots matched original field, clock, experience and score at $85F0; other context bytes remained as in the valid native input. Windows `cmake --build build -j 2` passed; all 45 compiled test executables passed. This does not simulate real-time presentation or prove other goal scenarios. Next trace the result0 post-goal route toward kickoff, result4 and other match situations. Private scripts and logs: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105.
+
+
+### 2026-11-05 - Sampled result0 post-goal kickoff boundary
+
+Continued the sampled side11 result0 original goal through its celebration and post-menu cleanup. Twelve original/native cases matched represented field, score, clock and experience at $85DD after 333 cooperative waits: side11 changed to side0, keeper0 stun6 cleared, and kickoff marker became4. The native transition acknowledges presentation, clears consumed native action/area metadata, and enters the existing saved kickoff boundary using a narrow validator branch; it does not run audiovisual frames. The focused regression failed before implementation, then passed including roundtrip and replay rejection. Windows full build and all 45 compiled tests passed. A two-case original-only probe continued seven waits to $DC07 formation entry, setting owner8 and clearing keeper11 penalty79; it remains unimplemented. Next compare and integrate kickoff preparation without guessing its elapsed/defender state. Evidence is private under ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105.
+
+
+### 2026-11-05 - Sampled side0 kickoff formation after result0 goal
+
+Traced the side11 goal from post-goal cleanup into formation entry $DC07 (seven cooperative waits) and through its return. The original sets owner8 and clears keeper11 penalty, then places the formation; elapsed1 and selected keeper0 remain. Extended the existing formation transition and validation for this specifically guarded side0 route, without discarding those observed values. A focused regression first failed at the former formation validator, then passed and roundtripped; unsupported side11 selection rejects. Twelve original/native cases matched the represented field, goalkeeper formation positions, clock, score and experience after formation. Windows full build and all 45 test executables passed. Original audiovisual scheduling and receiver/control continuation are not established. Next trace that kickoff continuation, result4 and other match routes. Evidence including private formation table: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105.
+
+
+### 2026-11-06 - Sampled post-goal kickoff control
+
+Continued the sampled side11 goal through side0 receiver selection, ball placement, acknowledged transfer and regular control setup. Original traces showed receiver7 for captured random127, 189 cooperative waits between placement and transfer, and a return to control-ready with owner7. Extended the existing saved kickoff validators for this bounded route, retaining elapsed1 and selected keeper0 until normal control setup. The receiver transition explicitly rejects unobserved random and candidate inputs; focused tests first failed at the previous validation and passed after the change, with snapshot roundtrip and rejection checks.
+
+Twelve original/native cases matched represented field, clock and experience at each of four boundaries, totaling 48 comparisons; score, goalkeeper formation positions and receiver were also checked at the first three. Other snapshot metadata and real-time audiovisual presentation were not compared. Windows full CMake build and all 45 compiled test executables passed. Next compare control input/clock/field progress from this route, then trace result4 and other match situations toward a verified playable match. Overall completion percentage is unmeasured. Private traces and comparison scripts: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105.
+
+
+### 2026-11-06 - Post-goal control, action menu and retained action correction
+
+The sampled post-goal kickoff control was compared against original for 36 input polls (including 12 menu requests), 36 polls with the decision timer explicitly set to zero on both sides, and 24 applicable subsequent clock ticks; boundary, represented field, clock and experience matched. The original's menu branch was then traced through menu opening, ordinary-shot confirmation and preparation in 12 cases; represented field, clock, experience and goalkeeper positions matched at all 36 boundaries. The menu presentation is still host-acknowledged rather than live.
+
+A first diagnostic compared original $043F to native shot power and appeared to mismatch. The established original mapping uses $061C/$061D; both original and native prepared power were11. A separate real discrepancy was confirmed: the prior post-goal handoff reset represented action metadata, whereas the original retained action0, route3, cursor128, flash128 and power22 until menu processing. A focused regression failed before replacing the reset with this narrowly observed state and passed afterward. Rebuilt the entire sampled route for 12 cases (120 native transitions): all nine represented action bytes matched original at seven post-goal, kickoff, control and menu boundaries per case; represented field/clock/experience matched through shot preparation. Original scratch not represented by the engine and live audiovisual scheduling remain outside coverage. Windows full CMake build and all 45 compiled test executables passed. Next investigate the subsequent original shot route and result4; no playable-match completion percentage is measured. Private scripts/logs: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105.
+
+
+### 2026-11-06 - Sampled kickoff loose shot and defended arrival
+
+After the sampled side11 goal and side0 kickoff, traced the ordinary shot through elapsed clock, result dispatch, acknowledged attack tail and approach. Twelve original/native cases matched represented field, clock, experience, all action bytes, score and goalkeeper positions at four boundaries (48 comparisons), including the loose flight setup. Original/native numeric flight setup, every cell step and callback matched field, clock, experience and trajectory at 312 checkpoints across 12 cases, with cooperative original waits explicitly acknowledged. Each arrived at cell209 with flight flag0 and ordered defenders19/14.
+
+The original reaches bank26 $8835 with that queue, then first-defender announcement $8845 after one cooperative wait. The native engine formerly rejected this case. Extended the existing saved defender-pending and announcement phases150/151 for only this observed flag0 loose-shot state; the pass-specific preparation explicitly rejects the new case until its distinct action0 path is implemented. Version67/marker133 encoding now writes its required zero flag and absent pass-context bytes for these phases. A focused regression initially failed, then exposed and verified a corrected truncated-snapshot encoding; it now passes, including roundtrip, replay/unknown-input rejection. Twenty-four original/native boundary comparisons matched represented field, clock, experience, ordered defenders and flight flag. Original-only continuation identified defender19/action0/result2; no native comparison or result handler is claimed yet. Windows full CMake build and all 45 compiled test executables passed. Next trace and implement this specific defender's preparation/comparison and terminal result before further match work. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105.
+
+
+### 2026-11-06 - First sampled loose-shot defender preparation
+
+Added saved phase188 and `--prepare-sampled-loose-shot-defender` for the already traced flag0 loose arrival. It saves defender19 and variant0 before the original action0 comparison without supplying a guessed stamina cost. Twelve original/native cases matched represented field, clock, experience, defender ID and ball variant at $886D. Focused regression failed before implementation, then passed including snapshot roundtrip and replay rejection; marker133 includes the new state while previous supported snapshot versions remain readable. Windows full CMake build and all 45 compiled test executables passed.
+
+In 12 original-only internal traces, $8EE9 received defender scratch power19, incoming11, random0/128, action0, range192 and offset64; the original returned strength9, loss2, score78 and result2 at $8870. The existing native comparison arithmetic independently returned those values for the same captured inputs and table. This does not yet save the comparison or implement its result2 handler. Next compare and save that bounded result, then trace the original terminal continuation. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105.
+
+
+### 2026-11-06 - Sampled loose-shot defender comparison
+
+Added guarded phase189 and `--compare-sampled-loose-shot-defender`, requiring captured power19 and the observed action0 private flight content. Existing byte-accurate comparison computes strength9, loss2, score78 and result2 from incoming11 and frozen random0/128; other power/table inputs reject atomically. Focused regression first failed with a stub, then passed including version67 snapshot roundtrip and replay rejection. Twelve original/native cases matched represented field, clock, experience, selected defender and saved comparison arithmetic at $8870. Windows full CMake build and all 45 compiled test executables passed.
+
+Original-only continuation reached result2 handler $88BB after 194 cooperative waits, then $81BC with ball188/124 changed to140/140 and one experience point awarded. The original cell value remained stale209 there. These later steps are not yet native behavior; explicit presentation waits do not simulate real-time presentation. Next trace and implement result2 and its clock/recovery continuation, then other keeper and match routes. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105. Overall completion percentage remains unmeasured.
+
+
+### 2026-11-06 - Sampled loose-shot result2 and recovered owner
+
+Traced 12 original result2 cases through $88BB, $81BC, $81C3 and $8BDF. The first handler awards defender experience and sets ball position to140/140 while leaving cell209 stale; the terminal prelude awards the defender again, applies action0 contact status and elapsed2, and advances clock445 to443; the queued defenders then clear. The original used 194 cooperative presentation waits for the result and three for the clock segment. Added `--recover-sampled-loose-shot-result2` as one guarded saved transition that explicitly acknowledges those presentation effects (facing64 and motion0), performs the two original awards and clock prelude, clears the consumed flight/defender metadata and enters ordinary ball recovery. Unsupported clock/content/position/replays reject atomically. Focused regression first failed with a stub; original/native session comparison then revealed facing/motion mismatches, which were added to the regression and corrected. Twelve original/native cases now match represented session bytes 11..323 at $8BDF.
+
+Ran the existing recovery step on the resulting states: 12 original/native cases matched represented session bytes 11..323 at recovered owner handoff, with player8 as owner. This remains a controlled, staged route; no live frame/audio/presentation parity is claimed. Windows full CMake build and all 45 compiled test executables passed. Next trace continuation to player control and remaining match routes. Private traces and comparisons: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105. Overall completion is unmeasured.
+
+
+### 2026-11-06 - Sampled recovered player returns to control
+
+Continued the sampled result2 loose-shot recovery from player8 ownership to the original player-control handoff and control-ready. The first 12-case comparison found that the original recovery presentation changed facing64 to0, which the native prepared tail had retained as64. A focused regression failed before adding the specifically guarded observed facing reset, then passed. Twelve original/native cases now match represented session bytes 11..323 at each of the player-control handoff and control-ready boundaries, 24 comparisons total. The original presentation is acknowledged, not executed live. Windows full CMake build and all 45 compiled test executables passed. Next investigate result4 and other match situations toward a complete match; overall progress is unmeasured. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result0-goal-20261105.
+
+
+### 2026-11-06 - Sampled keeper result4 restart branch
+
+Traced result4 from saved handler $87D4 through $9366 and captured decision $936E to $94CF in 12 controlled original cases. For the sampled side11 owner12 ball56/124, frozen random0/0 and clock446, the boundary check reported carry1 and side0; represented field, clock, experience and score were unchanged. Added guarded phase190 and `--route-sampled-keeper-result4 CARRY SIDE`, requiring the explicit captured 1/0 values and the traced state. Focused regression failed before implementation, then passed including marker134 roundtrip and invalid/replay rejection; 12 original/native full saved snapshots matched at $94CF. Windows full CMake build and all 45 compiled test executables passed.
+
+Original-only continuation reached $94D7 after 242 cooperative waits and formation entry $94E6 after another 175, with owner20, ball68/132/cell30 and relocated players. At $94EC the original had selected action9 and power21 after 41 further waits; at $94F8 the extra-time counter was5 after 221 more waits, while field elapsed remained1. These later formation, action and clock changes remain unimplemented. Presentation acknowledgments are not live audiovisual execution. Next trace and save the bounded restart setup and action, then remaining match paths. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106. Overall progress is unmeasured.
+
+
+### 2026-11-06 - Captured goalkeeper result4 restart formation
+
+Implemented phase191 and `--ack-sampled-keeper-result4-formation FILE` for the observed restart formation at $94E6: owner20 and ball68/132/cell30. The explicitly captured field may change player position high bytes but must preserve position fractions, target/status and all unrelated field state. This acknowledges the original's 242- and 175-wait presentation/selection segments; it does not calculate the selection or execute live frames. A focused regression first failed with a stub, then passed after implementation including snapshot roundtrip, replay rejection and unrelated-field protection. Twelve original/native full saved snapshots matched the controlled original formation cases. Windows full CMake build and all 45 compiled tests passed. Next trace the action9/power21 selection and clock, then remaining match situations. Original evidence and private captured fields remain in ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106. Overall progress is unmeasured; a complete playable match remains unverified.
+
+
+### 2026-11-06 - Captured goalkeeper result4 restart action
+
+At original $94EC, 12 controlled cases captured action9, subtype128, context5, cost40 and power21 after the result4 formation. Added guarded phase192 and `--prepare-sampled-keeper-result4-action ACTION SUBTYPE CONTEXT COST POWER`; these are explicit observed inputs and no AI or action-power calculation is claimed. The previous action4 origin is retained separately. Focused regression failed with a stub, then passed with snapshot roundtrip, older-version rejection and invalid/replay checks. Twelve original cases matched the captured values and full native snapshot preservation. Windows full CMake build and all 45 compiled tests passed.
+
+Correction to earlier note: original $05F9 maps to the extra-time counter, not field elapsed. At $94F8 that counter changed from0 to5 while field elapsed remained1. The next task is to trace and implement the timing/interruption behavior and ensuing action9 route; the original's cooperative waits do not simulate live presentation. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106. Overall progress remains unmeasured and a complete playable match remains unverified.
+
+
+### 2026-11-06 - Sampled result4 extra-time byte update
+
+Traced original $94EC..$94F8 after the captured result4 action. In 96 controlled cases spanning eight clock inputs, the original added5 to $05F9 (extra time) with 8-bit wraparound; remaining match time, field elapsed, represented field and experience did not change. The original used 221 cooperative presentation waits per case and reached $94F8 even for zero remaining time in these samples. Added guarded phase193 and `--advance-sampled-keeper-result4-extra-time`; it records this byte update and explicitly acknowledges the presentation, without advancing the match clock or claiming live presentation. Focused regression first failed with a stub then passed, including snapshot roundtrip, replay/unknown-input rejection and wrap cases. Ninety-six original/native full saved snapshots matched. Windows full CMake build and all 45 compiled test executables passed. Next trace the original action9 dispatch and any later match-clock/interruption boundary. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106. Overall progress is unmeasured; a complete playable match remains unverified.
+
+
+### 2026-11-06 - Sampled result4 action returns to recovery
+
+From original $94F8, 12 controlled cases dispatched the captured action9 and reached $8BDF without additional cooperative waits. The original awarded the opposing goalkeeper selector3 experience, cleared the selected queue, moved the ball from68/132 to80/128 while retaining stale cell30, and changed keeper0 timer/duration/penalty from0/0/0 to7/4/79. Added guarded `--recover-sampled-keeper-result4-action` for the observed clock446/extra5, random0/0, goalkeeper and position inputs. It retains the original action9 context and subtype while clearing consumed restart metadata. A focused regression failed against the stub; original comparison then exposed display-parameter2 versus0, which was added to the test and corrected. Twelve original/native cases matched represented session bytes 11..323 at recovery entry.
+
+The existing recovery transition then matched 12 original cases at recovered-owner handoff, with side0 player3 in possession. Original audiovisual effects remain acknowledged/captured rather than live; other result and timing inputs remain unverified. Windows full CMake build and all 45 compiled tests passed. Next trace the recovered-owner continuation and other match situations. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106. Overall completion is unmeasured; a complete playable match remains unfinished.
+
+
+### 2026-11-06 - Sampled result4 recovered player returns to control
+
+Continued the sampled result4 loose recovery from side0 player3 ownership to the original player-control handoff and control-ready. Twelve controlled original/native cases matched represented session bytes 11..323 at each boundary (24 comparisons). Existing native recovery/control transitions required no changes. This is a staged CPU comparison with presentation acknowledged, not live match execution. Windows full CMake build and all 45 test executables passed at the preceding implementation checkpoint. Next compare subsequent input/clock behavior and continue remaining keeper/match paths; overall progress is unmeasured and a playable match is not yet verified. Evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106.
+
+
+### 2026-11-06 - Result4 control through next ordinary shot
+
+The sampled result4 recovery route matched original/native represented session bytes 11..323 for 96 input/timer/clock comparisons, 72 field-update comparisons, and 36 action-menu/ordinary-shot preparation comparisons. Original-only traces of 12 subsequent shots reached the approach with distance135 and destination233. The native direct continuation rejects the original retained defense-action byte9 because the contact prelude accepts 0..6. An exploratory substitution of action0 ran all 48 shot boundaries but is not validated as original behavior: every comparison differed at byte304 (motion request: original2, native0), and action0 was not the original input. Do not treat this as a passing parity result or broaden accepted values without tracing the original table lookup and presentation effects. Next investigate the original action9 clock/table reads and the acknowledged shot animation, add focused tests and only then implement evidence-backed behavior. The latest full Windows build and all 45 tests passed at the prior implementation checkpoint; these subsequent checks did not alter engine code. Live presentation and a complete playable match are unverified; overall progress is unmeasured. Private evidence: `area-action4-keeper-result4-restart-20261106`.
+
+
+
+### 2026-11-06 - Result4 recovered shot approach
+
+For the sampled result4 recovered-player ordinary shot, traced original bank26 action9 clock lookup: it reads $9107=0, while the existing action0 keeper entry is also0. Added a narrowly guarded action9 continuation only for the observed keeper0/clock445/extra5/owner3/ball80,128 case, and acknowledge the observed motion request2 at its preceding shot dispatch. This uses the existing action0 prelude only when its keeper elapsed is zero; unrelated action9 inputs still reject. Two focused regressions failed first and now pass. Twelve original/native cases matched represented session bytes 11..323 at each of four boundaries (48 comparisons) from final shot clock through approach, using the actual original action9. Full Windows CMake build and all 45 test executables passed. Original presentation is acknowledged, not live; coverage is sampled, other match routes and a complete playable match remain unfinished. Next trace shot flight and its defender/keeper outcome and compare with the engine. Overall progress remains unmeasured. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106.
+
+
+### 2026-11-06 - Result4 shot flight and generic goalkeeper
+
+The sampled result4 recovered-player shot flight matched the original across 12 cases and 384 saved setup/movement/callback checkpoints, arriving at cell233 with no field defenders. The existing native route and keeper-entry transitions then matched represented session bytes 11..323 in 12 cases each. With explicitly supplied goalkeeper choices, original-only constructed traces observed choice0 result3 and a keeper save/side11 ownership, and choice1 result0 and score1-0, 12 cases each; these choices are inputs, not observed live AI selection. Native keeper comparison rejected all 24 because the goalkeeper is generic type0 and the private pack has no runtime generic team profile. The exporter intentionally leaves that table empty; do not substitute an unverified profile. Next trace the original generic team selection/context and implement or supply evidence-backed private profile mapping, then compare keeper results and their continuations. Windows full CMake build and all 45 test executables passed at the preceding shot implementation checkpoint; no engine code changed in this follow-up. Live presentation and a complete playable match remain unverified; overall progress is unmeasured. Evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106.
+
+
+### 2026-11-06 - Generic keeper trace limitation
+
+Further tracing found that the constructed keeper comparison reads the generic-team pointer from scratch bytes $38/$39, which in this captured setup resolves into zero-page RAM at $0002 rather than a verified selected-team table. Thus the earlier constructed choice0/save and choice1/goal outcomes are not reliable evidence of real-match outcomes, although they are reproducible from that constructed scratch state. Do not implement or claim those results as original match behavior. The smallest missing input is an original capture establishing the selected team and valid generic-team pointer/table at the real keeper loader entry; trace that setup before comparing generic keeper behavior. The earlier matched flight and keeper entry boundaries do not include this comparison and remain valid within their disclosed scope.
+
+
+## 2026-11-06 - Explicit generic goalkeeper team data (newest checkpoint)
+
+Original bank28:$8B39-$8B49 derives a team-data pointer using the explicit team ID and pointer table $BAB2. IDs3..6 were traced to mapped records; no real team identity is established for the constructed saved scenario. `tools/export_shot_content.py --team-id N` now exports an explicitly selected private record for IDs3..6; omission preserves the original output byte-for-byte and untraced IDs reject. Team choice remains the caller's responsibility, and private packs remain outside Git. A synthetic unit regression failed before implementation and passes; private CLI verifies selected output, existing-file protection, and untraced-ID rejection. The four new outputs exactly match the manually constructed private packs used below.
+
+For each of those four explicitly supplied teams and keeper choices0/1, 12 original/native constructed keeper comparisons and 12 subsequent goal-registration comparisons matched represented session bytes 11..323 and keeper/goal fields (96 cases at each boundary); the observed score was 1-0 in these constructed inputs. These are not evidence of the actual match's selected team, AI choice, or live presentation. The earlier scratch-pointer outcome remains invalid for real-match inference. All 45 Windows test executables passed after this Python-only change; the last full Windows build passed at the preceding implementation checkpoint. An initial separate CLI attempt in sandbox temporary storage failed with an access error and cleanup error; repeating in the authorized workspace passed. No engine or Japanese-text files were changed in this increment. Next capture or trace the real scenario's team selection and valid team pointer, then continue its verified goal/restart or save route and broader match loop. Overall progress is unmeasured; a complete playable match remains unverified. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/keeper-generic-controlled-20261106-v1.
+
+
+## 2026-11-06 - Supplied-team goal returns to kickoff control (newest checkpoint)
+
+Continued the existing constructed result4-to-shot route for explicit original team IDs3..6, 12 saved variants and keeper choices0/1. All 96 original/native comparisons matched at each of six subsequent boundaries: post-goal cleanup, kickoff formation, receiver selection, ball placement, prepared possession handoff, and player-control setup (576 boundary comparisons). Cleanup, formation, receiver and ball comparisons cover represented session bytes 11..323 plus relevant score/formation/receiver bytes; handoff compares the complete saved snapshot; control compares bytes11..323. The sampled original goal has score1-0 and side11 kickoff; no live presentation is simulated and the original post-display handoff explicitly acknowledges display effects. Existing native transitions required no changes. The original formation trace initially exceeded a helper's 2,000-instruction bound; increasing the trace bound to 20,000 completed all 96 cases.
+
+The scenario was constructed from prepared test states and its actual opponent team is not established. Supplying a traced team and keeper choice gives controlled evidence, not a verified real-match selection or AI decision. Next obtain a valid real original match/team capture or trace original match initialization, and then compare the corresponding team selection and subsequent live match route. Other match situations and a complete playable match remain unfinished; overall progress is unmeasured. The selected-team exporter unit test and all 45 existing Windows test executables passed in this increment; no engine code or Japanese text was changed and no fresh full build was needed. Existing Git status remains unavailable with "this operation must be run in a work tree"; all existing changes were preserved. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/keeper-generic-kickoff-20261106.
+
+
+## 2026-11-06 - Original stage-to-opponent initialization (newest checkpoint)
+
+Original bank2:$88AF-$88B6 loads stage byte $26 and writes opponent team ID $2B as stage+3. Original bank28:$8B39-$8B4B then uses that ID to initialize the generic-team pointer via $BAB2. Executed both original instruction sequences for stages0..3: IDs3..6 and pointers $BAF6, $BB00, $BB0E, $BB1C respectively; each pointed record matched the existing explicitly selected private exporter. All 12 constructed keeper-entry states have stage0 but inconsistent uninitialized team byte0. Restoring the observed stage0 initialization selects team3 for that constructed scenario, making the preceding team3 controlled comparison the initialization-consistent variant. This does not prove an actual live match was played or that these constructed states and team values correspond to a captured match; team3 is not a claim about an unrelated real save. Keeper choice remains supplied, not live AI.
+
+The earlier 96-case supplied-team continuation reaches player-control setup across six compared boundaries; stage0/team3 is a 24-case subset (12 variants times two choices), with explicitly acknowledged presentation. No engine code changed in this investigation; selected-team exporter unit test and 45 Windows test executables passed at the immediately preceding checkpoint. Next trace real match initialization or capture a live original match to verify team/stage and unsimulated effects, then continue player input and remaining match situations. Overall progress remains unmeasured; a complete playable match is unverified. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/keeper-generic-kickoff-20261106.
+
+
+## 2026-11-06 - Stage0 controlled kickoff input and field round (newest checkpoint)
+
+Reconstructed 24 stage0/team3 kickoff-control states from the prior supplied-team goal continuation (12 saved variants, two explicitly supplied keeper choices), preserving their constructed nature and acknowledged presentation. Compared original/native represented session bytes11..323 for four held/pressed pairs 0/0, 1/0, 64/64 and 128/128: 96 input polls matched at control-poll wait. With the control timer deliberately set to zero in both inputs, 96 more polls matched at control-clock pending and all 96 subsequent clock ticks matched at field-round pending. From those ticks, three field input pairs 0/0, 1/0 and 64/64 produced 288 matching original/native field-round comparisons, returning to control-ready. Total 576 comparisons; existing native transitions required no changes. The selected-team exporter unit test and all 45 existing Windows test executables passed; no new build or engine-code edit was required.
+
+Stage0/team3 follows the earlier traced original stage-to-team initialization, but this is a constructed scenario, not a live match capture or evidence of the actual goalkeeper AI choice. No rendering, audio, NMI or live timing is simulated. A valid live original match/team capture or trace from full startup remains necessary to establish real match initialization and unsimulated behavior; remaining match situations and complete playable match are unfinished, and overall progress is unmeasured. Next trace the next opponent-possession action or repeat control/field cycles through an interaction, comparing original and native, while pursuing live initialization evidence. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/stage0-kickoff-input-20261106.
+
+
+## 2026-11-06 - Opponent possession reaches AI pass (newest checkpoint)
+
+From 24 constructed stage0/team3 post-kickoff variants with no held/pressed input and acknowledged presentation, original/native represented session bytes11..323 matched through 480 control-poll waits, 24 clock-pending polls, 24 field ticks, 24 field rounds, and 24 opponent-carrier cell-decision boundaries (576 comparisons). The carrier moved from cell152 to140 and the existing native state reaches phase12; no native continuation exists for this field AI decision. For all 24, a constructed original CPU/task continuation from $E19B reached $E1B2 with action1/subtype0/power22, $E1CB with action1/subtype128/power21, and bank26:$8027 after nine cooperative host waits. These AI choice/attack-preparation boundaries are original-only observations, not native parity.
+
+One representative continuation reached bank26:$8107 after 31 cooperative waits and fixed-bank $C612 after 66; the original cooperative execution changed many player positions during presentation. This does not emulate NMI, PPU, audio or hardware timing and does not prove the same later behavior for all 24 variants. Next trace the original field AI selection, action1 preparation and pass/position effects; implement only supported, tested saved boundaries, with live/frame-dependent effects explicitly captured or unimplemented. Stage0/team3 and keeper choice remain constructed inputs, not a live match capture; actual match initialization is not yet independently verified. Cinema's separate RetroArch session was not accessed. No engine code was changed; selected-team exporter unit test and all 45 existing Windows test executables passed. A complete playable match remains unverified and overall progress is unmeasured. Git status still errors "this operation must be run in a work tree"; do not reset or overwrite existing work. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/stage0-opponent-possession-20261106.
+
+
+## 2026-11-06 - Sampled opponent AI pass handoff implemented (newest checkpoint)
+
+Added strictly guarded phases194..199 for the constructed stage0/team3 opponent-cell case: capture the explicitly supplied original action1/subtype0; capture prepared subtype128/power21; acknowledge the original presentation flag changes; advance the original carrier-cell reset; acknowledge a private captured pass-presentation field; and acknowledge the observed pass handoff. These operations do not calculate general AI choice, attack power, live animation, or frame scheduling. The field capture can replace motion values and the observed elapsed/movement-region values only; serialized unrelated field data must match. The guarded handoff records the observed ball variant and control fields, preserving other state.
+
+For 24 controlled original variants, all six consecutive native stages matched represented session bytes11..323 (144 comparisons), including the captured field and acknowledged presentation. The original used 31 and 66 total cooperative host waits to pass-handler and $C612 handoff, respectively; these are not NMI/PPU/audio or real timing emulation. The first handoff comparison failed because recovery byte $44E was incorrectly mapped to special-owner flags; the regression exposed the mismatch, and correcting it to ball variant yielded 24/24 matches. Focused tests cover state preservation, snapshot roundtrip, invalid/replay cases and captured-field protection. Full Windows CMake build and all 45 test executables passed.
+
+Original-only continuation from $C612 reached $DE5E/$DE61/$DE64 in all 24 cases: captured receiver19, destination103, counter255, distance3. These are not yet native pass target or flight parity. Next preserve the pass recipient, counter, destination and distance in a versioned saved context, trace/compare pass flight and subsequent possession, then connect remaining match paths. The AI and presentation inputs were captured from constructed states; actual match initialization, live AI/rendering and a complete match remain unverified. Cinema's RetroArch session was not accessed. Overall progress is unmeasured. Git status still errors "this operation must be run in a work tree"; preserve all prior changes. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/stage0-opponent-ai-pass-20261106.
+
+
+## 2026-11-06 - Sampled opponent pass target captured (newest checkpoint)
+
+Added phase200 and version72 marker138 to retain the explicitly supplied pass recipient19, destination103, counter255 and distance3 after the sampled action1 handoff. The guarded capture checks that the recipient's current field position maps to the supplied destination; phase validation enforces the same invariant after reload. Version72 is restricted to this new context and prior snapshot versions retain their existing layouts. The saved state, context values and represented session bytes11..323 matched 24 original $DE64 cases. Focused tests cover capture, input preservation, snapshot roundtrip, wrong/replayed input, malformed/truncated snapshots, old-version rejection, and a receiver-position mismatch. Full Windows CMake build and all 45 test executables passed.
+
+Original-only traces for the same 24 constructed cases reached flight setup $E773, then crossed cells128, 116, 115 and103 with no selected defenders; flag1 was retained. After explicit frame acknowledgements the original returned to control handoff with side11 player19 owning the ball at119,140. The observed 176 cooperative waits are not NMI, rendering, audio or hardware timing. Native flight setup, per-cell flight, reception, and subsequent control have not yet been compared or implemented for this new field-pass route. A prior draft flight observer used the wrong bank number for $E773, was interrupted, and the corrected observer completed all 24 cases. Actual live-match initialization, live AI and presentation, other routes and a complete playable match remain unverified; overall progress is unmeasured. Next connect the saved target to numeric flight using the existing shared ball/trajectory code, compare each original boundary and retain the captured flag, then trace reception and resumed opponent control. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/stage0-opponent-pass-target-20261106.
+
+
+## 2026-11-06 - Sampled opponent pass reaches control (newest checkpoint)
+
+Connected phase200's explicitly captured stage0/team3 pass target to existing area/numeric ball flight using observed starting fractions127/0, shared direction/velocity arithmetic and original flight flag1. The sampled recipient19/destination103/counter255/distance3 remains constrained; this is not general AI target selection. Original/native comparisons matched 24 setup states, 96 cell steps, 72 defender callbacks, 24 recipient handoffs and 24 ball placements. All passed through cells128,116,115,103 without defenders and returned possession to side11 player19 at119,140.
+
+Added a strictly guarded continuation from this received-pass position to player-control entry. It acknowledges the observed facing change, preserves flag1 in saved state, and clears consumed flight/target contexts. Original/native represented session bytes11..323 matched 24 control entries and 24 control-ready setups; a further 96 held/pressed input polls matched and preserved the flag (384 comparisons total across setup, flight, reception, control and input). Original 176 cooperative waits are acknowledged, not live NMI/rendering/audio or hardware timing. Focused tests cover replay/invalid capture, input preservation and snapshot roundtrip, including version72 marker138 pass-target rejection of malformed/truncated/older versions and position mismatch. Full Windows CMake build and all 45 test executables passed.
+
+These are constructed stage0/team3 states with explicitly captured AI/presentation input, not a validated live-match initialization, general opponent AI or full-game parity. The original match capture remains unavailable while its RetroArch session is managed separately. Next follow subsequent opponent control through additional decisions, trace broader branches and original startup, and integrate genuine presentation/frame scheduling before testing a complete match through final whistle. A complete playable match remains unverified; overall progress is unmeasured. Git status still errors "this operation must be run in a work tree". Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/stage0-opponent-pass-flight-20261106.
+
+
+## 2026-11-06 - Sampled pass reaches three-defender contact (newest checkpoint)
+
+Continued the 24 constructed stage0/team3 pass-reception cases with no player input. Original/native represented session bytes11..323 and retained flight flag1 matched through 720 control waits, 72 clock-pending polls, 72 field ticks, 48 field rounds and 24 field-contact boundaries (936 comparisons). Each contact had side11 owner19, ball cell103 and selected defenders3,7,8. Initially the native transition rejected the retained kickoff keeper-position context. A focused regression failed, then validation and snapshot version checks were corrected to allow that existing context at field contact while preserving the pass flag.
+
+Added guarded phase201 / `--ack-sampled-opponent-contact` for the observed contact-presentation handoff: original/native session bytes11..323, saved kickoff keeper positions and retained flag matched all24 cases at bank26:$8003. The original used 96 cooperative host waits; they are acknowledged, not live NMI/PPU/audio or hardware timing. Focused tests cover preservation, snapshot roundtrip, replay and changed defender rejection. Full Windows CMake build and all 45 test executables passed.
+
+An original-only attempt to continue from $8003 did not reach the anticipated $805A or $8127 within 100,000 instructions; its representative run ended in bank30:$CAD1 after 280 cooperative host waits. This is an observer limit, not proof of which input or event is required. The 24-case attempt was stopped after identifying the diagnostic issue, and no native confrontation outcome is claimed. Next trace the confrontation scheduler, presentation and required defender input from phase201 before implementing action/defense resolution. The scenario, team and prior AI choices remain constructed/captured, not a verified live match; actual initialization, remaining routes, live presentation and a complete match through the final whistle are still unverified. Overall progress is unmeasured. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/stage0-after-pass-contact-20261106.
+
+
+## 2026-11-06 - Opponent contact menu observer follow-up (newest checkpoint)
+
+A representative phase201 original-only diagnostic from bank26:$8003 entered $803C and its $C600/$D565 menu before reaching attacker preparation $804C. A constructed host trace with a fixed confirm input on every cooperative wait did not reach $805A/$8127 within 1,000,000 instructions (3,369 acknowledged waits); this does not establish the real user-input sequence, menu outcome or a game bug. The prior neutral-input trace reached its 100,000-instruction bound after 280 waits. Next trace the actual field-defense menu/scheduler and its required held/edge input sequence from the three-defender contact, or capture it from a coordinated live original run. Do not infer confrontation outcomes from either bounded attempt. Phase201 and all 24 previous comparisons remain verified as documented above; no further engine code changed and full Windows build/all45 tests passed at the preceding checkpoint. A complete playable match and live initialization are unverified; overall progress is unmeasured. Private evidence: ../Captain-Majid-analysis/area-action4-keeper-result4-restart-20261106/stage0-after-pass-contact-20261106.
