@@ -52,6 +52,30 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::control_clock_pending: return "control clock step pending";
     case captain::FieldSessionPhase::action_menu_pending: return "action menu pending";
     case captain::FieldSessionPhase::ai_cell_decision: return "opposing-carrier cell decision pending";
+    case captain::FieldSessionPhase::sampled_player14_ai_choice: return "sampled player14 pass choice captured";
+    case captain::FieldSessionPhase::sampled_player14_ai_prepared: return "sampled player14 pass prepared";
+    case captain::FieldSessionPhase::sampled_player14_ai_presented: return "sampled player14 pass presented";
+    case captain::FieldSessionPhase::sampled_player14_ai_dispatch: return "sampled player14 pass dispatch pending";
+    case captain::FieldSessionPhase::sampled_player14_pass_handoff: return "sampled player14 pass handoff";
+    case captain::FieldSessionPhase::sampled_player14_pass_target: return "sampled player14 pass target captured";
+    case captain::FieldSessionPhase::sampled_player19_return_shot_choice: return "sampled player19 return shot choice captured";
+    case captain::FieldSessionPhase::sampled_player19_return_shot_prepared: return "sampled player19 return shot prepared";
+    case captain::FieldSessionPhase::sampled_player19_return_shot_presented: return "sampled player19 return shot presented";
+    case captain::FieldSessionPhase::sampled_player19_return_shot_clock: return "sampled player19 return shot clock";
+    case captain::FieldSessionPhase::sampled_player19_return_shot_approach: return "sampled player19 return shot approach";
+    case captain::FieldSessionPhase::sampled_player19_return_shot_handoff: return "sampled player19 return shot handoff";
+    case captain::FieldSessionPhase::sampled_player19_return_keeper_prompt: return "sampled player19 return goalkeeper prompt";
+    case captain::FieldSessionPhase::sampled_player19_return_keeper_selected: return "sampled player19 return goalkeeper selected";
+    case captain::FieldSessionPhase::sampled_player19_return_keeper_confirmed: return "sampled player19 return goalkeeper confirmed";
+    case captain::FieldSessionPhase::sampled_player19_return_keeper_precompare: return "sampled player19 return goalkeeper comparison pending";
+    case captain::FieldSessionPhase::sampled_player19_return_keeper_compared: return "sampled player19 return goalkeeper compared";
+    case captain::FieldSessionPhase::sampled_player19_return_goal_scored: return "sampled player19 return goal scored";
+    case captain::FieldSessionPhase::sampled_player19_return_goal_presented: return "sampled player19 return goal presented";
+    case captain::FieldSessionPhase::sampled_player19_return_goal_restart: return "sampled player19 return goal restart";
+    case captain::FieldSessionPhase::sampled_score23_pass_target: return "2-3 human pass target cursor";
+    case captain::FieldSessionPhase::sampled_score23_empty_confirmed: return "2-3 empty pass confirmed";
+    case captain::FieldSessionPhase::sampled_score23_pass_cancel: return "2-3 pass cancellation pending";
+    case captain::FieldSessionPhase::sampled_score23_pass_prepared: return "2-3 weakened pass prepared";
     case captain::FieldSessionPhase::sampled_field_ai_choice: return "sampled opponent AI choice captured; preparation pending";
     case captain::FieldSessionPhase::sampled_field_ai_prepared: return "sampled opponent attack prepared; presentation pending";
     case captain::FieldSessionPhase::sampled_field_ai_presented: return "sampled opponent presentation acknowledged; field attack pending";
@@ -60,12 +84,106 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::sampled_field_ai_pass_handoff: return "sampled opponent pass handoff; flight pending";
     case captain::FieldSessionPhase::sampled_field_ai_pass_target: return "sampled opponent pass target captured; flight setup pending";
     case captain::FieldSessionPhase::sampled_opponent_contact_presented: return "sampled opponent contact presented; action selection pending";
+    case captain::FieldSessionPhase::sampled_field_defense_prompt: return "sampled field defense prompt; input pending";
+    case captain::FieldSessionPhase::sampled_field_defense_poll: return "sampled field defense choices pending";
+    case captain::FieldSessionPhase::sampled_field_defense_preparation: return "sampled field defender choice confirmed";
+    case captain::FieldSessionPhase::sampled_field_defense_complete: return "sampled field defensive choices complete";
+    case captain::FieldSessionPhase::sampled_field_contact_ai_choice: return "sampled field contact opponent choice captured";
+    case captain::FieldSessionPhase::sampled_field_contact_ai_prepared: return "sampled field contact opponent preparation captured";
+    case captain::FieldSessionPhase::sampled_field_contact_presentation: return "sampled contact presentation captured; control setup pending";
+    case captain::FieldSessionPhase::sampled_opponent_shot_choice: return "sampled opponent shot choice captured";
+    case captain::FieldSessionPhase::sampled_opponent_shot_prepared: return "sampled opponent shot prepared";
+    case captain::FieldSessionPhase::sampled_opponent_shot_presented: return "sampled opponent shot presentation acknowledged";
+    case captain::FieldSessionPhase::sampled_opponent_shot_clock: return "sampled opponent shot clock advanced";
+    case captain::FieldSessionPhase::sampled_opponent_shot_approach: return "sampled opponent shot approach captured";
+    case captain::FieldSessionPhase::sampled_opponent_shot_handoff: return "sampled opponent shot handoff";
+    case captain::FieldSessionPhase::sampled_mixed_defense_ai_choice: return "sampled mixed defense opponent choice";
+    case captain::FieldSessionPhase::sampled_mixed_defense_ai_prepared: return "sampled mixed defense opponent prepared";
+    case captain::FieldSessionPhase::sampled_mixed_defender_prepared: return "sampled mixed defender prepared";
+    case captain::FieldSessionPhase::sampled_mixed_defender_compared: return "sampled mixed defender compared";
+    case captain::FieldSessionPhase::sampled_mixed_defender_result4: return "sampled mixed defender result4";
+    case captain::FieldSessionPhase::sampled_mixed_result4_pass: return "sampled mixed result4 pass";
+    case captain::FieldSessionPhase::sampled_mixed_result4_target: return "sampled mixed result4 target";
+    case captain::FieldSessionPhase::sampled_player12_ai_choice: return "sampled player12 pass choice";
+    case captain::FieldSessionPhase::sampled_player12_ai_prepared: return "sampled player12 pass prepared";
+    case captain::FieldSessionPhase::sampled_player12_ai_presented: return "sampled player12 pass presented";
+    case captain::FieldSessionPhase::sampled_player12_ai_dispatch: return "sampled player12 pass dispatch";
+    case captain::FieldSessionPhase::sampled_player12_pass_handoff: return "sampled player12 pass handoff";
+    case captain::FieldSessionPhase::sampled_player12_pass_target: return "sampled player12 pass target";
+    case captain::FieldSessionPhase::sampled_player19_shot_choice: return "sampled player19 shot choice";
+    case captain::FieldSessionPhase::sampled_player19_shot_prepared: return "sampled player19 shot prepared";
+    case captain::FieldSessionPhase::sampled_home_shot_defender_choice: return "sampled home shot defender choice";
+    case captain::FieldSessionPhase::sampled_home_shot_defender_resolved: return "sampled home shot defender resolved";
+    case captain::FieldSessionPhase::sampled_home_shot_contact_clock: return "sampled home shot contact clock";
+    case captain::FieldSessionPhase::sampled_home_shot_dispatch_clock: return "sampled home shot dispatch clock";
+    case captain::FieldSessionPhase::sampled_home_shot_handoff: return "sampled home shot handoff";
+    case captain::FieldSessionPhase::sampled_home_shot_target: return "sampled home shot target";
+    case captain::FieldSessionPhase::sampled_shot_keeper_prompt: return "sampled home goalkeeper choice pending";
+    case captain::FieldSessionPhase::sampled_shot_keeper_selected: return "sampled home goalkeeper choice selected";
+    case captain::FieldSessionPhase::sampled_shot_keeper_confirmed: return "sampled home goalkeeper choice confirmed";
+    case captain::FieldSessionPhase::sampled_shot_keeper_precompare: return "sampled home goalkeeper comparison pending";
+    case captain::FieldSessionPhase::sampled_shot_keeper_compared: return "sampled home goalkeeper compared";
+    case captain::FieldSessionPhase::sampled_opponent_goal_scored: return "sampled opponent goal registered";
+    case captain::FieldSessionPhase::sampled_opponent_goal_presented: return "sampled opponent goal presentation acknowledged";
+    case captain::FieldSessionPhase::sampled_opponent_goal_restart: return "sampled opponent goal restart pending";
     case captain::FieldSessionPhase::field_round_pending: return "field round pending";
     case captain::FieldSessionPhase::control_added_time: return "control added-time presentation pending";
     case captain::FieldSessionPhase::field_contact_pending: return "nearby field contact pending";
     case captain::FieldSessionPhase::goal_area_action: return "goal-area action pending";
     case captain::FieldSessionPhase::special_callback: return "special callback pending";
     case captain::FieldSessionPhase::human_action_menu: return "human action menu";
+    case captain::FieldSessionPhase::sampled_human_pass_target: return "sampled human pass target cursor";
+    case captain::FieldSessionPhase::sampled_human_pass_empty_confirmed: return "sampled empty pass target confirmed";
+    case captain::FieldSessionPhase::sampled_human_pass_cancel_pending: return "sampled human pass cancel pending";
+    case captain::FieldSessionPhase::sampled_human_pass_prepared: return "sampled human pass prepared";
+    case captain::FieldSessionPhase::sampled_human_pass_handoff: return "sampled human pass handoff";
+    case captain::FieldSessionPhase::sampled_player3_pass_target: return "sampled player3 pass target";
+    case captain::FieldSessionPhase::sampled_player3_empty_confirmed: return "sampled player3 empty target confirmed";
+    case captain::FieldSessionPhase::sampled_player3_pass_prepared: return "sampled player3 pass prepared";
+    case captain::FieldSessionPhase::sampled_player3_defender_prepared: return "sampled player3 defender prepared";
+    case captain::FieldSessionPhase::sampled_player3_defender_compared: return "sampled player3 defender compared";
+    case captain::FieldSessionPhase::sampled_score23_defender_prepared: return "sampled 2-3 pass defender prepared";
+    case captain::FieldSessionPhase::sampled_score23_defender_compared: return "sampled 2-3 pass defender compared";
+    case captain::FieldSessionPhase::sampled_score23_contact_clock: return "sampled 2-3 pass contact clock advanced";
+    case captain::FieldSessionPhase::sampled_score23_dispatch_clock: return "sampled 2-3 pass dispatch clock advanced";
+    case captain::FieldSessionPhase::sampled_score23_pass_handoff: return "sampled 2-3 pass field movement advanced";
+    case captain::FieldSessionPhase::sampled_score23_shot_choice: return "sampled opponent shot choice";
+    case captain::FieldSessionPhase::sampled_score23_shot_prepared: return "sampled opponent shot prepared";
+    case captain::FieldSessionPhase::sampled_score23_shot_presented: return "sampled opponent shot presented";
+    case captain::FieldSessionPhase::sampled_score23_shot_clock: return "sampled opponent shot clock";
+    case captain::FieldSessionPhase::sampled_score23_shot_approach: return "sampled opponent shot approach";
+    case captain::FieldSessionPhase::sampled_score23_shot_handoff: return "sampled opponent shot handoff";
+    case captain::FieldSessionPhase::sampled_score23_shot_target: return "sampled opponent shot target";
+    case captain::FieldSessionPhase::sampled_score23_ball_advance_ready: return "sampled opponent shot flight ready";
+    case captain::FieldSessionPhase::sampled_score23_ball_cell_callback: return "sampled opponent shot cell callback";
+    case captain::FieldSessionPhase::sampled_score23_ball_arrival_callback: return "sampled opponent shot arrival callback";
+    case captain::FieldSessionPhase::sampled_score23_keeper_prompt: return "sampled goalkeeper prompt";
+    case captain::FieldSessionPhase::sampled_score23_keeper_selected: return "sampled goalkeeper selected";
+    case captain::FieldSessionPhase::sampled_score23_keeper_confirmed: return "sampled goalkeeper confirmed";
+    case captain::FieldSessionPhase::sampled_score23_keeper_precompare: return "sampled goalkeeper comparison pending";
+    case captain::FieldSessionPhase::sampled_score23_keeper_compared: return "sampled goalkeeper compared";
+    case captain::FieldSessionPhase::sampled_score24_goal_scored: return "sampled opponent goal scored";
+    case captain::FieldSessionPhase::sampled_score24_goal_presented: return "sampled opponent goal presented";
+    case captain::FieldSessionPhase::sampled_score24_goal_restart: return "sampled opponent goal restart";
+    case captain::FieldSessionPhase::sampled_score24_dribble_choice: return "sampled 2-4 dribble defender choice";
+    case captain::FieldSessionPhase::sampled_score24_dribble_prepared: return "sampled 2-4 dribble prepared";
+    case captain::FieldSessionPhase::sampled_score24_dribble_defender: return "sampled 2-4 dribble defender prepared";
+    case captain::FieldSessionPhase::sampled_score24_dribble_compared: return "sampled 2-4 dribble defender compared";
+    case captain::FieldSessionPhase::sampled_score24_dribble_clock: return "sampled 2-4 dribble contact clock";
+    case captain::FieldSessionPhase::sampled_score24_dribble_field: return "sampled 2-4 dribble field movement";
+    case captain::FieldSessionPhase::sampled_score24_dribble_possession: return "sampled 2-4 opponent possession";
+    case captain::FieldSessionPhase::sampled_score25_pass_target: return "sampled 2-5 human pass target";
+    case captain::FieldSessionPhase::sampled_score25_player7_confirmed: return "sampled player7 pass confirmed";
+    case captain::FieldSessionPhase::sampled_score25_pass_cancel: return "sampled 2-5 pass cancel pending";
+    case captain::FieldSessionPhase::sampled_score25_pass_defenses: return "sampled 2-5 player7 pass defender choices";
+    case captain::FieldSessionPhase::sampled_score25_pass_prepared: return "sampled 2-5 player7 pass prepared";
+    case captain::FieldSessionPhase::sampled_score25_first_defender_prepared: return "sampled 2-5 player7 pass first defender prepared";
+    case captain::FieldSessionPhase::sampled_score25_first_defender_compared: return "sampled 2-5 player7 pass first defender compared";
+    case captain::FieldSessionPhase::sampled_score25_first_contact_clock: return "sampled 2-5 player7 pass first contact clock";
+    case captain::FieldSessionPhase::sampled_player3_contact_clock: return "sampled player3 contact clock advanced";
+    case captain::FieldSessionPhase::sampled_player3_dispatch_clock: return "sampled player3 pass dispatch clock advanced";
+    case captain::FieldSessionPhase::sampled_player3_pass_handoff: return "sampled player3 pass handoff";
+    case captain::FieldSessionPhase::sampled_player3_empty_pass_destination: return "sampled player3 empty pass destination";
     case captain::FieldSessionPhase::attack_choice_pending: return "confirmed action pending";
     case captain::FieldSessionPhase::attack_prepared: return "ordinary shot prepared";
     case captain::FieldSessionPhase::shot_field_complete: return "shot passed selected defenses; flight pending";
@@ -660,7 +778,7 @@ void prepare_clearance_file(captain::PhaseSessionState& state, const std::string
     std::cout << "Capture clearance prepared | side music request " << result.request_side_music
               << " | cooperative task request " << unsigned(result.requested_task) << '\n';
 }
-void clearance_race_file(captain::PhaseSessionState& state,const captain::ShotContent& content,const std::string& path,bool area=false) {
+void clearance_race_file(captain::PhaseSessionState& state,const captain::ShotContent& content,const std::string& path,bool area=false,bool sampled_pass=false,bool human_recovery=false) {
     std::ifstream input(path);
     if(!input) throw std::invalid_argument("Unable to open private race content");
     captain::ClearanceRaceContent race{};
@@ -671,6 +789,17 @@ void clearance_race_file(captain::PhaseSessionState& state,const captain::ShotCo
     }
     input>>std::ws;
     if(input.peek()!=std::char_traits<char>::eof() || input.bad()) throw std::invalid_argument("Trailing or unreadable race data");
+    if(human_recovery) {
+        const auto result=captain::resolve_sampled_human_empty_pass_recovery(state,content.field_players,*content.movement,race);
+        state=result.state;std::cout << "Human empty pass | timeout acknowledged; player " <<
+            unsigned(result.recipient->ball_owner) << " recovered | possession sound request " << result.request_possession_sound << '\n';
+        return;
+    }
+    if(sampled_pass) {
+        state=captain::resolve_sampled_player3_pass_race(state,content.field_players,*content.movement,race);
+        std::cout << "Player3 pass contest | player5 reached the ball; winner handling pending\n";
+        return;
+    }
     const auto result=area ? captain::resolve_session_area_action6_race(state,content.field_players,*content.movement,race)
                            : captain::resolve_session_clearance_race(state,content.field_players,*content.movement,race);
     state=result.state;
@@ -750,13 +879,17 @@ void compare_area_pass(captain::PhaseSessionState& state,const std::string& file
 int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
-                     "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | "
+                     "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | --begin-sampled-human-pass-target | --poll-sampled-human-pass-target HELD PRESSED | --capture-sampled-score25-pass-defenses A0 A1 A2 S0 S1 S2 | --prepare-sampled-score25-player7-pass | --prepare-sampled-human-empty-pass | --prepare-sampled-player3-defender | --compare-sampled-player3-defender RANGE OFFSET ELIGIBLE T0 T1 T2 T3 | --advance-sampled-player3-contact | --advance-sampled-player3-dispatch | --capture-sampled-player3-pass-handoff FILE | --ack-sampled-human-empty-pass | --capture-sampled-human-pass-recovery FILE | "
                      "--advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | "
                      "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --begin-ball-flight FILE LOWX LOWY | --continue-flight-arrival | --recover-shot-loose | --prepare-kickoff-formation FILE SIDE | --prepare-kickoff-receiver RANDOM C1 C2 C3 C4 C5 | --prepare-kickoff-ball | --continue-prepared-kickoff | --continue-prepared-goal-restart | --prepare-scored-goal LEFT RIGHT KICKOFF | --resolve-keeper-save | --recover-keeper-punch | --poll-keeper-area-special PRESSED | --advance-profiled-area-prefix-clock | --advance-area-prefix-clock ELAPSED | --resume-area-prefix-clock | --present-area-contact-result | --advance-area-defender | --skip-area-defender | --advance-area-contact-clock | --resume-area-contact-clock | --resolve-area-defender | --dispatch-area-result | --recover-area-result | --announce-prepared-area-defenders FACING | --begin-prepared-area-defense | --prepare-opponent-area-attack | --choose-keeper-area-action | --continue-keeper-area-special | --redraw-keeper-area-special | --resolve-keeper-area-special | --open-keeper-area-special | --inspect-keeper-area-defense | --prepare-keeper-area-defense | --poll-keeper-area-defense PRESSED | --open-keeper-area-defense | --begin-keeper-area-defense BLINK | --open-prepared-keeper-area-menu FACING | --prepare-keeper-area | --prepare-keeper-entry | --resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM | --resolve-stunned-keeper T0 T1 | --resolve-ball-cell | --advance-ball-cell | --prepare-shot-approach | --continue-unopposed-attack ACTION | --continue-prepared-attack | --resume-attack-clock | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n"
                      "Area recovery: --continue-area-ordinary-recovery FACING | --continue-area-story-recovery FACING\n"
+                     "Player3 pass contest: --resolve-sampled-player3-pass-race FILE | --position-sampled-player3-pass-winner | --continue-sampled-player3-pass-winner\n"
+                     "Calculated human pass recovery: --resolve-sampled-human-pass-recovery FILE\n"
+                     "Extended movement: --advance-sampled-player14-pass-handoff | --advance-sampled-player19-return-shot-approach | --advance-sampled-score23-pass-handoff\n"
+                     "Player5 dribble: --capture-sampled-score24-dribble-defense ACTION SUBTYPE | --capture-sampled-player5-defense A0 A1 A2 A3 A4 S0 S1 S2 S3 S4 | --prepare-sampled-player5-dribble | --begin-sampled-player5-defenders | --prepare-sampled-player5-defender | --compare-sampled-player5-defender RANGE OFFSET ELIGIBLE T0 T1 T2 T3 | --advance-sampled-player5-terminal | --advance-sampled-player5-terminal-field | --transfer-sampled-player5-possession | --prepare-sampled-player5-result3-control\n"
                      "Area actions: --continue-area-action4 FACING MOTION | --continue-area-action6 FILE FACING MOTION | --continue-area-pass-received | --prepare-area-pass-keeper\n"
-                     "AI: --ack-sampled-opponent-contact | --continue-sampled-field-pass-control | --begin-sampled-field-pass-flight FILE XLOW YLOW | --capture-sampled-field-pass-target RECIPIENT DEST COUNTER DISTANCE | --ack-sampled-field-ai-pass-handoff | --ack-sampled-field-ai-pass-presentation FILE | --advance-sampled-field-ai-dispatch | --ack-sampled-field-ai-presentation | --capture-sampled-field-ai-preparation SUBTYPE POWER | --capture-sampled-field-ai-choice ACTION SUBTYPE\n"
+                     "AI: --ack-sampled-unaffordable-shot | --begin-sampled-opponent-goal-restart | --ack-sampled-opponent-goal | --prepare-sampled-opponent-goal | --compare-sampled-home-goalkeeper | --ack-sampled-keeper-overlay | --poll-sampled-goalkeeper PRESSED ICON0 ICON1 | --ack-sampled-mixed-result4-pass | --advance-sampled-mixed-result4 | --compare-sampled-mixed-defender | --prepare-sampled-mixed-defender | --prepare-sampled-field-contact-attack | --poll-sampled-field-defense PRESSED | --ack-sampled-field-defense-prompt BLINK | --ack-sampled-opponent-contact | --continue-sampled-field-pass-control | --begin-sampled-field-pass-flight FILE XLOW YLOW | --capture-sampled-field-pass-target RECIPIENT DEST COUNTER DISTANCE | --ack-sampled-field-ai-pass-handoff | --ack-sampled-field-ai-pass-presentation FILE | --advance-sampled-field-ai-dispatch | --ack-sampled-field-ai-presentation | --capture-sampled-field-ai-preparation SUBTYPE POWER | --capture-sampled-home-shot-handoff FILE | --advance-sampled-home-shot-dispatch | --advance-sampled-home-shot-contact | --resolve-sampled-home-shot-defender | --capture-sampled-home-shot-defender ACTION SUBTYPE | --capture-sampled-field-ai-choice ACTION SUBTYPE\n"
                      "Area flight: --recover-sampled-keeper-result4-action | --advance-sampled-keeper-result4-extra-time | --prepare-sampled-keeper-result4-action ACTION SUBTYPE CONTEXT COST POWER | --ack-sampled-keeper-result4-formation FILE | --route-sampled-keeper-result4 CARRY SIDE | --recover-sampled-loose-shot-result2 | --compare-sampled-loose-shot-defender | --prepare-sampled-loose-shot-defender | --continue-area-action4-keeper-result0-goal | --prepare-area-action4-keeper-result0-goal | --begin-area-action4-restart-flight FILE | --prepare-area-action4-restart-pass-control | --begin-area-flight FILE LX LY DIST FACING MOTION VXLO VXHI VYLO VYHI | --advance-area-ball-cell | --resolve-area-ball-cell | --continue-area-already-arrived | --ack-area-pass-defender | --prepare-area-pass-defender COSTLO COSTHI | --compare-area-pass-defender FILE POWERLO POWERHI CONTEXT | --begin-area-action4-encounters | --continue-area-action4-control | --prepare-area-action4-control | --ack-area-action4-restart-pass | --resume-area-action4-restart-clock | --dispatch-area-action4-restart | --advance-area-action4-restart-clock | --prepare-area-action4-restart-power | --compute-area-action4-restart-formation TABLE | --ack-area-action4-restart-formation FIELD | --prepare-area-action4-keeper-restart OWNER ACTION SUBTYPE CHOICE | --route-area-action4-keeper-restart | --advance-area-action4-keeper-jitter | --continue-area-action4-keeper-result ACTION | --ack-area-action4-keeper-result | --compare-area-action4-keeper POWER ACTION SUBTYPE ADJUSTMENT | --spend-area-action4-keeper-stamina | --begin-area-action4-keeper | --ack-area-action4-keeper FACING MOTION | --prepare-area-action4-keeper COSTLO COSTHI POWERLO POWERHI\n";
         return 2;
     }
@@ -765,7 +898,7 @@ int main(int argc, char** argv) {
         bool run_recovery = false, run_continue_recovery = false;
         bool run_setup_control = false;
         bool run_control_tick = false, resume_control_time = false;
-        bool run_open_action_menu = false, run_prepare_basic_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false, run_continue_clearance = false, run_restart_route = false, run_restart_options = false, run_attack_clock = false, run_resume_attack = false, run_approach = false, run_ball_step=false, run_ball_cell=false, run_arrival=false, run_shot_recovery=false, run_keeper_entry=false, run_keeper_save=false, run_punch_recovery=false, run_goal_restart=false, run_kickoff_ball=false, run_kickoff_handoff=false, run_keeper_area=false,run_area_defense_prompt=false,run_prepare_area_defense=false,run_inspect_area_defense=false,run_open_area_special=false,run_resolve_area_special=false,run_redraw_area_special=false,run_continue_area_special=false,run_area_ai=false,run_area_attack=false,run_area_defense_entry=false;
+        bool run_open_action_menu = false, run_prepare_basic_shot = false, run_reject_sampled_shot = false, resume_shot_clock = false, run_selected_result = false, run_continue_selected = false, run_continue_clearance = false, run_restart_route = false, run_restart_options = false, run_attack_clock = false, run_resume_attack = false, run_approach = false, run_ball_step=false, run_ball_cell=false, run_arrival=false, run_shot_recovery=false, run_keeper_entry=false, run_keeper_save=false, run_punch_recovery=false, run_goal_restart=false, run_kickoff_ball=false, run_kickoff_handoff=false, run_keeper_area=false,run_area_defense_prompt=false,run_prepare_area_defense=false,run_inspect_area_defense=false,run_open_area_special=false,run_resolve_area_special=false,run_redraw_area_special=false,run_continue_area_special=false,run_area_ai=false,run_area_attack=false,run_area_defense_entry=false;
         std::optional<std::array<std::uint8_t,2>> stunned_thresholds;
         std::optional<std::array<std::uint8_t,3>> keeper_choice,goal_baseline;
         std::optional<std::string> flight_file,kickoff_file,area_flight_file,restart_flight_file,area_action6_file,area_action6_race_file,area_action4_restart_field,area_action4_restart_table,sampled_result4_formation_file;
@@ -789,17 +922,26 @@ int main(int argc, char** argv) {
         std::optional<std::array<unsigned,5>> sampled_result4_action;
         std::optional<std::array<unsigned,4>> area_action4_keeper_prep,area_action4_keeper_compare,area_action4_keeper_restart_prep;
         std::optional<unsigned> area_action4_keeper_result_action;
-        std::optional<std::string> selected_recovery_file, clearance_file, race_file;
+        std::optional<std::string> selected_recovery_file, clearance_file, race_file, player3_race_file, human_race_recovery_file;
         std::optional<std::array<unsigned,4>> staged_input;
         std::optional<unsigned> dispatch_elapsed, unopposed_attack;
-        std::optional<std::array<unsigned,2>> sampled_field_ai,sampled_field_ai_prep;
+        std::optional<std::array<unsigned,2>> sampled_field_ai,sampled_field_ai_prep,sampled_home_shot_defender,score24_dribble_defense;
+        std::optional<std::array<unsigned,10>> player5_defense;
+        std::optional<std::array<unsigned,7>> compare_player5_defender;
+        bool prepare_player5_dribble=false,begin_player5_defenders=false,prepare_player5_defender=false,advance_player5_terminal=false,advance_player5_terminal_field=false,transfer_player5_possession=false,prepare_player5_result3_control=false,advance_player14_handoff=false,advance_player19_return_approach=false,advance_score23_handoff=false;
+        std::optional<std::array<unsigned,3>> sampled_keeper_poll;
+        bool run_sampled_contact_attack=false,run_sampled_home_shot_defender=false,run_sampled_home_shot_contact=false,run_sampled_home_shot_dispatch=false,run_sampled_mixed_defender=false,run_sampled_mixed_compare=false,run_sampled_mixed_result4=false,run_sampled_mixed_pass=false,run_keeper_overlay=false,run_sampled_home_keeper=false,run_sampled_opponent_goal=false,run_sampled_goal_presentation=false,run_sampled_goal_restart=false;
         bool sampled_field_ai_ack=false,sampled_field_ai_dispatch=false,sampled_field_ai_pass_handoff=false,sampled_field_pass_control=false,sampled_opponent_contact_ack=false;
-        std::optional<std::string> sampled_field_ai_pass_field;
+        std::optional<unsigned> sampled_field_defense_blink;
+        std::optional<std::string> sampled_field_ai_pass_field,sampled_home_shot_handoff_field,human_pass_recovery_field,player3_handoff_field;
         std::optional<std::array<unsigned,4>> sampled_field_pass_target;
         std::optional<std::string> sampled_field_pass_flight_file;std::array<unsigned,2> sampled_field_pass_fractions{};
         std::optional<unsigned> code, defender, elapsed;
         std::optional<unsigned> menu_pressed,area_menu_facing,area_defense_blink,area_defense_pressed,area_special_pressed;
-        std::optional<std::array<unsigned, 2>> poll_input;
+        std::optional<std::array<unsigned, 2>> poll_input, poll_human_pass;
+        bool begin_human_pass=false, prepare_human_pass=false, ack_human_pass=false, prepare_player3_defender=false, advance_player3_contact=false, advance_player3_dispatch=false, position_player3_winner=false, continue_player3_winner=false, prepare_score25_pass=false;
+        std::optional<std::array<unsigned,6>> score25_pass_defenses;
+        std::optional<std::array<unsigned,7>> compare_player3_defender;
         std::optional<std::array<unsigned, 2>> world_input;
         std::optional<std::string> world_file, shot_file;
         unsigned action = 0, subtype = 0;
@@ -949,6 +1091,68 @@ int main(int argc, char** argv) {
             else if (option == "--resume-control-time") resume_control_time = true;
             else if (option == "--open-action-menu") run_open_action_menu = true;
             else if (option == "--prepare-basic-shot") run_prepare_basic_shot = true;
+            else if (option == "--ack-sampled-unaffordable-shot") run_reject_sampled_shot = true;
+            else if (option == "--begin-sampled-human-pass-target") begin_human_pass = true;
+            else if (option == "--prepare-sampled-human-empty-pass") prepare_human_pass = true;
+            else if (option == "--prepare-sampled-score25-player7-pass") prepare_score25_pass = true;
+            else if (option == "--capture-sampled-score25-pass-defenses") {
+                if(i+6>=argc || score25_pass_defenses)throw std::invalid_argument("Expected three defender actions and three subtypes");
+                std::array<unsigned,6> values{};for(auto& value:values)value=number(argv[++i]);score25_pass_defenses=values;
+            }
+            else if (option == "--prepare-sampled-player3-defender") prepare_player3_defender = true;
+            else if (option == "--advance-sampled-player3-contact") advance_player3_contact = true;
+            else if (option == "--advance-sampled-player3-dispatch") advance_player3_dispatch = true;
+            else if (option == "--position-sampled-player3-pass-winner") position_player3_winner = true;
+            else if (option == "--continue-sampled-player3-pass-winner") continue_player3_winner = true;
+            else if (option == "--capture-sampled-player5-defense") {
+                if(i+10>=argc || player5_defense)throw std::invalid_argument("Expected five defender actions and five subtypes");
+                std::array<unsigned,10> values{};for(auto& value:values)value=number(argv[++i]);
+                player5_defense=values;
+            }
+            else if (option == "--capture-sampled-score24-dribble-defense") {
+                if(i+2>=argc || score24_dribble_defense)throw std::invalid_argument("Expected one 2-4 defender action and subtype");
+                std::array<unsigned,2> values{};for(auto& value:values){value=number(argv[++i]);if(value>255)throw std::invalid_argument("Defender choice must be bytes");}
+                score24_dribble_defense=values;
+            }
+            else if (option == "--prepare-sampled-player5-dribble") prepare_player5_dribble=true;
+            else if (option == "--begin-sampled-player5-defenders") begin_player5_defenders=true;
+            else if (option == "--prepare-sampled-player5-defender") prepare_player5_defender=true;
+            else if (option == "--advance-sampled-player5-terminal") advance_player5_terminal=true;
+            else if (option == "--advance-sampled-player5-terminal-field") advance_player5_terminal_field=true;
+            else if (option == "--transfer-sampled-player5-possession") transfer_player5_possession=true;
+            else if (option == "--prepare-sampled-player5-result3-control") prepare_player5_result3_control=true;
+            else if (option == "--advance-sampled-player14-pass-handoff") advance_player14_handoff=true;
+            else if (option == "--advance-sampled-score23-pass-handoff") advance_score23_handoff=true;
+            else if (option == "--advance-sampled-player19-return-shot-approach") advance_player19_return_approach=true;
+            else if (option == "--compare-sampled-player5-defender") {
+                if(i+7>=argc || compare_player5_defender)throw std::invalid_argument("Expected direct player5 comparison content");
+                std::array<unsigned,7> values{};for(auto& value:values)value=number(argv[++i]);
+                if(values[2]>1)throw std::invalid_argument("Comparison eligibility must be zero or one");
+                compare_player5_defender=values;
+            }
+            else if (option == "--capture-sampled-player3-pass-handoff") {
+                if(++i>=argc || player3_handoff_field)throw std::invalid_argument("Expected captured player3 pass handoff field");
+                player3_handoff_field=argv[i];
+            }
+            else if (option == "--resolve-sampled-player3-pass-race") {
+                if(++i>=argc || player3_race_file)throw std::invalid_argument("Expected private player3 race content");
+                player3_race_file=argv[i];
+            }
+            else if (option == "--resolve-sampled-human-pass-recovery") {
+                if(++i>=argc || human_race_recovery_file)throw std::invalid_argument("Expected private human pass race content");
+                human_race_recovery_file=argv[i];
+            }
+            else if (option == "--compare-sampled-player3-defender") {
+                if(i+7>=argc || compare_player3_defender)throw std::invalid_argument("Expected direct player3 comparison content");
+                std::array<unsigned,7> values{};for(auto& value:values){value=number(argv[++i]);if(value>255)throw std::invalid_argument("Comparison content must be bytes");}
+                if(values[2]>1)throw std::invalid_argument("Comparison eligibility must be zero or one");
+                compare_player3_defender=values;
+            }
+            else if (option == "--ack-sampled-human-empty-pass") ack_human_pass = true;
+            else if (option == "--capture-sampled-human-pass-recovery") {
+                if(++i>=argc || human_pass_recovery_field)throw std::invalid_argument("Expected captured human pass recovery field");
+                human_pass_recovery_field=argv[i];
+            }
             else if (option == "--resume-shot-clock") resume_shot_clock = true;
             else if (option == "--resolve-shot-result") run_selected_result = true;
             else if (option == "--continue-selected-recovery") run_continue_selected = true;
@@ -986,7 +1190,7 @@ int main(int argc, char** argv) {
                 const auto action=number(argv[++i]),subtype=number(argv[++i]),team=number(argv[++i]);
                 keeper_choice=std::array<std::uint8_t,3>{static_cast<std::uint8_t>(action),static_cast<std::uint8_t>(subtype),static_cast<std::uint8_t>(team)};
             }
-            else if (option == "--poll-keeper-area-defense") {
+            else if ((option == "--poll-keeper-area-defense" || option == "--poll-sampled-field-defense")) {
                 if(++i>=argc || area_defense_pressed)throw std::invalid_argument("Expected sampled pressed byte");
                 area_defense_pressed=number(argv[i]);
             }
@@ -1089,6 +1293,21 @@ int main(int argc, char** argv) {
                 const auto pressed = number(argv[++i]);
                 world_input = std::array<unsigned, 2>{held, pressed};
             }
+            else if (option == "--ack-sampled-field-defense-prompt") {if(++i>=argc || sampled_field_defense_blink)throw std::invalid_argument("Expected captured defensive blink");sampled_field_defense_blink=number(argv[i]);}
+            else if (option == "--ack-sampled-mixed-result4-pass") {if(run_sampled_mixed_pass)throw std::invalid_argument("Duplicate sampled mixed pass acknowledgement");run_sampled_mixed_pass=true;}
+            else if (option == "--advance-sampled-mixed-result4") {if(run_sampled_mixed_result4)throw std::invalid_argument("Duplicate sampled defender result");run_sampled_mixed_result4=true;}
+            else if (option == "--compare-sampled-mixed-defender") {if(run_sampled_mixed_compare)throw std::invalid_argument("Duplicate sampled defender comparison");run_sampled_mixed_compare=true;}
+            else if (option == "--begin-sampled-opponent-goal-restart") {if(run_sampled_goal_restart)throw std::invalid_argument("Duplicate sampled goal restart");run_sampled_goal_restart=true;}
+            else if (option == "--ack-sampled-opponent-goal") {if(run_sampled_goal_presentation)throw std::invalid_argument("Duplicate sampled goal presentation");run_sampled_goal_presentation=true;}
+            else if (option == "--prepare-sampled-opponent-goal") {if(run_sampled_opponent_goal)throw std::invalid_argument("Duplicate sampled goal");run_sampled_opponent_goal=true;}
+            else if (option == "--compare-sampled-home-goalkeeper") {if(run_sampled_home_keeper)throw std::invalid_argument("Duplicate sampled keeper comparison");run_sampled_home_keeper=true;}
+            else if (option == "--ack-sampled-keeper-overlay") {if(run_keeper_overlay)throw std::invalid_argument("Duplicate keeper overlay acknowledgement");run_keeper_overlay=true;}
+            else if (option == "--poll-sampled-goalkeeper") {
+                if(i+3>=argc || sampled_keeper_poll)throw std::invalid_argument("Expected goalkeeper input and two icon IDs");
+                std::array<unsigned,3> values{};for(auto& v:values){v=number(argv[++i]);if(v>255)throw std::invalid_argument("Goalkeeper value exceeds byte");}sampled_keeper_poll=values;
+            }
+            else if (option == "--prepare-sampled-mixed-defender") {if(run_sampled_mixed_defender)throw std::invalid_argument("Duplicate sampled defender preparation");run_sampled_mixed_defender=true;}
+            else if (option == "--prepare-sampled-field-contact-attack") {if(run_sampled_contact_attack)throw std::invalid_argument("Duplicate sampled contact preparation");run_sampled_contact_attack=true;}
             else if (option == "--ack-sampled-opponent-contact") {if(sampled_opponent_contact_ack)throw std::invalid_argument("Duplicate contact acknowledgement");sampled_opponent_contact_ack=true;}
             else if (option == "--continue-sampled-field-pass-control") {if(sampled_field_pass_control)throw std::invalid_argument("Duplicate pass control handoff");sampled_field_pass_control=true;}
             else if (option == "--begin-sampled-field-pass-flight") {
@@ -1111,6 +1330,16 @@ int main(int argc, char** argv) {
                 const auto subtype=number(argv[++i]);const auto power=number(argv[++i]);
                 sampled_field_ai_prep=std::array<unsigned,2>{subtype,power};
             }
+            else if (option == "--advance-sampled-home-shot-dispatch") {if(run_sampled_home_shot_dispatch)throw std::invalid_argument("Duplicate home shot dispatch");run_sampled_home_shot_dispatch=true;}
+            else if (option == "--capture-sampled-home-shot-handoff") {if(i+1>=argc || sampled_home_shot_handoff_field)throw std::invalid_argument("Expected captured home shot field file");sampled_home_shot_handoff_field=argv[++i];}
+            else if (option == "--advance-sampled-home-shot-contact") {if(run_sampled_home_shot_contact)throw std::invalid_argument("Duplicate home-shot contact clock");run_sampled_home_shot_contact=true;}
+            else if (option == "--resolve-sampled-home-shot-defender") {if(run_sampled_home_shot_defender)throw std::invalid_argument("Duplicate home-shot defender resolution");run_sampled_home_shot_defender=true;}
+            else if (option == "--capture-sampled-home-shot-defender") {
+                if (i + 2 >= argc || sampled_home_shot_defender) throw std::invalid_argument("Expected home-shot defender action and subtype");
+                const auto action=number(argv[++i]);const auto subtype=number(argv[++i]);
+                if(action>255 || subtype>255)throw std::invalid_argument("Defender value exceeds byte");
+                sampled_home_shot_defender=std::array<unsigned,2>{action,subtype};
+            }
             else if (option == "--capture-sampled-field-ai-choice") {
                 if (i + 2 >= argc || sampled_field_ai) throw std::invalid_argument("Expected captured AI action and subtype");
                 const auto action=number(argv[++i]);const auto subtype=number(argv[++i]);
@@ -1121,6 +1350,12 @@ int main(int argc, char** argv) {
                 const auto held = number(argv[++i]);
                 const auto pressed = number(argv[++i]);
                 poll_input = std::array<unsigned, 2>{held, pressed};
+            }
+            else if (option == "--poll-sampled-human-pass-target") {
+                if(i+2>=argc || poll_human_pass)throw std::invalid_argument("Expected one human pass HELD PRESSED");
+                const auto held=number(argv[++i]);const auto pressed=number(argv[++i]);
+                if(held>255 || pressed>255)throw std::invalid_argument("Human pass inputs must be bytes");
+                poll_human_pass=std::array<unsigned,2>{held,pressed};
             }
             else if (option == "--contact" || option == "--rewarded-contact" || option == "--defender" || option == "--advance" ||
                      option == "--defense-action" || option == "--defense-subtype" || option == "--capture") {
@@ -1136,11 +1371,11 @@ int main(int argc, char** argv) {
                 else { subtype = number(argv[i]); defense_options = true; }
             } else throw std::invalid_argument("Unknown session option");
         }
-        if (unsigned(sampled_opponent_contact_ack) + unsigned(sampled_field_pass_control) + unsigned(bool(sampled_field_pass_flight_file)) + unsigned(bool(sampled_field_pass_target)) + unsigned(sampled_field_ai_pass_handoff) + unsigned(bool(sampled_field_ai_pass_field)) + unsigned(sampled_field_ai_dispatch) + unsigned(sampled_field_ai_ack) + unsigned(bool(sampled_field_ai_prep)) + unsigned(bool(sampled_field_ai)) + unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) + unsigned(run_recovery) +
+        if (unsigned(run_sampled_goal_restart) + unsigned(run_sampled_goal_presentation) + unsigned(run_sampled_opponent_goal) + unsigned(run_sampled_home_keeper) + unsigned(run_keeper_overlay) + unsigned(bool(sampled_keeper_poll)) + unsigned(run_sampled_mixed_compare) + unsigned(run_sampled_mixed_result4) + unsigned(run_sampled_mixed_pass) + unsigned(run_sampled_mixed_defender) + unsigned(run_sampled_contact_attack) + unsigned(bool(sampled_field_defense_blink)) + unsigned(sampled_opponent_contact_ack) + unsigned(sampled_field_pass_control) + unsigned(bool(sampled_field_pass_flight_file)) + unsigned(bool(sampled_field_pass_target)) + unsigned(sampled_field_ai_pass_handoff) + unsigned(bool(sampled_field_ai_pass_field)) + unsigned(sampled_field_ai_dispatch) + unsigned(sampled_field_ai_ack) + unsigned(bool(sampled_field_ai_prep)) + unsigned(bool(sampled_field_ai)) + unsigned(bool(sampled_home_shot_defender)) + unsigned(run_sampled_home_shot_defender) + unsigned(run_sampled_home_shot_contact) + unsigned(run_sampled_home_shot_dispatch) + unsigned(bool(sampled_home_shot_handoff_field)) + unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) + unsigned(run_recovery) +
             unsigned(run_continue_recovery) + unsigned(bool(area_ordinary_facing)) + unsigned(bool(area_story_facing)) + unsigned(bool(area_flight_file)) + unsigned(bool(restart_flight_file)) + unsigned(run_area_ball_step) + unsigned(run_area_ball_cell) + unsigned(run_area_pass_received) + unsigned(run_area_pass_keeper) + unsigned(run_area_pass_announcement) + unsigned(run_area_pass_restore) + unsigned(run_area_pass_nonterminal) + unsigned(run_area_pass_next) + unsigned(run_area_pass_blocked) + unsigned(run_area_pass_terminal) + unsigned(run_area_pass_capture) + unsigned(run_area_pass_capture_control) + unsigned(run_area_pass_blocked_control) + unsigned(run_area_pass_resume) + unsigned(run_area_pass_recovery) + unsigned(run_area_pass_recover) + unsigned(bool(area_pass_capture_ack)) + unsigned(bool(area_pass_recovery_ack)) + unsigned(bool(area_pass_cost)) + unsigned(bool(area_pass_result_ack)) + unsigned(bool(area_pass_compare_file)) + unsigned(run_prepare_area_pass_keeper) + unsigned(bool(area_action4_ack)) + unsigned(run_area_action4_field_entry) + unsigned(run_area_action4_control_entry) + unsigned(run_area_action4_control_ready) + unsigned(run_area_action4_keeper) + unsigned(run_area_action4_keeper_stamina) + unsigned(run_area_action4_keeper_result_ack) + unsigned(run_area_action4_keeper_jitter) + unsigned(run_area_action4_keeper_restart) + unsigned(bool(area_action4_keeper_restart_prep)) + unsigned(bool(area_action4_restart_field)) + unsigned(bool(area_action4_restart_table)) + unsigned(run_area_action4_restart_power) + unsigned(run_area_action4_restart_clock) + unsigned(run_area_action4_restart_resume) + unsigned(run_area_action4_restart_dispatch) + unsigned(run_area_action4_restart_pass) + unsigned(run_area_action4_restart_pass_control) + unsigned(run_area_action4_result0_goal) + unsigned(run_area_action4_postgoal) + unsigned(run_sampled_loose_defender) + unsigned(run_compare_sampled_loose_defender) + unsigned(run_recover_sampled_loose_result2) + unsigned(run_sampled_result4_extra_time) + unsigned(run_recover_sampled_result4_action) + unsigned(bool(sampled_keeper_result4)) + unsigned(bool(sampled_result4_formation_file)) + unsigned(bool(sampled_result4_action)) + unsigned(bool(area_action4_keeper_result_action)) + unsigned(bool(area_action4_keeper_compare)) + unsigned(bool(area_action4_keeper_ack)) + unsigned(bool(area_action4_keeper_prep)) + unsigned(bool(area_action6_file)) + unsigned(bool(area_action6_race_file)) + unsigned(bool(area_action6_winner_ack)) + unsigned(run_area_action6_recover) + unsigned(bool(area_action6_recovery_ack)) + unsigned(run_area_action6_control) + unsigned(run_setup_control) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
-            unsigned(bool(world_file)) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
-            unsigned(run_prepare_basic_shot) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) + unsigned(run_arrival) + unsigned(run_shot_recovery) + unsigned(run_keeper_entry) + unsigned(bool(stunned_thresholds)) + unsigned(bool(keeper_choice)) + unsigned(run_keeper_save) + unsigned(run_punch_recovery) + unsigned(bool(goal_baseline)) + unsigned(run_goal_restart) + unsigned(bool(kickoff_file)) + unsigned(bool(kickoff_receiver)) + unsigned(run_kickoff_ball) + unsigned(run_kickoff_handoff) + unsigned(run_keeper_area) + unsigned(bool(area_menu_facing)) + unsigned(bool(area_defense_blink)) + unsigned(run_area_defense_prompt) + unsigned(bool(area_defense_pressed)) + unsigned(run_prepare_area_defense) + unsigned(run_inspect_area_defense) + unsigned(run_open_area_special) + unsigned(bool(area_special_pressed)) + unsigned(run_resolve_area_special) + unsigned(run_redraw_area_special) + unsigned(run_continue_area_special) + unsigned(run_area_ai) + unsigned(run_area_attack) + unsigned(run_area_defense_entry) + unsigned(bool(area_announce_facing)) + unsigned(run_area_contact) + unsigned(run_area_clock) + unsigned(run_area_clock_resume) + unsigned(run_area_result_dispatch) + unsigned(run_area_result_recovery) + unsigned(bool(area_sequence_operation)) + unsigned(bool(area_prefix_elapsed)) + unsigned(resume_area_prefix) + unsigned(run_profiled_area_prefix) > 1)
+            unsigned(bool(world_file)) + unsigned(bool(human_pass_recovery_field)) + unsigned(bool(human_race_recovery_file)) + unsigned(bool(player3_handoff_field)) + unsigned(bool(player3_race_file)) + unsigned(position_player3_winner) + unsigned(continue_player3_winner) + unsigned(bool(player5_defense)) + unsigned(bool(score24_dribble_defense)) + unsigned(prepare_player5_dribble) + unsigned(begin_player5_defenders) + unsigned(prepare_player5_defender) + unsigned(advance_player5_terminal) + unsigned(advance_player5_terminal_field) + unsigned(transfer_player5_possession) + unsigned(prepare_player5_result3_control) + unsigned(advance_player14_handoff) + unsigned(advance_player19_return_approach) + unsigned(advance_score23_handoff) + unsigned(bool(compare_player5_defender)) + unsigned(prepare_player3_defender) + unsigned(bool(compare_player3_defender)) + unsigned(advance_player3_contact) + unsigned(advance_player3_dispatch) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
+            unsigned(run_prepare_basic_shot) + unsigned(run_reject_sampled_shot) + unsigned(begin_human_pass) + unsigned(prepare_human_pass) + unsigned(prepare_score25_pass) + unsigned(bool(score25_pass_defenses)) + unsigned(ack_human_pass) + unsigned(bool(poll_human_pass)) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) + unsigned(run_arrival) + unsigned(run_shot_recovery) + unsigned(run_keeper_entry) + unsigned(bool(stunned_thresholds)) + unsigned(bool(keeper_choice)) + unsigned(run_keeper_save) + unsigned(run_punch_recovery) + unsigned(bool(goal_baseline)) + unsigned(run_goal_restart) + unsigned(bool(kickoff_file)) + unsigned(bool(kickoff_receiver)) + unsigned(run_kickoff_ball) + unsigned(run_kickoff_handoff) + unsigned(run_keeper_area) + unsigned(bool(area_menu_facing)) + unsigned(bool(area_defense_blink)) + unsigned(run_area_defense_prompt) + unsigned(bool(area_defense_pressed)) + unsigned(run_prepare_area_defense) + unsigned(run_inspect_area_defense) + unsigned(run_open_area_special) + unsigned(bool(area_special_pressed)) + unsigned(run_resolve_area_special) + unsigned(run_redraw_area_special) + unsigned(run_continue_area_special) + unsigned(run_area_ai) + unsigned(run_area_attack) + unsigned(run_area_defense_entry) + unsigned(bool(area_announce_facing)) + unsigned(run_area_contact) + unsigned(run_area_clock) + unsigned(run_area_clock_resume) + unsigned(run_area_result_dispatch) + unsigned(run_area_result_recovery) + unsigned(bool(area_sequence_operation)) + unsigned(bool(area_prefix_elapsed)) + unsigned(resume_area_prefix) + unsigned(run_profiled_area_prefix) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
             throw std::invalid_argument("Contact needs --contact and --defender");
@@ -1259,6 +1494,70 @@ int main(int argc, char** argv) {
         if (run_open_action_menu) open_action_menu(state, content);
         if (menu_pressed) menu_input(state, content, *menu_pressed);
         if (run_prepare_basic_shot) prepare_basic_shot(state, content);
+        if (run_reject_sampled_shot) state=captain::acknowledge_sampled_unaffordable_shot(state,content.field_players,content.attack);
+        if(begin_human_pass)state=captain::begin_sampled_human_pass_target(state);
+        if(prepare_human_pass)state=captain::prepare_sampled_human_empty_pass(state,content.field_players,content.attack);
+        if(score25_pass_defenses) {
+            std::array<std::uint8_t,3> actions{},subtypes{};
+            for(unsigned j=0;j<3;++j) {actions[j]=static_cast<std::uint8_t>((*score25_pass_defenses)[j]);subtypes[j]=static_cast<std::uint8_t>((*score25_pass_defenses)[j+3]);}
+            state=captain::capture_sampled_score25_pass_defenses(state,actions,subtypes);
+        }
+        if(prepare_score25_pass)state=captain::prepare_sampled_score25_player7_pass(state,content.field_players,content.attack);
+        if(prepare_player3_defender)state=captain::prepare_sampled_player3_pass_defender(state,content.field_players,content.defense);
+        if(compare_player3_defender) {
+            const auto& c=*compare_player3_defender;
+            const captain::FieldComparisonSelection direct{5,static_cast<std::uint8_t>(c[0]),static_cast<std::uint8_t>(c[1]),bool(c[2]),
+                {static_cast<std::uint8_t>(c[3]),static_cast<std::uint8_t>(c[4]),static_cast<std::uint8_t>(c[5]),static_cast<std::uint8_t>(c[6])}};
+            state=captain::compare_sampled_player3_pass_defender(state,direct);
+        }
+        if(advance_player3_contact) {
+            if(!content.contact || !content.experience)throw std::invalid_argument("Missing contact or experience content");
+            state=captain::advance_sampled_player3_pass_contact(state,*content.contact,*content.experience);
+        }
+        if(advance_player3_dispatch)state=captain::advance_sampled_player3_pass_dispatch(state);
+        if(position_player3_winner)state=captain::position_sampled_player3_pass_winner(state);
+        if(continue_player3_winner)state=captain::continue_sampled_player3_pass_winner(state);
+        if(player5_defense) {
+            std::array<std::uint8_t,5> actions{},subtypes{};
+            for(unsigned j=0;j<5;++j) {actions[j]=static_cast<std::uint8_t>((*player5_defense)[j]);subtypes[j]=static_cast<std::uint8_t>((*player5_defense)[j+5]);}
+            state=captain::capture_sampled_player5_defense_choices(state,actions,subtypes);
+        }
+        if(score24_dribble_defense)state=captain::capture_sampled_score24_dribble_defense(state,
+            static_cast<std::uint8_t>((*score24_dribble_defense)[0]),static_cast<std::uint8_t>((*score24_dribble_defense)[1]));
+        if(prepare_player5_dribble)state=captain::prepare_sampled_player5_dribble(state,content.field_players,content.attack);
+        if(begin_player5_defenders)state=captain::begin_sampled_player5_dribble_defenders(state);
+        if(prepare_player5_defender)state=captain::prepare_sampled_player5_dribble_defender(state,content.field_players,content.defense);
+        if(advance_player5_terminal) {
+            if(!content.experience)throw std::invalid_argument("Player5 terminal needs experience content");
+            state=captain::advance_sampled_player5_dribble_terminal(state,*content.contact,*content.experience);
+        }
+        if(advance_player5_terminal_field)state=captain::advance_sampled_player5_terminal_field(state,content.field_players,*content.movement);
+        if(transfer_player5_possession) {
+            const auto result=captain::transfer_sampled_player5_dribble_possession(state);
+            state=result.state;std::cout << "Player " << unsigned(state.current.field.ball_owner) << " possession | side music request " << result.request_side_music << '\n';
+        }
+        if(prepare_player5_result3_control)state=captain::prepare_sampled_player5_result3_control(state).state;
+        if(advance_player14_handoff)state=captain::advance_sampled_player14_pass_handoff(state,content.field_players,*content.movement);
+        if(advance_score23_handoff)state=captain::advance_sampled_score23_pass_handoff(state,content.field_players,*content.movement);
+        if(advance_player19_return_approach)state=captain::advance_sampled_player19_return_shot_approach(state,content.field_players,*content.movement);
+        if(compare_player5_defender) {
+            const auto& v=*compare_player5_defender;
+            const captain::FieldComparisonSelection selected{9,static_cast<std::uint8_t>(v[0]),static_cast<std::uint8_t>(v[1]),bool(v[2]),
+                {static_cast<std::uint8_t>(v[3]),static_cast<std::uint8_t>(v[4]),static_cast<std::uint8_t>(v[5]),static_cast<std::uint8_t>(v[6])}};
+            state=captain::compare_sampled_player5_dribble_defender(state,selected);
+        }
+        if(player3_handoff_field) {
+            std::ifstream captured(*player3_handoff_field,std::ios::binary);
+            if(!captured)throw std::invalid_argument("Cannot open captured player3 pass handoff field");
+            state=captain::capture_sampled_player3_pass_handoff(state,captain::load_field_state(captured));
+        }
+        if(ack_human_pass)state=captain::acknowledge_sampled_human_empty_pass_handoff(state);
+        if(human_pass_recovery_field) {
+            std::ifstream captured(*human_pass_recovery_field,std::ios::binary);
+            if(!captured)throw std::invalid_argument("Cannot open captured human pass recovery field");
+            state=captain::capture_sampled_human_empty_pass_recovery(state,captain::load_field_state(captured));
+        }
+        if(poll_human_pass)state=captain::poll_sampled_human_pass_target(state,static_cast<std::uint8_t>((*poll_human_pass)[0]),static_cast<std::uint8_t>((*poll_human_pass)[1]));
         if (shot_file) shot_defenders_file(state, content, *shot_file);
         if (staged_input) staged_defense(state,content,*staged_input);
         if (dispatch_elapsed) dispatch_shot(state,*dispatch_elapsed);
@@ -1268,6 +1567,8 @@ int main(int argc, char** argv) {
         if (run_continue_selected) state = captain::continue_session_selected_recovery(state);
         if (clearance_file) prepare_clearance_file(state,*clearance_file);
         if (race_file) clearance_race_file(state,content,*race_file);
+        if (player3_race_file) clearance_race_file(state,content,*player3_race_file,false,true);
+        if (human_race_recovery_file) clearance_race_file(state,content,*human_race_recovery_file,false,false,true);
         if (run_continue_clearance) state=captain::continue_session_clearance(state);
         if (unopposed_attack) state=captain::continue_prepared_session_attack(state,*content.contact,*unopposed_attack).state;
         if(flight_file)begin_ball_flight(state,content,*flight_file,flight_fractions[0],flight_fractions[1]);
@@ -1296,13 +1597,45 @@ int main(int argc, char** argv) {
         if(run_area_defense_entry){const auto entry=captain::begin_prepared_area_defense(state);state=entry.state;for(const auto& r:entry.presentation)std::cout<<"Presentation request "<<unsigned(r.kind)<<" | id "<<unsigned(r.id)<<" | slot "<<unsigned(r.slot)<<'\n';}
         if(run_area_attack)state=captain::prepare_session_area_attack(state,content);
         if(sampled_field_ai)state=captain::capture_sampled_field_ai_choice(state,(*sampled_field_ai)[0],(*sampled_field_ai)[1]);
+        if(sampled_home_shot_defender)state=captain::capture_sampled_home_shot_defender(state,(*sampled_home_shot_defender)[0],(*sampled_home_shot_defender)[1]);
+        if(run_sampled_home_shot_defender)state=captain::resolve_sampled_home_shot_defender(state,content.field_players,content.defense,content.field_comparison);
+        if(run_sampled_home_shot_contact) {
+            if(!content.contact || !content.experience)throw std::invalid_argument("Missing contact or experience content");
+            state=captain::advance_sampled_home_shot_contact(state,*content.contact,*content.experience);
+        }
+        if(run_sampled_home_shot_dispatch)state=captain::advance_sampled_home_shot_dispatch(state);
+        if(sampled_home_shot_handoff_field) {
+            std::ifstream captured(*sampled_home_shot_handoff_field,std::ios::binary);
+            if(!captured)throw std::invalid_argument("Unable to open captured home shot field");
+            state=captain::capture_sampled_home_shot_handoff(state,captain::load_field_state(captured));
+        }
         if(sampled_field_ai_prep)state=captain::capture_sampled_field_ai_preparation(state,(*sampled_field_ai_prep)[0],(*sampled_field_ai_prep)[1]);
         if(sampled_field_ai_ack)state=captain::acknowledge_sampled_field_ai_presentation(state);
         if(sampled_field_ai_dispatch)state=captain::advance_sampled_field_ai_dispatch(state);
         if(sampled_field_ai_pass_handoff)state=captain::acknowledge_sampled_field_ai_pass_handoff(state);
         if(sampled_field_pass_control)state=captain::continue_sampled_field_pass_control(state);
+        if(run_sampled_contact_attack)state=captain::prepare_sampled_field_contact_attack(state,content.field_players,content.attack);
+        if(run_sampled_mixed_defender)state=captain::prepare_sampled_mixed_defender(state,content.field_players,content.defense);
+        if(run_sampled_mixed_compare)state=captain::compare_sampled_mixed_defender(state,content.field_comparison);
+        if(run_sampled_mixed_result4)state=captain::advance_sampled_mixed_result4(state);
+        if(run_sampled_mixed_pass)state=captain::acknowledge_sampled_mixed_result4_pass(state);
+        if(run_sampled_home_keeper)state=captain::compare_sampled_home_goalkeeper(state,content);
+        if(run_sampled_opponent_goal)state=captain::prepare_sampled_opponent_goal(state,content);
+        if(run_sampled_goal_presentation)state=captain::acknowledge_sampled_opponent_goal_presentation(state);
+        if(run_sampled_goal_restart)state=captain::begin_sampled_opponent_goal_restart(state);
+        if(run_keeper_overlay) {const auto r=captain::acknowledge_sampled_goalkeeper_overlay(state);state=r.state;
+          for(const auto& q:r.presentation)std::cout<<"Presentation request "<<unsigned(q.kind)<<" | id "<<unsigned(q.id)<<" | slot "<<unsigned(q.slot)<<'\n';}
+        if(sampled_keeper_poll) {const auto r=captain::poll_sampled_goalkeeper_prompt(state,static_cast<std::uint8_t>((*sampled_keeper_poll)[0]),
+          {static_cast<std::uint8_t>((*sampled_keeper_poll)[1]),static_cast<std::uint8_t>((*sampled_keeper_poll)[2])});state=r.state;
+          for(const auto& q:r.presentation)std::cout<<"Presentation request "<<unsigned(q.kind)<<" | id "<<unsigned(q.id)<<" | slot "<<unsigned(q.slot)<<'\n';}
         if(sampled_opponent_contact_ack)state=captain::acknowledge_sampled_opponent_contact_presentation(state);
-        if(sampled_field_pass_target)state=captain::capture_sampled_field_pass_target(state,(*sampled_field_pass_target)[0],(*sampled_field_pass_target)[1],(*sampled_field_pass_target)[2],(*sampled_field_pass_target)[3]);
+        if(sampled_field_defense_blink)state=captain::acknowledge_sampled_field_defense_prompt(state,*sampled_field_defense_blink);
+        if(sampled_field_pass_target) {
+            const auto& t=*sampled_field_pass_target;
+            state=state.phase==captain::FieldSessionPhase::sampled_player3_pass_handoff
+                ? captain::capture_sampled_player3_pass_target(state,t[0],t[1],t[2],t[3])
+                : captain::capture_sampled_field_pass_target(state,t[0],t[1],t[2],t[3]);
+        }
         if(sampled_field_pass_flight_file) {
             if(!content.movement)throw std::invalid_argument("Missing movement geometry");
             const auto velocity=read_ball_velocity(*sampled_field_pass_flight_file);

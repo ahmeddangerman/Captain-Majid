@@ -1,6 +1,40 @@
 #include "captain/keeper_session.hpp"
 #include <stdexcept>
 namespace captain {
+PhaseSessionState compare_sampled_home_goalkeeper(const PhaseSessionState& input,const ShotContent& content) {
+ validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::sampled_player19_return_keeper_precompare || input.phase==FieldSessionPhase::sampled_score23_keeper_precompare) {
+  const bool score23=input.phase==FieldSessionPhase::sampled_score23_keeper_precompare;
+  const auto& field=input.current.field;const auto& player=field.roster[0];const auto& status=field.keepers[0];
+  const GoalkeeperInput comparison{input.action->power,
+   {0,field.random_first,field.random_second,content.keeper_range,content.keeper_offset,false,false,3,0,0},
+   0,status.timer,0,status.penalty,content.keeper_thresholds};
+  const auto result=prepare_goalkeeper({{0,player.type,static_cast<std::uint8_t>(player.stamina),
+   static_cast<std::uint8_t>(player.stamina>>8),player.level},11,0,0,0,128,false,comparison},content.goalkeepers,content.keeper);
+  if(result.preparation.base_strength!=10 || result.preparation.stamina_cost!=20 || result.energy.stamina!=(score23 && field.ball_owner!=17 ? 22 : 24) || result.energy.weakened ||
+     result.comparison.strength!=5 || result.comparison.score!=255 || result.comparison.result_code!=0)
+   throw std::invalid_argument("Unverified player19 return goalkeeper result");
+  auto state=input;state.current.field.roster[0].stamina=result.energy.stamina;
+  state.phase=score23 ? FieldSessionPhase::sampled_score23_keeper_compared : FieldSessionPhase::sampled_player19_return_keeper_compared;validate_phase_session(state);return state;
+ }
+ const bool postgoal=input.current.clock.extra_time==13 && input.score && input.score->left_goals==2 && input.score->right_goals==1 && input.current.clock.remaining==381;
+ if(input.phase!=FieldSessionPhase::sampled_shot_keeper_precompare ||
+    (input.keeper_menu_action!=0 && !(input.current.clock.extra_time==9 && input.keeper_menu_action==1)) ||
+    input.current.field.roster[0].stamina!=(postgoal ? 30 : input.current.clock.extra_time==9 ? 16 : 18))
+  throw std::invalid_argument("Unsupported sampled home goalkeeper comparison");
+ const auto& field=input.current.field;const auto& player=field.roster[0];const auto& status=field.keepers[0];
+ const auto action=*input.keeper_menu_action;
+ const GoalkeeperInput comparison{input.action->power,
+  {0,field.random_first,field.random_second,content.keeper_range,content.keeper_offset,false,false,3,0,0},
+  0,status.timer,0,status.penalty,content.keeper_thresholds};
+ const auto result=prepare_goalkeeper({{0,player.type,static_cast<std::uint8_t>(player.stamina),
+  static_cast<std::uint8_t>(player.stamina>>8),player.level},11,action,0,0,128,false,comparison},content.goalkeepers,content.keeper);
+ if(result.preparation.base_strength!=(action==1 ? 12 : 10) || result.preparation.stamina_cost!=(action==1 ? 40 : 20) || result.energy.stamina!=(postgoal ? 10 : 0) ||
+    result.energy.weakened==postgoal || result.comparison.strength!=(postgoal ? 5 : 0) || result.comparison.score!=255 || result.comparison.result_code!=0)
+  throw std::invalid_argument("Unverified sampled home goalkeeper result");
+ auto state=input;state.current.field.roster[0].stamina=result.energy.stamina;
+ state.phase=FieldSessionPhase::sampled_shot_keeper_compared;validate_phase_session(state);return state;
+}
 PhaseSessionState prepare_session_keeper_entry(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::shot_keeper_entry)

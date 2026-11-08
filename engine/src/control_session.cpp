@@ -3,6 +3,18 @@
 #include <stdexcept>
 
 namespace captain {
+ControlSetupResult prepare_sampled_player5_result3_control(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ const bool score24=input.phase==FieldSessionPhase::sampled_score24_dribble_possession;
+ if(((input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices) && !score24) || !input.area_contact ||
+    input.area_sequence_result!=3 || input.current.field.side!=11 || input.current.field.ball_owner!=(score24 ? 17 : 14) ||
+    input.current.field.selected_defenders!=(score24 ? 1 : 5) || input.current.field.elapsed)
+  throw std::invalid_argument("Player5 result3 control needs the observed opponent possession handoff");
+ auto prepared=input;prepared.phase=FieldSessionPhase::player_control;
+ prepared.human_defense_choices.reset();prepared.area_contact.reset();prepared.area_sequence_result=255;
+ prepared.current.field.selected_defenders=0;prepared.scheduling->selected_ids.fill(0);
+ return prepare_session_control(prepared);
+}
 ControlSetupResult prepare_session_area_action4_restart_pass_control(const PhaseSessionState& input) {
  validate_phase_session(input);
  const auto& f=input.current.field;
@@ -64,7 +76,8 @@ ControlSetupResult prepare_session_area_action6_control(const PhaseSessionState&
 }
 ControlSetupResult prepare_session_control(const PhaseSessionState& input) {
     validate_phase_session(input);
-    if ((input.phase != FieldSessionPhase::player_control && input.phase != FieldSessionPhase::kickoff_control_pending) || !input.control ||
+    if ((input.phase != FieldSessionPhase::player_control && input.phase != FieldSessionPhase::kickoff_control_pending &&
+         input.phase != FieldSessionPhase::sampled_field_contact_presentation) || !input.control ||
         !input.recovery || !input.experience)
         throw std::invalid_argument("Control setup requires a player-control handoff and captured contexts");
     const auto owner_index = field_motion_index(input.current.field.ball_owner);
@@ -100,6 +113,7 @@ ControlSetupResult prepare_session_control(const PhaseSessionState& input) {
     field.ball_x = x; field.ball_y = y; field.ball_cell = cell;
     recovery.ball_variant = 0;
     field.selected_defenders = 0;
+    if(input.phase==FieldSessionPhase::sampled_field_contact_presentation)state.area_defense.reset();
     if (state.scheduling) state.scheduling->selected_ids.fill(0);
     field.side = field.ball_owner < 11 ? 0 : 11;
     control.facing = field.side == 0 ? 64 : 0;

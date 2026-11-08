@@ -270,12 +270,29 @@ PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& inp
 }
 PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::sampled_field_ai_pass_target || x_fraction!=127 || y_fraction!=0)
+ const bool mixed=input.phase==FieldSessionPhase::sampled_mixed_result4_target;
+ const bool player12=input.phase==FieldSessionPhase::sampled_player12_pass_target;
+ const bool player14=input.phase==FieldSessionPhase::sampled_player14_pass_target;
+ const bool postgoal_player12=player12 && input.score && input.score->left_goals==2 && input.score->right_goals==1 &&
+  input.current.clock.remaining==384 && input.current.clock.extra_time==13;
+ const bool postgoal_mixed=mixed && input.score && input.score->left_goals==2 && input.score->right_goals==1 &&
+  input.current.clock.remaining==385 && input.current.clock.extra_time==13;
+ const bool postgoal=input.phase==FieldSessionPhase::sampled_field_ai_pass_target && input.score &&
+  input.score->left_goals==2 && input.score->right_goals==1 && input.current.clock.remaining==406 && input.current.clock.extra_time==9;
+ if((input.phase!=FieldSessionPhase::sampled_field_ai_pass_target && !mixed && !player12 && !player14) ||
+    x_fraction!=(player14 ? 101 : player12 ? (postgoal_player12 ? 8 : 120) : mixed ? (postgoal_mixed ? 232 : 216) : postgoal ? 143 : 127) ||
+    y_fraction!=(player14 ? 13 : player12 ? (postgoal_player12 ? 255 : 132) : mixed ? (postgoal_mixed ? 255 : 228) : postgoal ? 27 : 0))
   throw std::invalid_argument("Unsupported sampled opponent pass flight input");
  const auto& field=input.current.field;const auto pass=*input.sampled_field_pass;
  if(field_cell_at(field.ball_x,field.ball_y)!=field.ball_cell || field.ball_cell==pass.destination)
   throw std::invalid_argument("Sampled pass flight requires a distinct coherent ball cell");
  auto state=input;state.sampled_field_pass.reset();
+ if(mixed) {
+  state.current.field.selected_defenders=0;state.current.field.elapsed=0;
+  state.scheduling->selected_ids.fill(0);state.area_defense.reset();state.area_sequence_result=255;
+ }
+ // The prior goal retains an internal defender result; this new pass starts a fresh sequence.
+ if(postgoal){state.area_defender_cursor=0;state.area_sequence_result=255;}
  state.area_ai_target=PhaseSessionState::AreaAiTarget{pass.recipient,pass.destination,0};
  state.shot_flight=ShotFlightContext{pass.distance,pass.destination,pass.counter,false};
  BallTrajectoryContext t{static_cast<std::uint16_t>((unsigned(field.ball_x)<<8)|x_fraction),
@@ -288,26 +305,48 @@ PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input
 PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& input,
  std::uint8_t low_x,std::uint8_t low_y,const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::shot_flight_pending)
+ const bool sampled_home_shot=input.phase==FieldSessionPhase::sampled_home_shot_target;
+ const bool score23=input.phase==FieldSessionPhase::sampled_score23_shot_target;
+ if(input.phase!=FieldSessionPhase::shot_flight_pending && !sampled_home_shot && !score23)
   throw std::invalid_argument("Flight setup requires a saved shot destination");
+ if(sampled_home_shot && (low_x!=116 || low_y!=92))
+  throw std::invalid_argument("Home shot flight requires the observed fractional position");
+ const bool player17=score23 && input.current.field.ball_owner==17;
+ if(score23 && (low_x!=(player17 ? 116 : 44) || low_y!=(player17 ? 105 : 73)))
+  throw std::invalid_argument("Sampled opponent shot flight requires its observed fractional position");
  const auto& f=input.current.field;
  if(field_cell_at(f.ball_x,f.ball_y)!=f.ball_cell)
   throw std::invalid_argument("Flight requires coherent current ball coordinates/cell");
  auto state=input;
+ // The observed 1-1 restart shot runs DD08's zero write before the flight entry.
+ const bool sampled_restart_shot=input.saved_ball_flight_flag && input.score && input.kickoff_formation &&
+  input.score->left_goals==1 && input.score->right_goals==1 && input.score->kickoff==4 &&
+  f.side==0 && f.ball_owner==5 && f.ball_x==108 && f.ball_y==108 && f.ball_cell==87 &&
+  !f.random_first && !f.random_second && input.current.clock.remaining==432 && input.current.clock.extra_time==5 &&
+  input.action->action==0 && input.action->power==22 && input.recovery->attack_subtype==128 &&
+  input.shot_flight->destination==233 && input.shot_flight->distance==108 && !input.shot_flight->loose_ball;
+ if(sampled_restart_shot || sampled_home_shot || score23)state.saved_ball_flight_flag=0;
  BallTrajectoryContext t{static_cast<std::uint16_t>((unsigned(f.ball_x)<<8)|low_x),
-  static_cast<std::uint16_t>((unsigned(f.ball_y)<<8)|low_y),0,0,input.recovery->x_jitter_control,input.saved_ball_flight_flag};
+  static_cast<std::uint16_t>((unsigned(f.ball_y)<<8)|low_y),0,0,input.recovery->x_jitter_control,state.saved_ball_flight_flag};
  state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
  state.current.field.elapsed=0;state.shot_progress.reset();
+ if(sampled_home_shot){state.area_defense.reset();state.area_defender_cursor=0;}
  if(f.ball_cell==input.shot_flight->destination)state.phase=FieldSessionPhase::ball_already_arrived;
  else {
   t.direction=calculate_player_direction({t.x,t.y,input.shot_flight->destination,0},f.ball_cell,geometry);
   const auto v=calculate_ball_velocity(t.direction,velocity);t.vx=v.x;t.vy=v.y;
-  state.recovery->x_jitter_control=t.direction;state.phase=FieldSessionPhase::ball_advance_ready;
+  state.recovery->x_jitter_control=t.direction;state.phase=score23 ? FieldSessionPhase::sampled_score23_ball_advance_ready : FieldSessionPhase::ball_advance_ready;
  }
  state.ball_trajectory=t;validate_phase_session(state);return state;
 }
 PhaseSessionState continue_session_unopposed_arrival(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::sampled_score23_ball_arrival_callback) {
+  auto state=input;state.current.field.selected_defenders=1;state.scheduling->selected_ids.fill(0);
+  state.action->menu_route=4;state.action->cursor=0;state.control->motion_requested=0;
+  state.shot_flight.reset();state.ball_trajectory.reset();state.phase=FieldSessionPhase::sampled_score23_keeper_prompt;
+  validate_phase_session(state);return state;
+ }
  if(input.phase==FieldSessionPhase::shot_pass_defenders_done) {
   auto state=input;state.area_defender_cursor=0;
   state.phase=input.shot_flight->loose_ball ? FieldSessionPhase::shot_loose_recovery : FieldSessionPhase::shot_keeper_entry;
@@ -368,7 +407,8 @@ PhaseSessionState resolve_session_area_ball_cell(const PhaseSessionState& input)
 }
 PhaseSessionState resolve_session_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::ball_cell_callback)
+ const bool score23=input.phase==FieldSessionPhase::sampled_score23_ball_cell_callback;
+ if(input.phase!=FieldSessionPhase::ball_cell_callback && !score23)
   throw std::invalid_argument("No pending ball cell callback");
  FlightDefenderSelectionInput selection{};
  const auto& field=input.current.field;
@@ -381,7 +421,7 @@ PhaseSessionState resolve_session_ball_cell(const PhaseSessionState& input) {
  auto state=input;auto& count=state.current.field.selected_defenders;
  const auto capacity=field.side==0 ? 5u : 4u;
  for(auto id:selected){if(count>=capacity)break;state.scheduling->selected_ids[count++]=id;}
- state.phase=FieldSessionPhase::ball_advance_ready;validate_phase_session(state);return state;
+ state.phase=score23 ? FieldSessionPhase::sampled_score23_ball_advance_ready : FieldSessionPhase::ball_advance_ready;validate_phase_session(state);return state;
 }
 SessionBallStepResult advance_prepared_area_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
@@ -396,13 +436,15 @@ SessionBallStepResult advance_prepared_area_ball_cell(const PhaseSessionState& i
 }
 SessionBallStepResult advance_prepared_session_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::ball_advance_ready)
+ const bool score23=input.phase==FieldSessionPhase::sampled_score23_ball_advance_ready;
+ if(input.phase!=FieldSessionPhase::ball_advance_ready && !score23)
   throw std::invalid_argument("Ball step requires acknowledged frame and pending numeric flight");
  auto state=input;auto& t=*state.ball_trajectory;
  const auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},state.current.field.ball_cell,state.shot_flight->destination});
  t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;
  state.current.field.ball_cell=step.cell;
- state.phase=step.event==BallStepEvent::cell_changed ? FieldSessionPhase::ball_cell_callback : FieldSessionPhase::ball_arrival_callback;
+ state.phase=score23 ? (step.event==BallStepEvent::cell_changed ? FieldSessionPhase::sampled_score23_ball_cell_callback : FieldSessionPhase::sampled_score23_ball_arrival_callback) :
+  (step.event==BallStepEvent::cell_changed ? FieldSessionPhase::ball_cell_callback : FieldSessionPhase::ball_arrival_callback);
  validate_phase_session(state);return {std::move(state),step};
 }
 }

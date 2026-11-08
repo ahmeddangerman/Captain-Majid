@@ -5,7 +5,7 @@
 #include <vector>
 
 namespace captain {
-enum class FieldSessionPhase : std::uint8_t {
+enum class FieldSessionPhase : std::uint16_t {
     field = 0, player_control = 1, ball_recovery = 2, added_time = 3, period_end = 4,
     boundary_restart = 5, recovered_owner = 6, keeper_interaction = 7, story_transition = 8,
     control_ready = 9, control_clock_pending = 10, action_menu_pending = 11, ai_cell_decision = 12,
@@ -24,7 +24,7 @@ enum class FieldSessionPhase : std::uint8_t {
     area_action6_destination_pending = 104, area_pass_keeper_prepared = 105,
     area_action6_race_winner = 106, area_action6_race_timeout = 107,
     area_action6_control_pending = 108, area_action6_recovered_owner = 109,
-    area_action6_recovered_control = 110, area_action6_control_ready = 113,
+    area_action6_recovered_control = 110, sampled_player3_pass_handoff = 111, sampled_player3_empty_pass_destination = 112, area_action6_control_ready = 113,
     area_pass_defenders_pending = 114, area_pass_defender_announced = 115,
     area_pass_defender_prepared = 116, area_pass_defender_compared = 117,
     area_pass_variant_restored = 118, area_pass_result_handler_entry = 119,
@@ -53,7 +53,38 @@ enum class FieldSessionPhase : std::uint8_t {
     area_action4_control_clock = 164, area_action4_field_round = 165,
     area_action4_goal_area = 166, area_action4_added_time = 167, area_action4_period_end = 168,
     area_action4_keeper_entry = 169, area_action4_keeper_presented = 170,
-    area_action4_keeper_prepared = 171, area_action4_keeper_stamina_done = 172, area_action4_keeper_compared = 173, area_action4_keeper_dispatch_entry = 174, area_action4_keeper_result0_entry = 175, area_action4_keeper_result1_recovery = 176, area_action4_keeper_result1_boundary_check = 177, area_action4_keeper_result1_restart_entry = 178, area_action4_keeper_restart_prepared = 179, area_action4_keeper_restart_formation = 180, area_action4_keeper_restart_power = 181, area_action4_restart_clock_done = 182, area_action4_restart_added_time = 183, area_action4_restart_period_end = 184, area_action4_restart_action1_entry = 185, area_action4_restart_pass_entry = 186, area_action4_keeper_result0_goal = 187, sampled_loose_shot_defender_prepared = 188, sampled_loose_shot_defender_compared = 189, sampled_keeper_result4_restart = 190, sampled_keeper_result4_formation = 191, sampled_keeper_result4_action = 192, sampled_keeper_result4_extra_time = 193, sampled_field_ai_choice = 194, sampled_field_ai_prepared = 195, sampled_field_ai_presented = 196, sampled_field_ai_dispatch = 197, sampled_field_ai_pass_presented = 198, sampled_field_ai_pass_handoff = 199, sampled_field_ai_pass_target = 200, sampled_opponent_contact_presented = 201
+    area_action4_keeper_prepared = 171, area_action4_keeper_stamina_done = 172, area_action4_keeper_compared = 173, area_action4_keeper_dispatch_entry = 174, area_action4_keeper_result0_entry = 175, area_action4_keeper_result1_recovery = 176, area_action4_keeper_result1_boundary_check = 177, area_action4_keeper_result1_restart_entry = 178, area_action4_keeper_restart_prepared = 179, area_action4_keeper_restart_formation = 180, area_action4_keeper_restart_power = 181, area_action4_restart_clock_done = 182, area_action4_restart_added_time = 183, area_action4_restart_period_end = 184, area_action4_restart_action1_entry = 185, area_action4_restart_pass_entry = 186, area_action4_keeper_result0_goal = 187, sampled_loose_shot_defender_prepared = 188, sampled_loose_shot_defender_compared = 189, sampled_keeper_result4_restart = 190, sampled_keeper_result4_formation = 191, sampled_keeper_result4_action = 192, sampled_keeper_result4_extra_time = 193, sampled_field_ai_choice = 194, sampled_field_ai_prepared = 195, sampled_field_ai_presented = 196, sampled_field_ai_dispatch = 197, sampled_field_ai_pass_presented = 198, sampled_field_ai_pass_handoff = 199, sampled_field_ai_pass_target = 200, sampled_opponent_contact_presented = 201, sampled_field_defense_prompt = 202, sampled_field_defense_poll = 203, sampled_field_defense_preparation = 204, sampled_field_defense_complete = 205, sampled_field_contact_ai_choice = 206, sampled_field_contact_ai_prepared = 207, sampled_field_contact_presentation = 208, sampled_opponent_shot_choice = 209, sampled_opponent_shot_prepared = 210, sampled_opponent_shot_presented = 211, sampled_opponent_shot_clock = 212, sampled_opponent_shot_approach = 213, sampled_opponent_shot_handoff = 214, sampled_mixed_defense_ai_choice = 215, sampled_mixed_defense_ai_prepared = 216, sampled_mixed_defender_prepared = 217, sampled_mixed_defender_compared = 218, sampled_shot_keeper_prompt = 219, sampled_shot_keeper_selected = 220, sampled_shot_keeper_confirmed = 221, sampled_shot_keeper_precompare = 222, sampled_shot_keeper_compared = 223, sampled_opponent_goal_scored = 224, sampled_opponent_goal_presented = 225, sampled_opponent_goal_restart = 226, sampled_mixed_defender_result4 = 227, sampled_mixed_result4_pass = 228, sampled_mixed_result4_target = 229, sampled_player12_ai_choice = 230, sampled_player12_ai_prepared = 231, sampled_player12_ai_presented = 232, sampled_player12_ai_dispatch = 233, sampled_player12_pass_handoff = 234, sampled_player12_pass_target = 235, sampled_player19_shot_choice = 236, sampled_player19_shot_prepared = 237, sampled_home_shot_defender_choice = 238, sampled_home_shot_defender_resolved = 239, sampled_home_shot_contact_clock = 240, sampled_home_shot_dispatch_clock = 241, sampled_home_shot_handoff = 242, sampled_home_shot_target = 243, sampled_human_pass_target = 244, sampled_human_pass_empty_confirmed = 245, sampled_human_pass_cancel_pending = 246, sampled_human_pass_prepared = 247, sampled_human_pass_handoff = 248, sampled_player3_pass_target = 249, sampled_player3_empty_confirmed = 250, sampled_player3_pass_prepared = 251, sampled_player3_defender_prepared = 252, sampled_player3_defender_compared = 253, sampled_player3_contact_clock = 254, sampled_player3_dispatch_clock = 255
+    , sampled_player14_ai_choice = 256, sampled_player14_ai_prepared = 257,
+    sampled_player14_ai_presented = 258, sampled_player14_ai_dispatch = 259, sampled_player14_pass_handoff = 260,
+    sampled_player14_pass_target = 261, sampled_player19_return_shot_choice = 262,
+    sampled_player19_return_shot_prepared = 263, sampled_player19_return_shot_presented = 264,
+    sampled_player19_return_shot_clock = 265, sampled_player19_return_shot_approach = 266,
+    sampled_player19_return_shot_handoff = 267, sampled_player19_return_keeper_prompt = 268,
+    sampled_player19_return_keeper_selected = 269, sampled_player19_return_keeper_confirmed = 270,
+    sampled_player19_return_keeper_precompare = 271, sampled_player19_return_keeper_compared = 272,
+    sampled_player19_return_goal_scored = 273, sampled_player19_return_goal_presented = 274,
+    sampled_player19_return_goal_restart = 275, sampled_score23_pass_target = 276,
+    sampled_score23_empty_confirmed = 277, sampled_score23_pass_cancel = 278,
+    sampled_score23_pass_prepared = 279, sampled_score23_defender_prepared = 280,
+    sampled_score23_defender_compared = 281, sampled_score23_contact_clock = 282,
+    sampled_score23_dispatch_clock = 283, sampled_score23_pass_handoff = 284,
+    sampled_score23_shot_choice = 285, sampled_score23_shot_prepared = 286,
+    sampled_score23_shot_presented = 287, sampled_score23_shot_clock = 288,
+    sampled_score23_shot_approach = 289, sampled_score23_shot_handoff = 290,
+    sampled_score23_shot_target = 291, sampled_score23_ball_advance_ready = 292,
+    sampled_score23_ball_cell_callback = 293, sampled_score23_ball_arrival_callback = 294,
+    sampled_score23_keeper_prompt = 295, sampled_score23_keeper_selected = 296,
+    sampled_score23_keeper_confirmed = 297, sampled_score23_keeper_precompare = 298,
+    sampled_score23_keeper_compared = 299, sampled_score24_goal_scored = 300,
+    sampled_score24_goal_presented = 301, sampled_score24_goal_restart = 302,
+    sampled_score24_dribble_choice = 303, sampled_score24_dribble_prepared = 304,
+    sampled_score24_dribble_defender = 305, sampled_score24_dribble_compared = 306,
+    sampled_score24_dribble_clock = 307, sampled_score24_dribble_field = 308,
+    sampled_score24_dribble_possession = 309, sampled_score25_pass_target = 310,
+    sampled_score25_player7_confirmed = 311, sampled_score25_pass_cancel = 312,
+    sampled_score25_pass_defenses = 313, sampled_score25_pass_prepared = 314,
+    sampled_score25_first_defender_prepared = 315, sampled_score25_first_defender_compared = 316,
+    sampled_score25_first_contact_clock = 317
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;
@@ -102,6 +133,9 @@ struct AreaContactContext {
 struct AreaAction4RestartContext { std::uint8_t action=0,subtype=0,choice=0; };
 struct AreaAction4RestartPowerContext { std::uint16_t cost=0,power=0; };
 struct SampledFieldPassContext { std::uint8_t recipient=0,destination=0,counter=0,distance=0; };
+struct HumanDefenseChoices {
+    std::array<std::uint8_t,5> actions{},subtypes{};
+};
 struct AreaPassContactContext { std::uint8_t saved_ball_variant=0; std::uint16_t captured_cost=0; };
 struct PhaseSessionState {
     ContactPreludeState current;
@@ -118,8 +152,12 @@ struct PhaseSessionState {
     std::optional<RestartOptionsContext> restart_options{};
     std::optional<ShotFlightContext> shot_flight{};
     std::optional<SampledFieldPassContext> sampled_field_pass{};
+    std::optional<HumanDefenseChoices> human_defense_choices{};
+    std::optional<std::uint8_t> human_pass_cursor{};
+    std::uint8_t human_pass_steps=0;
     std::optional<BallTrajectoryContext> ball_trajectory{};
     std::optional<KeeperDecisionContext> keeper_decision{};
+    std::optional<std::uint8_t> keeper_menu_action{};
     std::optional<MatchScoreContext> score{};
     std::optional<KickoffFormationContext> kickoff_formation{};
     std::optional<std::uint8_t> kickoff_receiver{};

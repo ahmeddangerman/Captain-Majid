@@ -2,6 +2,8 @@
 #include "captain/phase_session.hpp"
 #include "captain/shot_content.hpp"
 namespace captain {
+// Bounded home-keeper comparison for the observed sampled opponent shot.
+PhaseSessionState compare_sampled_home_goalkeeper(const PhaseSessionState& input,const ShotContent& content);
 // Prepared DD1C dispatch through normal8509 or stunned8900, before presentation.
 PhaseSessionState prepare_session_keeper_entry(const PhaseSessionState& input);
 // Original8900..8917: explicit descending thresholds, final threshold zero.

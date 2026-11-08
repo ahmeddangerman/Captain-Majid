@@ -1,5 +1,6 @@
 #include "captain/recovery_session.hpp"
 #include "captain/defender_selection.hpp"
+#include "captain/clearance_race.hpp"
 #include <stdexcept>
 #include <utility>
 
@@ -17,14 +18,35 @@ PhaseSessionState continue_session_area_pass_blocked_recovery(const PhaseSession
 }
 PhaseSessionState continue_sampled_field_pass_control(const PhaseSessionState& input) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::area_pass_keeper_entry || !input.area_ai_target || !input.ball_trajectory || !input.shot_flight || !input.score ||
-    input.current.field.side!=11 || input.current.field.ball_owner!=19 || input.current.field.ball_x!=119 || input.current.field.ball_y!=140 ||
-    input.current.field.ball_cell!=103 || input.current.field.selected_defenders || input.current.field.random_first || input.current.field.random_second ||
-    input.current.clock.remaining!=443 || input.current.clock.extra_time!=5 || input.experience->opponent_stage ||
-    input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 || input.action->action!=1 || input.action->power!=21 ||
-    input.area_ai_target->recipient!=19 || input.area_ai_target->cell!=103 || input.ball_trajectory->flags!=1 || input.control->facing!=64)
+ if(input.phase!=FieldSessionPhase::area_pass_keeper_entry || !input.area_ai_target || !input.ball_trajectory || !input.shot_flight || !input.score || !input.experience || !input.action || !input.control)
   throw std::invalid_argument("Unsupported sampled opponent pass control handoff");
- auto state=input;state.control->facing=0;state.saved_ball_flight_flag=state.ball_trajectory->flags;
+ const bool first=input.current.field.ball_owner==19 && input.current.field.ball_x==119 && input.current.field.ball_y==140 &&
+    input.current.field.ball_cell==103 && input.current.clock.remaining==443 && input.current.clock.extra_time==5 &&
+    input.action->power==21 && input.area_ai_target->recipient==19 && input.area_ai_target->cell==103;
+ const bool mixed=input.current.field.ball_owner==12 && input.current.field.ball_x==138 && input.current.field.ball_y==164 &&
+    input.current.field.ball_cell==142 && input.current.clock.remaining==422 && input.current.clock.extra_time==9 &&
+    input.action->power==24 && input.area_ai_target->recipient==12 && input.area_ai_target->cell==142;
+ const bool postgoal_mixed=input.current.field.ball_owner==12 && input.current.field.ball_x==137 && input.current.field.ball_y==164 &&
+    input.current.field.ball_cell==142 && input.current.clock.remaining==385 && input.current.clock.extra_time==13 &&
+    input.action->power==24 && input.area_ai_target->recipient==12 && input.area_ai_target->cell==142;
+ const bool return19=input.current.field.ball_owner==19 && input.current.field.ball_x==100 && input.current.field.ball_y==140 &&
+    input.current.field.ball_cell==79 && input.current.clock.remaining==421 && input.current.clock.extra_time==9 &&
+    input.action->power==21 && input.area_ai_target->recipient==19 && input.area_ai_target->cell==79;
+ const bool postgoal_return19=input.current.field.ball_owner==19 && input.current.field.ball_x==99 && input.current.field.ball_y==141 &&
+    input.current.field.ball_cell==79 && input.current.clock.remaining==384 && input.current.clock.extra_time==13 &&
+    input.action->power==21 && input.area_ai_target->recipient==19 && input.area_ai_target->cell==79;
+ const bool postgoal=input.current.field.ball_owner==19 && input.current.field.ball_x==118 && input.current.field.ball_y==141 &&
+    input.current.field.ball_cell==103 && input.current.clock.remaining==406 && input.current.clock.extra_time==9 &&
+    input.action->power==21 && input.area_ai_target->recipient==19 && input.area_ai_target->cell==103;
+ const bool player14_return=input.current.field.ball_owner==19 && input.current.field.ball_x==91 && input.current.field.ball_y==109 &&
+    input.current.field.ball_cell==63 && input.current.clock.remaining==363 && input.current.clock.extra_time==13 &&
+    input.action->power==21 && input.area_ai_target->recipient==19 && input.area_ai_target->cell==63;
+ if((!first && !mixed && !postgoal_mixed && !return19 && !postgoal_return19 && !postgoal && !player14_return) || input.current.field.side!=11 || input.current.field.selected_defenders ||
+    input.current.field.random_first || input.current.field.random_second || input.experience->opponent_stage ||
+    (player14_return ? (input.score->left_goals!=2 || input.score->right_goals!=2) : (postgoal || postgoal_mixed || postgoal_return19) ? (input.score->left_goals!=2 || input.score->right_goals!=1) : (input.score->left_goals!=1 || input.score->right_goals!=0)) || input.score->kickoff!=4 || input.action->action!=1 ||
+    input.ball_trajectory->flags!=1 || input.control->facing!=((postgoal_mixed || player14_return) ? 0 : 64))
+  throw std::invalid_argument("Unsupported sampled opponent pass control handoff");
+ auto state=input;if(first || postgoal_return19)state.control->facing=0;if(postgoal_mixed)state.control->facing=64;state.saved_ball_flight_flag=state.ball_trajectory->flags;
  state.area_ai_target.reset();state.shot_flight.reset();state.ball_trajectory.reset();state.phase=FieldSessionPhase::player_control;
  validate_phase_session(state);return state;
 }
@@ -142,6 +164,26 @@ RecoverySessionResult recover(const PhaseSessionState& input,
     return result;
 }
 
+}
+RecoverySessionResult resolve_sampled_human_empty_pass_recovery(const PhaseSessionState& input,
+ const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,const ClearanceRaceContent& content) {
+ validate_phase_session(input);
+ const bool score23=input.phase==FieldSessionPhase::sampled_score23_pass_handoff;
+ if((input.phase!=FieldSessionPhase::sampled_human_pass_handoff && !score23) || input.recovery->opposing_player!=(score23 ? 17 : 1) ||
+    input.current.field.ball_cell!=87 || input.current.field.selected_defenders!=(score23 ? 1 : 0) || !input.human_pass_cursor ||
+    *input.human_pass_cursor!=87 || input.saved_ball_flight_flag)
+  throw std::invalid_argument("Unsupported sampled human empty-pass contest");
+ auto race=resolve_field_loose_ball_race(input.current.field,input.recovery->opposing_player,2,mappings,movement,content);
+ if(race.rounds!=2 || race.remaining || race.active_candidate!=(score23 ? 1 : 3) || race.opposing_candidate!=(score23 ? 19 : 17) || race.winner)
+  throw std::invalid_argument("Unverified sampled human empty-pass contest outcome");
+ auto prepared=input;prepared.current.field=std::move(race.field);prepared.saved_ball_flight_flag=1;
+ if(score23) {prepared.current.field.selected_defenders=0;prepared.scheduling->selected_ids.fill(0);prepared.area_contact.reset();}
+ prepared.human_pass_cursor.reset();prepared.human_pass_steps=0;prepared.phase=FieldSessionPhase::ball_recovery;
+ validate_phase_session(prepared);
+ auto result=recover(prepared,{},false,false,mappings,movement,FieldSessionPhase::recovered_owner);
+ if(!result.recipient || result.recipient->ball_owner!=(score23 ? 19 : 3) || result.request_possession_sound!=score23)
+  throw std::invalid_argument("Unverified sampled human empty-pass recovery outcome");
+ return result;
 }
 RecoverySessionResult advance_session_keeper_punch_recovery(const PhaseSessionState& input,
  const PlayerProfileMappings& primary,const FieldPhaseContent& movement) {
@@ -333,6 +375,10 @@ PhaseSessionState continue_session_recovery(const PhaseSessionState& post_presen
     if(state.control && state.kickoff_formation && state.score && state.score->left_goals==0 && state.score->right_goals==1 && state.score->kickoff==4 &&
        field.side==0 && field.ball_owner==8 && field.ball_x==140 && field.ball_y==140 && field.ball_cell==209 &&
        field.random_first==0 && field.random_second==128 && state.recovery->opposing_player==19 && state.recovery->x_jitter_control==128)
+        state.control->facing=0;
+    if(state.control && state.kickoff_formation && state.score && state.score->left_goals==2 && state.score->right_goals==3 && state.score->kickoff==4 &&
+       state.current.clock.remaining==353 && field.side==11 && field.ball_owner==19 && field.ball_x==108 && field.ball_y==108 &&
+       field.ball_cell==87 && state.recovery->opposing_player==17 && state.saved_ball_flight_flag==1)
         state.control->facing=0;
     state.phase = FieldSessionPhase::player_control;
     validate_phase_session(state);

@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'z') && version!=128 && version!=129 && version!=130 && version!=131 && version!=132 && version!=133 && version!=134 && version!=135 && version!=136 && version!=137 && version!=138)
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'z') && version!=128 && version!=129 && version!=130 && version!=131 && version!=132 && version!=133 && version!=134 && version!=135 && version!=136 && version!=137 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146)
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -35,10 +35,28 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.current.clock.extra_time = byte(input); state.current.clock.flags = byte(input);
     state.current.clock.script_flags = byte(input); state.current.clock.ball_mode = byte(input);
     state.current.shared_recovery_flags = byte(input); state.current.shared_recovery_timer = byte(input);
-    state.phase = static_cast<FieldSessionPhase>(byte(input));
+    const auto phase_low=byte(input);
+    const auto phase_high=version==143 || version==144 || version==145 || version==146 ? byte(input) : 0;
+    state.phase = static_cast<FieldSessionPhase>(unsigned(phase_low) | (unsigned(phase_high)<<8));
+    if((version==143 || version==144 || version==145 || version==146) && static_cast<unsigned>(state.phase)<256)
+        throw std::invalid_argument("Extended session version requires a two-byte phase");
+    if((version==144)!=(state.phase==FieldSessionPhase::sampled_player14_pass_target))
+        throw std::invalid_argument("Extended pass target requires session version144");
+    if((version==145)!=((static_cast<unsigned>(state.phase)>=269 && static_cast<unsigned>(state.phase)<=275) ||
+       (static_cast<unsigned>(state.phase)>=296 && static_cast<unsigned>(state.phase)<=302)))
+        throw std::invalid_argument("Extended goalkeeper choice requires session version145");
+    if((version==146)!=((static_cast<unsigned>(state.phase)>=276 && static_cast<unsigned>(state.phase)<=284) ||
+       (static_cast<unsigned>(state.phase)>=310 && static_cast<unsigned>(state.phase)<=317)))
+        throw std::invalid_argument("Extended human pass cursor requires session version146");
     if(version<133 && (static_cast<unsigned>(state.phase)==188 || static_cast<unsigned>(state.phase)==189))throw std::invalid_argument("Prepared sampled loose defender requires session version67");
+    if((version==139)!=(static_cast<unsigned>(state.phase)==220 || static_cast<unsigned>(state.phase)==221 || static_cast<unsigned>(state.phase)==222 || static_cast<unsigned>(state.phase)==223 || static_cast<unsigned>(state.phase)==224 || static_cast<unsigned>(state.phase)==225 || static_cast<unsigned>(state.phase)==226))
+        throw std::invalid_argument("Keeper menu selection requires session version73");
     if((version==138)!=(static_cast<unsigned>(state.phase)==200))
         throw std::invalid_argument("Sampled field pass target requires session version72");
+    if((version==140)!=(static_cast<unsigned>(state.phase)==229 || static_cast<unsigned>(state.phase)==235))throw std::invalid_argument("Mixed pass target requires session version74");
+    if((version==141)!=((static_cast<unsigned>(state.phase)==111 || static_cast<unsigned>(state.phase)==112) || (static_cast<unsigned>(state.phase)>=244 && static_cast<unsigned>(state.phase)<=255)))throw std::invalid_argument("Human pass cursor requires session version75");
+    if(version==142 && state.phase!=FieldSessionPhase::attack_choice_pending && state.phase!=FieldSessionPhase::attack_prepared)
+        throw std::invalid_argument("Five human defender choices require their supported phases");
     if(version<137 && static_cast<unsigned>(state.phase)==186)
         throw std::invalid_argument("Prepared area restart pass requires session version71");
     if(version<136 && ((static_cast<unsigned>(state.phase)>=181 && static_cast<unsigned>(state.phase)<=186) || static_cast<unsigned>(state.phase)==192 || static_cast<unsigned>(state.phase)==193))
@@ -350,13 +368,21 @@ PhaseSessionState load_phase_session(std::istream& input) {
         else if(low || high)throw std::invalid_argument("Invalid absent area pass context");
     }
     if(version>=133 && version!=138)state.saved_ball_flight_flag=byte(input);
-    if(version>=135 && version!=138)state.area_action4_restart=AreaAction4RestartContext{byte(input),byte(input),byte(input)};
-    if(version>=136 && version!=138) {
+    if(version>=135 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146)state.area_action4_restart=AreaAction4RestartContext{byte(input),byte(input),byte(input)};
+    if(version>=136 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146) {
         const auto cost_low=byte(input),cost_high=byte(input),power_low=byte(input),power_high=byte(input);
         state.area_action4_restart_power=AreaAction4RestartPowerContext{static_cast<std::uint16_t>(unsigned(cost_low)|(unsigned(cost_high)<<8)),static_cast<std::uint16_t>(unsigned(power_low)|(unsigned(power_high)<<8))};
     }
-    if(version>=137 && version!=138)state.area_action4_restart_pass_counter=byte(input);
-    if(version==138)state.sampled_field_pass=SampledFieldPassContext{byte(input),byte(input),byte(input),byte(input)};
+    if(version>=137 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146)state.area_action4_restart_pass_counter=byte(input);
+    if(version==138 || version==140 || version==144 || (version==141 && state.phase==FieldSessionPhase::sampled_player3_empty_pass_destination))state.sampled_field_pass=SampledFieldPassContext{byte(input),byte(input),byte(input),byte(input)};
+    if(version==139 || version==145)state.keeper_menu_action=byte(input);
+    if(version==141 || version==146) {state.human_pass_cursor=byte(input);state.human_pass_steps=byte(input);}
+    if(version==142) {
+        HumanDefenseChoices choices{};
+        for(auto& action:choices.actions)action=byte(input);
+        for(auto& subtype:choices.subtypes)subtype=byte(input);
+        state.human_defense_choices=choices;
+    }
     if(version<'k' && state.phase==FieldSessionPhase::human_action_menu && state.keeper_area)
         throw std::invalid_argument("Keeper-area menu requires session version46");
     if(version<'l' && state.phase==FieldSessionPhase::attack_choice_pending && state.keeper_area)
@@ -408,16 +434,19 @@ PhaseSessionState load_phase_session(std::istream& input) {
 void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     validate_phase_session(state);
     output.write(magic, sizeof(magic) - 1);
+    const bool extended=static_cast<unsigned>(state.phase)>=256;
     const bool action4_continuation=(static_cast<unsigned>(state.phase)>=160 && static_cast<unsigned>(state.phase)<=187) || static_cast<unsigned>(state.phase)==190 || static_cast<unsigned>(state.phase)==191 || static_cast<unsigned>(state.phase)==192 || static_cast<unsigned>(state.phase)==193;
-    byte(output, state.sampled_field_pass ? 138 : state.area_action4_restart_pass_counter ? 137 : state.area_action4_restart_power ? 136 : state.area_action4_restart ? 135 : action4_continuation ? 134 : (state.saved_ball_flight_flag || state.phase==FieldSessionPhase::shot_pass_defenders_pending || state.phase==FieldSessionPhase::shot_pass_defender_announced || (state.phase==FieldSessionPhase::sampled_loose_shot_defender_prepared || state.phase==FieldSessionPhase::sampled_loose_shot_defender_compared)) ? 133 : state.area_pass_contact ? 132 : (static_cast<unsigned>(state.phase)>=96 || (state.phase==FieldSessionPhase::keeper_area_attack_continuation && state.area_defense)) ? 131 : 130);
+    byte(output, extended ? (state.human_pass_cursor ? 146 : state.keeper_menu_action ? 145 : state.sampled_field_pass ? 144 : 143) : state.human_defense_choices ? 142 : state.human_pass_cursor ? 141 : state.keeper_menu_action ? 139 : (state.phase==FieldSessionPhase::sampled_mixed_result4_target || state.phase==FieldSessionPhase::sampled_player12_pass_target) ? 140 : state.sampled_field_pass ? 138 : state.area_action4_restart_pass_counter ? 137 : state.area_action4_restart_power ? 136 : state.area_action4_restart ? 135 : action4_continuation ? 134 : (state.saved_ball_flight_flag || state.phase==FieldSessionPhase::shot_pass_defenders_pending || state.phase==FieldSessionPhase::shot_pass_defender_announced || (state.phase==FieldSessionPhase::sampled_loose_shot_defender_prepared || state.phase==FieldSessionPhase::sampled_loose_shot_defender_compared)) ? 133 : state.area_pass_contact ? 132 : (static_cast<unsigned>(state.phase)>=96 || (state.phase==FieldSessionPhase::keeper_area_attack_continuation && state.area_defense)) ? 131 : 130);
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
     for (const auto value : {state.current.clock.extra_time, state.current.clock.flags,
          state.current.clock.script_flags, state.current.clock.ball_mode,
-         state.current.shared_recovery_flags, state.current.shared_recovery_timer,
-         static_cast<std::uint8_t>(state.phase), static_cast<std::uint8_t>(state.pending ? 1 : 0)})
+         state.current.shared_recovery_flags, state.current.shared_recovery_timer})
         byte(output, value);
+    byte(output,static_cast<std::uint8_t>(state.phase));
+    if(extended)byte(output,static_cast<std::uint8_t>(static_cast<unsigned>(state.phase)>>8));
+    byte(output,static_cast<std::uint8_t>(state.pending ? 1 : 0));
     const auto contact = state.pending.value_or(PendingTerminalContact{0, 0, 0, 0});
     for (const auto value : {contact.result_code, contact.defender_id, contact.defense_action, contact.defense_subtype})
         byte(output, value);
@@ -511,7 +540,7 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
         area.strength,area.loss,area.score,area.result,static_cast<std::uint8_t>(area.weakened)})byte(output,value);
     byte(output,state.area_defender_cursor);
     byte(output,state.area_sequence_result);
-    const bool flight_flag_encoded=state.saved_ball_flight_flag || action4_continuation ||
+    const bool flight_flag_encoded=extended || state.saved_ball_flight_flag || state.human_pass_cursor || state.keeper_menu_action || action4_continuation ||
         state.phase==FieldSessionPhase::shot_pass_defenders_pending || state.phase==FieldSessionPhase::shot_pass_defender_announced ||
         state.phase==FieldSessionPhase::sampled_loose_shot_defender_prepared || state.phase==FieldSessionPhase::sampled_loose_shot_defender_compared;
     if(state.area_pass_contact) {
@@ -523,6 +552,12 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     if(state.area_action4_restart_power) {byte(output,state.area_action4_restart_power->cost&255);byte(output,state.area_action4_restart_power->cost>>8);byte(output,state.area_action4_restart_power->power&255);byte(output,state.area_action4_restart_power->power>>8);}
     if(state.area_action4_restart_pass_counter)byte(output,*state.area_action4_restart_pass_counter);
     if(state.sampled_field_pass)for(const auto value:{state.sampled_field_pass->recipient,state.sampled_field_pass->destination,state.sampled_field_pass->counter,state.sampled_field_pass->distance})byte(output,value);
+    if(state.keeper_menu_action)byte(output,*state.keeper_menu_action);
+    if(state.human_pass_cursor) {byte(output,*state.human_pass_cursor);byte(output,state.human_pass_steps);}
+    if(state.human_defense_choices) {
+        for(auto action:state.human_defense_choices->actions)byte(output,action);
+        for(auto subtype:state.human_defense_choices->subtypes)byte(output,subtype);
+    }
     if (!output) throw std::invalid_argument("Unable to write phase session");
 }
 }

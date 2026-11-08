@@ -3,6 +3,7 @@
 #include "captain/ball_recovery.hpp"
 
 namespace captain {
+struct ClearanceRaceContent;
 struct RecoverySessionResult {
     PhaseSessionState state;
     std::optional<FieldPhaseResult> movement{};
@@ -10,6 +11,10 @@ struct RecoverySessionResult {
     bool special_owner_cleared = false;
     bool request_possession_sound = false;
 };
+// Calculates the observed same-cell timeout and recovery after the caller has
+// acknowledged the original timeout script; no live presentation is implied.
+RecoverySessionResult resolve_sampled_human_empty_pass_recovery(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,const ClearanceRaceContent& race);
 // Supported original8BDF..8C31 sequence; selected-defender count must be zero.
 // Uses staged inputs without synthesizing frame/NMI randomness.
 RecoverySessionResult advance_session_keeper_punch_recovery(const PhaseSessionState& input,

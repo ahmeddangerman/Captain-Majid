@@ -50,10 +50,28 @@ ActionMenuResult redraw_keeper_area_special(const PhaseSessionState& input,const
 ActionMenuResult continue_keeper_area_special(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
 // Ordinary field choices only; available special options stay pending. No energy charge.
 ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,const AreaDefenseMenuContent& content);
+// Bounded initial human-keeper menu input; icon IDs are supplied by private content.
+ActionMenuResult poll_sampled_goalkeeper_prompt(const PhaseSessionState& input, std::uint8_t pressed,
+ const std::array<std::uint8_t,2>& icons);
+ActionMenuResult acknowledge_sampled_goalkeeper_overlay(const PhaseSessionState& input);
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,
                                       const ActionMenuContent& content);
 struct SessionAttackResult { PhaseSessionState state; PreparedAttackResult preparation; };
 // Explicit prepared ordinary UI choice; special moves and other actions stay pending.
 SessionAttackResult prepare_session_basic_shot(const PhaseSessionState& input,
     const FieldPlayerProfiles& players, const FieldDefenseContent& attack);
+// Acknowledge the captured return to the menu after an unaffordable ordinary shot.
+PhaseSessionState acknowledge_sampled_unaffordable_shot(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players, const FieldDefenseContent& attack);
+PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input);
+PhaseSessionState poll_sampled_human_pass_target(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed);
+// Explicit defender choices observed for the bounded player7 pass; no AI is inferred.
+PhaseSessionState capture_sampled_score25_pass_defenses(const PhaseSessionState& input,
+    const std::array<std::uint8_t,3>& actions,const std::array<std::uint8_t,3>& subtypes);
+PhaseSessionState prepare_sampled_score25_player7_pass(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
+PhaseSessionState prepare_sampled_human_empty_pass(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
+PhaseSessionState acknowledge_sampled_human_empty_pass_handoff(const PhaseSessionState& input);
+PhaseSessionState capture_sampled_human_empty_pass_recovery(const PhaseSessionState& input,const FieldPhaseState& captured);
 }

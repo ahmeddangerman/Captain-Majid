@@ -18,6 +18,15 @@ int main(){try{
  s.current.field.selected_defenders=1;s.current.field.elapsed=1;s.scheduling->selected_ids={12,0,0,0,0};
  s.recovery->opposing_player=12;s.current.clock.remaining=448;
  MovementGeometryContent g{};g.direction_thresholds.fill(65535);BallVelocityContent v{};v.quarter_wave[63]=256;
+ auto drawn=s;drawn.current.field.side=0;drawn.current.field.ball_owner=5;drawn.current.field.ball_x=108;
+ drawn.current.field.ball_y=108;drawn.current.field.ball_cell=87;drawn.current.field.selected_defenders=0;
+ drawn.scheduling->selected_ids.fill(0);drawn.shot_progress=ShotContactProgress{};drawn.shot_flight=ShotFlightContext{108,233,255,false};
+ drawn.current.clock.remaining=432;drawn.current.clock.extra_time=5;drawn.score=MatchScoreContext{1,1,4};
+ drawn.kickoff_formation=KickoffFormationContext{{124,132}};drawn.saved_ball_flight_flag=1;
+ drawn.action->action=0;drawn.action->power=22;drawn.recovery->attack_subtype=128;drawn.recovery->opposing_player=1;
+ auto drawn_flight=begin_prepared_session_ball_flight(drawn,64,192,g,v);
+ check(!drawn_flight.saved_ball_flight_flag && !drawn_flight.ball_trajectory->flags && drawn.saved_ball_flight_flag==1,
+       "New sampled post-goal shot clears the previous flight flag");
  auto retained=s;retained.saved_ball_flight_flag=1;
  auto retained_flight=begin_prepared_session_ball_flight(retained,64,192,g,v);
  check(retained_flight.ball_trajectory->flags==1,"New shot retains the earlier original flight flag");

@@ -55,5 +55,20 @@ int main(){
  s=original;race.speeds[0]={256,2048};
  for(auto id:{1,13}){auto& p=s.current.field.motion[field_motion_index(id)];p.x=52<<8;p.y=82<<8;}
  r=run();check(r.winner==1 && r.rounds==1,"Other selector36 uses its own nonzero speed column");
+ // Field-level contest supports either side without pretending the pass was a clearance.
+ auto pass_field=original.current.field;pass_field.side=0;pass_field.ball_owner=3;
+ pass_field.selected_defenders=0;pass_field.ball_x=108;pass_field.ball_y=108;
+ pass_field.ball_cell=field_cell_at(108,108);pass_field.elapsed=0;
+ for(auto& m:pass_field.motion){m.x=160<<8;m.y=140<<8;m.status=0;}
+ for(auto id:{5,19}){auto& m=pass_field.motion[field_motion_index(id)];m.x=108<<8;m.y=108<<8;}
+ const auto before_pass=pass_field;
+ auto pass_race=resolve_field_loose_ball_race(pass_field,17,2,mappings,movement,race);
+ check(pass_race.winner==5 && pass_race.rounds==1 && pass_race.remaining==2 &&
+  pass_race.active_candidate==5 && pass_race.opposing_candidate==19 &&
+  pass_race.field.ball_owner==3 && pass_race.field.side==0 && pass_race.field.elapsed==1 &&
+  pass_field.elapsed==before_pass.elapsed,"Side0 contest preserves the original carrier until winner handling");
+ check(pass_race.field.motion[field_motion_index(5)].target_cell==pass_field.ball_cell &&
+  pass_race.field.motion[field_motion_index(19)].target_cell==pass_field.ball_cell,
+  "Both candidates target the loose ball before movement");
  std::cout<<"Clearance race checks passed\n";
 }

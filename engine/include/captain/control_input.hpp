@@ -1,5 +1,7 @@
 #pragma once
 #include "captain/control_session.hpp"
+#include "captain/field_comparison_content.hpp"
+#include "captain/shot_approach.hpp"
 
 namespace captain {
 struct ControlMovementContent {
@@ -20,11 +22,54 @@ struct ControlButtonResult {
 // Capture the explicitly observed field AI choice at the sampled opponent-cell boundary.
 PhaseSessionState capture_sampled_field_ai_choice(const PhaseSessionState& input, std::uint8_t action, std::uint8_t subtype);
 PhaseSessionState capture_sampled_field_ai_preparation(const PhaseSessionState& input, std::uint8_t subtype, std::uint16_t power);
+PhaseSessionState advance_sampled_player14_pass_handoff(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement);
+PhaseSessionState advance_sampled_score23_pass_handoff(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement);
+PhaseSessionState advance_sampled_player19_return_shot_approach(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement);
+// Compute the guarded sampled action2 preparation from supplied private profile data.
+PhaseSessionState prepare_sampled_field_contact_attack(const PhaseSessionState& input, const FieldPlayerProfiles& profiles, const FieldDefenseContent& attack);
+PhaseSessionState prepare_sampled_mixed_defender(const PhaseSessionState& input, const FieldPlayerProfiles& profiles, const FieldDefenseContent& defense);
+PhaseSessionState compare_sampled_mixed_defender(const PhaseSessionState& input, const FieldComparisonContent& comparison);
+PhaseSessionState capture_sampled_home_shot_defender(const PhaseSessionState& input, std::uint8_t action, std::uint8_t subtype);
+PhaseSessionState resolve_sampled_home_shot_defender(const PhaseSessionState& input, const FieldPlayerProfiles& profiles, const FieldDefenseContent& defense, const FieldComparisonContent& comparison);
+PhaseSessionState prepare_sampled_player3_pass_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense);
+PhaseSessionState compare_sampled_player3_pass_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison);
+PhaseSessionState advance_sampled_player3_pass_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience);
+PhaseSessionState advance_sampled_player3_pass_dispatch(const PhaseSessionState& input);
+PhaseSessionState capture_sampled_player3_pass_handoff(const PhaseSessionState& input,const FieldPhaseState& captured);
+PhaseSessionState capture_sampled_player3_pass_target(const PhaseSessionState& input,std::uint8_t recipient,std::uint8_t destination,std::uint8_t counter,std::uint8_t distance);
+PhaseSessionState capture_sampled_player5_defense_choices(const PhaseSessionState& input,
+    const std::array<std::uint8_t,5>& actions,const std::array<std::uint8_t,5>& subtypes);
+PhaseSessionState capture_sampled_score24_dribble_defense(const PhaseSessionState& input,
+    std::uint8_t action,std::uint8_t subtype);
+PhaseSessionState prepare_sampled_player5_dribble(const PhaseSessionState& input,
+    const FieldPlayerProfiles& profiles,const FieldDefenseContent& attack);
+PhaseSessionState begin_sampled_player5_dribble_defenders(const PhaseSessionState& input);
+PhaseSessionState prepare_sampled_player5_dribble_defender(const PhaseSessionState& input,
+    const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense);
+PhaseSessionState compare_sampled_player5_dribble_defender(const PhaseSessionState& input,
+    const FieldComparisonSelection& comparison);
+PhaseSessionState advance_sampled_player5_dribble_terminal(const PhaseSessionState& input,
+    const ContactPreludeContent& prelude,const ExperienceContent& experience);
+PhaseSessionState advance_sampled_player5_terminal_field(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement);
+struct Player5PossessionResult { PhaseSessionState state; bool request_side_music=false; };
+Player5PossessionResult transfer_sampled_player5_dribble_possession(const PhaseSessionState& input);
+PhaseSessionState advance_sampled_home_shot_contact(const PhaseSessionState& input, const ContactPreludeContent& prelude, const ExperienceContent& experience);
+PhaseSessionState advance_sampled_home_shot_dispatch(const PhaseSessionState& input);
+PhaseSessionState capture_sampled_home_shot_handoff(const PhaseSessionState& input, const FieldPhaseState& captured);
+PhaseSessionState prepare_sampled_home_shot_target(const PhaseSessionState& input, const ShotApproachContent& content);
+PhaseSessionState advance_sampled_mixed_result4(const PhaseSessionState& input);
+PhaseSessionState acknowledge_sampled_mixed_result4_pass(const PhaseSessionState& input);
 PhaseSessionState acknowledge_sampled_field_ai_presentation(const PhaseSessionState& input);
 PhaseSessionState acknowledge_sampled_opponent_contact_presentation(const PhaseSessionState& input);
+PhaseSessionState acknowledge_sampled_field_defense_prompt(const PhaseSessionState& input, std::uint8_t captured_blink);
 PhaseSessionState advance_sampled_field_ai_dispatch(const PhaseSessionState& input);
 PhaseSessionState acknowledge_sampled_field_ai_pass_presentation(const PhaseSessionState& input, const FieldPhaseState& captured);
 PhaseSessionState acknowledge_sampled_field_ai_pass_handoff(const PhaseSessionState& input);
+PhaseSessionState capture_sampled_shot_keeper_prompt(const PhaseSessionState& input, const FieldPhaseState& captured);
 PhaseSessionState capture_sampled_field_pass_target(const PhaseSessionState& input, std::uint8_t recipient, std::uint8_t destination, std::uint8_t counter, std::uint8_t distance);
 // E349 effects only: no decision-timer decrement or controlled movement.
 ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::uint8_t held, std::uint8_t pressed);
