@@ -93,6 +93,25 @@ int main(){try{using namespace captain;
  auto idle_travel=advance_session_control_travel(control_ready,928,0);
  check(bytes(idle_travel)==bytes(control_ready),"Neutral home input leaves travel unchanged");
  rejects([&]{advance_session_control_travel(handoff,928,1);});
+ auto profile_input=control_ready;profile_input.current.field.roster[7].type=1;
+ PlayerProfileMappings profile_mappings{};FieldPhaseContent travel_movement{};
+ travel_movement.profiles.ordinary[1].speed_profile=0;
+ travel_movement.profiles.speeds.push_back({0,0});
+ ControlMovementContent travel_content{};travel_content.carrier_speeds[0]=928;
+ auto profiled=advance_profiled_session_control_travel(profile_input,1,profile_mappings,travel_movement,travel_content);
+ check(profiled.loaded_speed && *profiled.loaded_speed==928 && profiled.state.control->travel_accumulator==232 &&
+       profile_input.control->travel_accumulator==0,"Profiled control travel loads the carrier speed and preserves its input");
+ auto neutral_profile=profile_input;neutral_profile.current.field.roster[7].type=0;
+ auto neutral_result=advance_profiled_session_control_travel(neutral_profile,0,profile_mappings,travel_movement,travel_content);
+ check(!neutral_result.loaded_speed && bytes(neutral_result.state)==bytes(neutral_profile),
+       "Neutral home input skips profile loading just like the original gate");
+ rejects([&]{advance_profiled_session_control_travel(neutral_profile,1,profile_mappings,travel_movement,travel_content);});
+ auto opposing=profile_input;opposing.current.field.side=11;opposing.current.field.ball_owner=12;
+ opposing.current.field.roster[12].type=1;opposing.control->controlled_player=1;opposing.control->facing=0;
+ auto opposing_travel=advance_profiled_session_control_travel(opposing,0,profile_mappings,travel_movement,travel_content);
+ check(opposing_travel.loaded_speed && *opposing_travel.loaded_speed==928 &&
+       opposing_travel.state.control->travel_accumulator==65303,
+       "Opposing carrier speed is loaded even without held directional input");
  auto control_bytes=bytes(control_ready);std::istringstream control_stream(control_bytes);
  check(bytes(load_phase_session(control_stream))==control_bytes && bytes(handoff)==handoff_bytes,
        "Kickoff control state roundtrips without mutating its input");
