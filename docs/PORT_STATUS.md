@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - returned shot flight components (2026-11-09):** Original/native direction and velocity, seven cell steps and six intermediate defender selections match in standalone comparisons. A continuous native shot-flight replay and the original result2 interruption remain unverified. All62 Windows tests passed at the prior integrated target checkpoint; overall progress is unmeasured.
+
+
 **Latest - returned shot target (2026-11-09):** The supported shot now matches the original target through $DD08 using shared approach arithmetic. Original-only flight then finds two players and defender14 yields result2 before any verified keeper comparison. Native shot flight/interruption, live AI/presentation and a complete match remain unsupported. All62 Windows tests passed; overall progress is unmeasured.
 
 

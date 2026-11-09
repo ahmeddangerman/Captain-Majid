@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Returned shot flight numerical comparisons
+
+Compared the shared native setup and ball/selection kernels to the private live continuation: direction/velocity255/256/0 matched at $E773; seven individual cell steps matched through234; six intermediate selections matched additions [], [14], [12], [], [], []. Inputs came directly from each original snapshot, so these are component comparisons, not a continuous native replay or verification of defender14 result2. Drivers and notes: ../Captain-Majid-analysis/shot-flight-setup-live-20261109. The integrated phase364 target and full62-test Windows suite remain the preceding verified checkpoint. Next connect flight events and compare full state; overall progress unmeasured; suggested model Terra High.
+
+
 ## 2026-11-09 - Returned shot target and interruption trace
 
 Reused the shot-approach calculation in guarded phase364 and compared the original $DD08 target: distance63, destination234, counter255, non-loose and final random index81 matched. The replay verifies exact RAM equality at the handoff between two private traces and reports the first changed byte; a deliberate alteration reported RAM[0x635]. The continued original selected14 and12 in flight, then defender14 produced result2 at $88A8 before a keeper comparison. This interruption remains original-only, with native flight and resulting possession unverified. Full Windows build and all62 tests passed; previous phase317 sets matched576/1152 boundaries. Private evidence: ../Captain-Majid-analysis/live-return-shot-target-final-20261109. Overall progress unmeasured; next compare flight/interruption; suggested model Terra High.

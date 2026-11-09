@@ -1,5 +1,10 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: original shot flight component comparisons
+
+Using the private original continuation and existing shared kernels, native direction/velocity matched $E773 (255, 256, 0); seven independent ball-cell steps matched through destination234, including the final snap; and six intermediate defender-selection comparisons matched additions `[], [14], [12], [], [], []`. They use captured original motion/random values at each boundary, and do not constitute a connected session replay or a comparison of the result2 interruption. The prior phase364 target replay and all62 Windows tests remain the last integrated checkpoint. Private source drivers and notes: ../Captain-Majid-analysis/shot-flight-setup-live-20261109; original trace: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-shot-interruption/trace. Next connect these existing kernels with captured event order, compare the full session at each cell, then compare defender14 result2 and resulting possession. Timing, AI, presentation, full match progression and a complete faithful match remain unsupported. Overall progress is unmeasured; suggested model Terra High.
+
+
 ## Current stopping point - 2026-11-09: returned shot target and original interruption
 
 Phase364 reuses the existing shot-approach calculation after the event-fed shot movement. The original target boundary $DD08 and native state match: distance63, destination234, counter255, non-loose, random index81. The replay accepts a separate private follow-up trace and requires its $C618 RAM to match the prior trace exactly before comparing the target. A deliberately changed join reports `returned.shot.target_handoff, RAM[0x635]` as the first differing boundary and field. Earlier RAM frame captures from15100 through15800 are byte-identical between the original runs. Private evidence: ../Captain-Majid-analysis/live-return-shot-target-final-20261109 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-shot-interruption.
