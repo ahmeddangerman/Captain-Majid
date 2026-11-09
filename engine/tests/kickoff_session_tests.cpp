@@ -3,6 +3,7 @@
 #include "captain/goal_session.hpp"
 #include "captain/control_session.hpp"
 #include "captain/control_input.hpp"
+#include "captain/control_travel.hpp"
 #include "captain/clearance_race.hpp"
 #include "captain/action_menu.hpp"
 #include "captain/staged_shot.hpp"
@@ -85,6 +86,13 @@ int main(){try{using namespace captain;
        control_ready.kickoff_formation && !control_ready.kickoff_receiver &&
        control_ready.kickoff_formation->keeper_y==handoff.kickoff_formation->keeper_y,
        "Kickoff control setup retains goalkeeper positions and consumes receiver context");
+ auto travelled=advance_session_control_travel(control_ready,928,1);
+ check(travelled.control->travel_accumulator==232 && control_ready.control->travel_accumulator==0 &&
+       travelled.phase==control_ready.phase && travelled.current.field.ball_x==control_ready.current.field.ball_x,
+       "Explicit control-travel step updates only the represented accumulator");
+ auto idle_travel=advance_session_control_travel(control_ready,928,0);
+ check(bytes(idle_travel)==bytes(control_ready),"Neutral home input leaves travel unchanged");
+ rejects([&]{advance_session_control_travel(handoff,928,1);});
  auto control_bytes=bytes(control_ready);std::istringstream control_stream(control_bytes);
  check(bytes(load_phase_session(control_stream))==control_bytes && bytes(handoff)==handoff_bytes,
        "Kickoff control state roundtrips without mutating its input");
