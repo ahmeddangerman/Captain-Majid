@@ -612,7 +612,9 @@ NmiFieldRoundResult advance_observed_ordinary_return_field_round(const PhaseSess
     if(input.phase!=FieldSessionPhase::ordinary_return_field_round)throw std::invalid_argument("Returned pass field round requires a completed control clock");
     auto normalized=input;normalized.phase=FieldSessionPhase::field_round_pending;normalized.area_defender_cursor=0;
     auto result=advance_observed_nmi_field_round(normalized,primary,movement,control,world,initial_random_index,inputs);
-    if(result.round.state.phase!=FieldSessionPhase::control_ready)
+    if(result.round.state.phase==FieldSessionPhase::field_contact_pending)
+        result.round.state.phase=FieldSessionPhase::ordinary_return_contact_pending;
+    else if(result.round.state.phase!=FieldSessionPhase::control_ready)
         throw std::invalid_argument("Returned pass field round needs an unsupported continuation");
     result.round.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.round.state);return result;

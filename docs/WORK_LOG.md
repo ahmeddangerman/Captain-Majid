@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Directed returned possession reaches encounter
+
+Captured a controlled rightward input after the startup free pass. From the saved returned-control point, 45 polls, five clock updates and five field rounds matched the original through a new encounter: player3 moved from x132 to x149 and met defender16; final random index247. Twenty-two overlapping control snapshots matched the shorter original directional run byte-for-byte. Phase354 preserves the retained cursor at the encounter without relaxing older guards. The input and NMI/travel schedule are supplied, not generated. Full Windows build, all 62 CTest tests and both phase317 replays (576/1,152 boundaries) passed. New encounter handling, AI/presentation and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Returned possession through three field rounds
 
 Extended the live startup replay through ten neutral input polls and then 23 additional polls, three clocks and three field rounds (29 subsequent boundaries, final random index169). A second instrumented original trace had all 35 overlapping full RAM control snapshots byte-identical to the first. New phases352/353 preserve the original defender cursor while reusing control kernels with captured event ordering; unsupported menu/encounter continuations reject. An initial broadening of the old cursor guard admitted an invalid earlier scenario, and was removed after its regression caught it. A changed source correctly reported its first differing boundary and field. Full Windows build, 62 CTest checks and phase317 replays (576/1,152 boundaries) passed. Directed return input, autonomous timing/AI and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.

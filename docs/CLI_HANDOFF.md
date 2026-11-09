@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: directed returned possession reaches a new encounter
+
+A controlled original rerun held right after the free-pass control return. From the saved control point at frame14595, the native event-fed continuation matched 45 input polls, five clock/energy updates and five field rounds (55 boundaries) through original $E4BE: player3 carries the ball from x132 to x149, cell150, and encounters defender16. Final random index247. The rerun's 22 overlapping full RAM control snapshots through frame14645 matched the shorter directional capture. Private trace and replay: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-returned-long/trace and ../Captain-Majid-analysis/live-return-next-encounter-verified-20261109.
+
+Phase354 preserves the original retained defender cursor at this encounter, while existing guarded phases remain unchanged. `tools/verify_returned_control_chain.py --expect-encounter` accepts private paths and checks the first differing case, boundary and field. The direction and all NMI/travel events are supplied observations; no AI or frame scheduler is inferred. A separate shorter directional run matched three rounds, and the original neutral return matched three rounds. Full Windows build, all 62 CTest tests and phase317 replays (576/1,152 boundaries) passed.
+
+General: bounded returned control input, clock, field movement and encounter selection using existing kernels with recorded events. Scenario-specific: the observed input/event schedule and guarded older routes. Unknown: action menu and defender processing from phase354, AI, autonomous scheduling/audio/presentation, general scoring/restarters and a complete match. Next trace the new encounter's actual menu and defender choices, comparing existing shared mechanics rather than adding score-specific paths. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: returned possession through three field rounds
 
 `tools/verify_captured_pass_defenses.py --returned-polls 10` extends the captured free pass through ten neutral control polls. `tools/verify_returned_control_chain.py` consumes that saved output and a second private original trace, then matches another 23 polls, three clock/energy updates and three field rounds (29 boundaries), retaining the original defender cursor and ending at random index169. The second instrumented original run reproduced all 35 overlapping full RAM control snapshots byte-for-byte. A deliberately modified source reports the first differing boundary and field. Private evidence: ../Captain-Majid-analysis/live-free-returned-polls-20261109 and ../Captain-Majid-analysis/live-return-rounds-verified-20261109.

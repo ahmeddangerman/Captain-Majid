@@ -23,6 +23,7 @@ def main():
     parser.add_argument('--initial-index',type=int,required=True)
     parser.add_argument('--expected-rounds',type=int,required=True)
     parser.add_argument('--expected-polls',type=int,required=True)
+    parser.add_argument('--expect-encounter',action='store_true',help='require the last field round to end at the original encounter')
     args=parser.parse_args()
     if not 0<=args.initial_index<=255 or args.expected_rounds<1 or args.expected_polls<1:
         raise ValueError('Random index and expected counts are invalid')
@@ -67,10 +68,11 @@ def main():
             kind='world';counts[kind]+=1;entry=at
             _,_,rows,boundary=read_nmi_trace(args.trace_directory,counts[kind])
             end=next(i for i in range(at+1,len(pcs)) if pcs[i] in ('E145','E4BE','E38A'))
-            if pcs[end]!=boundary or boundary!='E145':
+            expected_boundary='E4BE' if args.expect_encounter and counts[kind]==args.expected_rounds else 'E145'
+            if pcs[end]!=boundary or boundary!=expected_boundary:
                 raise ValueError(f'boundary returned.world[{counts[kind]}]: unsupported field-round continuation')
             event_text='CMJWORLDNMI1\n'+''.join(' '.join(map(str,row))+'\n' for row in rows)
-            phase=9
+            phase=354 if boundary=='E4BE' else 9
         name=f'returned.{kind}[{counts[kind]}]'
         if index!=ram(entry)[0xe1]:
             raise ValueError(f'boundary {name}, random.index: native {index}, original {ram(entry)[0xe1]}')
@@ -81,7 +83,7 @@ def main():
         if run.returncode:
             raise RuntimeError(f'boundary {name}: {run.stderr.strip()}')
         actual=destination.read_bytes()
-        legacy={352:10,353:13}.get(phase,phase)
+        legacy={352:10,353:13,354:15}.get(phase,phase)
         if phase>=256:
             if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260],'little')!=phase:
                 raise ValueError(f'boundary {name}: invalid native session format or phase')

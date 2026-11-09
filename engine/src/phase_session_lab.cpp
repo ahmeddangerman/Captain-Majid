@@ -159,6 +159,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::ordinary_free_pass_contest_winner: return "ordinary free pass contest winner";
     case captain::FieldSessionPhase::ordinary_return_clock_pending: return "ordinary returned control clock pending";
     case captain::FieldSessionPhase::ordinary_return_field_round: return "ordinary returned control field round";
+    case captain::FieldSessionPhase::ordinary_return_contact_pending: return "ordinary returned control encounter";
     case captain::FieldSessionPhase::sampled_human_pass_empty_confirmed: return "sampled empty pass target confirmed";
     case captain::FieldSessionPhase::sampled_human_pass_cancel_pending: return "sampled human pass cancel pending";
     case captain::FieldSessionPhase::sampled_human_pass_prepared: return "sampled human pass prepared";

@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - directed return reaches an encounter (2026-11-09):** A captured rightward input after the startup free pass matches 45 polls and five clock/field rounds through a second encounter, with supplied event ordering. The native path stops at the new encounter. All 62 Windows tests and both phase317 replays passed; AI, autonomous presentation and a complete match remain unsupported. Overall progress is unmeasured.
+
 **Latest - returned control through three rounds (2026-11-09):** One captured startup continues after the free pass through 33 neutral polls and three clock/field rounds with explicitly supplied original events. The second trace matches all 35 overlapping full RAM control snapshots. All 62 Windows tests and both phase317 replays passed. Directed input, later encounters, autonomous timing/AI and a complete match remain unsupported; overall progress is unmeasured.
 
 **Latest - startup free pass to control-ready (2026-11-09):** One original startup sequence now matches from confirmed target through defenders, free-pass contest and control_ready using supplied original event timing, choices and content; 24 earlier teammate passes also match through control_ready. Other contest outcomes, autonomous AI/presentation and a complete match remain unsupported. All 62 Windows CTest checks and both phase317 replays passed; overall progress is unmeasured.
