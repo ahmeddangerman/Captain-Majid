@@ -57,9 +57,11 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool score25_human_pass=phase>=310 && phase<=326;
     const bool score36_human_pass=score25_human_pass && state.score && state.score->left_goals==3 && state.score->right_goals==6;
     const bool score25_shot=phase>=327 && phase<=330;
-    const bool ordinary_human_target=phase==331;
+    const bool ordinary_human_target=phase==331 || phase==332;
     if (state.ordinary_pass_candidates && !ordinary_human_target)
         throw std::invalid_argument("Ordinary pass candidate context requires the target phase");
+    if (bool(state.ordinary_pass_recipient) != (phase==332))
+        throw std::invalid_argument("Ordinary pass recipient requires the confirmed target phase");
     const bool score35_opponent_shot=state.score && state.score->left_goals==3 && (state.score->right_goals==5 || (phase>=300 && state.score->right_goals==6)) && state.current.field.ball_owner==19;
     const bool player17_score24=state.score && state.score->left_goals==2 && state.score->right_goals==4 && state.current.field.ball_owner==17;
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
@@ -95,6 +97,14 @@ void validate_phase_session(const PhaseSessionState& state) {
             }
             if (candidates.allied_count && candidates.allied_count != candidates.count)
                 throw std::invalid_argument("Allied pass candidates exclude opponents");
+        }
+        if (phase==332) {
+            if (!state.ordinary_pass_candidates || state.ordinary_pass_candidates->candidates.allied_count > 1)
+                throw std::invalid_argument("Confirmed ordinary pass requires a known single or empty target");
+            const auto& candidates = state.ordinary_pass_candidates->candidates;
+            const auto expected = candidates.allied_count == 1 ? candidates.ids[0] : 255;
+            if (*state.ordinary_pass_recipient != expected)
+                throw std::invalid_argument("Confirmed ordinary pass recipient disagrees with saved candidates");
         }
     }
     if(score25_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||

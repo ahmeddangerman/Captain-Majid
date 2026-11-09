@@ -480,6 +480,19 @@ OrdinaryPassCursorResult poll_ordinary_human_pass_cursor(const PhaseSessionState
     validate_phase_session(state);
     return {std::move(state), changed};
 }
+PhaseSessionState confirm_ordinary_human_pass_target(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::ordinary_human_pass_target || !input.ordinary_pass_candidates)
+        throw std::invalid_argument("Ordinary pass confirmation requires known candidate context");
+    const auto& candidates = input.ordinary_pass_candidates->candidates;
+    if (candidates.allied_count > 1)
+        throw std::invalid_argument("Multiple teammates require the original recipient chooser");
+    auto state = input;
+    state.ordinary_pass_recipient = candidates.allied_count == 1 ? candidates.ids[0] : 255;
+    state.phase = FieldSessionPhase::ordinary_human_pass_confirmed;
+    validate_phase_session(state);
+    return state;
+}
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input) {
     validate_phase_session(input);const auto& f=input.current.field;
     const bool score25=input.phase==FieldSessionPhase::attack_choice_pending && input.score && input.action && input.recovery && input.scheduling &&

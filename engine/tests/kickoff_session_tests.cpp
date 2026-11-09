@@ -1225,6 +1225,21 @@ int main(){try{using namespace captain;
  const auto still_saved=poll_ordinary_human_pass_cursor(changed_positions,0,0);
  check(still_saved.state.ordinary_pass_candidates->candidates.ids[0]==2,
        "Candidate prefix remains from the last scan when player positions later change");
+ const auto free_pass=confirm_ordinary_human_pass_target(general_pass);
+ check(free_pass.phase==FieldSessionPhase::ordinary_human_pass_confirmed && free_pass.ordinary_pass_recipient==255 &&
+       free_pass.human_pass_cursor==114 && !general_pass.ordinary_pass_recipient,
+       "An unscanned initial target confirms an explicitly free pass");
+ const auto teammate_pass=confirm_ordinary_human_pass_target(general_move.state);
+ check(teammate_pass.ordinary_pass_recipient==2 && teammate_pass.human_pass_cursor==126,
+       "One scanned teammate is retained as pass recipient");
+ const auto teammate_bytes=bytes(teammate_pass);std::istringstream teammate_stream(teammate_bytes);
+ check(bytes(load_phase_session(teammate_stream))==teammate_bytes,"Confirmed pass recipient survives snapshot roundtrip");
+ auto wrong_recipient=teammate_pass;wrong_recipient.ordinary_pass_recipient=3;
+ rejects([&]{validate_phase_session(wrong_recipient);});
+ rejects([&]{confirm_ordinary_human_pass_target(legacy_target);});
+ auto multiple=general_move.state;multiple.ordinary_pass_candidates->candidates.count=2;
+ multiple.ordinary_pass_candidates->candidates.allied_count=2;multiple.ordinary_pass_candidates->candidates.ids[1]=3;
+ rejects([&]{confirm_ordinary_human_pass_target(multiple);});
  const auto general_edge=poll_ordinary_human_pass_cursor(general_pass,1,1);
  check(general_edge.state.human_pass_cursor==126,"Directional press edge does not suppress held movement");
  const auto target_nmi=advance_observed_nmi_events(general_pass,255,{{ObservedClockEventKind::random,{0,0,0,false}}});
@@ -1234,6 +1249,8 @@ int main(){try{using namespace captain;
  check(sampled_motion.state.control->motion_requested==1 && !general_pass.control->motion_requested,
        "Explicit captured target-wait motion sample preserves its input");
  rejects([&]{poll_ordinary_human_pass_cursor(general_pass,1,128);});
+ rejects([&]{poll_ordinary_human_pass_cursor(general_pass,1,64);});
+ rejects([&]{poll_ordinary_human_pass_cursor(general_pass,1,192);});
  auto wrong_action=general_pass_input;wrong_action.action->action=3;
  rejects([&]{begin_ordinary_human_pass_target(wrong_action);});
  auto stale_flight_pass=pass_confirmed;stale_flight_pass.saved_ball_flight_flag=1;

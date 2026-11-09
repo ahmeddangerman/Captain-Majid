@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Ordinary target confirmation
+
+Added phase332/version149 for an explicitly supplied A-only confirmation of a known free/opponent-only or single-teammate target. Multiple teammates stop at the original chooser, and old unknown candidate states reject. Six full original controlled confirmations matched across two contexts; two chooser cases rejected atomically. The captured startup additionally matched 25 polls and confirmed cell126 as free recipient255. Full 62 Windows tests, both phase317 regressions and the focused forged-recipient check passed. Live presentation/AI, cancellation, chooser and a complete match remain unsupported. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Persist original ordinary-pass candidate scan
 
 Added a side-zero original candidate scan and version148 target context distinguishing an unscanned initial list from a scanned prefix. Older version146 targets remain readable with candidate state unknown. Two independent original target seeds matched 2,048 constructed CPU scans; 106 moved polls and 160 full cursor checkpoints matched, and the captured startup still matched 55 polls with the recorded opponent-only prefix. Confirmation and recipient chooser remain guarded. All 62 Windows CTest tests and both phase317 regressions passed. Overall progress is unmeasured; suggested model Terra High.

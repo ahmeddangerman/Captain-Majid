@@ -50,6 +50,24 @@ def compare_target(actual, raw):
                     raise ValueError(f'boundary target.initial, candidates.{name}: native {native_value}, original {original_value}')
 
 
+def compare_confirmed_target(actual, raw):
+    if len(actual) != 429 or actual[:10] != b'CMJSESSION' or actual[10] != 149:
+        raise ValueError('boundary target.confirmed: invalid native session format or length')
+    if int.from_bytes(actual[258:260], 'little') != 332:
+        raise ValueError('boundary target.confirmed, session.phase: expected 332')
+    prior = bytearray(actual[:-1])
+    prior[10] = 148
+    prior[258:260] = (331).to_bytes(2, 'little')
+    try:
+        compare_target(prior, raw)
+    except ValueError as error:
+        raise ValueError(str(error).replace('target.initial', 'target.confirmed')) from error
+    if actual[-1] != raw[0x5fc]:
+        raise ValueError(f'boundary target.confirmed, pass.recipient: native {actual[-1]}, original {raw[0x5fc]}')
+    if actual[419] != raw[0x638]:
+        raise ValueError(f'boundary target.confirmed, pass.destination: native {actual[419]}, original {raw[0x638]}')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):

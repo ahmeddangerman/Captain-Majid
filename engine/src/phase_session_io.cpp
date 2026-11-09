@@ -21,7 +21,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         if (byte(input) != static_cast<std::uint8_t>(magic[i]))
             throw std::invalid_argument("Unsupported phase session format/version");
     const auto version = byte(input);
-    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'z') && version!=128 && version!=129 && version!=130 && version!=131 && version!=132 && version!=133 && version!=134 && version!=135 && version!=136 && version!=137 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146 && version!=147 && version!=148)
+    if ((version < '1' || version > '9') && (version < 'A' || version > 'Z') && (version<'a' || version>'z') && version!=128 && version!=129 && version!=130 && version!=131 && version!=132 && version!=133 && version!=134 && version!=135 && version!=136 && version!=137 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146 && version!=147 && version!=148 && version!=149)
         throw std::invalid_argument("Unsupported phase session format/version");
     std::array<char, 239> field_bytes{};
     input.read(field_bytes.data(), field_bytes.size());
@@ -36,9 +36,9 @@ PhaseSessionState load_phase_session(std::istream& input) {
     state.current.clock.script_flags = byte(input); state.current.clock.ball_mode = byte(input);
     state.current.shared_recovery_flags = byte(input); state.current.shared_recovery_timer = byte(input);
     const auto phase_low=byte(input);
-    const auto phase_high=version==143 || version==144 || version==145 || version==146 || version==147 || version==148 ? byte(input) : 0;
+    const auto phase_high=version==143 || version==144 || version==145 || version==146 || version==147 || version==148 || version==149 ? byte(input) : 0;
     state.phase = static_cast<FieldSessionPhase>(unsigned(phase_low) | (unsigned(phase_high)<<8));
-    if((version==143 || version==144 || version==145 || version==146 || version==147 || version==148) && static_cast<unsigned>(state.phase)<256)
+    if((version==143 || version==144 || version==145 || version==146 || version==147 || version==148 || version==149) && static_cast<unsigned>(state.phase)<256)
         throw std::invalid_argument("Extended session version requires a two-byte phase");
     if((version==144)!=(state.phase==FieldSessionPhase::sampled_player14_pass_target))
         throw std::invalid_argument("Extended pass target requires session version144");
@@ -51,6 +51,8 @@ PhaseSessionState load_phase_session(std::istream& input) {
     if((version==147)!=(static_cast<unsigned>(state.phase)==326))throw std::invalid_argument("Player7 target requires session version147");
     if(version==148 && state.phase!=FieldSessionPhase::ordinary_human_pass_target)
         throw std::invalid_argument("Ordinary pass candidates require the target phase");
+    if((version==149)!=(state.phase==FieldSessionPhase::ordinary_human_pass_confirmed))
+        throw std::invalid_argument("Confirmed ordinary pass requires session version149");
     if(version<133 && (static_cast<unsigned>(state.phase)==188 || static_cast<unsigned>(state.phase)==189))throw std::invalid_argument("Prepared sampled loose defender requires session version67");
     if((version==139)!=(static_cast<unsigned>(state.phase)==220 || static_cast<unsigned>(state.phase)==221 || static_cast<unsigned>(state.phase)==222 || static_cast<unsigned>(state.phase)==223 || static_cast<unsigned>(state.phase)==224 || static_cast<unsigned>(state.phase)==225 || static_cast<unsigned>(state.phase)==226))
         throw std::invalid_argument("Keeper menu selection requires session version73");
@@ -371,16 +373,16 @@ PhaseSessionState load_phase_session(std::istream& input) {
         else if(low || high)throw std::invalid_argument("Invalid absent area pass context");
     }
     if(version>=133 && version!=138)state.saved_ball_flight_flag=byte(input);
-    if(version>=135 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146 && version!=147 && version!=148)state.area_action4_restart=AreaAction4RestartContext{byte(input),byte(input),byte(input)};
-    if(version>=136 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146 && version!=147 && version!=148) {
+    if(version>=135 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146 && version!=147 && version!=148 && version!=149)state.area_action4_restart=AreaAction4RestartContext{byte(input),byte(input),byte(input)};
+    if(version>=136 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146 && version!=147 && version!=148 && version!=149) {
         const auto cost_low=byte(input),cost_high=byte(input),power_low=byte(input),power_high=byte(input);
         state.area_action4_restart_power=AreaAction4RestartPowerContext{static_cast<std::uint16_t>(unsigned(cost_low)|(unsigned(cost_high)<<8)),static_cast<std::uint16_t>(unsigned(power_low)|(unsigned(power_high)<<8))};
     }
-    if(version>=137 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146 && version!=147 && version!=148)state.area_action4_restart_pass_counter=byte(input);
+    if(version>=137 && version!=138 && version!=139 && version!=140 && version!=141 && version!=142 && version!=143 && version!=144 && version!=145 && version!=146 && version!=147 && version!=148 && version!=149)state.area_action4_restart_pass_counter=byte(input);
     if(version==138 || version==140 || version==144 || version==147 || (version==141 && state.phase==FieldSessionPhase::sampled_player3_empty_pass_destination))state.sampled_field_pass=SampledFieldPassContext{byte(input),byte(input),byte(input),byte(input)};
     if(version==139 || version==145)state.keeper_menu_action=byte(input);
-    if(version==141 || version==146 || version==147 || version==148) {state.human_pass_cursor=byte(input);state.human_pass_steps=byte(input);}
-    if(version==148) {
+    if(version==141 || version==146 || version==147 || version==148 || version==149) {state.human_pass_cursor=byte(input);state.human_pass_steps=byte(input);}
+    if(version==148 || version==149) {
         const auto scanned = byte(input);
         if (scanned > 1) throw std::invalid_argument("Invalid ordinary pass candidate scan flag");
         OrdinaryPassCandidateContext context{};
@@ -390,6 +392,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
         for (auto& id : context.candidates.ids) id = byte(input);
         state.ordinary_pass_candidates = context;
     }
+    if(version==149) state.ordinary_pass_recipient = byte(input);
     if(version==142) {
         HumanDefenseChoices choices{};
         for(auto& action:choices.actions)action=byte(input);
@@ -449,7 +452,7 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
     output.write(magic, sizeof(magic) - 1);
     const bool extended=static_cast<unsigned>(state.phase)>=256;
     const bool action4_continuation=(static_cast<unsigned>(state.phase)>=160 && static_cast<unsigned>(state.phase)<=187) || static_cast<unsigned>(state.phase)==190 || static_cast<unsigned>(state.phase)==191 || static_cast<unsigned>(state.phase)==192 || static_cast<unsigned>(state.phase)==193;
-    byte(output, extended ? (state.ordinary_pass_candidates ? 148 : state.human_pass_cursor && state.sampled_field_pass ? 147 : state.human_pass_cursor ? 146 : state.keeper_menu_action ? 145 : state.sampled_field_pass ? 144 : 143) : state.human_defense_choices ? 142 : state.human_pass_cursor ? 141 : state.keeper_menu_action ? 139 : (state.phase==FieldSessionPhase::sampled_mixed_result4_target || state.phase==FieldSessionPhase::sampled_player12_pass_target) ? 140 : state.sampled_field_pass ? 138 : state.area_action4_restart_pass_counter ? 137 : state.area_action4_restart_power ? 136 : state.area_action4_restart ? 135 : action4_continuation ? 134 : (state.saved_ball_flight_flag || state.phase==FieldSessionPhase::shot_pass_defenders_pending || state.phase==FieldSessionPhase::shot_pass_defender_announced || (state.phase==FieldSessionPhase::sampled_loose_shot_defender_prepared || state.phase==FieldSessionPhase::sampled_loose_shot_defender_compared)) ? 133 : state.area_pass_contact ? 132 : (static_cast<unsigned>(state.phase)>=96 || (state.phase==FieldSessionPhase::keeper_area_attack_continuation && state.area_defense)) ? 131 : 130);
+    byte(output, extended ? (state.ordinary_pass_recipient ? 149 : state.ordinary_pass_candidates ? 148 : state.human_pass_cursor && state.sampled_field_pass ? 147 : state.human_pass_cursor ? 146 : state.keeper_menu_action ? 145 : state.sampled_field_pass ? 144 : 143) : state.human_defense_choices ? 142 : state.human_pass_cursor ? 141 : state.keeper_menu_action ? 139 : (state.phase==FieldSessionPhase::sampled_mixed_result4_target || state.phase==FieldSessionPhase::sampled_player12_pass_target) ? 140 : state.sampled_field_pass ? 138 : state.area_action4_restart_pass_counter ? 137 : state.area_action4_restart_power ? 136 : state.area_action4_restart ? 135 : action4_continuation ? 134 : (state.saved_ball_flight_flag || state.phase==FieldSessionPhase::shot_pass_defenders_pending || state.phase==FieldSessionPhase::shot_pass_defender_announced || (state.phase==FieldSessionPhase::sampled_loose_shot_defender_prepared || state.phase==FieldSessionPhase::sampled_loose_shot_defender_compared)) ? 133 : state.area_pass_contact ? 132 : (static_cast<unsigned>(state.phase)>=96 || (state.phase==FieldSessionPhase::keeper_area_attack_continuation && state.area_defense)) ? 131 : 130);
     write_field_state(output, state.current.field);
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining));
     byte(output, static_cast<std::uint8_t>(state.current.clock.remaining >> 8));
@@ -574,6 +577,7 @@ void write_phase_session(std::ostream& output, const PhaseSessionState& state) {
         byte(output, context.candidates.allied_count);
         for (const auto id : context.candidates.ids) byte(output, id);
     }
+    if(state.ordinary_pass_recipient) byte(output, *state.ordinary_pass_recipient);
     if(state.human_defense_choices) {
         for(auto action:state.human_defense_choices->actions)byte(output,action);
         for(auto subtype:state.human_defense_choices->subtypes)byte(output,subtype);
