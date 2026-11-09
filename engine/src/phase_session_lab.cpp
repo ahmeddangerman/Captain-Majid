@@ -1551,7 +1551,7 @@ int main(int argc, char** argv) {
         if(advance_player19_return_approach)state=captain::advance_sampled_player19_return_shot_approach(state,content.field_players,*content.movement);
         if(compare_player5_defender) {
             const auto& v=*compare_player5_defender;
-            const captain::FieldComparisonSelection selected{9,static_cast<std::uint8_t>(v[0]),static_cast<std::uint8_t>(v[1]),bool(v[2]),
+            const captain::FieldComparisonSelection selected{static_cast<std::uint8_t>(state.action && state.action->action==0 ? 1 : 9),static_cast<std::uint8_t>(v[0]),static_cast<std::uint8_t>(v[1]),bool(v[2]),
                 {static_cast<std::uint8_t>(v[3]),static_cast<std::uint8_t>(v[4]),static_cast<std::uint8_t>(v[5]),static_cast<std::uint8_t>(v[6])}};
             state=captain::compare_sampled_player5_dribble_defender(state,selected);
         }

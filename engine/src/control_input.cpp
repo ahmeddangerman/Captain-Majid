@@ -72,7 +72,14 @@ PhaseSessionState prepare_sampled_player5_dribble(const PhaseSessionState& input
 }
 PhaseSessionState begin_sampled_player5_dribble_defenders(const PhaseSessionState& input) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || input.area_defender_cursor!=1 ||
+ const bool player7=input.score && input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7;
+ if(player7 && input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.area_contact &&
+    input.area_defender_cursor<5 && input.area_sequence_result==0 &&
+    input.current.field.motion[field_motion_index(input.scheduling->selected_ids[input.area_defender_cursor])].status==6) {
+  auto state=input;++state.area_defender_cursor;state.area_contact.reset();state.area_sequence_result=255;
+  validate_phase_session(state);return state;
+ }
+ if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || input.area_defender_cursor!=(player7 ? 3 : 1) ||
     input.current.field.random_first!=0)
   throw std::invalid_argument("Player5 dribble defender prefix needs its observed prepared state");
  auto state=input;state.area_defender_cursor=0;state.control->last_carrier_cell=0;
@@ -91,6 +98,19 @@ PhaseSessionState prepare_sampled_player5_dribble_defender(const PhaseSessionSta
   state.area_contact=AreaContactContext{0,1,0,0,18,60,0,0,0,0,false};
   state.phase=FieldSessionPhase::sampled_score24_dribble_defender;validate_phase_session(state);return state;
  }
+ if(input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.score &&
+    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7 &&
+    input.area_defender_cursor<5 && !input.area_contact) {
+  const auto defender=input.scheduling->selected_ids[input.area_defender_cursor];
+  const auto& p=input.current.field.roster[defender];
+  const auto prepared=prepare_profiled_field_defender({defender,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},profiles,1,0,0,defense);
+  if(prepared.base_strength!=18 || prepared.stamina_cost!=60 || prepared.move_effect)
+   throw std::invalid_argument("Unverified player7 first defender content");
+  auto state=input;state.recovery->opposing_player=defender;state.recovery->ball_variant=1;
+  state.control->last_carrier_cell=128;state.control->motion_requested=input.area_defender_cursor==0 ? 2 : 0;
+  state.area_contact=AreaContactContext{input.area_defender_cursor,1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+  validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || input.area_defender_cursor ||
     input.area_contact || input.recovery->opposing_player!=20 || input.current.field.roster[14].type!=23 ||
     input.current.field.roster[14].stamina!=100)
@@ -107,6 +127,20 @@ PhaseSessionState prepare_sampled_player5_dribble_defender(const PhaseSessionSta
 PhaseSessionState compare_sampled_player5_dribble_defender(const PhaseSessionState& input,
  const FieldComparisonSelection& comparison) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.area_contact && input.score &&
+    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7) {
+  if(input.area_sequence_result!=255 || comparison.table_index!=1)throw std::invalid_argument("Unsupported player7 shot comparison row");
+  DefenderContactInput contact{};contact.incoming_power=input.action->power;contact.defender_power=input.area_contact->defender_power;
+  contact.random_first=input.current.field.random_first;contact.random_second=input.current.field.random_second;
+  contact.range=comparison.range;contact.offset=comparison.offset;contact.eligible=comparison.eligible;
+  contact.thresholds=comparison.thresholds;contact.defender_slot=input.recovery->opposing_player;
+  const auto result=compare_defender_contact(contact);
+  if(result.strength || result.loss || result.score!=255 || result.result_code)
+   throw std::invalid_argument("Unverified player7 shot defender comparison");
+  auto state=input;state.area_contact->strength=result.strength;state.area_contact->loss=result.loss;
+  state.area_contact->score=result.score;state.area_contact->result=result.result_code;state.area_sequence_result=result.result_code;
+  validate_phase_session(state);return state;
+ }
  if(input.phase==FieldSessionPhase::sampled_score24_dribble_defender) {
   if(comparison.table_index!=9)throw std::invalid_argument("Unsupported sampled 2-4 defender comparison row");
   DefenderContactInput contact{};contact.incoming_power=input.action->power;contact.defender_power=input.area_contact->defender_power;
@@ -223,6 +257,20 @@ PhaseSessionState compare_sampled_player3_pass_defender(const PhaseSessionState&
 }
 PhaseSessionState advance_sampled_player3_pass_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.area_contact && input.score &&
+    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7) {
+  const auto defender=input.recovery->opposing_player;
+  if(input.area_sequence_result!=0 || input.current.field.motion[field_motion_index(defender)].status ||
+     prelude.field_elapsed[3]!=1 || prelude.defender_status[1]!=6)
+   throw std::invalid_argument("Unsupported player7 first defender clock");
+  const auto reward=award_player_experience(*input.experience,23,1,experience);
+  if(!reward.slot || *reward.slot!=0 || reward.award!=3)throw std::invalid_argument("Unverified player7 contact experience");
+  const auto applied=apply_contact_prelude({input.current,defender,1,true},prelude);
+  if(applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready)
+   throw std::invalid_argument("Unverified player7 contact clock");
+  auto state=input;state.current=applied.state;state.experience=reward.state;state.control->motion_requested=0;
+  validate_phase_session(state);return state;
+ }
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_defender_compared;
  const bool third=input.phase==FieldSessionPhase::sampled_score25_third_defender_compared;
  const bool second=input.phase==FieldSessionPhase::sampled_score25_second_defender_compared;
@@ -242,17 +290,20 @@ PhaseSessionState advance_sampled_player3_pass_contact(const PhaseSessionState& 
 PhaseSessionState advance_sampled_player3_pass_dispatch(const PhaseSessionState& input) {
  validate_phase_session(input);
  const bool score25=input.phase==FieldSessionPhase::sampled_score25_third_contact_clock;
+ const bool player7=input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.score &&
+    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7 &&
+    input.area_defender_cursor==5 && !input.area_contact && input.current.clock.remaining==306 && input.current.field.elapsed==6;
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_contact_clock;
- if(input.phase!=FieldSessionPhase::sampled_player3_contact_clock && !score23 && !score25)
+ if(input.phase!=FieldSessionPhase::sampled_player3_contact_clock && !score23 && !score25 && !player7)
   throw std::invalid_argument("Unsupported sampled player3 pass dispatch");
- auto state=input;constexpr std::uint8_t elapsed=1;
+ auto state=input;const std::uint8_t elapsed=player7 ? 2 : 1;
  state.current.field.elapsed=static_cast<std::uint8_t>(unsigned(state.current.field.elapsed)+elapsed);
  const auto recovery=advance_keeper_recovery({state.current.field.keepers,state.current.shared_recovery_flags,state.current.shared_recovery_timer},elapsed);
  state.current.field.keepers=recovery.keepers;state.current.shared_recovery_flags=recovery.shared_flags;state.current.shared_recovery_timer=recovery.shared_timer;
  const auto clock=advance_match_clock(state.current.clock,elapsed,state.current.field.random_first);
  if(clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Unverified sampled player3 dispatch clock");
- state.current.clock=clock.state;state.area_defender_cursor=score25 ? 3 : 1;
- state.phase=score25 ? FieldSessionPhase::sampled_score25_dispatch_clock : score23 ? FieldSessionPhase::sampled_score23_dispatch_clock : FieldSessionPhase::sampled_player3_dispatch_clock;validate_phase_session(state);return state;
+ state.current.clock=clock.state;state.area_defender_cursor=player7 ? 5 : score25 ? 3 : 1;
+ state.phase=player7 ? FieldSessionPhase::attack_prepared : score25 ? FieldSessionPhase::sampled_score25_dispatch_clock : score23 ? FieldSessionPhase::sampled_score23_dispatch_clock : FieldSessionPhase::sampled_player3_dispatch_clock;validate_phase_session(state);return state;
 }
 PhaseSessionState capture_sampled_player3_pass_handoff(const PhaseSessionState& input,const FieldPhaseState& captured) {
  validate_phase_session(input);
@@ -270,10 +321,13 @@ PhaseSessionState advance_sampled_score23_pass_handoff(const PhaseSessionState& 
  const PlayerProfileMappings& mappings,const FieldPhaseContent& movement) {
  validate_phase_session(input);
  const bool score25=input.phase==FieldSessionPhase::sampled_score25_dispatch_clock;
- if(input.phase!=FieldSessionPhase::sampled_score23_dispatch_clock && !score25)
+ const bool player7=input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.score &&
+    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7 &&
+    input.current.clock.remaining==304 && input.current.field.elapsed==8 && input.area_defender_cursor==5;
+ if(input.phase!=FieldSessionPhase::sampled_score23_dispatch_clock && !score25 && !player7)
   throw std::invalid_argument("Unsupported sampled pass handoff");
  auto state=input;state.current.field=advance_field_phase(input.current.field,mappings,movement).state;
- state.phase=score25 ? FieldSessionPhase::sampled_score25_pass_handoff : FieldSessionPhase::sampled_score23_pass_handoff;validate_phase_session(state);return state;
+ state.phase=player7 ? FieldSessionPhase::attack_prepared : score25 ? FieldSessionPhase::sampled_score25_pass_handoff : FieldSessionPhase::sampled_score23_pass_handoff;validate_phase_session(state);return state;
 }
 PhaseSessionState capture_sampled_player3_pass_target(const PhaseSessionState& input,std::uint8_t recipient,std::uint8_t destination,std::uint8_t counter,std::uint8_t distance) {
  validate_phase_session(input);

@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Five-defender shot through numeric field handoff
+
+- Reused defender prefix, profile preparation, direct comparison, contact clock and dispatch routines for player7's ordinary shot. All five defender slots12,14,15,16,18 compare as observed; each contact advances the clock one unit, then dispatch advances two. The original cursor progresses0..5 and remains5. The existing version142 saves the defender choices and intermediate context.
+- Reused numerical field advancement after dispatch. Across24 constructed original/native cases, 528 compared boundaries match represented session bytes11..323, cursor and flag from defender prefix through $80FE field handoff; original $C618 has the same represented state. Evidence: ../Captain-Majid-analysis/mixed25-p7shotcontinuation-original-0e1183b5, ../Captain-Majid-analysis/mixed25-p7shotpostdispatch-original-664d8dd4 and ../Captain-Majid-analysis/mixed25-p7shotreplay-native-1cc815a2. Focused tests cover all five contacts, dispatch, numeric field advancement, rejection and saved prefix. Full Windows CMake build and all45 tests passed.
+- A representative original-only continuation reaches destination233, distance99, then flight arrival. Next compare target/flight and trace goalkeeper outcome. AI choices remain supplied and presentation acknowledged; real initialization, live audiovisual timing and a complete playable match are unverified. Overall progress is unmeasured. Suggested model: Terra High.
+
 ## 2026-11-09 - Player7 field contact and ordinary shot preparation
 
 - Continued24 constructed player7 control cases with no input: 2,640 original/native polls,240 clock updates and240 field rounds match through a five-defender contact at clock311/cell103. The original retains cursor3 and flight flag1. Corrected validation to preserve this observed cursor through field, contact and action-menu states. Original/native menu opening, shot selection and confirmation each match24. Evidence: ../Captain-Majid-analysis/mixed25-p7path-f2a1d041 and ../Captain-Majid-analysis/mixed25-p7menu-native-cf2c311a.
