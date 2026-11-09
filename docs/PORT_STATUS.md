@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - prepared kickoff validation (2026-11-09):** General kickoff phases now accept observed flag0/4 and unplaced ball coordinates before placement. Actual original-emulator captures matched322 represented bytes at each of receiver, ball and post-presentation handoff boundaries;144 earlier saved kickoff transitions and both existing phase317 replays still match. All59 Windows CTest tests passed. The presentation interval is captured, and a full native startup or playable match remains unsupported. Overall progress is unmeasured.
+
 **Latest - instruction-traced kickoff (2026-11-09):** Original-emulator instruction boundaries corroborate native side and receiver selection for one startup, and record ball placement and later control handoff. The captured initial kickoff flag0 is rejected by the existing restart session guard, which expects4. Full native startup and a playable match remain unsupported; overall progress is unmeasured. See CLI_HANDOFF and WORK_LOG.
 
 **Latest - emulated kickoff formation comparison (2026-11-09):** The shared native placement kernel matched44 raw coordinate words in each of four captures of one original-emulator startup layout (two fresh runs and two resumes of the same prior state). A private-path comparator reports the first differing player coordinate. All59 registered Windows CTest tests passed. The finding covers this placement, not complete native initialization or a playable match; overall progress is unmeasured.

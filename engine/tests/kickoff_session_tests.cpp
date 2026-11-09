@@ -56,6 +56,30 @@ int main(){try{using namespace captain;
        "Acknowledged kickoff display transfers carrier and resets controlled player");
  auto handoff_bytes=bytes(handoff);std::istringstream handoff_stream(handoff_bytes);
  check(bytes(load_phase_session(handoff_stream))==handoff_bytes,"Kickoff handoff roundtrip");
+ // Initial kickoffs use flag0 and prepared post-goal kickoffs use flag4.
+ // Neither flag is an input to the traced formation/selection/ball/handoff instructions.
+ for (const auto flag : {0u, 4u}) {
+  auto captured=placed;captured.score->kickoff=static_cast<std::uint8_t>(flag);
+  auto selected=prepare_session_kickoff_receiver(captured,7,candidates);
+  auto positioned=prepare_session_kickoff_ball(selected);
+  auto transferred=continue_prepared_session_kickoff(positioned);
+  check(transferred.score->kickoff==flag && transferred.current.field.ball_owner==7 &&
+        transferred.control->controlled_player==1 && !bytes(transferred).empty(),
+        "Initial and post-goal kickoff flags survive the same saved transition");
+ }
+ auto invalid_kickoff_flag=placed;invalid_kickoff_flag.score->kickoff=2;
+ rejects([&]{validate_phase_session(invalid_kickoff_flag);});
+ auto before_ball_placement=placed;before_ball_placement.score->kickoff=0;
+ before_ball_placement.current.field.ball_x=0;before_ball_placement.current.field.ball_y=0;
+ before_ball_placement.current.field.ball_cell=0;
+ auto before_ball_receiver=prepare_session_kickoff_receiver(before_ball_placement,7,candidates);
+ auto after_ball_placement=prepare_session_kickoff_ball(before_ball_receiver);
+ check(before_ball_receiver.current.field.ball_x==0 && before_ball_receiver.current.field.ball_y==0 &&
+       after_ball_placement.current.field.ball_x==52 && after_ball_placement.current.field.ball_y==84 &&
+       after_ball_placement.current.field.ball_cell==0,
+       "Unplaced kickoff ball is accepted only until placement supplies field coordinates");
+ auto invalid_placed_ball=after_ball_placement;invalid_placed_ball.current.field.ball_x=0;
+ rejects([&]{validate_phase_session(invalid_placed_ball);});
  auto control_ready=prepare_session_control(handoff).state;
  check(control_ready.phase==FieldSessionPhase::control_ready && control_ready.current.field.ball_owner==7 &&
        control_ready.kickoff_formation && !control_ready.kickoff_receiver &&

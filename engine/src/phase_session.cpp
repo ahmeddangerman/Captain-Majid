@@ -825,7 +825,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.current.field.side==0 && state.current.field.ball_owner==(phase==64 ? 5 : 8) && (phase==61 || (state.kickoff_receiver && *state.kickoff_receiver==5)) &&
        state.current.field.elapsed==0 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==0 &&
        state.current.field.random_first==0 && state.current.field.random_second==0;
-    if(kickoff_placed && !sampled_right_goal_formation && !sampled_draw_formation && (!state.score || state.score->kickoff!=4 || !state.scheduling ||
+    if(kickoff_placed && !sampled_right_goal_formation && !sampled_draw_formation && (!state.score || (state.score->kickoff!=0 && state.score->kickoff!=4) || !state.scheduling ||
        (phase==64 ? state.current.field.ball_owner!=*state.kickoff_receiver :
                     state.current.field.ball_owner!=state.current.field.side+8) || state.current.field.elapsed ||
        state.current.field.selected_defenders>1 || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=11)))
@@ -975,7 +975,8 @@ void validate_phase_session(const PhaseSessionState& state) {
         if (!transitional_clearance && !goal_restart && !player19_goal_possession && phase!=301 && phase!=302 && phase!=225 && phase!=226 && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;
-        if (phase!=177 && phase!=178 && phase!=179 && (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176))
+        // Before kickoff placement, the original can still hold an uninitialized ball position.
+        if (phase!=61 && phase!=62 && phase!=177 && phase!=178 && phase!=179 && (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176))
             throw std::invalid_argument("Recovered-owner continuation requires an interior ball");
     }
     if (static_cast<unsigned>(state.phase) >= 9 && (!state.control || !state.experience))
