@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Returned shot field movement
+
+Reused the pass field-player movement kernel after the separately guarded returned shot dispatch. Twenty-two original random/travel pairs and player slots match the $C618 handoff in the live startup; full replay covers75 menu polls through that handoff, final random index81. A rerun's RAM matched the earlier run at all five sampled frames14900-15300. The original-only continuation reaches shot destination234/distance63 and later selects two players in flight; it does not establish native flight parity or a goalkeeper outcome. Full Windows build and all62 registered tests passed; phase317 replay sets matched576/1152 boundaries. Private evidence: ../Captain-Majid-analysis/live-return-shot-movement-final2-20261109. Overall progress is unmeasured; next compare target/flight and its selected-player interruption; suggested model Terra High.
+
+
 ## 2026-11-09 - Returned encounter shot through defender dispatch
 
 The controlled startup continuation matched 75 action-menu polls through ordinary shot confirmation, explicitly supplied action1 defender choice, profile-based attacker/defender preparation, direct-table nonterminal comparison and contact/dispatch clocks. Player3 stamina385 to305, shot power8, defender16 strength1 and score255 matched; final random index59. The original resets its retained defender cursor before comparison and increments it at dispatch, so captured samples preserve that order. The separate earlier home-shot defender17 original set still matches24/24. A changed source identified the first differing boundary/field. Full Windows build, 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. Only one defender/action1/result0 is supported; goalkeeper, scoring, live AI/presentation and a complete match remain unsupported. Overall progress is unmeasured; suggested model Terra High.

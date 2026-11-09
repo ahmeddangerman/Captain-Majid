@@ -50,6 +50,7 @@ def main():
     parser.add_argument('--contact-end-index',type=int)
     parser.add_argument('--dispatch-index',type=int)
     parser.add_argument('--dispatch-end-index',type=int)
+    parser.add_argument('--movement-end-index',type=int,help='original shot handoff after ordered player movement')
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -200,7 +201,25 @@ def main():
         source,index=wait(destination,index,dispatch-1,final,'returned.shot.dispatch_after')
         compare_menu(source.read_bytes(),ram(final),362,'returned.shot.dispatch_after',score,strength,ram(args.comparison_index))
         if index!=ram(final)[0xe1]:raise ValueError('boundary returned.shot.dispatch, random.index: original and native differ')
-    print(f'Matched {count} returned menu polls through {"shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    if args.movement_end_index is not None:
+        end=args.movement_end_index
+        if args.dispatch_end_index is None or not args.dispatch_end_index<end<len(pcs) or pcs[end]!='C618':
+            raise ValueError('boundary returned.shot.movement: unsupported original handoff order')
+        rows,last=menu_wait_events(lines,pcs,ram,args.dispatch_end_index,end)
+        if len(rows)!=44:
+            raise ValueError(f'boundary returned.shot.movement: expected 22 random/travel pairs, got {len(rows)//2}')
+        operation+=1;events=output/f'{operation:03d}-movement-events.txt'
+        events.write_text('CMJNMISEQ1\n'+''.join(rows[2*slot]+'\n'+rows[2*slot+1]+'\nP '+str(slot)+'\n' for slot in range(22)))
+        destination=output/f'{operation:03d}-movement.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-field-movement',str(events),str(index),'--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.movement: {run.stderr.strip()}')
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(ram(end)[0xe1])]:raise ValueError(f'boundary returned.shot.movement, random.index: native {indices}, original {ram(end)[0xe1]}')
+        adjusted=bytearray(ram(end));adjusted[0x32:0x34]=ram(args.comparison_index)[0x32:0x34]
+        normalized=bytearray(destination.read_bytes());normalized[258:260]=(362).to_bytes(2,'little')
+        compare_menu(normalized,adjusted,362,'returned.shot.movement',score,strength,ram(args.comparison_index))
+        source=destination;index=int(indices[0])
+    print(f'Matched {count} returned menu polls through {"shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

@@ -101,7 +101,7 @@ enum class FieldSessionPhase : std::uint16_t {
     ordinary_return_contact_pending = 354, ordinary_return_action_menu = 355, ordinary_return_shot_choice = 356,
     ordinary_return_shot_defense = 357, ordinary_return_shot_prepared = 358,
     ordinary_return_shot_defender_prepared = 359, ordinary_return_shot_defender_compared = 360,
-    ordinary_return_shot_contact = 361, ordinary_return_shot_dispatch = 362
+    ordinary_return_shot_contact = 361, ordinary_return_shot_dispatch = 362, ordinary_return_shot_field_moved = 363
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

@@ -1,5 +1,8 @@
 # Evidence-fed field-round comparison
 
+The same 22-slot, event-fed field-player kernel can now follow a supported returned-shot dispatch into phase363. The original live startup matches at $C618; captured event order is supplied rather than generated. `--advance-observed-field-movement` and the older pass-named command refer to the same operation. The following shot-flight interruption is not yet modeled by this phase.
+
+
 At the guarded returned-shot preparation boundary, `M`, `L` and `C` samples respectively supply observed motion, last-carrier-cell and defender-cursor reset bytes. `C` currently accepts only the observed reset to zero. These preserve captured order and do not emulate presentation. See CLI_HANDOFF for the evidence and bounds.
 
 At a guarded returned-encounter boundary, explicit `M`, `F` and `D` records can supply observed motion, facing and display-parameter bytes before opening the shared action menu. `D` is an observed presentation sample, not a renderer. The original cursor residue remains preserved. See CLI_HANDOFF for coverage.

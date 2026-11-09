@@ -1468,6 +1468,16 @@ int main(){try{using namespace captain;
        returned_shot_dispatch.phase==FieldSessionPhase::ordinary_return_shot_dispatch &&
        returned_shot_dispatch.current.field.elapsed==returned_shot_contact.current.field.elapsed+2,
        "Returned ordinary shot applies the nonterminal contact and dispatch clocks");
+ auto shot_movement_input=returned_shot_dispatch;
+ for(auto& player:shot_movement_input.current.field.roster) player.type=1;
+ const auto shot_movement=advance_observed_pass_field_movement(shot_movement_input,profile_mappings,pass_movement_content,0,pass_movement_events);
+ check(shot_movement.state.phase==FieldSessionPhase::ordinary_return_shot_field_moved && !shot_movement.state.current.field.elapsed,
+       "Returned shot uses the shared evidence-fed field movement order");
+ const auto shot_movement_bytes=bytes(shot_movement.state);std::istringstream shot_movement_stream(shot_movement_bytes);
+ check(bytes(load_phase_session(shot_movement_stream))==shot_movement_bytes,"Returned shot movement snapshot roundtrip");
+ rejects([&]{advance_observed_pass_field_movement(shot_movement_input,profile_mappings,pass_movement_content,0,missing_movement);});
+ auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
+ rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

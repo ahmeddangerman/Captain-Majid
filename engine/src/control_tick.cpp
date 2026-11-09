@@ -333,8 +333,9 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement,std::uint8_t initial_random_index,
     const std::vector<ObservedClockEvent>& events) {
     validate_phase_session(input);
-    if (input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock || !input.current.field.elapsed || !input.control)
-        throw std::invalid_argument("Observed pass movement requires dispatch and elapsed time");
+    const bool shot=input.phase==FieldSessionPhase::ordinary_return_shot_dispatch;
+    if ((!shot && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
+        throw std::invalid_argument("Observed field movement requires a supported dispatch and elapsed time");
     auto state=input;
     auto& field=state.current.field;
     field.movement_region=static_cast<std::uint8_t>(field_ball_region(field.ball_x,field.ball_y)|128u);
@@ -356,7 +357,7 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     }
     if (slot!=22) throw std::invalid_argument("Observed pass movement has incomplete player slots");
     field.elapsed=0;
-    state.phase=FieldSessionPhase::ordinary_pass_field_moved;
+    state.phase=shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
     validate_phase_session(state);
     return {std::move(state),index};
 }

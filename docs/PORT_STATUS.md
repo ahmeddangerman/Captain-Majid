@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - returned shot field movement (2026-11-09):** One live startup now matches the evidence-fed field-player movement from shot dispatch through $C618, reusing the pass movement kernel. Original-only flight later selects two players; shot flight, goalkeeper outcome, live AI/presentation and a complete match remain unverified. All62 Windows tests and phase317 replay sets passed; overall progress is unmeasured.
+
+
 **Latest - returned encounter shot through dispatch (2026-11-09):** One captured startup matches 75 action-menu polls, ordinary shot preparation, a supplied single defender choice, nonterminal comparison and contact/dispatch clocks. An earlier independent home-shot defender set still matches24 cases. Other defender outcomes, the new shot's keeper/scoring path, autonomous AI/presentation and a complete match remain unsupported. All 62 Windows tests and both phase317 replays passed; overall progress is unmeasured.
 
 **Latest - returned encounter action menu (2026-11-09):** The directed startup continuation matches through a second encounter and action menu with captured event and presentation inputs. Menu choice, defender AI, autonomous timing and a complete match remain unsupported. All 62 Windows tests and both phase317 replays passed; overall progress is unmeasured.
