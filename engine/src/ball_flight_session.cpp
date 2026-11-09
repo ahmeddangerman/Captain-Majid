@@ -480,7 +480,7 @@ PhaseSessionState position_ordinary_pass_recipient(const PhaseSessionState& inpu
 }
 PhaseSessionState continue_ordinary_pass_control(const PhaseSessionState& input,std::uint8_t observed_facing) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::ordinary_pass_recipient_positioned || (observed_facing!=0 && observed_facing!=64))
+ if((input.phase!=FieldSessionPhase::ordinary_pass_recipient_positioned && input.phase!=FieldSessionPhase::ordinary_free_pass_contest_winner) || (observed_facing!=0 && observed_facing!=64))
   throw std::invalid_argument("Ordinary pass control requires positioned possession and observed facing");
  const auto& field=input.current.field;
  if((field.ball_y>=96 && field.ball_y<160 && (field.ball_x<80 || field.ball_x>=176)) ||

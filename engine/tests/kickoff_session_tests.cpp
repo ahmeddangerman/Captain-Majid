@@ -1372,6 +1372,8 @@ int main(){try{using namespace captain;
  const auto ordinary_ball_step=advance_ordinary_pass_ball_cell(home_flight_for_step);
  if(ordinary_ball_step.state.phase==FieldSessionPhase::ordinary_pass_flight_arrival)
   rejects([&]{advance_ordinary_pass_ball_cell(ordinary_flight);});
+ ClearanceRaceContent free_race_content{};
+ rejects([&]{resolve_ordinary_free_pass_contest(home_flight_for_step,profile_mappings,pass_movement_content,free_race_content);});
  check((ordinary_ball_step.state.phase==FieldSessionPhase::ordinary_pass_flight_callback ||
         ordinary_ball_step.state.phase==FieldSessionPhase::ordinary_pass_flight_arrival) && ordinary_ball_step.state.ball_trajectory,
        "Ordinary pass flight advances to an explicit cell or arrival callback");

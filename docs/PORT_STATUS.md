@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - startup free pass to control-ready (2026-11-09):** One original startup sequence now matches from confirmed target through defenders, free-pass contest and control_ready using supplied original event timing, choices and content; 24 earlier teammate passes also match through control_ready. Other contest outcomes, autonomous AI/presentation and a complete match remain unsupported. All 62 Windows CTest checks and both phase317 replays passed; overall progress is unmeasured.
+
 **Latest - ordinary teammate pass through resumed control (2026-11-09):** Twenty-four earlier original encounters match the bounded general path from confirmed target through defenders, flight, teammate reception and control_ready. Choices, timing, fractions and facing are supplied. The independent startup free pass matches through flight setup but its loose-ball contest remains unsupported. All 62 Windows tests and both phase317 replays passed; autonomous AI/presentation and a complete match remain unsupported. Overall progress is unmeasured.
 
 **Latest - ordinary pass flight setup (2026-11-09):** Shared recipient/distance and trajectory setup match one startup free pass and 24 earlier teammate-pass cases with supplied fractions and original-derived content. A separate phase preserves older scenario guards. Flight continuation, AI, autonomous scheduling/presentation and a complete match remain unsupported. All 62 Windows tests and both phase317 replays passed; overall progress is unmeasured.

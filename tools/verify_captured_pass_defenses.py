@@ -162,6 +162,15 @@ def compare_control_entry(actual, raw, case):
     compare_checkpoint(prior,raw,1,19,case,'control.entry',None,False,False)
 
 
+def compare_free_winner(actual, raw, case, boundary):
+    if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260], 'little')!=351:
+        raise ValueError(f'case {case}, boundary {boundary}: invalid native session format or phase')
+    prior=bytearray(actual[:259]+actual[260:])
+    prior[10]=133
+    prior[258]=99
+    compare_checkpoint(prior,raw,99,19,case,boundary,None,True,False)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):
@@ -190,6 +199,12 @@ def main():
     parser.add_argument('--distance-table', type=Path, help='private original-derived pass distance table')
     parser.add_argument('--flight-setup-index', type=int, help='original initial flight callback boundary')
     parser.add_argument('--velocity', type=Path, help='private original-derived ball velocity content')
+    parser.add_argument('--free-before-index', type=int, help='last recorded travel event before the free contest')
+    parser.add_argument('--free-winner-index', type=int, help='original free contest winner boundary')
+    parser.add_argument('--free-control-index', type=int, help='original return-to-control boundary')
+    parser.add_argument('--free-setup-index', type=int, help='original first NMI after control setup writes')
+    parser.add_argument('--free-ready-index', type=int, help='original control-ready boundary')
+    parser.add_argument('--race-content', type=Path, help='private original-derived race speed table')
     args = parser.parse_args()
     if args.defender_boundary_index is not None and args.prepared_boundary_index is None:
         raise ValueError('First-defender comparison requires the attacker-prepared boundary')
@@ -212,6 +227,9 @@ def main():
         raise ValueError('Pass target comparison requires the movement boundary and private distance table')
     if (args.flight_setup_index is None) != (args.velocity is None) or (args.flight_setup_index is not None and args.flight_target_index is None):
         raise ValueError('Flight setup requires target evidence and private velocity content')
+    free_indices=(args.free_before_index,args.free_winner_index,args.free_control_index,args.free_setup_index,args.free_ready_index)
+    if any(value is not None for value in free_indices) and (any(value is None for value in free_indices) or args.race_content is None or args.flight_setup_index is None):
+        raise ValueError('Free pass replay requires five original boundaries, flight setup and private race content')
     if not 0 <= args.initial_index <= 255:
         raise ValueError('Initial random index must be a byte')
     lines, pcs, ram = trace_data(args.trace_directory)
@@ -365,8 +383,21 @@ def main():
         if not (args.comparison_followup_index < before < contact < end < len(pcs)) or pcs[before] != 'E406' or pcs[contact] != 'C9C5' or pcs[end] != '80DC' or ram(end)[0x24] != 26:
             raise ValueError('boundary defender.contact: unsupported original ordering or bank')
 
-        def replay_wait(start, finish, state, random_index, label):
+        def replay_wait(start, finish, state, random_index, label, presentation_samples=False):
             rows, last = menu_wait_events(lines, pcs, ram, start, finish + 1)
+            if presentation_samples:
+                points=[i for i in range(start+1,finish+1) if pcs[i] in ('C9C5','E3CA')]
+                if len(points)!=len(rows):
+                    raise ValueError(f'boundary {label}: ambiguous presentation event ordering')
+                motion=state.read_bytes()[305]
+                ordered=[]
+                for row,point in zip(rows,points):
+                    observed=ram(point)[0x532]
+                    if observed!=motion:
+                        motion=observed
+                        ordered.append(f'M {motion}')
+                    ordered.append(row)
+                rows=ordered
             operation_path = output / f'{label}-events.txt'
             operation_path.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
             destination = output / f'{label}-wait.cmjsession'
@@ -485,8 +516,42 @@ def main():
         if index!=ram(setup)[0xe1]:
             raise ValueError(f'boundary flight.setup, random.index: native {index}, original {ram(setup)[0xe1]}')
         source=destination
+    if args.free_before_index is not None:
+        before,winner,control,setup,ready=free_indices
+        if not (args.flight_setup_index<before<winner<control<setup<ready<len(pcs)) or [pcs[i] for i in free_indices]!=['E406','DF0D','E0DF','C9C5','E145']:
+            raise ValueError('boundary free.contest: unsupported original ordering')
+        if any(pcs[i]=='C9C5' for i in range(before+1,winner)):
+            raise ValueError('boundary free.contest: unexpected interleaved random event')
+        waiting,index,last=replay_wait(args.flight_setup_index,before,source,index,'free-before')
+        if last!=before:
+            raise ValueError('boundary free.contest: incomplete pre-contest event')
+        compare_flight_setup(waiting.read_bytes(),ram(before),'startup',345,'free.before')
+        destination=output/'free-winner.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--resolve-ordinary-free-pass-contest',str(args.race_content.resolve()),'--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary free.contest: {run.stderr.strip()}')
+        compare_free_winner(destination.read_bytes(),ram(winner),'startup','free.winner')
+        waiting,index,last=replay_wait(winner,control-1,destination,index,'free-winner-wait')
+        compare_free_winner(waiting.read_bytes(),ram(control),'startup','free.winner_wait')
+        entry=output/'free-control-entry.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--continue-ordinary-pass-control',str(ram(control)[0x517]),'--capture',str(entry)],capture_output=True,text=True,timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary free.control_entry: {run.stderr.strip()}')
+        compare_control_entry(entry.read_bytes(),ram(control),'startup')
+        waiting,index,last=replay_wait(control,setup-1,entry,index,'free-control-before-setup',True)
+        compare_control_entry(waiting.read_bytes(),ram(last),'startup')
+        prepared=output/'free-control-setup.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--setup-control','--capture',str(prepared)],capture_output=True,text=True,timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary free.control_setup: {run.stderr.strip()}')
+        compare_checkpoint(prepared.read_bytes(),ram(setup),9,9,'startup','free.control_setup',None,False,False)
+        waiting,index,last=replay_wait(setup-1,ready-1,prepared,index,'free-control-after-setup')
+        compare_checkpoint(waiting.read_bytes(),ram(ready),9,9,'startup','free.control_ready',None,False,False)
+        if index!=ram(ready)[0xe1]:
+            raise ValueError(f'boundary free.control_ready, random.index: native {index}, original {ram(ready)[0xe1]}')
+        source=waiting
     print(f'Matched ordered mode change and {count} explicitly recorded defender choices'
-          f'{" through flight setup" if args.flight_setup_index is not None else " through pass flight target" if args.flight_target_index is not None else " through field movement and pass handoff" if args.movement_end_index is not None else " through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
+          f'{" through free-pass control ready" if args.free_before_index is not None else " through flight setup" if args.flight_setup_index is not None else " through pass flight target" if args.flight_target_index is not None else " through field movement and pass handoff" if args.movement_end_index is not None else " through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
           f'final random index {index}; checkpoint {source}.')
 
 

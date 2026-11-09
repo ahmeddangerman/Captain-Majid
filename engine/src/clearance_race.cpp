@@ -1,6 +1,7 @@
 #include "captain/clearance_race.hpp"
 #include "captain/ball_recovery.hpp"
 #include "captain/defender_selection.hpp"
+#include "captain/ball_step.hpp"
 #include <stdexcept>
 #include <utility>
 namespace captain {
@@ -36,6 +37,31 @@ FieldLooseBallRaceResult resolve_field_loose_ball_race(const FieldPhaseState& in
         remaining=static_cast<std::uint8_t>(unsigned(remaining)-1);
     } while(remaining!=0);
     return {std::move(field),rounds,remaining,active,other,winner};
+}
+PhaseSessionState resolve_ordinary_free_pass_contest(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,const ClearanceRaceContent& content) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_pass_flight_ready || !input.area_ai_target || input.area_ai_target->recipient!=255 ||
+       !input.ball_trajectory || !input.shot_flight || !input.recovery || input.current.field.selected_defenders)
+        throw std::invalid_argument("Free pass contest requires an unopposed free-target flight");
+    auto state=input;auto& trajectory=*state.ball_trajectory;
+    const auto step=advance_ball_to_next_cell({trajectory.x,trajectory.y,{trajectory.vx,trajectory.vy},
+        state.current.field.ball_cell,state.shot_flight->destination});
+    if(step.event==BallStepEvent::cell_changed)throw std::invalid_argument("Free pass must first reach its destination");
+    trajectory.x=step.x;trajectory.y=step.y;state.current.field.ball_x=step.x>>8;
+    state.current.field.ball_y=step.y>>8;state.current.field.ball_cell=step.cell;
+    auto numeric=resolve_field_loose_ball_race(state.current.field,state.recovery->opposing_player,state.shot_flight->distance,
+        mappings,movement,content);
+    if(numeric.rounds>2 || !numeric.winner || *numeric.winner<1 || *numeric.winner>10)
+        throw std::invalid_argument("Free pass contest winner or timeout requires further evidence: rounds="+
+            std::to_string(numeric.rounds)+" winner="+(numeric.winner ? std::to_string(*numeric.winner) : "none"));
+    state.current.field=std::move(numeric.field);
+    auto& field=state.current.field;field.ball_owner=*numeric.winner;
+    auto& winner=field.motion[field_motion_index(*numeric.winner)];
+    winner.x=static_cast<std::uint16_t>((winner.x&255u)|(unsigned(field.ball_x)<<8));
+    winner.y=static_cast<std::uint16_t>((winner.y&255u)|(unsigned(field.ball_y)<<8));
+    state.phase=FieldSessionPhase::ordinary_free_pass_contest_winner;
+    validate_phase_session(state);return state;
 }
 PhaseSessionState resolve_sampled_player3_pass_race(const PhaseSessionState& input,
     const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,
