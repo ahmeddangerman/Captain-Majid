@@ -217,6 +217,7 @@ def main():
         indices = re.findall(r'final random index (\d+);', run.stdout)
         if indices != [str(ram(wait_end)[0xe1])]:
             raise ValueError(f'boundary menu.wait, random.index: native {indices}, original {ram(wait_end)[0xe1]}')
+        random_index = int(indices[0])
         menu_result = output / f'{steps + 2:03d}-menu.cmjsession'
         run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(wait_result),
                               '--open-action-menu', '--capture', str(menu_result)],
@@ -250,9 +251,10 @@ def main():
             indices = re.findall(r'final random index (\d+);', run.stdout)
             if indices != [str(ram(wait_end)[0xe1])]:
                 raise ValueError(f'boundary menu.neutral_wait, random.index: native {indices}, original {ram(wait_end)[0xe1]}')
+            random_index = int(indices[0])
             steps += 1
             destination_name = 'neutral human action menu wait'
-    print(f'Continuously matched {steps} boundaries ({counts}) through {destination_name} with captured event inputs; no frame scheduler simulated.')
+    print(f'Continuously matched {steps} boundaries ({counts}) through {destination_name} with captured event inputs; final random index {random_index}; no frame scheduler simulated.')
 
 
 if __name__ == '__main__':

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Captured ordinary pass selection and target arithmetic
+
+Continued the startup's 68-boundary chain with 95 consecutive original menu polls through ordinary pass confirmation, with captured button, random and travel events. The next original pass-type submenu is not yet natively replayed. Added the pure ordinary target initializer: carrier high-byte coordinates refresh ball position and determine cell/cursor; ordinary mode/subtype become 129/0. Across the startup and an earlier independent encounter, 32 constructed original CPU cases matched eight positions and two fraction patterns with intentionally stale ball state. This kernel has no generic saved-session continuation yet. All 62 registered Windows tests passed; an initial build/replay concurrency attempt hit an executable lock and was rerun successfully in sequence. Earlier phase317 replays matched 576/1,152 boundaries. Evidence remains outside Git. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Original encounter to menu with captured NMI events
 
 Added explicit ordered random/travel sequence handling at field-contact and human-menu boundaries and extended the private-path continuous verifier through acknowledged menu entry and neutral wait. One startup now matches 68 sequential original boundaries without reseeding, including 197 supplied random/travel pairs through the menu interval. A separate original input probe selected pass target with down then confirm; native comparison beyond the neutral menu remains pending. All 62 registered Windows tests and the 576/1,152-boundary phase317 regressions passed. Evidence stays in ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/control-chain-menu-neutral-20261109. Overall progress is unmeasured; suggested model Terra High.

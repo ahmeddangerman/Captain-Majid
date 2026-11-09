@@ -7,6 +7,12 @@ template<class F> void rejects(F operation) {try {operation();} catch(const std:
 }
 int main() {try {
  using captain::resolve_pass_target_cell;
+ using captain::initialize_ordinary_pass_target;
+ const auto initial=initialize_ordinary_pass_target(0x7f32,0x8467);
+ check(initial.ball_x==127 && initial.ball_y==132 && initial.cell==114 && initial.cursor==114 &&
+       initial.ball_mode==129 && initial.attack_subtype==0,
+       "Ordinary pass target starts at the carrier's field cell with the ordinary pass mode");
+ rejects([&]{initialize_ordinary_pass_target(0x2fff,0x5000);});
  check(resolve_pass_target_cell(7,42,52,84)==0,"First field cell");
  check(resolve_pass_target_cell(21,42,204,172)==239,"Last field cell");
  check(resolve_pass_target_cell(1,42,47,84)==255,"Out-of-field recipient");
