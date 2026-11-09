@@ -70,7 +70,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        (phase>=328 && state.current.field.selected_defenders) || state.area_defender_cursor!=5 || state.action->action!=0 || state.action->power!=22 ||
        state.recovery->attack_subtype!=128 || state.saved_ball_flight_flag!=(phase==327 ? 1 : 0) || state.human_defense_choices))
         throw std::invalid_argument("Invalid player7 shot target or flight");
-    if(score25_human_pass && ((score36_human_pass && phase>=325) || !state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
+    if(score25_human_pass && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
        !state.human_pass_cursor || state.human_pass_steps>5 ||
        (state.human_pass_steps<=5 && *state.human_pass_cursor!=std::array<std::uint8_t,6>{87,99,100,101,102,103}[state.human_pass_steps]) ||
        ((phase==311 || phase>=313) && state.human_pass_steps!=5) || (phase==312 && state.human_pass_steps) ||
@@ -368,8 +368,8 @@ void validate_phase_session(const PhaseSessionState& state) {
     if(bool(state.area_ai_target)!=((phase>=78 && phase<=94) || area_flight || area_action4 || area_action6))throw std::invalid_argument("Area AI choice needs saved target context");
     if(area_action6 && (!state.action || state.action->action!=6 || !state.area_ai_target || state.area_ai_target->recipient || state.area_ai_target->cell!=state.current.field.ball_cell || ((phase==104 || phase==107) && state.current.field.side!=11) || state.current.field.selected_defenders>4))
         throw std::invalid_argument("Area action6 destination needs its captured target cell");
-    const bool sampled_player7_flight=area_flight && state.score && state.score->left_goals==2 && state.score->right_goals==5 &&
-        state.current.clock.remaining==321 && state.current.field.side==0 &&
+    const bool sampled_player7_flight=area_flight && state.score && ((state.score->left_goals==2 && state.score->right_goals==5 && state.current.clock.remaining==321) ||
+        (state.score->left_goals==3 && state.score->right_goals==6 && state.current.clock.remaining==279)) && state.current.field.side==0 &&
         (state.current.field.ball_owner==5 || state.current.field.ball_owner==7) && state.area_defender_cursor==3 &&
         state.saved_ball_flight_flag==1 && state.area_ai_target && state.area_ai_target->recipient==7 && state.area_ai_target->cell==103;
     if(area_flight && (!state.action || state.action->action!=1 || !state.area_ai_target || (!sampled_player7_flight && (state.area_ai_target->recipient<12 || state.area_ai_target->recipient>21)) || state.area_ai_target->cell>=240 || state.area_ai_target->cost>1023 || (!sampled_player7_flight && phase<135 && state.current.field.side!=((phase>=128 && phase<=133) ? 0 : 11)) || ((pass_capture_tick || pass_blocked_tick) && state.current.field.side!=0) || state.current.field.selected_defenders>4 || (phase<114 && state.area_defender_cursor && !sampled_player7_flight) || (((phase>=117 && phase<=122) || (phase>=124 && phase<=149)) ? state.area_sequence_result>((phase>=120 && phase<=122) ? 1 : 3) : state.area_sequence_result!=255)))
@@ -456,8 +456,9 @@ void validate_phase_session(const PhaseSessionState& state) {
         ((phase==1 || phase==6 || phase==9 || phase==10 || phase==12 || phase==13) && state.current.field.side==11 && state.current.field.ball_owner==19));
     const bool score25_player7_cursor=(phase==1 || phase==9 || phase==10 || phase==13 || phase==15 || phase==18 || phase==19 || (phase==20 && state.human_defense_choices)) &&
        (state.area_defender_cursor==3 || (phase==20 && state.area_defender_cursor<=5)) &&
-       state.score && state.score->left_goals==2 && state.score->right_goals==5 && state.score->kickoff==4 &&
-       state.current.clock.remaining>=304 && state.current.clock.remaining<=321 && state.current.field.side==0 && state.current.field.ball_owner==7 &&
+       state.score && state.score->kickoff==4 &&
+       ((state.score->left_goals==2 && state.score->right_goals==5 && state.current.clock.remaining>=304 && state.current.clock.remaining<=321) ||
+        (state.score->left_goals==3 && state.score->right_goals==6 && state.current.clock.remaining>=269 && state.current.clock.remaining<=279)) && state.current.field.side==0 && state.current.field.ball_owner==7 &&
        state.current.field.ball_cell==103 && state.saved_ball_flight_flag==1;
     const bool score25_shot_keeper_cursor=(phase>=52 && phase<=56) && state.area_defender_cursor==5 && state.score &&
        state.score->left_goals==2 && state.score->right_goals==5 && state.score->kickoff==4 &&

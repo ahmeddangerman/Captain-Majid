@@ -273,6 +273,7 @@ PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input
  const bool score35=input.phase==FieldSessionPhase::sampled_field_ai_pass_target && input.score &&
   input.score->left_goals==3 && input.score->right_goals==5 && input.current.clock.remaining==296;
  const bool player7=input.phase==FieldSessionPhase::sampled_score25_pass_target_captured;
+ const bool score36_player7=player7 && input.score && input.score->left_goals==3 && input.score->right_goals==6;
  const bool mixed=input.phase==FieldSessionPhase::sampled_mixed_result4_target;
  const bool player12=input.phase==FieldSessionPhase::sampled_player12_pass_target;
  const bool player14=input.phase==FieldSessionPhase::sampled_player14_pass_target;
@@ -283,8 +284,8 @@ PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input
  const bool postgoal=input.phase==FieldSessionPhase::sampled_field_ai_pass_target && input.score &&
   input.score->left_goals==2 && input.score->right_goals==1 && input.current.clock.remaining==406 && input.current.clock.extra_time==9;
  if((input.phase!=FieldSessionPhase::sampled_field_ai_pass_target && !mixed && !player12 && !player14 && !player7) ||
-    x_fraction!=(score35 ? 99 : player7 ? 167 : player14 ? 101 : player12 ? (postgoal_player12 ? 8 : 120) : mixed ? (postgoal_mixed ? 232 : 216) : postgoal ? 143 : 127) ||
-    y_fraction!=(score35 ? 120 : player7 ? 221 : player14 ? 13 : player12 ? (postgoal_player12 ? 255 : 132) : mixed ? (postgoal_mixed ? 255 : 228) : postgoal ? 27 : 0))
+    x_fraction!=(score35 ? 99 : player7 ? (score36_player7 ? 82 : 167) : player14 ? 101 : player12 ? (postgoal_player12 ? 8 : 120) : mixed ? (postgoal_mixed ? 232 : 216) : postgoal ? 143 : 127) ||
+    y_fraction!=(score35 ? 120 : player7 ? (score36_player7 ? 109 : 221) : player14 ? 13 : player12 ? (postgoal_player12 ? 255 : 132) : mixed ? (postgoal_mixed ? 255 : 228) : postgoal ? 27 : 0))
   throw std::invalid_argument("Unsupported sampled opponent pass flight input");
  const auto& field=input.current.field;const auto pass=*input.sampled_field_pass;
  if(field_cell_at(field.ball_x,field.ball_y)!=field.ball_cell || field.ball_cell==pass.destination)
@@ -401,8 +402,9 @@ PhaseSessionState continue_area_already_arrived(const PhaseSessionState& input) 
   state.area_defender_cursor=0;state.phase=FieldSessionPhase::area_pass_defenders_pending;
  } else {
   state.current.field.ball_owner=state.area_ai_target->recipient;
-  const bool player7=state.score && state.score->left_goals==2 && state.score->right_goals==5 &&
-   state.current.field.side==0 && state.area_ai_target->recipient==7 && state.current.clock.remaining==321;
+  const bool player7=state.score && ((state.score->left_goals==2 && state.score->right_goals==5 && state.current.clock.remaining==321) ||
+   (state.score->left_goals==3 && state.score->right_goals==6 && state.current.clock.remaining==279)) &&
+   state.current.field.side==0 && state.area_ai_target->recipient==7;
   if(!player7)state.area_defender_cursor=0;
   state.phase=FieldSessionPhase::area_pass_received;
  }

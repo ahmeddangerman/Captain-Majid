@@ -1869,6 +1869,31 @@ int main(){try{using namespace captain;
  auto score36_dispatch=advance_sampled_player3_pass_dispatch(score36_contact);
  check(score36_dispatch.current.clock.remaining==279 && score36_dispatch.area_defender_cursor==3,
        "The observed 3-6 pass reaches dispatch after three defenders");
+ auto score36_handoff_pass=advance_sampled_score23_pass_handoff(score36_dispatch,player3_race_mappings,player3_race_movement);
+ check(score36_handoff_pass.phase==FieldSessionPhase::sampled_score25_pass_handoff && score36_handoff_pass.current.clock.remaining==279 && !score36_handoff_pass.current.field.elapsed,
+       "The 3-6 pass calculates its field handoff");
+ auto score36_pass_captured=capture_sampled_player3_pass_target(score36_handoff_pass,7,103,255,3);
+ check(score36_pass_captured.sampled_field_pass && score36_pass_captured.sampled_field_pass->distance==3,
+       "The 3-6 pass retains the observed player7 target");
+ auto score36_pass_flight=begin_sampled_field_pass_flight(score36_pass_captured,82,109,pass_geometry,pass_velocity);
+ check(score36_pass_flight.phase==FieldSessionPhase::area_ball_advance_ready && score36_pass_flight.saved_ball_flight_flag==1,
+       "The 3-6 pass begins numeric player7 flight");
+ rejects([&]{begin_sampled_field_pass_flight(score36_pass_captured,81,109,pass_geometry,pass_velocity);});
+ auto score36_pass_arrival=score36_pass_flight;score36_pass_arrival.phase=FieldSessionPhase::area_ball_arrival_callback;
+ score36_pass_arrival.current.field.ball_x=113;score36_pass_arrival.current.field.ball_y=143;score36_pass_arrival.current.field.ball_cell=103;
+ score36_pass_arrival.ball_trajectory->x=113<<8;score36_pass_arrival.ball_trajectory->y=143<<8;
+ auto score36_pass_received=continue_area_already_arrived(score36_pass_arrival);
+ check(score36_pass_received.current.field.ball_owner==7 && score36_pass_received.area_defender_cursor==3,
+       "The 3-6 pass hands ownership to player7 and preserves the defender cursor");
+ score36_pass_received.current.field.motion[field_motion_index(7)].x=113<<8;score36_pass_received.current.field.motion[field_motion_index(7)].y=143<<8;
+ auto score36_pass_positioned=continue_area_pass_received(score36_pass_received);
+ auto score36_player7_control=continue_sampled_field_pass_control(score36_pass_positioned);
+ check(score36_player7_control.phase==FieldSessionPhase::player_control && score36_player7_control.current.field.ball_x==113 && score36_player7_control.current.field.ball_y==143,
+       "The 3-6 pass returns player7 to control at the observed position");
+ auto score36_player7_tick=score36_player7_control;score36_player7_tick.phase=FieldSessionPhase::field_round_pending;score36_player7_tick.current.clock.remaining=278;score36_player7_tick.current.field.elapsed=1;
+ check(!bytes(score36_player7_tick).empty(),"The observed 3-6 player7 clock retains its cursor");
+ auto invalid_score36_player7_tick=score36_player7_tick;invalid_score36_player7_tick.current.clock.remaining=268;
+ rejects([&]{bytes(invalid_score36_player7_tick);});
  auto player25_target=begin_sampled_human_pass_target(player25_pass_input);
  for(auto held:{1,4,4,4,4})player25_target=poll_sampled_human_pass_target(player25_target,held,0);
  check(player25_target.phase==FieldSessionPhase::sampled_score25_pass_target && *player25_target.human_pass_cursor==103 &&

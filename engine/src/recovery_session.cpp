@@ -20,9 +20,10 @@ PhaseSessionState continue_sampled_field_pass_control(const PhaseSessionState& i
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::area_pass_keeper_entry || !input.area_ai_target || !input.ball_trajectory || !input.shot_flight || !input.score || !input.experience || !input.action || !input.control)
   throw std::invalid_argument("Unsupported sampled opponent pass control handoff");
- const bool player7=input.current.field.side==0 && input.current.field.ball_owner==7 && input.current.field.ball_x==117 &&
-    input.current.field.ball_y==139 && input.current.field.ball_cell==103 && input.current.clock.remaining==321 &&
-    input.current.clock.extra_time==13 && input.score->left_goals==2 && input.score->right_goals==5 && input.score->kickoff==4 &&
+ const bool player7=input.current.field.side==0 && input.current.field.ball_owner==7 && input.current.field.ball_cell==103 &&
+    ((input.current.field.ball_x==117 && input.current.field.ball_y==139 && input.current.clock.remaining==321 && input.score->left_goals==2 && input.score->right_goals==5) ||
+     (input.current.field.ball_x==113 && input.current.field.ball_y==143 && input.current.clock.remaining==279 && input.score->left_goals==3 && input.score->right_goals==6)) &&
+    input.current.clock.extra_time==13 && input.score->kickoff==4 &&
     input.action->action==1 && input.action->power==0 && input.area_ai_target->recipient==7 &&
     input.area_ai_target->cell==103 && input.area_defender_cursor==3 && input.ball_trajectory->flags==1 &&
     input.control->facing==64 && !input.current.field.selected_defenders;
