@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-10 - Action3 reaches the original flight handler
+
+After $C606, the captured original executes 22 ordered field-player updates with one random/travel pair per slot. Phase398 reuses the existing movement kernel and matches the original $E0DE state, elapsed0, region130 and random index72. The following presentation uses 35 recorded random/travel pairs and explicit motion0, facing64 and display0 samples. Phase399 retains the selected player14/cell161 and cost60, acknowledges the observed carrier marker128 and ball variant1, and matches the original $C621/$DFD9 flight-handler entry at random index107. Original/native represented fields and score/formation match at both boundaries. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-fieldmove-final-20261110, ../Captain-Majid-analysis/post-kickoff-action3-flight-handoff-final-20261110 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-post-kickoff-action3-route-20261110/trace.
+
+Original DFD9 next derives a new target from the moved recipient and enters numeric flight; that calculation and flight are not yet native-compared. The recorded samples acknowledge presentation rather than executing it. A fresh Windows build and all62 registered checks passed; focused tests cover ordering, invalid handoff and snapshot roundtrip. Overall progress remains unmeasured; a complete playable match and autonomous AI/timing remain unsupported. Next compare action3 target/flight setup and its subsequent recipient exchange. Suggested model GPT-6.1 Terra High.
+
+
 ## 2026-11-10 - Opponent action3 reaches dispatch
 
 The captured startup continues through the opponent action3 presentation and dispatch. Phase394 accepts ten recorded random/travel pairs and three ordered ball-mode samples; explicitly acknowledging the observed script/mode reset reaches phase395 and matches original bank26:$8027. The original executes D193 with elapsed1; phase396 reuses keeper recovery and match-clock arithmetic, matching the original clock158 to157 and elapsed1 to2 before the next NMI. Three recorded random/travel pairs then reach random index50, and phase397 clears the observed carrier-cell marker at original $C606. Represented state, score/formation and retained selected target/cost match at each compared boundary. Private replays: ../Captain-Majid-analysis/post-kickoff-action3-handoff-20261110 and ../Captain-Majid-analysis/post-kickoff-action3-dispatch-20261110.

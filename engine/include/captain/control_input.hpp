@@ -29,6 +29,7 @@ PhaseSessionState begin_postgoal_opponent_action_wait(const PhaseSessionState& i
 PhaseSessionState acknowledge_postgoal_opponent_action(const PhaseSessionState& input);
 PhaseSessionState advance_postgoal_opponent_clock(const PhaseSessionState& input);
 PhaseSessionState dispatch_postgoal_opponent_action(const PhaseSessionState& input);
+PhaseSessionState handoff_postgoal_opponent_flight(const PhaseSessionState& input);
 PhaseSessionState capture_sampled_field_ai_preparation(const PhaseSessionState& input, std::uint8_t subtype, std::uint16_t power);
 PhaseSessionState advance_sampled_player14_pass_handoff(const PhaseSessionState& input,
     const PlayerProfileMappings& mappings,const FieldPhaseContent& movement);

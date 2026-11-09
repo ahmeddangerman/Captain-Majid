@@ -515,6 +515,15 @@ PhaseSessionState dispatch_postgoal_opponent_action(const PhaseSessionState& inp
  auto state=input;state.control->last_carrier_cell=0;state.phase=FieldSessionPhase::postgoal_opponent_dispatch;
  validate_phase_session(state);return state;
 }
+PhaseSessionState handoff_postgoal_opponent_flight(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_field_moved || input.current.field.random_first!=176 ||
+    input.current.field.random_second!=26 || input.control->facing!=64 || input.control->display_parameter ||
+    input.control->motion_requested || input.recovery->ball_variant)
+  throw std::invalid_argument("Post-goal flight handoff requires the observed presentation boundary");
+ auto state=input;state.control->last_carrier_cell=128;state.recovery->ball_variant=1;
+ state.phase=FieldSessionPhase::postgoal_opponent_flight_handoff;validate_phase_session(state);return state;
+}
 PhaseSessionState capture_sampled_field_ai_choice(const PhaseSessionState& input, std::uint8_t action, std::uint8_t subtype) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ai_cell_decision && input.action && input.score && input.recovery && input.control && input.experience &&

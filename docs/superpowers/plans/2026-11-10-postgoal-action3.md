@@ -40,3 +40,17 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Reuse the shared keeper recovery and match-clock arithmetic in guarded saved phases.
 - [x] Replay the three captured random/travel pairs and compare the original pre-wait and $C606 boundaries.
 - [x] Run the full build and checks and update the dated handoff.
+
+## Task 4: Compare ordered field movement
+
+- [x] Add failing tests for the guarded 22-player movement sequence, malformed ordering and snapshot roundtrip.
+- [x] Reuse the existing field-movement kernel for the captured action3 dispatch.
+- [x] Compare the original E0DE boundary with captured random/travel and ordered player events.
+- [x] Run the full build and checks and document the result.
+
+## Task 5: Compare action3 routing to the flight handler
+
+- [x] Test captured facing, display and motion observations and the guarded flight-handler handoff.
+- [x] Retain the existing target and preparation context while applying explicitly observed presentation changes.
+- [x] Replay the original event sequence through $C621 and compare the represented state.
+- [x] Verify and document the checkpoint before implementing flight.

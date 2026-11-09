@@ -315,7 +315,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
          input.phase != FieldSessionPhase::ordinary_pass_next_defender_compared && input.phase != FieldSessionPhase::ordinary_pass_next_contact_clock && input.phase != FieldSessionPhase::ordinary_pass_dispatch_clock &&
          input.phase != FieldSessionPhase::ordinary_pass_flight_ready && input.phase != FieldSessionPhase::ordinary_pass_flight_callback &&
          input.phase != FieldSessionPhase::ordinary_free_pass_contest_winner && input.phase != FieldSessionPhase::ordinary_pass_control_entry &&
-         input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::postgoal_opponent_action_wait && input.phase != FieldSessionPhase::postgoal_opponent_clocked && input.phase != FieldSessionPhase::ordinary_return_contact_pending &&
+         input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::postgoal_opponent_action_wait && input.phase != FieldSessionPhase::postgoal_opponent_clocked && input.phase != FieldSessionPhase::postgoal_opponent_field_moved && input.phase != FieldSessionPhase::ordinary_return_contact_pending &&
          input.phase != FieldSessionPhase::ordinary_return_action_menu && input.phase != FieldSessionPhase::ordinary_return_shot_choice && input.phase != FieldSessionPhase::ordinary_return_shot_prepared &&
          input.phase != FieldSessionPhase::ordinary_return_shot_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_contact && input.phase != FieldSessionPhase::ordinary_return_shot_dispatch &&
          input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival && input.phase != FieldSessionPhase::ordinary_return_shot_defenders_pending && input.phase != FieldSessionPhase::ordinary_return_shot_flight_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_blocked_clocked && input.phase != FieldSessionPhase::ordinary_return_goal_area_defenders && input.phase != FieldSessionPhase::ordinary_return_goal_area_menu && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_choice && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_prepared && input.phase != FieldSessionPhase::ordinary_return_goal_area_first_clock && input.phase != FieldSessionPhase::ordinary_return_goal_area_field_moved && input.phase != FieldSessionPhase::ordinary_return_goal_area_dispatch && input.phase != FieldSessionPhase::ordinary_return_goal_area_keeper_ready && input.phase != FieldSessionPhase::ordinary_return_goal_area_keeper_compared && input.phase != FieldSessionPhase::ordinary_return_goal_area_goal_scored && input.phase != FieldSessionPhase::goal_kickoff_pending) || !input.control)
@@ -332,6 +332,15 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
+        } else if (event.kind == ObservedClockEventKind::facing_sample && input.phase == FieldSessionPhase::postgoal_opponent_field_moved) {
+            if (event.held != 64) throw std::invalid_argument("Only the observed opponent action facing is supported");
+            state.control->facing = event.held;
+        } else if (event.kind == ObservedClockEventKind::motion_sample && input.phase == FieldSessionPhase::postgoal_opponent_field_moved) {
+            if (event.held != 0) throw std::invalid_argument("Only the observed opponent action motion is supported");
+            state.control->motion_requested = event.held;
+        } else if (event.kind == ObservedClockEventKind::display_sample && input.phase == FieldSessionPhase::postgoal_opponent_field_moved) {
+            if (event.held != 0) throw std::invalid_argument("Only the observed opponent action display is supported");
+            state.control->display_parameter = event.held;
         } else if (event.kind == ObservedClockEventKind::facing_sample && captured_kickoff) {
             if (event.held != 64) throw std::invalid_argument("Only the observed kickoff facing is supported");
             state.control->facing = event.held;
@@ -393,7 +402,8 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     const bool shot=input.phase==FieldSessionPhase::ordinary_return_shot_dispatch;
     const bool recovery=input.phase==FieldSessionPhase::ordinary_return_shot_recovery_jittered;
     const bool goal_shot=input.phase==FieldSessionPhase::ordinary_return_goal_area_first_clock;
-    if ((!shot && !recovery && !goal_shot && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
+    const bool postgoal=input.phase==FieldSessionPhase::postgoal_opponent_dispatch;
+    if ((!shot && !recovery && !goal_shot && !postgoal && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
         throw std::invalid_argument("Observed field movement requires a supported dispatch and elapsed time");
     auto state=input;
     auto& field=state.current.field;
@@ -416,7 +426,7 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     }
     if (slot!=22) throw std::invalid_argument("Observed pass movement has incomplete player slots");
     field.elapsed=0;
-    state.phase=goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
+    state.phase=postgoal ? FieldSessionPhase::postgoal_opponent_field_moved : goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
     validate_phase_session(state);
     return {std::move(state),index};
 }

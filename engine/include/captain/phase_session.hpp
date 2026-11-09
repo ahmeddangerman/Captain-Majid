@@ -104,7 +104,8 @@ enum class FieldSessionPhase : std::uint16_t {
     ordinary_return_shot_contact = 361, ordinary_return_shot_dispatch = 362, ordinary_return_shot_field_moved = 363, ordinary_return_shot_target = 364, ordinary_return_shot_flight_ready = 365, ordinary_return_shot_flight_callback = 366, ordinary_return_shot_flight_arrival = 367, ordinary_return_shot_defenders_pending = 368, ordinary_return_shot_flight_defender_prepared = 369, ordinary_return_shot_flight_defender_compared = 370, ordinary_return_shot_blocked_positioned = 371, ordinary_return_shot_blocked_clocked = 372, ordinary_return_shot_blocked_recovery = 373, ordinary_return_shot_recovery_jittered = 374, ordinary_return_shot_recovery_field_moved = 375, ordinary_return_shot_recovered_owner = 376, ordinary_return_recovered_goal_area = 377, ordinary_return_goal_area_defenders = 378, ordinary_return_goal_area_menu = 379, ordinary_return_goal_area_shot_choice = 380, ordinary_return_goal_area_shot_prepared = 381, ordinary_return_goal_area_clock_entry = 382, ordinary_return_goal_area_first_clock = 383, ordinary_return_goal_area_field_moved = 384, ordinary_return_goal_area_dispatch = 385, ordinary_return_goal_area_handoff = 386, ordinary_return_goal_area_target = 387, ordinary_return_goal_area_keeper_arrival = 388, ordinary_return_goal_area_keeper_ready = 389, ordinary_return_goal_area_keeper_compared = 390, ordinary_return_goal_area_goal_scored = 391,
     postgoal_opponent_action_choice = 392, postgoal_opponent_action_prepared = 393,
     postgoal_opponent_action_wait = 394, postgoal_opponent_action_handoff = 395,
-    postgoal_opponent_clocked = 396, postgoal_opponent_dispatch = 397
+    postgoal_opponent_clocked = 396, postgoal_opponent_dispatch = 397,
+    postgoal_opponent_field_moved = 398, postgoal_opponent_flight_handoff = 399
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

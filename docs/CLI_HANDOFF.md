@@ -1,5 +1,10 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: action3 flight handler
+
+The captured 1-0 startup matches through action3's ordered 22-player field movement at $E0DE and the explicitly sampled presentation handoff at $C621/$DFD9. The first uses22 captured random/travel pairs; the next uses35 plus motion0/facing64/display0. Native phase399 matches represented state and retains selected player14, original selected cell161 and cost60; final random index107. Original DFD9 then recomputes target from the moved recipient and enters E773 numeric flight, not yet native-compared. The action's live presentation, autonomous timing/AI and a complete playable match remain unsupported. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-fieldmove-final-20261110 and ../Captain-Majid-analysis/post-kickoff-action3-flight-handoff-final-20261110. Fresh Windows build and all62 checks passed. Overall progress unmeasured; next compare target and numeric flight setup. Suggested model GPT-6.1 Terra High.
+
+
 ## Current stopping point - 2026-11-10: opponent action3 dispatch
 
 The captured 1-0 startup now matches through opponent action3's presentation handoff, one-tick clock and dispatch at original $C606. Ten recorded random/travel pairs and three ball-mode samples lead to explicitly acknowledged bank26:$8027; shared clock/recovery arithmetic reaches clock157, elapsed2; three more pairs and the carrier-cell reset match $C606, random index50. The selected target14/cell161 and cost60 remain saved. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-handoff-20261110 and ../Captain-Majid-analysis/post-kickoff-action3-dispatch-20261110. Original later reaches flight but native field movement/flight is unconnected. Presentation, AI and timing remain supplied, and a complete playable match is unsupported. Fresh Windows build/all62 checks passed. Overall progress unmeasured; next trace field movement after $C606. Suggested model GPT-6.1 Terra High.

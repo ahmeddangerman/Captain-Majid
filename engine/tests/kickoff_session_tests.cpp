@@ -1821,6 +1821,32 @@ int main(){try{using namespace captain;
  rejects([&]{advance_postgoal_opponent_clock(postgoal_clocked);});
  rejects([&]{dispatch_postgoal_opponent_action(postgoal_clocked);});
  rejects([&]{dispatch_postgoal_opponent_action(postgoal_dispatch);});
+ auto postgoal_movement_input=postgoal_dispatch;
+ for(unsigned id=1;id<=21;++id)if(id!=11 && id!=18)postgoal_movement_input.current.field.roster[id].type=1;
+ const auto postgoal_movement=advance_observed_pass_field_movement(postgoal_movement_input,profile_mappings,
+   pass_movement_content,50,pass_movement_events);
+ check(postgoal_movement.state.phase==FieldSessionPhase::postgoal_opponent_field_moved &&
+       !postgoal_movement.state.current.field.elapsed && postgoal_movement.state.area_ai_target->recipient==14,
+       "Observed opponent action moves players in the recorded order and retains its target");
+ const auto postgoal_movement_bytes=bytes(postgoal_movement.state);std::istringstream postgoal_movement_stream(postgoal_movement_bytes);
+ check(bytes(load_phase_session(postgoal_movement_stream))==postgoal_movement_bytes,"Post-goal movement snapshot roundtrips");
+ rejects([&]{advance_observed_pass_field_movement(postgoal_movement_input,profile_mappings,pass_movement_content,50,missing_movement);});
+ rejects([&]{advance_observed_pass_field_movement(postgoal_movement_input,profile_mappings,pass_movement_content,50,unordered_movement);});
+ const auto postgoal_flight_wait=advance_observed_nmi_events(postgoal_movement.state,72,
+   {{ObservedClockEventKind::motion_sample,{},0}, {ObservedClockEventKind::facing_sample,{},64},
+    {ObservedClockEventKind::display_sample,{},0}});
+ check(postgoal_flight_wait.state.control->facing==64 && !postgoal_flight_wait.state.control->motion_requested &&
+       !postgoal_flight_wait.state.control->display_parameter,"Observed action3 presentation samples are retained");
+ auto postgoal_flight_handoff_input=postgoal_flight_wait.state;
+ postgoal_flight_handoff_input.current.field.random_first=176;postgoal_flight_handoff_input.current.field.random_second=26;
+ const auto postgoal_flight_handoff=handoff_postgoal_opponent_flight(postgoal_flight_handoff_input);
+ check(postgoal_flight_handoff.phase==FieldSessionPhase::postgoal_opponent_flight_handoff &&
+       postgoal_flight_handoff.control->last_carrier_cell==128 && postgoal_flight_handoff.recovery->ball_variant==1 &&
+       postgoal_flight_handoff.area_ai_target->cell==161,"Observed action3 reaches the flight handler with its original target retained");
+ const auto postgoal_flight_handoff_bytes=bytes(postgoal_flight_handoff);std::istringstream postgoal_flight_handoff_stream(postgoal_flight_handoff_bytes);
+ check(bytes(load_phase_session(postgoal_flight_handoff_stream))==postgoal_flight_handoff_bytes,"Post-goal flight handoff snapshot roundtrips");
+ rejects([&]{handoff_postgoal_opponent_flight(postgoal_movement.state);});
+ rejects([&]{handoff_postgoal_opponent_flight(postgoal_flight_handoff);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

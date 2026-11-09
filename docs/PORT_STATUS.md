@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - action3 flight handler (2026-11-10):** One captured startup matches through goal, opposing kickoff, action3 and 22 ordered field updates to the original flight-handler entry, using recorded timing and presentation samples. Numeric flight, autonomous timing/AI and a complete playable match remain unsupported. Windows build and all62 registered checks passed; overall progress unmeasured.
+
+
 **Latest - opponent action3 dispatch (2026-11-10):** One captured startup matches through goal, opposing kickoff, supplied action3 preparation, presentation acknowledgement and dispatch at $C606. The later field movement and flight remain unconnected. Autonomous timing/AI and a complete playable match remain unsupported. Windows build and all62 registered checks passed; overall progress unmeasured.
 
 
