@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-09 - Captured startup reaches goal registration
+
+The continuously replayed startup now matches the original from the selected keeper result through the original $85AC goal handler and $85F0 score write: 0-0 becomes 1-0 and scorer8 receives 15 experience. During the 226-frame keeper presentation, the replay supplies 226 recorded random/travel pairs and one motion sample; phase390 does not render or execute that presentation. Phase391 reuses the existing scorer-reward and score code after explicit acknowledgement, rejects missing observed motion and preserves the preceding context. Represented state and random index119 match the original at the goal handler and score boundary. Full replay: ../Captain-Majid-analysis/live-return-area-volley-goal-scored-20261109; live follow-up trace: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-live-goal-continuation-20261109/trace.
+
+A separate original run reaches the post-goal menu, accepts a supplied confirm and returns the opposing side to play. This later route is original-only, not yet connected or native-compared. Full Windows build and all62 registered checks passed via direct invocation (`ctest` unavailable). Rendering, audio, autonomous timing/AI, restart in this continuation and a complete playable match remain unsupported. Overall progress unmeasured; next compare celebration/menu and the restart handoff. Suggested model Terra High.
+
+
 ## 2026-11-09 - Captured goalkeeper result before presentation
 
 The captured startup now continues from the selected opposing goalkeeper through the original result write at bank26:$8599. The original $856B state, continued for ten CPU instructions with the captured registers and RAM, writes result0 and cursor0; team3/game-mode0 does not trigger the story override. Phase390 reuses the shared prepared-keeper and story calculations with explicitly supplied action0/subtype0/team3, rejects other choices or nonzero results, and retains the keeper decision before presentation. Represented native state, keeper fields and random index149 match the isolated original $8599 checkpoint and the subsequent live presentation entry. The full captured replay matched 75 returned menu polls through this boundary. Private evidence: ../Captain-Majid-analysis/live-return-area-volley-keeper-result-20261109 and ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/live_keeper_result.py.

@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - captured startup goal (2026-11-09):** The startup replay matches original score0-0 to1-0 and scorer8 experience +15, with 226 recorded random/travel pairs and a sampled presentation motion. Goal celebration, post-goal menu/restart, autonomous match and a complete playable match remain unsupported in this continuation. Full Windows build and all62 registered checks passed; overall progress unmeasured.
+
+
 **Latest - captured keeper result (2026-11-09):** The startup replay now matches the original keeper result0 and subsequent presentation entry using supplied action0/subtype0/team3 and recorded timing. Outcome presentation, scoring/restart and a continuous playable match remain unsupported. Full Windows build and all62 registered checks passed; overall progress unmeasured.
 
 

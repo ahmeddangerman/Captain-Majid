@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: captured startup goal registered
+
+The captured startup replay now matches through original bank26:$85AC goal handler and $85F0 score write: score0-0 to1-0 and scorer8 experience +15. Phase391 reuses existing score/reward arithmetic after explicitly acknowledging the keeper presentation; the replay supplies 226 captured random/travel pairs and one motion sample, ending at random index119. Private full replay: ../Captain-Majid-analysis/live-return-area-volley-goal-scored-20261109; original trace: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-live-goal-continuation-20261109/trace.
+
+A subsequent separate original-only run reached the post-goal menu, accepted confirm at frame17020 and returned the opposing side to play; these later states are not native-compared. General: shared goalkeeper and scorer arithmetic. Captured/guarded: this startup, supplied choices and event order. Unsupported: live presentation, menu/restart integration in this continuation, autonomous AI/frame scheduling and complete playable match. Full Windows build and all62 registered checks passed via direct invocation (`ctest` unavailable). Overall progress unmeasured. Next trace celebration/menu and goal restart, compare each before progressing. Suggested model Terra High.
+
+
 ## Current stopping point - 2026-11-09: captured goalkeeper result connected
 
 The captured live startup now reaches native phase390 at the original bank26:$8599 result write and matches the subsequent original presentation entry in all represented fields. Original $856B..$8599 executed ten instructions from the captured registers/RAM: team3 does not trigger the story override; result0, keeper cursor0 and random index149 match native. The native transition uses the shared prepared goalkeeper/story calculations and explicitly supplied action0, subtype0 and team3; other choices and results reject. Private full replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-result-20261109; private original check: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/live_keeper_result.py.

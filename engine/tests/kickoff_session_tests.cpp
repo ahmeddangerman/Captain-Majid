@@ -1674,6 +1674,20 @@ int main(){try{using namespace captain;
        bytes(returned_keeper_input)==returned_keeper_before,"Returned volley records the keeper result before presentation without mutating its input");
  auto returned_keeper_bytes=bytes(returned_keeper_result);std::istringstream returned_keeper_stream(returned_keeper_bytes);
  check(bytes(load_phase_session(returned_keeper_stream))==returned_keeper_bytes,"Returned keeper decision snapshot roundtrips");
+ const auto returned_keeper_presented_wait=advance_observed_nmi_events(returned_keeper_result,149,{{ObservedClockEventKind::random,{0,0,0,false}}});
+ check(returned_keeper_presented_wait.random_index==150 && returned_keeper_presented_wait.state.phase==returned_keeper_result.phase &&
+       returned_keeper_presented_wait.state.keeper_decision->result_code==0,"Recorded frame input can advance while the keeper presentation is pending");
+ const auto returned_keeper_motion=advance_observed_nmi_events(returned_keeper_result,149,{{ObservedClockEventKind::motion_sample,{},3}});
+ check(returned_keeper_motion.state.control->motion_requested==3 && returned_keeper_result.control->motion_requested!=3,
+       "Recorded presentation motion is supplied explicitly before the goal handler");
+ const auto returned_goal=prepare_session_scored_goal(returned_keeper_motion.state,*returned_keeper_motion.state.score,returned_keeper_content);
+ check(static_cast<unsigned>(returned_goal.phase)==391 && returned_goal.score->left_goals==static_cast<std::uint8_t>(returned_keeper_motion.state.score->left_goals+1) &&
+       returned_goal.score->right_goals==returned_keeper_motion.state.score->right_goals,
+       "Acknowledged keeper presentation reaches the observed home-goal registration");
+ const auto returned_goal_bytes=bytes(returned_goal);std::istringstream returned_goal_stream(returned_goal_bytes);
+ check(bytes(load_phase_session(returned_goal_stream))==returned_goal_bytes,"Returned goal registration snapshot roundtrips");
+ rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
+ rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});
  rejects([&]{resolve_prepared_session_keeper(returned_keeper_result,0,0,3,returned_keeper_content);});
  rejects([&]{resolve_prepared_session_keeper(returned_keeper_input,1,0,3,returned_keeper_content);});
  auto forged_returned_keeper=returned_keeper_result;forged_returned_keeper.keeper_decision->defense_action=1;
