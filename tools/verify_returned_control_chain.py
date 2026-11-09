@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from verify_captured_control_chain import clock_events, trace_data
+from verify_captured_control_chain import clock_events, trace_data, menu_wait_events
 from verify_observed_nmi_world_round import read_nmi_trace
 from verify_player7_pass_end_to_end import compare_checkpoint, prepare_output
 
@@ -24,9 +24,13 @@ def main():
     parser.add_argument('--expected-rounds',type=int,required=True)
     parser.add_argument('--expected-polls',type=int,required=True)
     parser.add_argument('--expect-encounter',action='store_true',help='require the last field round to end at the original encounter')
+    parser.add_argument('--menu-index',type=int,help='original first menu-ready random boundary')
+    parser.add_argument('--menu-wait-end-index',type=int,help='original last menu-wait travel boundary')
     args=parser.parse_args()
     if not 0<=args.initial_index<=255 or args.expected_rounds<1 or args.expected_polls<1:
         raise ValueError('Random index and expected counts are invalid')
+    if (args.menu_index is not None and not args.expect_encounter) or (args.menu_wait_end_index is not None and args.menu_index is None):
+        raise ValueError('Menu comparison requires the encounter and any menu wait requires menu entry')
     lines,pcs,ram=trace_data(args.trace_directory)
     start=next(i for i,line in enumerate(lines) if pcs[i]=='E145' and line.split()[-1]==f'FRAME={args.start_frame}')
     source=args.source.resolve();index=args.initial_index
@@ -97,6 +101,66 @@ def main():
             break
     if counts!={'poll':args.expected_polls,'clock':args.expected_rounds,'world':args.expected_rounds}:
         raise ValueError(f'Incomplete returned-control chain: {counts}')
+    if args.menu_index is not None:
+        menu=args.menu_index
+        if not end<menu<len(pcs) or pcs[menu]!='C9C5':
+            raise ValueError('boundary returned.menu: unsupported original ordering')
+        rows,last=menu_wait_events(lines,pcs,ram,end,menu)
+        points=[i for i in range(end+1,menu) if pcs[i] in ('C9C5','E3CA')]
+        if len(points)!=len(rows):
+            raise ValueError('boundary returned.menu_wait: ambiguous original event ordering')
+        raw_state=source.read_bytes();values=[raw_state[305],raw_state[299],raw_state[304]];ordered=[]
+        for row,point in zip(rows,points):
+            observed=ram(point)
+            for slot,(address,token) in enumerate(((0x532,'M'),(0x517,'F'),(0x8e,'D'))):
+                if observed[address]!=values[slot]:
+                    values[slot]=observed[address];ordered.append(f'{token} {values[slot]}')
+            ordered.append(row)
+        events=output/'menu-wait-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(ordered)+'\n')
+        waiting=output/'menu-wait.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',
+                            str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary returned.menu_wait: {run.stderr.strip()}')
+        actual=waiting.read_bytes()
+        if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260],'little')!=354:
+            raise ValueError('boundary returned.menu_wait: invalid native encounter snapshot')
+        normalized=bytearray(actual[:259]+actual[260:]);normalized[10]=133;normalized[258]=15
+        compare_checkpoint(normalized,ram(last),15,15,'startup','returned.menu_wait',None,False,False)
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(ram(last)[0xe1])] or ram(last)[0xe1]!=ram(menu)[0xe1]:
+            raise ValueError('boundary returned.menu_wait, random.index: original and native differ')
+        index=int(indices[0]);destination=output/'menu.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--open-action-menu','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary returned.menu: {run.stderr.strip()}')
+        actual=destination.read_bytes()
+        if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260],'little')!=355:
+            raise ValueError('boundary returned.menu: invalid native menu snapshot')
+        normalized=bytearray(actual[:259]+actual[260:]);normalized[10]=133;normalized[258]=18
+        compare_checkpoint(normalized,ram(menu),18,18,'startup','returned.menu',None,False,False)
+        source=destination;steps+=2
+        if args.menu_wait_end_index is not None:
+            finish=args.menu_wait_end_index
+            if not menu<finish<len(pcs) or pcs[finish]!='E406':
+                raise ValueError('boundary returned.menu_neutral: unsupported original wait boundary')
+            rows,last=menu_wait_events(lines,pcs,ram,menu-1,finish+1)
+            if last!=finish:
+                raise ValueError('boundary returned.menu_neutral: incomplete travel event')
+            events=output/'menu-neutral-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+            destination=output/'menu-neutral.cmjsession'
+            run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(destination)],capture_output=True,text=True,timeout=30)
+            if run.returncode:
+                raise RuntimeError(f'boundary returned.menu_neutral: {run.stderr.strip()}')
+            actual=destination.read_bytes()
+            if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260],'little')!=355:
+                raise ValueError('boundary returned.menu_neutral: invalid native menu snapshot')
+            normalized=bytearray(actual[:259]+actual[260:]);normalized[10]=133;normalized[258]=18
+            compare_checkpoint(normalized,ram(finish),18,18,'startup','returned.menu_neutral',None,False,False)
+            indices=re.findall(r'final random index (\d+);',run.stdout)
+            if indices!=[str(ram(finish)[0xe1])]:
+                raise ValueError('boundary returned.menu_neutral, random.index: original and native differ')
+            index=int(indices[0]);source=destination;steps+=1
     print(f'Matched {steps} returned-control boundaries {counts}; final random index {index}; checkpoint {source}.')
 
 

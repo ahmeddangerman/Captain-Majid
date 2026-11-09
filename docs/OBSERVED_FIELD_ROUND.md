@@ -1,5 +1,7 @@
 # Evidence-fed field-round comparison
 
+At a guarded returned-encounter boundary, explicit `M`, `F` and `D` records can supply observed motion, facing and display-parameter bytes before opening the shared action menu. `D` is an observed presentation sample, not a renderer. The original cursor residue remains preserved. See CLI_HANDOFF for coverage.
+
 For returned possession with a retained pass-defender cursor, `tools/verify_returned_control_chain.py` accepts private source, trace, pack and executable paths and compares captured poll, clock and world boundaries. The `--advance-observed-ordinary-return KIND FILE INDEX` development operation uses `poll`, `clock` or `world`; it preserves the cursor in separate phases rather than broadening older guarded states. It takes captured NMI/travel ordering and does not generate a scheduler. See CLI_HANDOFF for coverage and limits.
 
 For an ordinary-pass dispatch, `--advance-observed-pass-movement FILE INITIAL_INDEX` accepts the same `CMJNMISEQ1` random/travel records interleaved with exactly 22 ordered `P ID` records, ID 0 through 21. This records the player order; IDs 0, 11 and the carrier are skipped by the field-player kernel. It finishes at the saved pass field-movement boundary and reports the final random index. It does not generate event timing. See CLI_HANDOFF for comparisons and bounds.

@@ -160,6 +160,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::ordinary_return_clock_pending: return "ordinary returned control clock pending";
     case captain::FieldSessionPhase::ordinary_return_field_round: return "ordinary returned control field round";
     case captain::FieldSessionPhase::ordinary_return_contact_pending: return "ordinary returned control encounter";
+    case captain::FieldSessionPhase::ordinary_return_action_menu: return "ordinary returned action menu";
     case captain::FieldSessionPhase::sampled_human_pass_empty_confirmed: return "sampled empty pass target confirmed";
     case captain::FieldSessionPhase::sampled_human_pass_cancel_pending: return "sampled human pass cancel pending";
     case captain::FieldSessionPhase::sampled_human_pass_prepared: return "sampled human pass prepared";
@@ -786,7 +787,9 @@ void open_keeper_area_menu(captain::PhaseSessionState& state,const captain::Shot
 void open_action_menu(captain::PhaseSessionState& state, const captain::ShotContent& content) {
     if (!content.action_menu) throw std::invalid_argument("Action menu requires version9 menu content");
     const bool pass_menu=state.phase==captain::FieldSessionPhase::area_pass_capture_action_menu || state.phase==captain::FieldSessionPhase::area_pass_blocked_action_menu;
-    const auto result = pass_menu ? captain::open_area_pass_human_action_menu(state,*content.action_menu) : captain::open_human_action_menu(state, *content.action_menu);
+    const auto result = pass_menu ? captain::open_area_pass_human_action_menu(state,*content.action_menu) :
+        state.phase==captain::FieldSessionPhase::ordinary_return_contact_pending ? captain::open_ordinary_return_action_menu(state,*content.action_menu) :
+        captain::open_human_action_menu(state, *content.action_menu);
     state = result.state;
     std::cout << "Opened human attacking menu; no game-frame/NMI work performed.\n";
     for (const auto& request : result.presentation)

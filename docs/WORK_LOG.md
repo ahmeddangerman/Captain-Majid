@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Returned encounter action menu
+
+Connected the directed startup's second encounter to the shared action-menu opening via phase355, preserving original cursor residue. The original/native chain matched 58 boundaries through the menu and held-input wait; its lead-in uses 136 recorded random/travel pairs and explicit motion/facing/display samples. No defender choice or frame scheduler is inferred. Full Windows build, 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. Menu choice and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Directed returned possession reaches encounter
 
 Captured a controlled rightward input after the startup free pass. From the saved returned-control point, 45 polls, five clock updates and five field rounds matched the original through a new encounter: player3 moved from x132 to x149 and met defender16; final random index247. Twenty-two overlapping control snapshots matched the shorter original directional run byte-for-byte. Phase354 preserves the retained cursor at the encounter without relaxing older guards. The input and NMI/travel schedule are supplied, not generated. Full Windows build, all 62 CTest tests and both phase317 replays (576/1,152 boundaries) passed. New encounter handling, AI/presentation and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.

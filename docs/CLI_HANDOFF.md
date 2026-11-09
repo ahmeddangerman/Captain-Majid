@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: returned encounter action menu
+
+Phase355 opens the existing human action menu from phase354 while preserving the original defender cursor. The captured directed startup replay now matches 58 boundaries from its returned control point through the new encounter, action-menu entry and a held-input wait, ending at random index58. Its menu lead-in uses 136 captured random/travel pairs plus explicitly sampled motion, facing and display changes; the subsequent wait also uses captured events. `tools/verify_returned_control_chain.py` accepts private trace/source/content paths and reports the first differing boundary and field. Evidence: ../Captain-Majid-analysis/live-return-next-menu-verified-20261109.
+
+The development event stream accepts `D VALUE` for a captured display-parameter write at the guarded returned-encounter phase, alongside explicit `M` and `F` samples. These do not simulate presentation. General: shared action-menu opening and event-fed control/encounter kernels; the original cursor is preserved in a separate phase. Scenario-specific: this single input/event schedule and the existing guarded phase317 routes. Unknown: action selection from phase355, subsequent defender choice, autonomous AI/presentation/audio and a complete match. Full Windows build, all 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. Next capture and compare the menu's actual button edges and a general action route without inventing AI. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: directed returned possession reaches a new encounter
 
 A controlled original rerun held right after the free-pass control return. From the saved control point at frame14595, the native event-fed continuation matched 45 input polls, five clock/energy updates and five field rounds (55 boundaries) through original $E4BE: player3 carries the ball from x132 to x149, cell150, and encounters defender16. Final random index247. The rerun's 22 overlapping full RAM control snapshots through frame14645 matched the shorter directional capture. Private trace and replay: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-returned-long/trace and ../Captain-Majid-analysis/live-return-next-encounter-verified-20261109.

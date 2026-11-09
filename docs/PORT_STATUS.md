@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - returned encounter action menu (2026-11-09):** The directed startup continuation matches through a second encounter and action menu with captured event and presentation inputs. Menu choice, defender AI, autonomous timing and a complete match remain unsupported. All 62 Windows tests and both phase317 replays passed; overall progress is unmeasured.
+
 **Latest - directed return reaches an encounter (2026-11-09):** A captured rightward input after the startup free pass matches 45 polls and five clock/field rounds through a second encounter, with supplied event ordering. The native path stops at the new encounter. All 62 Windows tests and both phase317 replays passed; AI, autonomous presentation and a complete match remain unsupported. Overall progress is unmeasured.
 
 **Latest - returned control through three rounds (2026-11-09):** One captured startup continues after the free pass through 33 neutral polls and three clock/field rounds with explicitly supplied original events. The second trace matches all 35 overlapping full RAM control snapshots. All 62 Windows tests and both phase317 replays passed. Directed input, later encounters, autonomous timing/AI and a complete match remain unsupported; overall progress is unmeasured.

@@ -316,6 +316,16 @@ ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const Ac
     return result;
 }
 
+ActionMenuResult open_ordinary_return_action_menu(const PhaseSessionState& input,const ActionMenuContent& content) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_contact_pending)
+        throw std::invalid_argument("Returned action menu requires the saved encounter");
+    auto normalized=input;normalized.phase=FieldSessionPhase::field_contact_pending;normalized.area_defender_cursor=0;
+    auto result=open_human_action_menu(normalized,content);
+    result.state.phase=FieldSessionPhase::ordinary_return_action_menu;
+    result.state.area_defender_cursor=input.area_defender_cursor;
+    validate_phase_session(result.state);return result;
+}
 ActionMenuResult acknowledge_sampled_goalkeeper_overlay(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::sampled_score23_keeper_confirmed && input.keeper_menu_action==0) {

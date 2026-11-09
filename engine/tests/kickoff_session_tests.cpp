@@ -1424,6 +1424,15 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(ordinary_encounter_stream))==ordinary_encounter_bytes,"Returned encounter preserves its original cursor");
  auto empty_return_encounter=ordinary_return_encounter;empty_return_encounter.current.field.selected_defenders=0;
  rejects([&]{validate_phase_session(empty_return_encounter);});
+ const auto returned_menu_wait=advance_observed_nmi_events(ordinary_return_encounter,0,
+     {{ObservedClockEventKind::motion_sample,{},0},{ObservedClockEventKind::facing_sample,{},0},
+      {ObservedClockEventKind::display_sample,{},0}});
+ const auto returned_action_menu=open_ordinary_return_action_menu(returned_menu_wait.state,pass_menu_content);
+ check(returned_action_menu.state.phase==FieldSessionPhase::ordinary_return_action_menu &&
+       returned_action_menu.state.area_defender_cursor==2 && returned_action_menu.state.action->cursor==0,
+       "Returned encounter opens the shared action menu while preserving cursor residue");
+ const auto returned_menu_bytes=bytes(returned_action_menu.state);std::istringstream returned_menu_stream(returned_menu_bytes);
+ check(bytes(load_phase_session(returned_menu_stream))==returned_menu_bytes,"Returned encounter menu snapshot roundtrip");
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});
