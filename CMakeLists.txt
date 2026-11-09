@@ -72,6 +72,9 @@ if(BUILD_TESTING)
     add_executable(control-travel-tests engine/tests/control_travel_tests.cpp)
     target_link_libraries(control-travel-tests PRIVATE captain_core)
     add_test(NAME control_travel COMMAND control-travel-tests)
+    add_executable(observed-world-round-tests engine/tests/observed_world_round_tests.cpp)
+    target_link_libraries(observed-world-round-tests PRIVATE captain_core)
+    add_test(NAME observed_world_round COMMAND observed-world-round-tests)
     add_executable(kickoff-selection-tests engine/tests/kickoff_selection_tests.cpp)
     target_link_libraries(kickoff-selection-tests PRIVATE captain_core)
     add_test(NAME kickoff_selection COMMAND kickoff-selection-tests)
@@ -209,6 +212,8 @@ if(BUILD_TESTING)
         add_test(NAME kickoff_formation_capture_checks COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_compare_kickoff_formation_capture.py
             $<TARGET_FILE:kickoff-formation-tests>)
+        add_test(NAME observed_world_replay_checks COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_verify_observed_world_round.py)
         add_test(NAME pass_distance_export_checks COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_export_pass_distance.py)
         add_test(NAME pass_distance_oracle_checks COMMAND ${Python3_EXECUTABLE}

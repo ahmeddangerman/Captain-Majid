@@ -1,7 +1,9 @@
 #include "captain/control_tick.hpp"
+#include "captain/control_travel.hpp"
 #include "captain/defender_selection.hpp"
 #include <algorithm>
 #include <stdexcept>
+#include <string>
 #include <utility>
 
 namespace captain {
@@ -206,10 +208,11 @@ ControlTickResult resume_control_added_time(const PhaseSessionState& post_presen
     return result;
 }
 
-FieldRoundResult advance_control_field_round(const PhaseSessionState& input,
+static FieldRoundResult run_control_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
     const ControlMovementContent& control_content, const WorldStepContent& world,
-    const std::array<LogicalButtons, 22>& inputs) {
+    const std::array<LogicalButtons, 22>& inputs,
+    const std::array<ObservedFieldPoll, 22>* observed) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::field_round_pending)
         throw std::invalid_argument("Field round requires a completed control clock/energy step");
@@ -220,6 +223,16 @@ FieldRoundResult advance_control_field_round(const PhaseSessionState& input,
     old_region &= 127u;
     if (region != old_region) old_region = static_cast<std::uint8_t>(region | 128u);
     for (unsigned slot = 0; slot < 22; ++slot) {
+        if (observed) {
+            const auto& sample = (*observed)[slot];
+            state.current.field.random_first = sample.random_first;
+            state.current.field.random_second = sample.random_second;
+            if (sample.travel_observed) {
+                state.control->travel_accumulator = advance_control_travel(
+                    state.control->travel_accumulator, sample.travel_speed, state.current.field.side,
+                    sample.travel_held, state.control->facing);
+            }
+        }
         const auto buttons = apply_control_buttons(state, inputs[slot].held, inputs[slot].pressed);
         state = buttons.state;
         ++result.consumed_polls;
@@ -271,5 +284,46 @@ FieldRoundResult advance_control_field_round(const PhaseSessionState& input,
     else state.phase = FieldSessionPhase::control_ready;
     validate_phase_session(state);
     return result;
+}
+
+FieldRoundResult advance_control_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
+    const ControlMovementContent& control, const WorldStepContent& world,
+    const std::array<LogicalButtons, 22>& inputs) {
+    return run_control_field_round(input, primary, movement, control, world, inputs, nullptr);
+}
+
+std::array<ObservedFieldPoll, 22> load_observed_field_polls(std::istream& input) {
+    std::string magic;
+    if (!(input >> magic) || magic != "CMJWORLDOBS1")
+        throw std::invalid_argument("Invalid observed world file header");
+    std::array<ObservedFieldPoll, 22> samples{};
+    for (auto& sample : samples) {
+        unsigned held, pressed, first, second, present, travel_held, low, high;
+        if (!(input >> held >> pressed >> first >> second >> present >> travel_held >> low >> high) ||
+            held > 255 || pressed > 255 || first > 255 || second > 255 || present > 1 ||
+            travel_held > 255 || low > 255 || high > 255 || (!present && (travel_held || low || high)))
+            throw std::invalid_argument("Observed world file requires 22 valid byte records");
+        sample = {{static_cast<std::uint8_t>(held), static_cast<std::uint8_t>(pressed)},
+                  static_cast<std::uint8_t>(first), static_cast<std::uint8_t>(second), present != 0,
+                  static_cast<std::uint8_t>(travel_held), static_cast<std::uint16_t>(low | (high << 8))};
+    }
+    input >> std::ws;
+    if (input.peek() != std::char_traits<char>::eof() || input.bad())
+        throw std::invalid_argument("Trailing or unreadable observed world data");
+    return samples;
+}
+
+FieldRoundResult advance_observed_control_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
+    const ControlMovementContent& control, const WorldStepContent& world,
+    const std::array<ObservedFieldPoll, 22>& inputs) {
+    std::array<LogicalButtons, 22> buttons{};
+    for (std::size_t i = 0; i < inputs.size(); ++i) {
+        if (!inputs[i].travel_observed && (inputs[i].travel_held || inputs[i].travel_speed))
+            throw std::invalid_argument("Unobserved travel event must have zero inputs");
+        buttons[i] = inputs[i].buttons;
+    }
+    return run_control_field_round(input, primary, movement, control, world, buttons, &inputs);
 }
 }

@@ -1,6 +1,7 @@
 #pragma once
 #include "captain/control_input.hpp"
 #include "captain/prepared_keeper.hpp"
+#include <istream>
 
 namespace captain {
 struct WorldStepContent {
@@ -23,6 +24,14 @@ ControlTickResult resume_area_action4_added_time(const PhaseSessionState& input,
 ControlTickResult resume_control_added_time(const PhaseSessionState& post_presentation,
     const FieldPlayerProfiles& field, const GoalkeeperProfiles& keepers, const WorldStepContent& content);
 struct LogicalButtons { std::uint8_t held = 0, pressed = 0; };
+struct ObservedFieldPoll {
+    LogicalButtons buttons{};
+    std::uint8_t random_first = 0, random_second = 0;
+    bool travel_observed = false;
+    std::uint8_t travel_held = 0;
+    std::uint16_t travel_speed = 0;
+};
+std::array<ObservedFieldPoll, 22> load_observed_field_polls(std::istream& input);
 struct FieldRoundResult {
     PhaseSessionState state;
     std::vector<ControlPresentationRequest> presentation{};
@@ -32,6 +41,11 @@ FieldRoundResult advance_control_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
     const ControlMovementContent& control, const WorldStepContent& world,
     const std::array<LogicalButtons, 22>& inputs);
+// Explicit captured pre-poll events; does not generate frames, random or audio.
+FieldRoundResult advance_observed_control_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
+    const ControlMovementContent& control, const WorldStepContent& world,
+    const std::array<ObservedFieldPoll, 22>& inputs);
 FieldRoundResult advance_area_pass_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement,
     const ControlMovementContent& control,const WorldStepContent& world,

@@ -202,12 +202,16 @@ build/pass-target-tests: engine/tests/pass_target_tests.cpp $(CORE) $(HEADERS) |
 build/control-travel-tests: engine/tests/control_travel_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/control_travel_tests.cpp $(CORE) -o $@
 
+build/observed-world-round-tests: engine/tests/observed_world_round_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/observed_world_round_tests.cpp $(CORE) -o $@
+
 build/pass-distance-tests: engine/tests/pass_distance_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/pass_distance_tests.cpp $(CORE) -o $@
 
-check: build/control-travel-tests
+check: build/control-travel-tests build/observed-world-round-tests
 check: build/pass-target-tests build/pass-distance-tests build/ai-action-candidate-tests build/defensive-move-inspection-tests build/defense-affordability-tests build/kickoff-session-tests build/kickoff-formation-tests build/kickoff-selection-tests build/goal-session-tests build/keeper-save-session-tests build/keeper-session-tests build/loose-arrival-tests build/ball-flight-session-tests build/ball-step-tests build/ball-velocity-tests build/approach-session-tests build/attack-clock-tests build/restart-options-tests build/restart-route-tests build/clearance-handoff-tests build/clearance-race-tests build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
 	./build/control-travel-tests
+	./build/observed-world-round-tests
 	./build/pass-target-tests
 	./build/pass-distance-tests
 	./build/ai-action-candidate-tests
@@ -264,6 +268,7 @@ check: build/pass-target-tests build/pass-distance-tests build/ai-action-candida
 	python3 tools/check_reference_cartridge.py
 	python3 tools/test_verify_player7_pass_end_to_end.py
 	python3 tools/test_compare_kickoff_formation_capture.py
+	python3 tools/test_verify_observed_world_round.py
 	python3 tools/test_export_pass_distance.py
 	python3 tools/test_pass_distance_oracle.py
 	python3 tools/test_pass_target_oracle.py
