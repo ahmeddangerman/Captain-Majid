@@ -222,28 +222,30 @@ Player5PossessionResult transfer_sampled_player5_dribble_possession(const PhaseS
 }
 PhaseSessionState prepare_sampled_player3_pass_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense) {
  validate_phase_session(input);
- if(input.phase==FieldSessionPhase::sampled_score25_first_contact_clock || input.phase==FieldSessionPhase::sampled_score25_second_contact_clock) {
-  const bool third=input.phase==FieldSessionPhase::sampled_score25_second_contact_clock;
-  const std::uint8_t defender=third ? 20 : 19;
-  const auto& p=input.current.field.roster[defender];
-  const auto prepared=prepare_profiled_field_defender({defender,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},profiles,1,0,0,defense);
-  if(prepared.base_strength!=18 || prepared.stamina_cost!=60 || prepared.move_effect!=0)
-   throw std::invalid_argument("Unverified sampled second defender content");
-  auto state=input;state.recovery->opposing_player=defender;state.area_defender_cursor=third ? 2 : 1;
-  state.area_contact=AreaContactContext{static_cast<std::uint8_t>(third ? 2 : 1),1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
-  state.phase=third ? FieldSessionPhase::sampled_score25_third_defender_prepared : FieldSessionPhase::sampled_score25_second_defender_prepared;validate_phase_session(state);return state;
- }
+ const bool second=input.phase==FieldSessionPhase::sampled_score25_first_contact_clock;
+ const bool third=input.phase==FieldSessionPhase::sampled_score25_second_contact_clock;
+ const bool later=second || third;
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_pass_prepared;
  const bool score25=input.phase==FieldSessionPhase::sampled_score25_pass_prepared;
- if((input.phase!=FieldSessionPhase::sampled_player3_pass_prepared && !score23 && !score25) || input.current.field.roster[17].type!=23 || input.current.field.roster[17].stamina!=100)
+ if(!later && ((input.phase!=FieldSessionPhase::sampled_player3_pass_prepared && !score23 && !score25) ||
+    input.current.field.roster[17].type!=23 || input.current.field.roster[17].stamina!=100))
   throw std::invalid_argument("Unsupported sampled player3 defender preparation");
- const auto& p=input.current.field.roster[17];
- const auto prepared=prepare_profiled_field_defender({17,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},profiles,1,0,0,defense);
+ const std::uint8_t defender=third ? 20 : second ? 19 : 17;
+ const std::uint8_t cursor=third ? 2 : second ? 1 : 0;
+ const auto& p=input.current.field.roster[defender];
+ const auto prepared=prepare_profiled_field_defender({defender,p.type,static_cast<std::uint8_t>(p.stamina),
+  static_cast<std::uint8_t>(p.stamina>>8),p.level},profiles,1,0,0,defense);
  if(prepared.base_strength!=18 || prepared.stamina_cost!=60 || prepared.move_effect!=0)
-  throw std::invalid_argument("Unverified sampled player3 defender content");
- auto state=input;state.recovery->ball_variant=1;state.control->facing=64;if(score25)state.recovery->opposing_player=17;
- state.area_contact=AreaContactContext{0,1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
- state.phase=score25 ? FieldSessionPhase::sampled_score25_first_defender_prepared : score23 ? FieldSessionPhase::sampled_score23_defender_prepared : FieldSessionPhase::sampled_player3_defender_prepared;validate_phase_session(state);return state;
+  throw std::invalid_argument(later ? "Unverified sampled second defender content" : "Unverified sampled player3 defender content");
+ auto state=input;
+ if(later) {state.recovery->opposing_player=defender;state.area_defender_cursor=cursor;}
+ else {state.recovery->ball_variant=1;state.control->facing=64;if(score25)state.recovery->opposing_player=17;}
+ state.area_contact=AreaContactContext{cursor,1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+ state.phase=third ? FieldSessionPhase::sampled_score25_third_defender_prepared :
+  second ? FieldSessionPhase::sampled_score25_second_defender_prepared :
+  score25 ? FieldSessionPhase::sampled_score25_first_defender_prepared :
+  score23 ? FieldSessionPhase::sampled_score23_defender_prepared : FieldSessionPhase::sampled_player3_defender_prepared;
+ validate_phase_session(state);return state;
 }
 PhaseSessionState compare_sampled_player3_pass_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison) {
  validate_phase_session(input);

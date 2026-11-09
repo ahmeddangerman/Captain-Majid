@@ -248,3 +248,4 @@ check: build/ai-action-candidate-tests build/defensive-move-inspection-tests bui
 	python3 engine/tests/check_adapter.py
 	python3 tools/check_replica_sync.py
 	python3 tools/check_reference_cartridge.py
+	python3 tools/test_verify_player7_pass_end_to_end.py

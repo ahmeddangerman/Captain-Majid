@@ -195,6 +195,8 @@ if(BUILD_TESTING)
             --binary $<TARGET_FILE:captain-prototype>)
         add_test(NAME reference_cartridge COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_reference_cartridge.py)
+        add_test(NAME player7_pass_replay_checks COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_verify_player7_pass_end_to_end.py)
         add_test(NAME replica_loopback COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_replica_sync.py
             --binary $<TARGET_FILE:captain-prototype>)

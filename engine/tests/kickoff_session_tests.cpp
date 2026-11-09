@@ -1931,6 +1931,11 @@ int main(){try{using namespace captain;
        player25_second_defender.recovery->opposing_player==19 && player25_second_defender.area_defender_cursor==1 &&
        player25_second_defender.current.clock.remaining==324,
        "The second defender is prepared after the first contact");
+ check(player25_second_defender.area_contact->defender_power==player25_first_defender.area_contact->defender_power &&
+       player25_second_defender.area_contact->cost==player25_first_defender.area_contact->cost &&
+       player25_second_defender.area_contact->effect==player25_first_defender.area_contact->effect &&
+       player25_first_clock.recovery->opposing_player==17,
+       "Earlier and later sampled defenders share preparation without mutating the input");
  auto second_bytes=bytes(player25_second_defender);std::istringstream second_stream(second_bytes);
  check(bytes(load_phase_session(second_stream))==second_bytes,"The second defender preparation roundtrips");
  rejects([&]{prepare_sampled_player3_pass_defender(player25_second_defender,sampled_attack_profiles,player3_defense_content);});

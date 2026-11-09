@@ -218,3 +218,5 @@ The current writer is snapshot58w398bytes. Host frame acknowledgements are expli
 `check_area_defender_announcement_original.py ROM PACK KEEPER_RAM OUTPUT_DIR`
 compares prepared defender announcements through89D5, supplying captured facing.
 The current writer is snapshot59x398bytes.
+
+The [phase 317 player 7 pass replay](../docs/REPLAY_PLAYER7_PASS.md) compares one complete sampled pass through resumed control using private evidence paths.
