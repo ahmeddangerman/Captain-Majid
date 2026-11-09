@@ -1827,6 +1827,40 @@ int main(){try{using namespace captain;
        player25_first_clock.current.clock.remaining==324 && player25_first_clock.current.field.elapsed==2 &&
        player25_first_clock.current.field.motion[field_motion_index(17)].status==6,
        "The first defender contact applies its clock and status");
+ auto player25_second_defender=prepare_sampled_player3_pass_defender(player25_first_clock,sampled_attack_profiles,player3_defense_content);
+ check(player25_second_defender.phase==FieldSessionPhase::sampled_score25_second_defender_prepared &&
+       player25_second_defender.recovery->opposing_player==19 && player25_second_defender.area_defender_cursor==1 &&
+       player25_second_defender.current.clock.remaining==324,
+       "The second defender is prepared after the first contact");
+ auto second_bytes=bytes(player25_second_defender);std::istringstream second_stream(second_bytes);
+ check(bytes(load_phase_session(second_stream))==second_bytes,"The second defender preparation roundtrips");
+ rejects([&]{prepare_sampled_player3_pass_defender(player25_second_defender,sampled_attack_profiles,player3_defense_content);});
+ auto player25_second_compared=compare_sampled_player3_pass_defender(player25_second_defender,{5,153,0,false,{154,96,68,0}});
+ check(player25_second_compared.phase==FieldSessionPhase::sampled_score25_second_defender_compared &&
+       player25_second_compared.area_contact->score==255 && !player25_second_compared.area_contact->result,
+       "The second defender comparison is calculated");
+ auto player25_second_clock=advance_sampled_player3_pass_contact(player25_second_compared,player3_prelude,home_experience);
+ check(player25_second_clock.phase==FieldSessionPhase::sampled_score25_second_contact_clock &&
+       player25_second_clock.current.clock.remaining==323 && player25_second_clock.current.field.elapsed==3 &&
+       player25_second_clock.current.field.motion[field_motion_index(19)].status==6,
+       "The second defender contact advances clock and status");
+ auto player25_third_defender=prepare_sampled_player3_pass_defender(player25_second_clock,sampled_attack_profiles,player3_defense_content);
+ check(player25_third_defender.phase==FieldSessionPhase::sampled_score25_third_defender_prepared && player25_third_defender.recovery->opposing_player==20 && player25_third_defender.area_defender_cursor==2,"The third defender is prepared");
+ auto player25_third_compared=compare_sampled_player3_pass_defender(player25_third_defender,{5,153,0,false,{154,96,68,0}});
+ check(player25_third_compared.phase==FieldSessionPhase::sampled_score25_third_defender_compared && player25_third_compared.area_contact->score==255,"The third defender comparison is calculated");
+ auto player25_third_clock=advance_sampled_player3_pass_contact(player25_third_compared,player3_prelude,home_experience);
+ check(player25_third_clock.phase==FieldSessionPhase::sampled_score25_third_contact_clock && player25_third_clock.current.clock.remaining==322 && player25_third_clock.current.field.motion[field_motion_index(20)].status==6,"The third defender contact advances clock and status");
+ auto player25_dispatch=advance_sampled_player3_pass_dispatch(player25_third_clock);
+ check(player25_dispatch.phase==FieldSessionPhase::sampled_score25_dispatch_clock && player25_dispatch.current.clock.remaining==321 && player25_dispatch.area_defender_cursor==3,"The pass dispatch advances after three defenders");
+ auto dispatch_bytes=bytes(player25_dispatch);std::istringstream dispatch_stream(dispatch_bytes);
+ check(bytes(load_phase_session(dispatch_stream))==dispatch_bytes,"The pass dispatch snapshot roundtrips");
+ rejects([&]{advance_sampled_player3_pass_dispatch(player25_dispatch);});
+ auto invalid_dispatch=dispatch_bytes;invalid_dispatch[10]=static_cast<char>(143);
+ rejects([&]{std::istringstream in(invalid_dispatch);load_phase_session(in);});
+ invalid_dispatch=dispatch_bytes;invalid_dispatch.pop_back();
+ rejects([&]{std::istringstream in(invalid_dispatch);load_phase_session(in);});
+ auto changed_second=player25_second_defender;changed_second.area_defender_cursor=2;
+ rejects([&]{validate_phase_session(changed_second);});
  auto confirmed_empty_bytes=bytes(pass_empty_confirm);std::istringstream confirmed_empty_stream(confirmed_empty_bytes);
  auto cancel_pending_bytes=bytes(pass_cancel_pending);std::istringstream cancel_pending_stream(cancel_pending_bytes);
  check(bytes(load_phase_session(confirmed_empty_stream))==confirmed_empty_bytes && bytes(load_phase_session(cancel_pending_stream))==cancel_pending_bytes,

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: 2-5 pass dispatch
+
+The player7 pass now advances from phase317 through defender19, defender20 and dispatch at phase324. Original/native represented session bytes and contact/cursor/flag matched all24 constructed cases at each of seven new boundaries (168 comparisons). Continue from ../Captain-Majid-analysis/mixed25-thirddispatch-native-d5255acc. Original-only traces in ../Captain-Majid-analysis/mixed25-afterdispatch-original-6bff3082 reach the pass handoff $C612 and target $DE64 in all24 cases; the observer subsequently hit its 2,500 cooperative-wait bound. Next compare calculated field advancement to $C612, then target/flight; do not infer why the observer waits. Defender AI choices are supplied and presentation is acknowledged. Complete playable match, authentic initialization and live presentation remain unverified. Overall progress is unmeasured.
+
 ## Current stopping point - 2026-11-08: 2-5 player7 pass
 
 After the 2-5 restart, player5's selected pass targets player7 in cell103. Twenty-four constructed original/native cases match target entry, five cursor movements, confirmation, explicit defender choices, numerical pass preparation, first defender17 preparation/comparison and contact clock. The latest native state is phase317, clock324, elapsed2, defender17 status6. Continue from ../Captain-Majid-analysis/mixed25-firstcontact-native-8b17a06d; original checkpoints for defenders19 and20 and dispatch are in ../Captain-Majid-analysis/mixed25-player7pass-original-16857a86. They are original-only and need numerical native implementation and comparison. Cursor/step bookkeeping uses session version146. Presentation is cooperatively acknowledged and AI choices are supplied, not generated. Full Windows CMake build and all45 tests passed. Complete playable match and real initialization remain unverified.

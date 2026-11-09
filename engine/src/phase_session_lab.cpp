@@ -180,6 +180,13 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::sampled_score25_first_defender_prepared: return "sampled 2-5 player7 pass first defender prepared";
     case captain::FieldSessionPhase::sampled_score25_first_defender_compared: return "sampled 2-5 player7 pass first defender compared";
     case captain::FieldSessionPhase::sampled_score25_first_contact_clock: return "sampled 2-5 player7 pass first contact clock";
+    case captain::FieldSessionPhase::sampled_score25_second_defender_prepared: return "sampled 2-5 player7 pass second defender prepared";
+    case captain::FieldSessionPhase::sampled_score25_second_defender_compared: return "sampled 2-5 player7 pass second defender compared";
+    case captain::FieldSessionPhase::sampled_score25_second_contact_clock: return "sampled 2-5 player7 pass second contact clock";
+    case captain::FieldSessionPhase::sampled_score25_third_defender_prepared: return "sampled player7 third defender prepared";
+    case captain::FieldSessionPhase::sampled_score25_third_defender_compared: return "sampled player7 third defender compared";
+    case captain::FieldSessionPhase::sampled_score25_third_contact_clock: return "sampled player7 third contact clock";
+    case captain::FieldSessionPhase::sampled_score25_dispatch_clock: return "sampled player7 dispatch clock";
     case captain::FieldSessionPhase::sampled_player3_contact_clock: return "sampled player3 contact clock advanced";
     case captain::FieldSessionPhase::sampled_player3_dispatch_clock: return "sampled player3 pass dispatch clock advanced";
     case captain::FieldSessionPhase::sampled_player3_pass_handoff: return "sampled player3 pass handoff";

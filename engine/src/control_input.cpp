@@ -166,6 +166,17 @@ Player5PossessionResult transfer_sampled_player5_dribble_possession(const PhaseS
 }
 PhaseSessionState prepare_sampled_player3_pass_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::sampled_score25_first_contact_clock || input.phase==FieldSessionPhase::sampled_score25_second_contact_clock) {
+  const bool third=input.phase==FieldSessionPhase::sampled_score25_second_contact_clock;
+  const std::uint8_t defender=third ? 20 : 19;
+  const auto& p=input.current.field.roster[defender];
+  const auto prepared=prepare_profiled_field_defender({defender,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},profiles,1,0,0,defense);
+  if(prepared.base_strength!=18 || prepared.stamina_cost!=60 || prepared.move_effect!=0)
+   throw std::invalid_argument("Unverified sampled second defender content");
+  auto state=input;state.recovery->opposing_player=defender;state.area_defender_cursor=third ? 2 : 1;
+  state.area_contact=AreaContactContext{static_cast<std::uint8_t>(third ? 2 : 1),1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+  state.phase=third ? FieldSessionPhase::sampled_score25_third_defender_prepared : FieldSessionPhase::sampled_score25_second_defender_prepared;validate_phase_session(state);return state;
+ }
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_pass_prepared;
  const bool score25=input.phase==FieldSessionPhase::sampled_score25_pass_prepared;
  if((input.phase!=FieldSessionPhase::sampled_player3_pass_prepared && !score23 && !score25) || input.current.field.roster[17].type!=23 || input.current.field.roster[17].stamina!=100)
@@ -181,41 +192,47 @@ PhaseSessionState prepare_sampled_player3_pass_defender(const PhaseSessionState&
 PhaseSessionState compare_sampled_player3_pass_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison) {
  validate_phase_session(input);
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_defender_prepared;
+ const bool third=input.phase==FieldSessionPhase::sampled_score25_third_defender_prepared;
+ const bool second=input.phase==FieldSessionPhase::sampled_score25_second_defender_prepared;
  const bool score25=input.phase==FieldSessionPhase::sampled_score25_first_defender_prepared;
- if(input.phase!=FieldSessionPhase::sampled_player3_defender_prepared && !score23 && !score25)
+ if(input.phase!=FieldSessionPhase::sampled_player3_defender_prepared && !score23 && !score25 && !second && !third)
   throw std::invalid_argument("Unsupported sampled player3 defender comparison");
  DefenderContactInput contact{};contact.incoming_power=input.action->power;contact.defender_power=input.area_contact->defender_power;
  contact.random_first=input.current.field.random_first;contact.random_second=input.current.field.random_second;
  contact.weakened=false;contact.context=0;contact.subtype=0;
  if(comparison.table_index!=5)throw std::invalid_argument("Unsupported sampled player3 comparison table index");
  contact.range=comparison.range;contact.offset=comparison.offset;contact.eligible=comparison.eligible;
- contact.thresholds=comparison.thresholds;contact.defender_slot=17;
+ contact.thresholds=comparison.thresholds;contact.defender_slot=third ? 20 : second ? 19 : 17;
  const auto result=compare_defender_contact(contact);
  if(result.score!=255 || result.result_code!=0 || result.strength!=0 || result.loss!=0)
   throw std::invalid_argument("Unverified sampled player3 defender result: score="+std::to_string(result.score)+" result="+std::to_string(result.result_code)+" strength="+std::to_string(result.strength)+" loss="+std::to_string(result.loss));
  auto state=input;state.area_contact->strength=result.strength;state.area_contact->loss=result.loss;
  state.area_contact->score=result.score;state.area_contact->result=result.result_code;state.area_sequence_result=result.result_code;
- state.phase=score25 ? FieldSessionPhase::sampled_score25_first_defender_compared : score23 ? FieldSessionPhase::sampled_score23_defender_compared : FieldSessionPhase::sampled_player3_defender_compared;validate_phase_session(state);return state;
+ state.phase=third ? FieldSessionPhase::sampled_score25_third_defender_compared : second ? FieldSessionPhase::sampled_score25_second_defender_compared : score25 ? FieldSessionPhase::sampled_score25_first_defender_compared : score23 ? FieldSessionPhase::sampled_score23_defender_compared : FieldSessionPhase::sampled_player3_defender_compared;validate_phase_session(state);return state;
 }
 PhaseSessionState advance_sampled_player3_pass_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience) {
  validate_phase_session(input);
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_defender_compared;
+ const bool third=input.phase==FieldSessionPhase::sampled_score25_third_defender_compared;
+ const bool second=input.phase==FieldSessionPhase::sampled_score25_second_defender_compared;
  const bool score25=input.phase==FieldSessionPhase::sampled_score25_first_defender_compared;
- if((input.phase!=FieldSessionPhase::sampled_player3_defender_compared && !score23 && !score25) || input.current.field.motion[field_motion_index(17)].status ||
+ const auto defender=third ? 20 : second ? 19 : 17;
+ if((input.phase!=FieldSessionPhase::sampled_player3_defender_compared && !score23 && !score25 && !second && !third) || input.current.field.motion[field_motion_index(defender)].status ||
     prelude.field_elapsed[3]!=1 || prelude.defender_status[1]!=6)
   throw std::invalid_argument("Unsupported sampled player3 contact clock");
  const auto reward=award_player_experience(*input.experience,23,1,experience);
  if(!reward.slot || *reward.slot!=0 || reward.award!=3)throw std::invalid_argument("Unverified sampled player3 contact experience");
- const auto applied=apply_contact_prelude({input.current,17,1,true},prelude);
+ const auto applied=apply_contact_prelude({input.current,static_cast<std::uint8_t>(defender),1,true},prelude);
  if(applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready)
   throw std::invalid_argument("Unverified sampled player3 contact clock");
  auto state=input;state.current=applied.state;state.experience=reward.state;
- state.phase=score25 ? FieldSessionPhase::sampled_score25_first_contact_clock : score23 ? FieldSessionPhase::sampled_score23_contact_clock : FieldSessionPhase::sampled_player3_contact_clock;validate_phase_session(state);return state;
+ state.phase=third ? FieldSessionPhase::sampled_score25_third_contact_clock : second ? FieldSessionPhase::sampled_score25_second_contact_clock : score25 ? FieldSessionPhase::sampled_score25_first_contact_clock : score23 ? FieldSessionPhase::sampled_score23_contact_clock : FieldSessionPhase::sampled_player3_contact_clock;validate_phase_session(state);return state;
 }
 PhaseSessionState advance_sampled_player3_pass_dispatch(const PhaseSessionState& input) {
  validate_phase_session(input);
+ const bool score25=input.phase==FieldSessionPhase::sampled_score25_third_contact_clock;
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_contact_clock;
- if(input.phase!=FieldSessionPhase::sampled_player3_contact_clock && !score23)
+ if(input.phase!=FieldSessionPhase::sampled_player3_contact_clock && !score23 && !score25)
   throw std::invalid_argument("Unsupported sampled player3 pass dispatch");
  auto state=input;constexpr std::uint8_t elapsed=1;
  state.current.field.elapsed=static_cast<std::uint8_t>(unsigned(state.current.field.elapsed)+elapsed);
@@ -223,8 +240,8 @@ PhaseSessionState advance_sampled_player3_pass_dispatch(const PhaseSessionState&
  state.current.field.keepers=recovery.keepers;state.current.shared_recovery_flags=recovery.shared_flags;state.current.shared_recovery_timer=recovery.shared_timer;
  const auto clock=advance_match_clock(state.current.clock,elapsed,state.current.field.random_first);
  if(clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Unverified sampled player3 dispatch clock");
- state.current.clock=clock.state;state.area_defender_cursor=1;
- state.phase=score23 ? FieldSessionPhase::sampled_score23_dispatch_clock : FieldSessionPhase::sampled_player3_dispatch_clock;validate_phase_session(state);return state;
+ state.current.clock=clock.state;state.area_defender_cursor=score25 ? 3 : 1;
+ state.phase=score25 ? FieldSessionPhase::sampled_score25_dispatch_clock : score23 ? FieldSessionPhase::sampled_score23_dispatch_clock : FieldSessionPhase::sampled_player3_dispatch_clock;validate_phase_session(state);return state;
 }
 PhaseSessionState capture_sampled_player3_pass_handoff(const PhaseSessionState& input,const FieldPhaseState& captured) {
  validate_phase_session(input);

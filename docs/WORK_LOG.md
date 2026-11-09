@@ -1,5 +1,17 @@
 # Development log
 
+## 2026-11-09 - Player7 pass clears three defenders
+
+- Extended the existing numerical defender preparation, comparison and contact-clock operations to defender19 and defender20 and advanced the pass dispatch. New phases318-324 use the existing version146 snapshot layout; earlier snapshots remain supported. Across24 constructed cases, original/native represented session bytes11..323, saved contact, cursor and flag match seven new boundaries (168 comparisons). Focused tests cover progression, replay rejection, cursor validation and snapshot roundtrip, wrong-version and truncation. Private evidence: ../Captain-Majid-analysis/mixed25-seconddefender-native-31bb9679, ../Captain-Majid-analysis/mixed25-secondcontact-native-57084032 and ../Captain-Majid-analysis/mixed25-thirddispatch-native-d5255acc.
+- Original-only continuation reaches $C612 and $DE64 in all24 cases; a representative observer reached its 2,500 cooperative-wait limit thereafter. No pass flight or reception parity is claimed. The scenario is constructed, defender choices are supplied, and cooperative acknowledgements are not live timing, rendering or audio. Authentic initialization and a complete playable match remain unverified; progress is unmeasured. Next compare numeric field advancement and the target boundary, then investigate the observer wait. Suggested model: Terra High. Evidence: ../Captain-Majid-analysis/mixed25-afterdispatch-original-6bff3082.
+- An overbroad validation edit initially caused keeper-save-session-tests to fail; the unrelated condition was restored, then all45 Windows test executables passed. Full Windows CMake build also passed.
+
+## 2026-11-09 - Baseline and remaining defender checkpoint inspection
+
+- Windows CMake build completed with no work to do; all 45 existing Windows test executables passed. `ctest` is not on PATH, so these were run directly. Re-ran the private first-contact comparison: all 24 original/native comparison and clock boundaries matched.
+- Inspected all 24 existing original-only continuations. Defender19 preparation/comparison occurs at cursor1, clock324, elapsed2; its contact reaches clock323, elapsed3. Defender20 preparation/comparison occurs at cursor2, clock323, elapsed3; its contact reaches clock322, elapsed4. Dispatch occurs at cursor3, clock321, elapsed5. These are original observations only; no native implementation or comparison for these boundaries has yet been completed.
+- No engine changes were made. Next implement and compare the two remaining defenders and dispatch, preserving the explicit captured AI choices and snapshot compatibility. Full playable match, real initialization and live presentation remain unverified; overall progress is unmeasured. Suggested model: Terra High. Evidence: ../Captain-Majid-analysis/mixed25-player7pass-original-16857a86 and ../Captain-Majid-analysis/mixed25-firstcontact-native-d3f77cb2.
+
 ## 2026-11-08 - teammate pass and first defender
 
 - At the 2-5 three-defender contact, the selected pass cursor follows 87,99,100,101,102,103 to player7. Across 24 constructed original/native cases, target entry, five movements and recipient confirmation all match (168 boundaries). Captured defender choices 1,1,1, exhausted numerical pass preparation, first defender17 preparation and comparison, and first contact clock/status/experience each match all24. The first comparison uses original row5 inputs 153,0,0 and thresholds 154,96,68,0; defender17 status becomes6, clock 325 to324, elapsed 1 to2.
