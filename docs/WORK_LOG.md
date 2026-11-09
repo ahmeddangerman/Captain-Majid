@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Corrected post-pass flight observer
+
+- Diagnosed the earlier bounded observer: it checked bank30 for $E773 and $E0DF, but those fixed addresses are in bank31. After correcting the hooks, all24 constructed original cases reach five $E773 callbacks and $E0DF; target recipient7 and retained flag1 were observed. The earlier 10,000-wait trace missed those events and does not establish an actual scheduler wait. Original-only evidence: ../Captain-Majid-analysis/mixed25-corrected-flight-original-c7504f3f; corrected observer: ../Captain-Majid-analysis/trace_mixed25_afterdispatch_corrected_20261109.py.
+- Native comparison ends at phase325 field handoff; target, numeric flight and reception remain unimplemented. Next preserve the target in a compatible saved context, calculate flight and compare every original callback and return to control. The original runs use constructed states and cooperative presentation, not live hardware timing. A playable match and authentic initialization remain unverified; overall progress is unmeasured. Suggested model: Terra High.
+
 ## 2026-11-09 - Numeric field movement after player7 pass
 
 - Extended the existing numerical field advancement to phase325 after the three-defender dispatch. All24 constructed original/native cases match represented session bytes11..323, defender cursor and flight flag at original $C612; target cursor and step count are retained in version146. Focused tests exercise advancement, snapshot roundtrip and replay rejection. Private evidence: ../Captain-Majid-analysis/mixed25-fieldhandoff-native-d0fe5255 and ../Captain-Majid-analysis/mixed25-afterdispatch-original-6bff3082.
