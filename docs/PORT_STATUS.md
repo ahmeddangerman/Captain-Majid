@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - emulated repeatability diagnostic (2026-11-09):** Fresh original-emulator runs can diverge even when recorded input histories match; a saved state consistently reproduced one outcome over1,000 restores. Root cause is unresolved and full frame determinism is not claimed. No engine behavior changed. Overall progress is unmeasured; native live initialization and a complete playable match remain unsupported.
+
 **Latest - emulated stage/team context (2026-11-09):** Across284 sampled frames in four independent original-emulator startups, stage0, opponent team3 and pointer $BAF6 agree with the earlier isolated original mapping. This is bounded evidence for that startup, not native initialization or a full match; overall progress is unmeasured.
 
 **Latest - emulated startup observation (2026-11-09):** An isolated original-ROM emulator process reached kickoff and a first field encounter from power-on. Four repeated captures exposed RAM/picture differences, whose cause remains unresolved. The live sample and prior constructed checkpoint are different boundaries; no native startup parity is claimed. Native live initialization and a complete playable match remain unsupported; overall progress is unmeasured. See CLI_HANDOFF and WORK_LOG.
