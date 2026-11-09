@@ -1656,6 +1656,12 @@ int main(){try{using namespace captain;
        !area_keeper_arrival.current.field.elapsed && area_keeper_arrival.current.field.selected_defenders==1 &&
        area_keeper_arrival.scheduling->selected_ids[0]==11 && area_keeper_arrival.recovery->opposing_player==area_shot_target.recovery->opposing_player,
        "Same-cell shot selects the goalkeeper while retaining the previous opposing-player scratch until the next boundary");
+ const auto area_keeper_ready=prepare_session_keeper_entry(area_keeper_arrival);
+ check(area_keeper_ready.phase==FieldSessionPhase::ordinary_return_goal_area_keeper_ready &&
+       area_keeper_ready.recovery->opposing_player==11 && area_keeper_ready.current.field.selected_defenders==1,
+       "Keeper preparation makes the selected goalkeeper the active defender");
+ const auto keeper_wait=advance_observed_nmi_events(area_keeper_ready,0,{});
+ check(keeper_wait.state.recovery->opposing_player==11,"Keeper preparation accepts evidence-fed timing");
  auto stunned_area_keeper=area_shot_target;stunned_area_keeper.current.field.keepers[1].stun=1;
  rejects([&]{prepare_session_keeper_entry(stunned_area_keeper);});
  auto other_area_target=area_approach_fixture;other_area_target.current.field.random_first=232;

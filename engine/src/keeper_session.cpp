@@ -37,6 +37,10 @@ PhaseSessionState compare_sampled_home_goalkeeper(const PhaseSessionState& input
 }
 PhaseSessionState prepare_session_keeper_entry(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::ordinary_return_goal_area_keeper_arrival) {
+  auto state=input;state.recovery->opposing_player=11;state.phase=FieldSessionPhase::ordinary_return_goal_area_keeper_ready;
+  validate_phase_session(state);return state;
+ }
  if(input.phase==FieldSessionPhase::ordinary_return_goal_area_target) {
   if(input.current.field.keepers[1].stun)throw std::invalid_argument("Stunned goal-area keeper route is unsupported");
   auto state=input;state.current.field.elapsed=0;state.current.field.selected_defenders=1;

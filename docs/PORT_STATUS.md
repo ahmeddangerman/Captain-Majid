@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+**Latest - selected goalkeeper timing (2026-11-09):** One captured startup matches active goalkeeper11 and one recorded timing event. Goalkeeper preparation scratch, outcome, scoring and autonomous match remain unsupported in this continuation. All62 Windows tests passed; overall progress unmeasured.
+
+
+
 **Latest - same-cell goalkeeper arrival (2026-11-09):** One captured startup matches shot approach and direct unstunned goalkeeper selection without invented numeric flight. The keeper decision, scoring and autonomous match remain unsupported in this continuation. All62 Windows tests passed; overall progress unmeasured.
 
 

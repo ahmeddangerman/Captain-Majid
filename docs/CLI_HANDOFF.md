@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: selected goalkeeper timing boundary
+
+The captured same-cell volley now also matches the selected goalkeeper becoming the active defender at $80D9 and one recorded random/travel event through bank26:$856B (random index149). The comparison covers represented session fields and the keeper prefix; original scratch cost changes from90 to20 before $856B and is not represented or native-compared at this boundary. It must not be mistaken for a verified goalkeeper preparation or outcome. Private replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-precompare-20261109.
+
+General: shared shot approach, movement and clock kernels. Guarded: this same-cell, unstunned keeper continuation and captured timing. Unknown: keeper preparation scratch, decision/result, scoring, restart and autonomous AI/presentation. Full Windows build and all62 tests passed. Next compare keeper preparation and classify its result against controlled original cases. Overall progress unmeasured; suggested model Terra High.
+
+
+
 ## Current stopping point - 2026-11-09: same-cell goalkeeper arrival
 
 The existing captured startup now matches the goal-area volley through the shared shot-approach calculation ($DD08) and direct unstunned goalkeeper arrival ($8506): distance18, target234, random byte233 to116, elapsed1 to0 and selected goalkeeper11. The original keeps the preceding defender reference14 at this boundary; do not replace it until the later observed keeper-preparation boundary. Because the saved ball cell already equals the target, no numeric flight is invented. Private replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-arrival-20261109.

@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Selected goalkeeper timing boundary
+
+The same-cell volley replay matches active defender11 and one recorded random/travel event through bank26:$856B, random index149. Original keeper-cost scratch changes to20 and is not yet compared; keeper outcome remains unsupported. Full Windows build and all62 tests passed. Private replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-precompare-20261109. Overall progress unmeasured; next compare keeper preparation and outcome; suggested model Terra High.
+
+
+
 ## 2026-11-09 - Same-cell volley goalkeeper arrival
 
 The captured startup matches shared shot approach and the direct unstunned goalkeeper selection: distance18, cell234, elapsed1 to0, keeper11, with the previous defender reference retained. Same-cell and unstunned guards remain; goalkeeper decision is not yet connected. Full Windows build and all62 tests passed. Private replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-arrival-20261109. Overall progress unmeasured; next compare keeper preparation/outcome; suggested model Terra High.

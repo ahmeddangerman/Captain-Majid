@@ -195,6 +195,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::ordinary_return_goal_area_handoff: return "ordinary returned goal area handoff";
     case captain::FieldSessionPhase::ordinary_return_goal_area_target: return "ordinary returned goal area shot target";
     case captain::FieldSessionPhase::ordinary_return_goal_area_keeper_arrival: return "ordinary returned goal area keeper arrival";
+    case captain::FieldSessionPhase::ordinary_return_goal_area_keeper_ready: return "ordinary returned goal area keeper ready";
     case captain::FieldSessionPhase::sampled_human_pass_empty_confirmed: return "sampled empty pass target confirmed";
     case captain::FieldSessionPhase::sampled_human_pass_cancel_pending: return "sampled human pass cancel pending";
     case captain::FieldSessionPhase::sampled_human_pass_prepared: return "sampled human pass prepared";
