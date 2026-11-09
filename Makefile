@@ -257,6 +257,7 @@ check: build/pass-target-tests build/pass-distance-tests build/ai-action-candida
 	python3 tools/check_replica_sync.py
 	python3 tools/check_reference_cartridge.py
 	python3 tools/test_verify_player7_pass_end_to_end.py
+	python3 tools/test_compare_kickoff_formation_capture.py
 	python3 tools/test_export_pass_distance.py
 	python3 tools/test_pass_distance_oracle.py
 	python3 tools/test_pass_target_oracle.py

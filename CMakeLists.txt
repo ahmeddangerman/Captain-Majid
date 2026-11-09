@@ -203,6 +203,9 @@ if(BUILD_TESTING)
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/check_reference_cartridge.py)
         add_test(NAME player7_pass_replay_checks COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_verify_player7_pass_end_to_end.py)
+        add_test(NAME kickoff_formation_capture_checks COMMAND ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_compare_kickoff_formation_capture.py
+            $<TARGET_FILE:kickoff-formation-tests>)
         add_test(NAME pass_distance_export_checks COMMAND ${Python3_EXECUTABLE}
             ${CMAKE_CURRENT_SOURCE_DIR}/tools/test_export_pass_distance.py)
         add_test(NAME pass_distance_oracle_checks COMMAND ${Python3_EXECUTABLE}

@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - emulated kickoff formation comparison (2026-11-09):** The shared native placement kernel matched44 raw coordinate words in each of four captures of one original-emulator startup layout (two fresh runs and two resumes of the same prior state). A private-path comparator reports the first differing player coordinate. All59 registered Windows CTest tests passed. The finding covers this placement, not complete native initialization or a playable match; overall progress is unmeasured.
+
 **Latest - emulated repeatability diagnostic (2026-11-09):** Fresh original-emulator runs can diverge even when recorded input histories match; a saved state consistently reproduced one outcome over1,000 restores. Root cause is unresolved and full frame determinism is not claimed. No engine behavior changed. Overall progress is unmeasured; native live initialization and a complete playable match remain unsupported.
 
 **Latest - emulated stage/team context (2026-11-09):** Across284 sampled frames in four independent original-emulator startups, stage0, opponent team3 and pointer $BAF6 agree with the earlier isolated original mapping. This is bounded evidence for that startup, not native initialization or a full match; overall progress is unmeasured.
