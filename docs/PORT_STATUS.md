@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - captured keeper result (2026-11-09):** The startup replay now matches the original keeper result0 and subsequent presentation entry using supplied action0/subtype0/team3 and recorded timing. Outcome presentation, scoring/restart and a continuous playable match remain unsupported. Full Windows build and all62 registered checks passed; overall progress unmeasured.
+
+
 **Latest - live goalkeeper comparison (2026-11-09):** At the captured live $856B boundary, native goalkeeper arithmetic matches original cost, base power, strength, score and classification. The session is not yet connected through the result write, goal or restart; a continuous playable match remains unsupported. Overall progress unmeasured.
 
 

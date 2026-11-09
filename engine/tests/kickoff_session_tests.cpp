@@ -1662,6 +1662,22 @@ int main(){try{using namespace captain;
        "Keeper preparation makes the selected goalkeeper the active defender");
  const auto keeper_wait=advance_observed_nmi_events(area_keeper_ready,0,{});
  check(keeper_wait.state.recovery->opposing_player==11,"Keeper preparation accepts evidence-fed timing");
+ auto returned_keeper_input=keeper_wait.state;
+ returned_keeper_input.current.field.random_first=206;returned_keeper_input.current.field.random_second=74;
+ returned_keeper_input.action->power=1000;
+ auto returned_keeper_content=keeper_test_content;returned_keeper_content.goalkeepers.team_types={0};
+ returned_keeper_content.keeper.strength_curve.fill(11);
+ const auto returned_keeper_before=bytes(returned_keeper_input);
+ const auto returned_keeper_result=resolve_prepared_session_keeper(returned_keeper_input,0,0,3,returned_keeper_content);
+ check(static_cast<unsigned>(returned_keeper_result.phase)==390 && returned_keeper_result.keeper_decision &&
+       returned_keeper_result.keeper_decision->result_code==0 && returned_keeper_result.area_defender_cursor==0 &&
+       bytes(returned_keeper_input)==returned_keeper_before,"Returned volley records the keeper result before presentation without mutating its input");
+ auto returned_keeper_bytes=bytes(returned_keeper_result);std::istringstream returned_keeper_stream(returned_keeper_bytes);
+ check(bytes(load_phase_session(returned_keeper_stream))==returned_keeper_bytes,"Returned keeper decision snapshot roundtrips");
+ rejects([&]{resolve_prepared_session_keeper(returned_keeper_result,0,0,3,returned_keeper_content);});
+ rejects([&]{resolve_prepared_session_keeper(returned_keeper_input,1,0,3,returned_keeper_content);});
+ auto forged_returned_keeper=returned_keeper_result;forged_returned_keeper.keeper_decision->defense_action=1;
+ rejects([&]{validate_phase_session(forged_returned_keeper);});
  auto stunned_area_keeper=area_shot_target;stunned_area_keeper.current.field.keepers[1].stun=1;
  rejects([&]{prepare_session_keeper_entry(stunned_area_keeper);});
  auto other_area_target=area_approach_fixture;other_area_target.current.field.random_first=232;

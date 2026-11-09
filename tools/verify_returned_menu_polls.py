@@ -42,7 +42,7 @@ def compare_shot_flight(actual,raw,phase,boundary):
     for name,value,wanted in (('defenders.cursor',actual[413],raw[0x616]),('sequence.result',actual[414],raw[0x612])):
         if value!=wanted:raise ValueError(f'boundary {boundary}, {name}: native {value}, original {wanted}')
     normalized=bytearray(actual[:259]+actual[260:]);normalized[10]=133;normalized[258]=20
-    if phase in (388,389):
+    if phase in (388,389,390):
         for name,actual_value,expected_value in (('field.selected_defenders',normalized[28],raw[0x600]),('scheduling.selected_ids[0]',normalized[309],raw[0x601])):
             if actual_value!=expected_value:raise ValueError(f'boundary {boundary}, {name}: native {actual_value}, original {expected_value}')
         # The generic exporter accepts field defenders only. Compare the keeper
@@ -122,6 +122,8 @@ def main():
     parser.add_argument('--volley-keeper-ready-index',type=int)
     parser.add_argument('--volley-keeper-wait-index',type=int)
     parser.add_argument('--volley-keeper-precompare-index',type=int)
+    parser.add_argument('--volley-keeper-result-ram',type=Path,help='private original $8599 RAM, independently continued from the comparison')
+    parser.add_argument('--volley-keeper-presentation-index',type=int,help='subsequent original presentation entry')
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -783,7 +785,29 @@ def main():
         if any(volley_pcs[i]=='C9C5' for i in range(wait+1,precompare+1)):
             raise ValueError('boundary returned.goal_area.keeper_precompare: unexpected random event')
         compare_shot_flight(waiting.read_bytes(),volley_ram(precompare),389,'returned.goal_area.keeper_precompare');source=waiting
-    print(f'Matched {count} returned menu polls through {"opponent goal-area goalkeeper timing boundary" if args.volley_keeper_precompare_index is not None else "opponent goal-area goalkeeper arrival" if args.volley_keeper_arrival_index is not None else "opponent goal-area shot target" if args.volley_target_index is not None else "opponent goal-area shot handoff" if args.volley_handoff_index is not None else "opponent goal-area field movement" if args.volley_movement_index is not None else "opponent goal-area first attack clock" if args.volley_clock_end_index is not None else "opponent goal-area volley preparation" if args.volley_prepared_index is not None else "opponent goal-area shot confirmation" if args.expected_area_polls is not None else "opponent goal-area menu" if args.area_menu_index is not None else "blocked-shot recovered owner" if args.owner_positioned_index is not None else "blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    result_args=(args.volley_keeper_result_ram,args.volley_keeper_presentation_index)
+    if any(value is not None for value in result_args):
+        if any(value is None for value in result_args) or args.volley_keeper_precompare_index is None:
+            raise ValueError('boundary returned.goal_area.keeper_result: comparison, result RAM and presentation entry are required')
+        presentation=args.volley_keeper_presentation_index
+        if not args.volley_keeper_precompare_index<presentation<len(volley_pcs) or volley_pcs[presentation]!='800C' or volley_ram(presentation)[0x24]!=16:
+            raise ValueError('boundary returned.goal_area.keeper_result: unsupported presentation ordering')
+        result=args.volley_keeper_result_ram.read_bytes()
+        before=volley_ram(args.volley_keeper_precompare_index)
+        if len(result)!=2048 or (before[0x2b],before[0x43d],before[0x43e],result[0x612],result[0x616])!=(3,0,0,0,0):
+            raise ValueError('boundary returned.goal_area.keeper_result: unsupported original choice or result')
+        if any(before[i]!=result[i] for i in range(2048) if not 0x100<=i<0x200):
+            raise ValueError('boundary returned.goal_area.keeper_result: original handoff differs outside CPU stack')
+        operation+=1;destination=output/f'{operation:03d}-keeper-result.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--resolve-prepared-keeper','0','0','3','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.keeper_result: {run.stderr.strip()}')
+        actual=destination.read_bytes()
+        compare_shot_flight(actual,result,390,'returned.goal_area.keeper_result')
+        expected=bytes((1,0,result[0x612],result[0x43d],result[0x43e],result[0x445]))
+        if actual[356:362]!=expected:raise ValueError('boundary returned.goal_area.keeper_result: keeper decision differs')
+        compare_shot_flight(actual,volley_ram(presentation),390,'returned.goal_area.keeper_presentation_entry')
+        source=destination
+    print(f'Matched {count} returned menu polls through {"opponent goal-area goalkeeper result before presentation" if args.volley_keeper_result_ram is not None else "opponent goal-area goalkeeper timing boundary" if args.volley_keeper_precompare_index is not None else "opponent goal-area goalkeeper arrival" if args.volley_keeper_arrival_index is not None else "opponent goal-area shot target" if args.volley_target_index is not None else "opponent goal-area shot handoff" if args.volley_handoff_index is not None else "opponent goal-area field movement" if args.volley_movement_index is not None else "opponent goal-area first attack clock" if args.volley_clock_end_index is not None else "opponent goal-area volley preparation" if args.volley_prepared_index is not None else "opponent goal-area shot confirmation" if args.expected_area_polls is not None else "opponent goal-area menu" if args.area_menu_index is not None else "blocked-shot recovered owner" if args.owner_positioned_index is not None else "blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

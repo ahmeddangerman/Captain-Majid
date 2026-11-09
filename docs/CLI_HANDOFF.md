@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: captured goalkeeper result connected
+
+The captured live startup now reaches native phase390 at the original bank26:$8599 result write and matches the subsequent original presentation entry in all represented fields. Original $856B..$8599 executed ten instructions from the captured registers/RAM: team3 does not trigger the story override; result0, keeper cursor0 and random index149 match native. The native transition uses the shared prepared goalkeeper/story calculations and explicitly supplied action0, subtype0 and team3; other choices and results reject. Private full replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-result-20261109; private original check: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/live_keeper_result.py.
+
+General: keeper arithmetic and earlier shared kernels. Captured/guarded: this result, input choice and sampled event order. Unsupported: outcome presentation execution, goal registration/restart in this continuation, autonomous AI and frame scheduling, and a complete playable match. Full Windows build and all62 registered checks passed (direct invocation; `ctest` unavailable). Overall progress unmeasured. Next trace the live presentation-to-goal boundary and compare scoring/restart. Suggested model Terra High.
+
+
 ## Current stopping point - 2026-11-09: live goalkeeper comparison verified
 
 The captured startup reaches the selected opposing goalkeeper and the original bank26:$856B comparison boundary. Native `prepare_goalkeeper`, evaluated independently from the replay checkpoint with the observed action0 and the same private content and random bytes206/74, matches the live original scratch/registers: cost20, base power11, strength6, score255 and threshold classification0. At $856B the original has not yet run the subsequent story override and result write ($856B..$8599); the native session has not been advanced through that comparison or its presentation. Private reproducible check: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/live_keeper_check.py. Sixteen controlled original CPU variations also matched cost, power, stamina and final result; they supply keeper actions and freeze timing.

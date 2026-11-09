@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-09 - Captured goalkeeper result before presentation
+
+The captured startup now continues from the selected opposing goalkeeper through the original result write at bank26:$8599. The original $856B state, continued for ten CPU instructions with the captured registers and RAM, writes result0 and cursor0; team3/game-mode0 does not trigger the story override. Phase390 reuses the shared prepared-keeper and story calculations with explicitly supplied action0/subtype0/team3, rejects other choices or nonzero results, and retains the keeper decision before presentation. Represented native state, keeper fields and random index149 match the isolated original $8599 checkpoint and the subsequent live presentation entry. The full captured replay matched 75 returned menu polls through this boundary. Private evidence: ../Captain-Majid-analysis/live-return-area-volley-keeper-result-20261109 and ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/live_keeper_result.py.
+
+The full Windows build and all62 CMake-registered checks passed, run directly from their registered commands because `ctest` is unavailable on this machine. Presentation, scoring/restart and live AI/frame scheduling remain unsupported in this continuation; a complete playable match remains unverified. Overall progress is unmeasured; next trace outcome presentation, goal registration and restart. Suggested model Terra High.
+
+
 ## 2026-11-09 - Live goalkeeper comparison arithmetic
 
 The observed live bank26:$856B boundary is after the goalkeeper comparison and before story override/result write. For the captured action0 input, original scratch/registers and the independent native goalkeeper kernel match cost20, base11, strength6, score255 and threshold classification0. This is a live-input arithmetic comparison, not an integrated native result or goal. Private reproducible check: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/live_keeper_check.py. Two intentional keeper-prefix/elapsed mutations were also reported with boundary and field. The prior full Windows build and all62 tests passed; overall progress remains unmeasured. Next verify live result write/presentation and scoring handoff; suggested model Terra High.

@@ -73,8 +73,11 @@ PhaseSessionState resolve_session_stunned_keeper(const PhaseSessionState& input,
 PhaseSessionState resolve_prepared_session_keeper(const PhaseSessionState& input,
  std::uint8_t action,std::uint8_t subtype,std::uint8_t opponent_team,const ShotContent& content) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::keeper_presentation_pending)
+ const bool returned=input.phase==FieldSessionPhase::ordinary_return_goal_area_keeper_ready;
+ if(input.phase!=FieldSessionPhase::keeper_presentation_pending && !returned)
   throw std::invalid_argument("Prepared keeper comparison requires the saved normal keeper entry");
+ if(returned && (action!=0 || subtype!=0 || opponent_team!=3))
+  throw std::invalid_argument("Unobserved returned goal-area goalkeeper choice");
  const auto& field=input.current.field;const auto keeper=static_cast<std::uint8_t>(field.side^11u);
  const auto& p=field.roster[keeper];const auto& status=field.keepers[field.side==0?1:0];
  const GoalkeeperInput comparison{input.action->power,
@@ -87,6 +90,8 @@ PhaseSessionState resolve_prepared_session_keeper(const PhaseSessionState& input
   content.goalkeepers,content.keeper);
  const auto story=apply_keeper_story_override({prepared.comparison.result_code,field.side,
   opponent_team,input.recovery->game_mode,input.recovery->attack_subtype,field.random_first});
+ if(returned && story.result_code!=0)
+  throw std::invalid_argument("Unobserved returned goal-area goalkeeper result");
  auto state=input;state.current.field.roster[keeper].stamina=prepared.energy.stamina;
  if(input.score && ((input.score->left_goals==2 && input.score->right_goals==5 && input.current.clock.remaining==304 && input.area_defender_cursor==5) ||
     (input.score->left_goals==3 && input.score->right_goals==6 && input.current.clock.remaining==263 && input.area_defender_cursor==4)) &&
@@ -94,7 +99,8 @@ PhaseSessionState resolve_prepared_session_keeper(const PhaseSessionState& input
   state.area_defender_cursor=0;
  state.keeper_decision=KeeperDecisionContext{0,story.result_code,action,
   prepared.comparison.subtype,prepared.preparation.move_effect};
- state.phase=FieldSessionPhase::keeper_decided;validate_phase_session(state);return state;
+ state.phase=returned ? FieldSessionPhase::ordinary_return_goal_area_keeper_compared : FieldSessionPhase::keeper_decided;
+ validate_phase_session(state);return state;
 }
 
 }
