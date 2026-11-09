@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Confirmed one emulated stage/team context
+
+Read the stage byte $26, opponent-team byte $2B and retained pointer $38/$39 in each sampled frame12900..13600 (10-frame spacing) of all four independent emulated startups. All284 samples held stage0, team3 and $BAF6. This matches the previously isolated original stage-to-team/pointer instruction traces for stage0 and establishes the context in this specific emulated startup. It does not show when or how the pointer was assigned, validate other stages, identify the keeper loader at a later decision, or compare native whole-match initialization. The four captures have the separately documented RAM and picture variability; selected bytes matching does not make the complete run deterministic. Evidence remains private in ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/capture-{c,d,e,f}. No engine change. The last full Windows build and all58 registered CTest checks passed at the preceding code checkpoint. Overall progress is unmeasured; suggested model: Terra High.
+
 ## 2026-11-09 - Isolated emulated original startup evidence
 
 Ran the user's original Japanese ROM in a newly isolated headless FCEUmm/libretro process, using an official prebuilt Windows core obtained from the libretro buildbot; private provenance includes hashes. A private scripted input sequence passed the title, story and meeting, selected kickoff and reached field play and a first player encounter. The emulator advanced frames including its normal CPU/PPU/NMI processing; this is an emulated observation, not evidence from physical hardware. The existing separate emulator session was not accessed. The ROM and all generated RAM, pictures, runtime binaries and scripts remain outside the checkout at ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee.

@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - emulated stage/team context (2026-11-09):** Across284 sampled frames in four independent original-emulator startups, stage0, opponent team3 and pointer $BAF6 agree with the earlier isolated original mapping. This is bounded evidence for that startup, not native initialization or a full match; overall progress is unmeasured.
+
 **Latest - emulated startup observation (2026-11-09):** An isolated original-ROM emulator process reached kickoff and a first field encounter from power-on. Four repeated captures exposed RAM/picture differences, whose cause remains unresolved. The live sample and prior constructed checkpoint are different boundaries; no native startup parity is claimed. Native live initialization and a complete playable match remain unsupported; overall progress is unmeasured. See CLI_HANDOFF and WORK_LOG.
 
 **Latest - shared recipient target (2026-11-09):** Original/native controlled execution matched67,792 target-cell resolver fixtures. Both existing phase317 replays and24 earlier no-recipient targets match using resolved cell and calculated distance. The recipient is supplied, not chosen by AI; all58 Windows CTest checks passed. Live initialization and a complete playable match remain unsupported; overall progress is unmeasured.
