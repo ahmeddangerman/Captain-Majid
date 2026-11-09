@@ -5,6 +5,10 @@
 namespace captain {
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {
+  auto state=input;state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
+  state.phase=FieldSessionPhase::ordinary_return_shot_blocked_recovery;validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::area_pass_terminal_clock_done || input.area_contact->result!=2)
   throw std::invalid_argument("Blocked pass recovery requires a completed result2 clock");
  auto state=input;state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
@@ -396,6 +400,28 @@ PhaseSessionState compare_ordinary_return_flight_defender(const PhaseSessionStat
  auto state=input;state.area_contact->strength=result.strength;state.area_contact->loss=result.loss;state.area_contact->score=result.score;
  state.area_contact->result=result.result_code;state.area_sequence_result=result.result_code;state.recovery->ball_variant=1;
  state.phase=FieldSessionPhase::ordinary_return_shot_flight_defender_compared;validate_phase_session(state);return state;
+}
+PhaseSessionState position_ordinary_return_blocked_shot(const PhaseSessionState& input,const ExperienceContent& experience) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_shot_flight_defender_compared || !input.experience)
+  throw std::invalid_argument("Blocked shot placement needs a compared result2 defender");
+ auto state=input;const auto id=state.recovery->opposing_player;
+ state.experience=award_player_experience(*state.experience,state.current.field.roster[id].type,2,experience).state;
+ const auto& defender=state.current.field.motion[field_motion_index(id)];
+ state.current.field.ball_x=defender.x>>8;state.current.field.ball_y=defender.y>>8;
+ state.ball_trajectory->x=static_cast<std::uint16_t>((defender.x&0xff00u)|(state.ball_trajectory->x&255u));
+ state.ball_trajectory->y=static_cast<std::uint16_t>((defender.y&0xff00u)|(state.ball_trajectory->y&255u));
+ state.phase=FieldSessionPhase::ordinary_return_shot_blocked_positioned;validate_phase_session(state);return state;
+}
+PhaseSessionState advance_ordinary_return_blocked_shot_clock(const PhaseSessionState& input,const ContactPreludeContent& clock,const ExperienceContent& experience) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_shot_blocked_positioned || !input.experience || clock.field_elapsed[0]!=2)
+  throw std::invalid_argument("Blocked shot clock requires its positioned defender and observed elapsed time");
+ auto state=input;const auto id=state.recovery->opposing_player;
+ state.experience=award_player_experience(*state.experience,state.current.field.roster[id].type,2,experience).state;
+ const auto applied=apply_contact_prelude({state.current,id,0,false},clock);
+ if(applied.clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Unsupported blocked shot clock continuation");
+ state.current=applied.state;state.phase=FieldSessionPhase::ordinary_return_shot_blocked_clocked;validate_phase_session(state);return state;
 }
 PhaseSessionState continue_session_unopposed_arrival(const PhaseSessionState& input) {
  validate_phase_session(input);

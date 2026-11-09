@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: blocked shot enters recovery
+
+The startup chain now matches the original result2 handler after193 captured random/travel waits and an explicit facing sample. Shared experience, placement and contact-clock rules reproduce the defender-positioned ball at x164/y132 with stale cell234, shooter status5 and clock164 to162; after three captured waits the selected prefix clears at bank26:$8BDF. Phase373 retains original result2 and stale ball data for the next recovery. Final random index29. The explicit facing sample preserves observed presentation; it does not simulate it. Private replay: ../Captain-Majid-analysis/live-return-shot-recovery-entry-final-20261109. The distinct earlier loose-shot recovery remains guarded, with the same underlying contact/experience rules.
+
+The next original-only trace jitters the ball to188/124, runs22 interleaved player updates and selects owner8; that continuation has not yet been connected or compared as a session. General: shared result2 placement and clock arithmetic. Scenario-specific: this captured startup, selected defender and supplied event/presentation schedule. Live AI/timing, goalkeeper/scoring and a complete match remain unverified. Full Windows build, all62 tests and phase317 replays (576/1152 boundaries) passed. Overall progress unmeasured; suggested model Terra High.
+
+
 ## Current stopping point - 2026-11-09: shot-flight defender result2
 
 The startup replay now continues from numeric shot arrival through the queued-defender cursor reset, one captured NMI/travel wait, profile-based preparation and the first action0 defender comparison. Original and native both identify player14 with power8/cost70; strength6, candidate loss1, score85 and result2 match at bank26:$88A8, final random index89. The comparison restores the observed ball variant1. Phases368-370 retain the existing flight/selection context and support only the observed variant1/action0/result2 continuation; unobserved effects, variant and outcomes reject. The arithmetic uses the shared profiled defender and defender-contact kernels. A distinct earlier guarded loose-shot path still matches12 original/native comparisons (strength9, loss2, score78, result2); it retains its own existing guard rather than being silently generalized.

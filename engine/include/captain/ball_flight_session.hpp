@@ -26,6 +26,8 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
 PhaseSessionState continue_session_unopposed_arrival(const PhaseSessionState& input);
 PhaseSessionState prepare_ordinary_return_flight_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense);
 PhaseSessionState compare_ordinary_return_flight_defender(const PhaseSessionState& input,const FlightContactContent& content);
+PhaseSessionState position_ordinary_return_blocked_shot(const PhaseSessionState& input,const ExperienceContent& experience);
+PhaseSessionState advance_ordinary_return_blocked_shot_clock(const PhaseSessionState& input,const ContactPreludeContent& clock,const ExperienceContent& experience);
 PhaseSessionState resolve_session_ball_cell(const PhaseSessionState& input);
 PhaseSessionState resolve_session_area_ball_cell(const PhaseSessionState& input);
 PhaseSessionState continue_area_already_arrived(const PhaseSessionState& input);

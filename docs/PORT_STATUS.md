@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - blocked shot recovery entry (2026-11-09):** The directed startup matches the result2 handler through ball placement, clock and recovery entry using captured timing/facing. Jitter, subsequent field movement and owner choice are still original-only; autonomous AI/timing and a complete match remain unsupported. All62 Windows tests and phase317 replays passed; overall progress unmeasured.
+
+
 **Latest - returned shot-flight defender (2026-11-09):** The directed startup now matches the first queued flight defender through result2 using shared profile/comparison arithmetic; an earlier guarded loose-shot defender set still matches12 original cases. Recovery/race, autonomous AI/timing and a complete match remain unsupported. All62 Windows tests and phase317 replays passed; overall progress unmeasured.
 
 

@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Returned blocked shot recovery entry
+
+The controlled startup now matches the result2 handler through explicit presentation-facing sample, defender position, two experience calls, two-tick contact clock and cleared defender prefix at $8BDF. The original retains cell234 while ball x/y become164/132; native phase373 preserves that ordering. Final random index29. Original-only continuation jitters to188/124 and later chooses player8; it is not yet native-compared. Full Windows build and all62 tests passed; phase317 replays matched576/1152 boundaries. Evidence: ../Captain-Majid-analysis/live-return-shot-recovery-entry-final-20261109. Overall progress unmeasured; next compare jitter, interleaved field movement and owner selection; suggested model Terra High.
+
+
 ## 2026-11-09 - Returned shot-flight defender comparison
 
 The startup chain now matches the selected defender sequence through result2: cursor reset, captured wait, player14 profile power8/cost70, strength6/loss1/score85 and restored variant1. Shared numerical preparation/comparison are reused; only the observed first action0/result2/variant1 path is exposed. An earlier separately guarded loose-shot set still matches12 original cases. All62 registered Windows tests and phase317 replays (576/1152 boundaries) passed. Recovery remains original-only. Private replay: ../Captain-Majid-analysis/live-return-shot-flight-defender-final-20261109. Overall progress unmeasured; next compare result2 handler and recovery; suggested model Terra High.

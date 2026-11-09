@@ -76,6 +76,13 @@ def main():
     parser.add_argument('--flight-defender-pending-index',type=int)
     parser.add_argument('--flight-defender-index',type=int)
     parser.add_argument('--flight-defender-result-index',type=int)
+    parser.add_argument('--recovery-trace-directory',type=Path)
+    parser.add_argument('--recovery-entry-index',type=int)
+    parser.add_argument('--recovery-handler-index',type=int)
+    parser.add_argument('--recovery-position-index',type=int)
+    parser.add_argument('--recovery-clock-index',type=int)
+    parser.add_argument('--recovery-before-index',type=int)
+    parser.add_argument('--recovery-handoff-index',type=int)
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -397,7 +404,66 @@ def main():
         check_contact(compared.read_bytes(),target_ram(result),370,'returned.shot.flight.defender_compare')
         if index!=target_ram(result)[0xe1]:raise ValueError('boundary returned.shot.flight.defender_compare, random.index: original and native differ')
         source=compared
-    print(f'Matched {count} returned menu polls through {"shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    recovery_args=(args.recovery_trace_directory,args.recovery_entry_index,args.recovery_handler_index)
+    if any(value is not None for value in recovery_args):
+        if any(value is None for value in recovery_args) or args.flight_defender_result_index is None:
+            raise ValueError('boundary returned.shot.recovery_wait: defender comparison and all follow-up trace inputs are required')
+        recovery_lines,recovery_pcs,recovery_ram=trace_data(args.recovery_trace_directory)
+        entry,handler=args.recovery_entry_index,args.recovery_handler_index
+        if not 0<=entry<handler<len(recovery_pcs) or [recovery_pcs[entry],recovery_pcs[handler]]!=['88A8','88BB'] or recovery_ram(handler)[0x24]!=26:
+            raise ValueError('boundary returned.shot.recovery_wait: unsupported original order or bank')
+        original=target_ram(args.flight_defender_result_index);followup=recovery_ram(entry)
+        for address,(value,wanted) in enumerate(zip(followup,original)):
+            if value!=wanted:raise ValueError(f'boundary returned.shot.recovery_handoff, RAM[0x{address:03x}]: follow-up {value}, defender {wanted}')
+        rows,last=menu_wait_events(recovery_lines,recovery_pcs,recovery_ram,entry,handler)
+        points=[i for i in range(entry+1,handler) if recovery_pcs[i] in ('C9C5','E3CA')]
+        if len(points)!=len(rows):raise ValueError('boundary returned.shot.recovery_wait: ambiguous facing ordering')
+        facing=source.read_bytes()[299];ordered=[]
+        for row,point in zip(rows,points):
+            observed=recovery_ram(point)[0x517]
+            if observed!=facing:facing=observed;ordered.append(f'F {facing}')
+            ordered.append(row)
+        operation+=1;events=output/f'{operation:03d}-recovery-wait-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(ordered)+'\n')
+        waiting=output/f'{operation:03d}-recovery-wait.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.recovery_wait: {run.stderr.strip()}')
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(recovery_ram(handler)[0xe1])]:raise ValueError('boundary returned.shot.recovery_wait, random.index: original and native differ')
+        check_contact(waiting.read_bytes(),recovery_ram(handler),370,'returned.shot.recovery_wait')
+        source=waiting;index=int(indices[0])
+    recovery_boundaries=(args.recovery_position_index,args.recovery_clock_index,args.recovery_before_index,args.recovery_handoff_index)
+    if any(value is not None for value in recovery_boundaries):
+        if any(value is None for value in recovery_boundaries) or args.recovery_handler_index is None:
+            raise ValueError('boundary returned.shot.recovery: all recovery boundaries and handler are required')
+        position,clock,before,handoff=recovery_boundaries
+        if not args.recovery_handler_index<position<clock<before<handoff<len(recovery_pcs) or [recovery_pcs[i] for i in recovery_boundaries]!=['81BC','C9C5','E406','8BDF'] or recovery_ram(position)[0x24]!=26 or recovery_ram(handoff)[0x24]!=26:
+            raise ValueError('boundary returned.shot.recovery: unsupported original order or bank')
+        if any(recovery_pcs[i]=='C9C5' for i in range(args.recovery_handler_index+1,clock)) or any(recovery_pcs[i]=='C9C5' for i in range(before+1,handoff)):
+            raise ValueError('boundary returned.shot.recovery: unexpected interleaved random event')
+        operation+=1;positioned=output/f'{operation:03d}-blocked-position.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--position-ordinary-return-blocked-shot','--capture',str(positioned)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.recovery.position: {run.stderr.strip()}')
+        compare_shot_flight(positioned.read_bytes(),recovery_ram(position),371,'returned.shot.recovery.position')
+        operation+=1;clocked=output/f'{operation:03d}-blocked-clock.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(positioned),'--advance-ordinary-return-blocked-shot-clock','--capture',str(clocked)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.recovery.clock: {run.stderr.strip()}')
+        compare_shot_flight(clocked.read_bytes(),recovery_ram(clock),372,'returned.shot.recovery.clock')
+        rows,last=menu_wait_events(recovery_lines,recovery_pcs,recovery_ram,clock-1,before+1)
+        if last!=before:raise ValueError('boundary returned.shot.recovery.clock_wait: incomplete event sequence')
+        operation+=1;events=output/f'{operation:03d}-blocked-clock-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+        waiting=output/f'{operation:03d}-blocked-clock-wait.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(clocked),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.recovery.clock_wait: {run.stderr.strip()}')
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(recovery_ram(before)[0xe1])]:raise ValueError('boundary returned.shot.recovery.clock_wait, random.index: original and native differ')
+        index=int(indices[0]);compare_shot_flight(waiting.read_bytes(),recovery_ram(before),372,'returned.shot.recovery.clock_wait')
+        operation+=1;destination=output/f'{operation:03d}-blocked-recovery.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--enter-area-pass-blocked-recovery','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.recovery.handoff: {run.stderr.strip()}')
+        compare_shot_flight(destination.read_bytes(),recovery_ram(handoff),373,'returned.shot.recovery.handoff')
+        if index!=recovery_ram(handoff)[0xe1]:raise ValueError('boundary returned.shot.recovery.handoff, random.index: original and native differ')
+        source=destination
+    print(f'Matched {count} returned menu polls through {"blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

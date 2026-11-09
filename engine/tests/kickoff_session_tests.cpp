@@ -1538,6 +1538,9 @@ int main(){try{using namespace captain;
        flight_defender_result.area_contact->score==85 && flight_defender_result.area_sequence_result==2 &&
        flight_defender_result.recovery->ball_variant==1,
        "Shot flight comparison reproduces the captured result2 and restores the ball variant");
+ const auto blocked_shot_facing=advance_observed_nmi_events(flight_defender_result,0,{{ObservedClockEventKind::facing_sample,{},64}});
+ check(blocked_shot_facing.state.control->facing==64 && flight_defender_result.control->facing==0,
+       "Captured blocked-shot presentation can change facing without mutating its source");
  const auto flight_defender_result_bytes=bytes(flight_defender_result);std::istringstream flight_defender_result_stream(flight_defender_result_bytes);
  check(bytes(load_phase_session(flight_defender_result_stream))==flight_defender_result_bytes,
        "Compared shot-flight defender snapshot roundtrip");
@@ -1547,6 +1550,25 @@ int main(){try{using namespace captain;
  check(bytes(different_flight_result)==different_flight_result_bytes,"Unsupported shot-flight result leaves its source unchanged");
  auto unsupported_flight_variant=flight_defender_input;unsupported_flight_variant.recovery->ball_variant=2;
  rejects([&]{prepare_ordinary_return_flight_defender(unsupported_flight_variant,sampled_attack_profiles,flight_defense_content);});
+ auto blocked_shot_fixture=flight_defender_result;blocked_shot_fixture.experience->totals[0]=21;
+ blocked_shot_fixture.current.field.roster[19].type=1;
+ blocked_shot_fixture.current.field.motion[field_motion_index(19)].x=164u<<8;
+ blocked_shot_fixture.current.field.motion[field_motion_index(19)].y=132u<<8;
+ ExperienceContent blocked_experience{};blocked_experience.stage_bases[0]=4;blocked_experience.reward_factors[2]=64;
+ const auto blocked_position=position_ordinary_return_blocked_shot(blocked_shot_fixture,blocked_experience);
+ check(blocked_position.current.field.ball_x==164 && blocked_position.current.field.ball_y==132 &&
+       blocked_position.current.field.ball_cell==blocked_shot_fixture.current.field.ball_cell && blocked_position.experience->totals[0]==22,
+       "Blocked shot places the ball at the defender and awards the first reward before updating its cell");
+ ContactPreludeContent blocked_clock{};blocked_clock.field_elapsed[0]=2;
+ const auto blocked_clocked=advance_ordinary_return_blocked_shot_clock(blocked_position,blocked_clock,blocked_experience);
+ check(blocked_clocked.current.clock.remaining+2==blocked_position.current.clock.remaining &&
+       blocked_clocked.current.field.elapsed==2 && blocked_clocked.experience->totals[0]==23 &&
+       blocked_clocked.current.field.motion[field_motion_index(blocked_clocked.current.field.ball_owner)].status==5,
+       "Blocked shot awards the second reward and advances its contact clock");
+ const auto returned_blocked_recovery=enter_area_pass_blocked_recovery(blocked_clocked);
+ check(!returned_blocked_recovery.current.field.selected_defenders && returned_blocked_recovery.current.field.elapsed==2 &&
+       returned_blocked_recovery.current.field.ball_x==164 && returned_blocked_recovery.area_sequence_result==2,
+       "Blocked shot clears its selected prefix at the recovery handoff");
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
