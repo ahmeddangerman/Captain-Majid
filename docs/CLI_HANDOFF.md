@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: same-cell goalkeeper arrival
+
+The existing captured startup now matches the goal-area volley through the shared shot-approach calculation ($DD08) and direct unstunned goalkeeper arrival ($8506): distance18, target234, random byte233 to116, elapsed1 to0 and selected goalkeeper11. The original keeps the preceding defender reference14 at this boundary; do not replace it until the later observed keeper-preparation boundary. Because the saved ball cell already equals the target, no numeric flight is invented. Private replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-arrival-20261109.
+
+General: reused shot-approach arithmetic and keeper selection mechanics. Scenario-specific: the guarded same-cell, side0, unstunned continuation and recorded input/timing; other targets or stunned keepers reject. Unknown: this goalkeeper decision/outcome, scoring/restart in this continuation, autonomous AI/presentation and a complete playable match. Full Windows build and all62 tests passed. Next compare goalkeeper preparation and result using the original trace. Overall progress unmeasured; suggested model Terra High.
+
+
+
 ## Current stopping point - 2026-11-09: volley clock and shot handoff
 
 The captured startup now continues from the recovered goal-area volley through the first clock, 22 ordered field-player updates, a second clock and the original shot handoff at $C618. The first clock goes 162 to 161 and the second 161 to 160; the second applies the observed opposing-player status6. Original/native represented fields match at the intermediate clock and handoff boundaries, final random index148. The replay uses captured presentation-facing/motion and random/travel samples, including 90 pairs during the second wait. Private evidence: ../Captain-Majid-analysis/live-return-area-volley-handoff-v5-20261109.

@@ -1644,6 +1644,22 @@ int main(){try{using namespace captain;
  check(!area_shot_handoff.action->menu_route && area_shot_handoff.current.field.elapsed==1 &&
        area_shot_handoff.current.field.motion[field_motion_index(area_shot_handoff.recovery->opposing_player)].status==6,
        "Goal-area shot handoff clears the menu route and retains elapsed time");
+ auto area_approach_fixture=area_shot_handoff;
+ area_approach_fixture.current.field.ball_cell=234;area_approach_fixture.shot_flight->destination=234;
+ area_approach_fixture.current.field.random_first=233;
+ const auto area_shot_target=prepare_session_shot_approach(area_approach_fixture,returned_approach).state;
+ check(area_shot_target.phase==FieldSessionPhase::ordinary_return_goal_area_target && area_shot_target.shot_flight->destination==234 &&
+       area_shot_target.shot_flight->distance==63 && area_shot_target.current.field.random_first==116 &&
+       area_shot_target.current.field.elapsed==1,"Goal-area volley reuses shot approach and retains its same-cell trajectory");
+ const auto area_keeper_arrival=prepare_session_keeper_entry(area_shot_target);
+ check(area_keeper_arrival.phase==FieldSessionPhase::ordinary_return_goal_area_keeper_arrival &&
+       !area_keeper_arrival.current.field.elapsed && area_keeper_arrival.current.field.selected_defenders==1 &&
+       area_keeper_arrival.scheduling->selected_ids[0]==11 && area_keeper_arrival.recovery->opposing_player==area_shot_target.recovery->opposing_player,
+       "Same-cell shot selects the goalkeeper while retaining the previous opposing-player scratch until the next boundary");
+ auto stunned_area_keeper=area_shot_target;stunned_area_keeper.current.field.keepers[1].stun=1;
+ rejects([&]{prepare_session_keeper_entry(stunned_area_keeper);});
+ auto other_area_target=area_approach_fixture;other_area_target.current.field.random_first=232;
+ rejects([&]{prepare_session_shot_approach(other_area_target,returned_approach);});
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});

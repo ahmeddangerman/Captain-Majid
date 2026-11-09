@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+**Latest - same-cell goalkeeper arrival (2026-11-09):** One captured startup matches shot approach and direct unstunned goalkeeper selection without invented numeric flight. The keeper decision, scoring and autonomous match remain unsupported in this continuation. All62 Windows tests passed; overall progress unmeasured.
+
+
+
 **Latest - recovered volley handoff (2026-11-09):** One captured startup matches the two volley clock updates, 22 field movements and shot handoff with supplied timing and presentation samples. The same-cell goalkeeper entry and outcome remain unverified in this continuation; autonomous match play remains unsupported. All62 Windows tests passed; overall progress unmeasured.
 
 

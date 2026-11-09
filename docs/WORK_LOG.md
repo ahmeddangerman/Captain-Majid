@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Same-cell volley goalkeeper arrival
+
+The captured startup matches shared shot approach and the direct unstunned goalkeeper selection: distance18, cell234, elapsed1 to0, keeper11, with the previous defender reference retained. Same-cell and unstunned guards remain; goalkeeper decision is not yet connected. Full Windows build and all62 tests passed. Private replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-arrival-20261109. Overall progress unmeasured; next compare keeper preparation/outcome; suggested model Terra High.
+
+
+
 ## 2026-11-09 - Recovered volley clocks and handoff
 
 The captured startup now matches the unopposed volley's two clock steps, 22 ordered field movements and shot handoff, including the original timing of status6 and captured presentation samples. Final random index148; evidence: ../Captain-Majid-analysis/live-return-area-volley-handoff-v5-20261109. Shared clock, keeper recovery, contact prelude and movement kernels are reused; this sequence and event timing remain guarded and sampled. All62 Windows tests passed. Goalkeeper outcome and a complete match remain unsupported. Overall progress unmeasured; next investigate the direct same-cell keeper entry; suggested model Terra High.
