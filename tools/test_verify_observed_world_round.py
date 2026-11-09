@@ -1,5 +1,6 @@
 import unittest
 
+import verify_observed_world_round as observed_world
 from verify_observed_world_round import collect_samples, compare_checkpoints
 from verify_observed_nmi_world_round import collect_nmi_samples
 
@@ -18,6 +19,15 @@ def trace_events():
 
 
 class ObservedWorldVerificationTest(unittest.TestCase):
+    def test_selects_round_and_contact_boundary(self):
+        selector = getattr(observed_world, 'trace_bounds', None)
+        self.assertTrue(callable(selector), 'round boundary selection is unavailable')
+        events = [(0, 'E407', 1), (1, 'E145', 2), (2, 'E407', 3), (3, 'E4BE', 4)]
+        self.assertEqual(selector(events, 1), (0, 1, 'E145'))
+        self.assertEqual(selector(events, 2), (2, 3, 'E4BE'))
+        with self.assertRaisesRegex(ValueError, 'round'):
+            selector(events, 3)
+
     def test_extracts_explicit_events(self):
         rows = collect_samples(trace_events())
         self.assertEqual(len(rows), 22)

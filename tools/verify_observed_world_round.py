@@ -55,19 +55,28 @@ def collect_samples(events):
     return rows
 
 
-def read_trace(directory):
+def trace_bounds(parsed, round_index):
+    starts = [entry[0] for entry in parsed if entry[1] == 'E407']
+    if round_index < 1 or round_index > len(starts):
+        raise ValueError(f'Invalid round index {round_index}; trace contains {len(starts)} round entries')
+    start = starts[round_index - 1]
+    next_start = starts[round_index] if round_index < len(starts) else None
+    ending = next(((entry[0], entry[1]) for entry in parsed if entry[0] > start and entry[1] in ('E145', 'E4BE', 'E38A')), None)
+    if ending is None or (next_start is not None and ending[0] >= next_start):
+        raise ValueError(f'Round {round_index} has no observed control or encounter boundary')
+    if ending[1] == 'E38A':
+        raise ValueError(f'Round {round_index} interrupts at an unsupported action menu')
+    return start, ending[0], ending[1]
+
+
+def read_trace(directory, round_index=1, *, include_boundary=False):
     parsed = []
     for index, line in enumerate((directory / 'instructions.txt').read_text().splitlines()):
         parts = line.split()
         if not parts or not parts[-1].startswith('FRAME='):
             raise ValueError(f'trace line {index + 1}: missing frame ID')
         parsed.append((index, parts[0], int(parts[-1][6:])))
-    start = next((i for i, pc, _ in parsed if pc == 'E407'), None)
-    if start is None:
-        raise ValueError('trace has no field-round entry E407')
-    end = next((i for i, pc, _ in parsed if i > start and pc == 'E145'), None)
-    if end is None:
-        raise ValueError('trace has no subsequent control-ready boundary E145')
+    start, end, end_pc = trace_bounds(parsed, round_index)
 
     def read_ram(index, pc):
         data = (directory / f'{index:03d}-{pc}.ram').read_bytes()
@@ -77,7 +86,8 @@ def read_trace(directory):
 
     event_list = [(i, pc, frame, read_ram(i, pc)) for i, pc, frame in parsed
                   if start < i < end and pc in ('E3CA', 'E3DE', 'E406', 'E412')]
-    return read_ram(start, 'E407'), read_ram(end, 'E145'), collect_samples(event_list)
+    result = (read_ram(start, 'E407'), read_ram(end, end_pc), collect_samples(event_list))
+    return (*result, end_pc) if include_boundary else result
 
 
 def checkpoint(ram, phase):
@@ -120,8 +130,9 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'pack', 'exe', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--round', type=int, default=1, help='one-based observed field-round number')
     args = parser.parse_args()
-    entry, original, samples = read_trace(args.trace_directory)
+    entry, original, samples, end_pc = read_trace(args.trace_directory, args.round, include_boundary=True)
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
     source = output / 'entry.cmjsession'
     source.write_bytes(checkpoint(entry, 13))
@@ -133,9 +144,9 @@ def main():
                          capture_output=True, text=True, timeout=30)
     if run.returncode:
         raise RuntimeError(f'boundary field_round: native operation failed: {run.stderr.strip()}')
-    actual, expected = destination.read_bytes(), checkpoint(original, 9)
+    actual, expected = destination.read_bytes(), checkpoint(original, 9 if end_pc == 'E145' else 15)
     compare_checkpoints(actual, expected)
-    print('Matched 322 original-derived bytes, 80 canonical context bytes and the trailing context across 22 observed polls.')
+    print(f'Round {args.round} reached {end_pc}: matched 322 original-derived bytes, 80 canonical context bytes and the trailing context across 22 observed polls.')
 
 
 if __name__ == '__main__':

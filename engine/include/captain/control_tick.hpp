@@ -49,6 +49,15 @@ struct NmiFieldRoundResult {
     FieldRoundResult round;
     std::uint8_t random_index = 0;
 };
+struct NmiControlPollResult {
+    ControlPollResult poll;
+    std::uint8_t random_index = 0;
+};
+ObservedNmiFieldPoll load_observed_nmi_poll(std::istream& input);
+NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
+    const ControlMovementContent& control, std::uint8_t initial_random_index,
+    const ObservedNmiFieldPoll& sample);
 std::array<ObservedNmiFieldPoll, 22> load_observed_nmi_field_polls(std::istream& input);
 NmiFieldRoundResult advance_observed_nmi_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement,

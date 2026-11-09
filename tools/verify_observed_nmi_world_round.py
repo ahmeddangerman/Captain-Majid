@@ -11,7 +11,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from verify_observed_world_round import checkpoint, compare_checkpoints, read_trace
+from verify_observed_world_round import checkpoint, compare_checkpoints, read_trace, trace_bounds
 from verify_player7_pass_end_to_end import prepare_output
 
 
@@ -53,12 +53,11 @@ def collect_nmi_samples(events, entry, end, observed_rows):
     return rows
 
 
-def read_nmi_trace(directory):
-    entry, end, observed = read_trace(directory)
+def read_nmi_trace(directory, round_index=1):
+    entry, end, observed, end_pc = read_trace(directory, round_index, include_boundary=True)
     lines = (directory / 'instructions.txt').read_text().splitlines()
     parsed = [(i, line.split()[0], int(line.split()[-1][6:]), line) for i, line in enumerate(lines)]
-    start = next(i for i, pc, _, _ in parsed if pc == 'E407')
-    stop = next(i for i, pc, _, _ in parsed if i > start and pc == 'E145')
+    start, stop, _ = trace_bounds(parsed, round_index)
     events = []
     for i, pc, frame, line in parsed:
         if not start < i < stop or pc not in ('C9C5', 'C9E8', 'E3CA', 'E412', 'E48F'):
@@ -70,15 +69,16 @@ def read_nmi_trace(directory):
         if len(flags) != 1:
             raise ValueError(f'boundary {pc}: missing processor flags')
         events.append((i, pc, frame, ram, int(flags[0], 16) & 1))
-    return entry, end, collect_nmi_samples(events, entry, end, observed)
+    return entry, end, collect_nmi_samples(events, entry, end, observed), end_pc
 
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'pack', 'exe', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--round', type=int, default=1, help='one-based observed field-round number')
     args = parser.parse_args()
-    entry, original, samples = read_nmi_trace(args.trace_directory)
+    entry, original, samples, end_pc = read_nmi_trace(args.trace_directory, args.round)
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
     source = output / 'entry.cmjsession'
     source.write_bytes(checkpoint(entry, 13))
@@ -90,11 +90,11 @@ def main():
                           '--capture', str(destination)], capture_output=True, text=True, timeout=30)
     if run.returncode:
         raise RuntimeError(f'boundary field_round: native operation failed: {run.stderr.strip()}')
-    compare_checkpoints(destination.read_bytes(), checkpoint(original, 9))
+    compare_checkpoints(destination.read_bytes(), checkpoint(original, 9 if end_pc == 'E145' else 15))
     indices = re.findall(r'final random index (\d+);', run.stdout)
     if len(indices) != 1 or int(indices[0]) != original[0xe1]:
         raise ValueError(f'boundary field_round, random.index: native {indices}, original {original[0xe1]}')
-    print('Matched 322 original-derived bytes, canonical context and random index across 22 observed NMI/poll events.')
+    print(f'Round {args.round} reached {end_pc}: matched 322 original-derived bytes, canonical context and random index across 22 observed NMI/poll events.')
 
 
 if __name__ == '__main__':

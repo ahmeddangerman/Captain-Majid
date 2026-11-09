@@ -341,25 +341,57 @@ FieldRoundResult advance_observed_control_field_round(const PhaseSessionState& i
     return run_control_field_round(input, primary, movement, control, world, buttons, &inputs, nullptr, nullptr);
 }
 
+static ObservedNmiFieldPoll read_nmi_poll(std::istream& input) {
+        unsigned held, pressed, player, sound, tail, carry, present, travel_held, low, high;
+        if (!(input >> held >> pressed >> player >> sound >> tail >> carry >> present >> travel_held >> low >> high) ||
+            held > 255 || pressed > 255 || player > 255 || sound > 255 || tail > 255 || carry > 1 ||
+            present > 1 || travel_held > 255 || low > 255 || high > 255 || (!present && (travel_held || low || high)))
+            throw std::invalid_argument("Observed NMI input requires valid records");
+        return {{static_cast<std::uint8_t>(held), static_cast<std::uint8_t>(pressed)},
+                  {static_cast<std::uint8_t>(player), static_cast<std::uint8_t>(sound), static_cast<std::uint8_t>(tail), carry != 0},
+                  present != 0, static_cast<std::uint8_t>(travel_held), static_cast<std::uint16_t>(low | (high << 8))};
+}
+static void finish_nmi_input(std::istream& input) {
+    input >> std::ws;
+    if (input.peek() != std::char_traits<char>::eof() || input.bad())
+        throw std::invalid_argument("Trailing or unreadable observed NMI world data");
+}
+ObservedNmiFieldPoll load_observed_nmi_poll(std::istream& input) {
+    std::string magic;
+    if (!(input >> magic) || magic != "CMJPOLLNMI1")
+        throw std::invalid_argument("Invalid observed NMI poll file header");
+    auto sample = read_nmi_poll(input);
+    finish_nmi_input(input);
+    return sample;
+}
 std::array<ObservedNmiFieldPoll, 22> load_observed_nmi_field_polls(std::istream& input) {
     std::string magic;
     if (!(input >> magic) || magic != "CMJWORLDNMI1")
         throw std::invalid_argument("Invalid observed NMI world file header");
     std::array<ObservedNmiFieldPoll, 22> samples{};
-    for (auto& sample : samples) {
-        unsigned held, pressed, player, sound, tail, carry, present, travel_held, low, high;
-        if (!(input >> held >> pressed >> player >> sound >> tail >> carry >> present >> travel_held >> low >> high) ||
-            held > 255 || pressed > 255 || player > 255 || sound > 255 || tail > 255 || carry > 1 ||
-            present > 1 || travel_held > 255 || low > 255 || high > 255 || (!present && (travel_held || low || high)))
-            throw std::invalid_argument("Observed NMI world file requires 22 valid records");
-        sample = {{static_cast<std::uint8_t>(held), static_cast<std::uint8_t>(pressed)},
-                  {static_cast<std::uint8_t>(player), static_cast<std::uint8_t>(sound), static_cast<std::uint8_t>(tail), carry != 0},
-                  present != 0, static_cast<std::uint8_t>(travel_held), static_cast<std::uint16_t>(low | (high << 8))};
-    }
-    input >> std::ws;
-    if (input.peek() != std::char_traits<char>::eof() || input.bad())
-        throw std::invalid_argument("Trailing or unreadable observed NMI world data");
+    for (auto& sample : samples) sample = read_nmi_poll(input);
+    finish_nmi_input(input);
     return samples;
+}
+
+NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
+    const ControlMovementContent& control, std::uint8_t initial_random_index,
+    const ObservedNmiFieldPoll& sample) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::control_ready || !input.control)
+        throw std::invalid_argument("Observed NMI poll requires ready control");
+    if (!sample.travel_observed && (sample.travel_held || sample.travel_speed))
+        throw std::invalid_argument("Unobserved travel event must have zero inputs");
+    auto state = input;
+    const auto random = advance_reference_random(
+        {initial_random_index, state.current.field.random_first, state.current.field.random_second}, sample.random);
+    state.current.field.random_first = random.state.first;
+    state.current.field.random_second = random.state.second;
+    if (sample.travel_observed)
+        state = advance_session_control_travel(state, sample.travel_speed, sample.travel_held);
+    auto poll = poll_session_control(state, sample.buttons.held, sample.buttons.pressed, primary, movement, control);
+    return {std::move(poll), random.state.index};
 }
 
 NmiFieldRoundResult advance_observed_nmi_field_round(const PhaseSessionState& input,

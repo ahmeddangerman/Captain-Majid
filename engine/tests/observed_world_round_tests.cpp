@@ -38,6 +38,13 @@ int main() {
         std::istringstream nmi_stream(nmi_records);
         const auto parsed_nmi = load_observed_nmi_field_polls(nmi_stream);
         if (parsed_nmi[0].random.carry || parsed_nmi[0].travel_observed) return 1;
+        std::istringstream single_poll("CMJPOLLNMI1\n1 0 5 6 7 1 1 1 160 3\n");
+        const auto parsed_poll = load_observed_nmi_poll(single_poll);
+        if (parsed_poll.buttons.held != 1 || !parsed_poll.random.carry || parsed_poll.travel_speed != 928) return 1;
+        bool bad_poll_rejected = false;
+        try { std::istringstream bad("CMJPOLLNMI1\n1 0 5 6 7 1 1 1 160 3 4\n"); load_observed_nmi_poll(bad); }
+        catch (const std::invalid_argument&) { bad_poll_rejected = true; }
+        if (!bad_poll_rejected) return 1;
         const std::string good_nmi_record = "0 0 0 0 0 0 0 0 0 0";
         for (const std::string& bad_record : {"0 0 0 0 0 2 0 0 0 0", "0 0 0 0 0 0 0 1 0 0", "0 0 256 0 0 0 0 0 0 0"}) {
             auto invalid = nmi_records;

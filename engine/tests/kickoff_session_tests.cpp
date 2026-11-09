@@ -4,6 +4,7 @@
 #include "captain/control_session.hpp"
 #include "captain/control_input.hpp"
 #include "captain/control_travel.hpp"
+#include "captain/control_tick.hpp"
 #include "captain/clearance_race.hpp"
 #include "captain/action_menu.hpp"
 #include "captain/staged_shot.hpp"
@@ -112,6 +113,13 @@ int main(){try{using namespace captain;
  check(opposing_travel.loaded_speed && *opposing_travel.loaded_speed==928 &&
        opposing_travel.state.control->travel_accumulator==65303,
        "Opposing carrier speed is loaded even without held directional input");
+ ObservedNmiFieldPoll nmi_poll{};nmi_poll.travel_observed=true;nmi_poll.travel_held=1;nmi_poll.travel_speed=928;
+ auto poll_frame=advance_observed_nmi_control_poll(control_ready,profile_mappings,travel_movement,travel_content,255,nmi_poll);
+ check(poll_frame.random_index==0 && poll_frame.poll.state.current.field.random_first==255 &&
+       poll_frame.poll.state.control->travel_accumulator==232 && poll_frame.poll.state.control->decision_timer==9 &&
+       control_ready.control->travel_accumulator==0,"Observed NMI, travel and control poll compose without mutating input");
+ auto invalid_poll=nmi_poll;invalid_poll.travel_observed=false;
+ rejects([&]{advance_observed_nmi_control_poll(control_ready,profile_mappings,travel_movement,travel_content,255,invalid_poll);});
  auto control_bytes=bytes(control_ready);std::istringstream control_stream(control_bytes);
  check(bytes(load_phase_session(control_stream))==control_bytes && bytes(handoff)==handoff_bytes,
        "Kickoff control state roundtrips without mutating its input");

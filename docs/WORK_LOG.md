@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Explicit NMI control poll and later field-round boundaries
+
+Composed supplied NMI random inputs, travel and control polling into a bounded reusable operation and added a private-path original trace verifier. Fifty-five independently seeded observed polls matched 322 original-derived bytes, canonical context and random index. Added one-based field-round selection and encounter-boundary comparison: five consecutive original rounds individually matched, with round five reaching an encounter. These are not a continuous replay. Captures show random and travel events occur during the clock and stamina routines, so correct interleaving is the next investigation. Windows build and 62/62 registered tests passed; phase317 possession replays matched 576/1,152 boundaries. Private evidence remains outside Git. Progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Calculated field-round random from captured NMI inputs
 
 The four existing directional field-round traces each contained22 original random calls, one before each observed player poll. In all four, the random index/bytes entering each call followed directly from the prior original player-step boundary. The native random kernel matched all88 captured calls and carry outputs using the original player/sound/mirrored-tail RAM samples and incoming carry. These four runs share a startup context and do not prove this ordering for all matches.
