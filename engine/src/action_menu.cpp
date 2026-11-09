@@ -658,6 +658,24 @@ PhaseSessionState prepare_next_ordinary_pass_defender(const PhaseSessionState& i
     validate_phase_session(state);
     return state;
 }
+PhaseSessionState advance_ordinary_pass_dispatch_clock(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if ((input.phase!=FieldSessionPhase::ordinary_pass_first_contact_clock && input.phase!=FieldSessionPhase::ordinary_pass_next_contact_clock) ||
+        !input.ordinary_pass_defenses || unsigned(input.area_defender_cursor)+1!=input.ordinary_pass_defenses->count)
+        throw std::invalid_argument("Pass dispatch requires the final recorded defender contact");
+    auto state=input;
+    state.current.field.elapsed=static_cast<std::uint8_t>(unsigned(state.current.field.elapsed)+1);
+    const auto recovery=advance_keeper_recovery({state.current.field.keepers,state.current.shared_recovery_flags,state.current.shared_recovery_timer},1);
+    state.current.field.keepers=recovery.keepers;
+    state.current.shared_recovery_flags=recovery.shared_flags;
+    state.current.shared_recovery_timer=recovery.shared_timer;
+    const auto clock=advance_match_clock(state.current.clock,1,state.current.field.random_first);
+    if (clock.continuation!=ClockContinuation::ready) throw std::invalid_argument("Pass dispatch requires a ready clock continuation");
+    state.current.clock=clock.state;
+    state.phase=FieldSessionPhase::ordinary_pass_dispatch_clock;
+    validate_phase_session(state);
+    return state;
+}
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input) {
     validate_phase_session(input);const auto& f=input.current.field;
     const bool score25=input.phase==FieldSessionPhase::attack_choice_pending && input.score && input.action && input.recovery && input.scheduling &&

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Ordinary pass dispatch clock
+
+Added guarded phase342 for the one-unit post-defender pass dispatch clock and keeper recovery, after all recorded defenders have completed result0 contact. One startup and 24 earlier original cases matched dispatch; startup matched three subsequent supplied random/travel pairs. The following original field movement is interleaved with those events per player, so a bulk step cannot establish live parity. All 62 Windows CTest checks and phase317 replays (576/1,152 boundaries) passed. Live AI, scheduling and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Repeated ordinary pass defender contacts
 
 Added phases338-341 for observed nonterminal contact clock/experience and sequential defender preparation/comparison using shared kernels and explicit original inputs. The startup matched two defenders and their contact clocks with eight supplied intervening random/travel pairs; 24 earlier original cases matched all three defenders through their clocks. The live second comparison exposed a verifier error: X at $80D9 is not the strength; RAM $71 at $80D6 is. The first reported strength4 remains correct, and the second is2. Presentation later reuses $71. Unsupported results and clock continuations reject, and AI and presentation remain unimplemented. Full Windows build, all 62 CTest checks and both phase317 replays (576/1,152 boundaries) passed. Overall progress is unmeasured; suggested model Terra High.

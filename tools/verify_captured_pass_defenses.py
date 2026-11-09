@@ -101,6 +101,17 @@ def compare_first_contact(actual, raw, original_target, count, score, result, st
         raise ValueError(str(error).replace('boundary defender.compare', 'boundary defender.contact')) from error
 
 
+def compare_dispatch_clock(actual, raw, original_target, count, score, result, strength, slot):
+    if int.from_bytes(actual[258:260], 'little') != 342:
+        raise ValueError('boundary pass.dispatch_clock, session.phase: expected 342')
+    prior = bytearray(actual)
+    prior[258:260] = (338 if slot == 0 else 341).to_bytes(2, 'little')
+    try:
+        compare_first_contact(prior, raw, original_target, count, score, result, strength, slot)
+    except ValueError as error:
+        raise ValueError(str(error).replace('boundary defender.contact', 'boundary pass.dispatch_clock')) from error
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):
@@ -122,6 +133,8 @@ def main():
     parser.add_argument('--next-contact-before-index', type=int)
     parser.add_argument('--next-contact-index', type=int)
     parser.add_argument('--next-contact-end-index', type=int)
+    parser.add_argument('--dispatch-clock-index', type=int)
+    parser.add_argument('--dispatch-end-index', type=int)
     args = parser.parse_args()
     if args.defender_boundary_index is not None and args.prepared_boundary_index is None:
         raise ValueError('First-defender comparison requires the attacker-prepared boundary')
@@ -136,6 +149,8 @@ def main():
                     args.next_contact_before_index, args.next_contact_index, args.next_contact_end_index)
     if any(value is not None for value in next_indices) and (any(value is None for value in next_indices) or args.contact_index is None):
         raise ValueError('Next contact requires all six boundaries and the first contact')
+    if (args.dispatch_clock_index is None) != (args.dispatch_end_index is None) or (args.dispatch_clock_index is not None and args.next_defender_index is None):
+        raise ValueError('Dispatch requires both boundaries and the second defender contact')
     if not 0 <= args.initial_index <= 255:
         raise ValueError('Initial random index must be a byte')
     lines, pcs, ram = trace_data(args.trace_directory)
@@ -351,8 +366,22 @@ def main():
         if index != ram(end)[0xe1]:
             raise ValueError(f'boundary defender.next.contact, random.index: native {index}, original {ram(end)[0xe1]}')
         source = waiting
+    if args.dispatch_clock_index is not None:
+        clock, end = args.dispatch_clock_index, args.dispatch_end_index
+        if not (args.next_contact_end_index < clock < end < len(pcs)) or pcs[clock] != 'C9C5' or pcs[end] != '80ED' or ram(end)[0x24] != 26 or count != 2:
+            raise ValueError('boundary pass.dispatch_clock: unsupported original ordering or bank')
+        destination = output / 'dispatch-clock.cmjsession'
+        run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(source), '--advance-ordinary-pass-dispatch-clock', '--capture', str(destination)], capture_output=True, text=True, timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary pass.dispatch_clock: {run.stderr.strip()}')
+        compare_dispatch_clock(destination.read_bytes(), ram(clock), original, count, score, result, strength, 1)
+        waiting, index, last = replay_wait(clock - 1, end, destination, index, 'dispatch-after')
+        compare_dispatch_clock(waiting.read_bytes(), ram(end), original, count, score, result, strength, 1)
+        if index != ram(end)[0xe1]:
+            raise ValueError(f'boundary pass.dispatch_clock, random.index: native {index}, original {ram(end)[0xe1]}')
+        source = waiting
     print(f'Matched ordered mode change and {count} explicitly recorded defender choices'
-          f'{" and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
+          f'{" through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
           f'final random index {index}; checkpoint {source}.')
 
 

@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: ordinary pass dispatch clock
+
+Phase342/version150 advances the observed final one-unit ordinary pass dispatch clock and keeper recovery only after the last recorded action1 defender has completed a nonterminal contact. Non-ready clock continuations reject. The startup and 24 earlier original cases matched full represented dispatch-clock states; the startup then matched three supplied random/travel pairs to original bank26:$80ED. Private evidence: ../Captain-Majid-analysis/live-dispatch-clock-20261109 and ../Captain-Majid-analysis/earlier-dispatch-clock-20261109.
+
+The next startup interval reaches pass handoff $C612, but field movement occurs player by player between NMI/travel events. Bulk `advance_field_phase` omits that ordering, so it has not been used to claim live parity. The next investigation is an incremental original-backed field movement phase that can interleave explicit recorded events, checked against this startup and earlier handoff captures. No native scheduling, defender AI, other defender outcomes, pass flight from this path or complete match is claimed. Full Windows build, all 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: repeated ordinary pass defender contacts
 
 Phases338-341/version150 use the existing contact clock, experience, defender preparation and comparison kernels for the selected defenders in order. The caller supplies recorded choices, direct comparison row and ordered NMI/travel events. Only action1/subtype0, zero initial defender status, nonterminal result0 and a ready clock continuation are supported. The last contact remains a boundary; dispatch and flight are not yet connected from this general path.

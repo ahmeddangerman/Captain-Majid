@@ -1323,6 +1323,14 @@ int main(){try{using namespace captain;
  const auto next_wait=advance_observed_nmi_events(ordinary_second_contact,255,{{ObservedClockEventKind::random,{0,0,0,false}}});
  check(next_wait.random_index==0 && next_wait.state.area_defender_cursor==1,"Captured random events preserve the next defender cursor");
  rejects([&]{prepare_next_ordinary_pass_defender(ordinary_second_contact,sampled_attack_profiles,ordinary_pass_content);});
+ const auto ordinary_dispatch=advance_ordinary_pass_dispatch_clock(ordinary_second_contact);
+ check(ordinary_dispatch.phase==FieldSessionPhase::ordinary_pass_dispatch_clock &&
+       ordinary_dispatch.current.clock.remaining+1==ordinary_second_contact.current.clock.remaining &&
+       ordinary_dispatch.current.field.elapsed==ordinary_second_contact.current.field.elapsed+1,
+       "Pass dispatch advances the final original clock step");
+ const auto ordinary_dispatch_bytes=bytes(ordinary_dispatch);std::istringstream ordinary_dispatch_stream(ordinary_dispatch_bytes);
+ check(bytes(load_phase_session(ordinary_dispatch_stream))==ordinary_dispatch_bytes,"Ordinary pass dispatch clock snapshot roundtrip");
+ rejects([&]{advance_ordinary_pass_dispatch_clock(ordinary_contact);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

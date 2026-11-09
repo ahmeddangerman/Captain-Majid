@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - ordinary pass dispatch clock (2026-11-09):** The bounded final clock and keeper recovery match one startup and 24 earlier encounters after the explicitly supplied defender sequence. The startup's subsequent field movement interleaves with frame events and is not yet connected. All 62 Windows CTest tests and both phase317 replays passed. Complete match, AI and autonomous presentation/scheduling remain unsupported; overall progress is unmeasured.
+
 **Latest - repeated ordinary-pass defender contacts (2026-11-09):** Two startup and three earlier-encounter defenders match original preparation, nonterminal comparison and contact clock, with supplied choices, table and captured event ordering. The earlier set contains 24 cases. A verifier register mistake was corrected against original RAM. Final dispatch, AI, other results, live presentation and a complete match remain unsupported. All 62 Windows CTest tests and both phase317 replays passed. Overall progress is unmeasured.
 
 **Latest - first ordinary-pass defender (2026-11-09):** Shared numeric preparation and nonterminal comparison matched one captured startup and 24 earlier original cases, with explicitly supplied defender choices, presentation samples, ball variant and direct table content. Later contacts, autonomous AI/scheduling and a complete match remain unsupported. All 62 Windows CTest tests and both phase317 replays passed. Overall progress is unmeasured.
