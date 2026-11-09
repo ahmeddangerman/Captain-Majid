@@ -16,7 +16,8 @@ PhaseSessionState continue_prepared_session_kickoff(const PhaseSessionState& inp
      (state.score->left_goals==2 && state.score->right_goals==2 && state.current.clock.remaining==381 && state.current.clock.extra_time==13) ||
      (state.score->left_goals==2 && state.score->right_goals==3 && state.current.clock.remaining==360 && state.current.clock.extra_time==13) ||
      (state.score->left_goals==2 && state.score->right_goals==4 && state.current.clock.remaining==348 && state.current.clock.extra_time==13) ||
-     (state.score->left_goals==2 && state.score->right_goals==5 && state.current.clock.remaining==335 && state.current.clock.extra_time==13)) && state.current.field.side==0 && *state.kickoff_receiver==5 &&
+     (state.score->left_goals==2 && state.score->right_goals==5 && state.current.clock.remaining==335 && state.current.clock.extra_time==13) ||
+     (state.score->left_goals==3 && state.score->right_goals==6 && state.current.clock.remaining==293 && state.current.clock.extra_time==13)) && state.current.field.side==0 && *state.kickoff_receiver==5 &&
     state.current.field.selected_defenders==1 && state.scheduling->selected_ids[0]==0)
   state.control->facing=0;
  state.phase=FieldSessionPhase::kickoff_control_pending;

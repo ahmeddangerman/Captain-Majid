@@ -25,7 +25,7 @@ cmake --build build --config Debug
 ctest --test-dir build -C Debug --output-on-failure
 ```
 
-Linux builds and checks have been exercised through Make and CMake. Windows execution remains unverified.
+Linux builds and checks have been exercised through Make and CMake. On Windows, the CMake build and 45 compiled test executables have also passed; the graphical match remains unverified.
 
 ## Try the development fixture
 

@@ -441,10 +441,10 @@ PhaseSessionState acknowledge_sampled_unaffordable_shot(const PhaseSessionState&
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input) {
     validate_phase_session(input);const auto& f=input.current.field;
     const bool score25=input.phase==FieldSessionPhase::attack_choice_pending && input.score && input.action && input.recovery && input.scheduling &&
-       input.score->left_goals==2 && input.score->right_goals==5 && input.score->kickoff==4 && input.current.clock.remaining==325 && input.current.clock.extra_time==13 &&
+       ((input.score->left_goals==2 && input.score->right_goals==5 && input.current.clock.remaining==325) || (input.score->left_goals==3 && input.score->right_goals==6 && input.current.clock.remaining==283)) && input.score->kickoff==4 && input.current.clock.extra_time==13 &&
        f.side==0 && f.ball_owner==5 && f.ball_x==108 && f.ball_y==108 && f.ball_cell==87 && f.elapsed==1 && f.selected_defenders==3 &&
        input.scheduling->selected_ids==std::array<std::uint8_t,5>{17,19,20,0,0} && !f.random_first && !f.random_second &&
-       f.roster[5].type==23 && !f.roster[5].stamina && input.action->action==1 && input.action->power==22 &&
+       f.roster[5].type==23 && f.roster[5].stamina==(input.score->left_goals==3 ? 10 : 0) && input.action->action==1 && input.action->power==22 &&
        input.action->menu_route==0 && input.action->cursor==225 && input.recovery->opposing_player==4 &&
        input.recovery->attack_subtype==128 && !input.saved_ball_flight_flag && !input.area_defender_cursor;
     if(score25) {
@@ -544,7 +544,7 @@ PhaseSessionState prepare_sampled_score25_player7_pass(const PhaseSessionState& 
        !prepared.energy.weakened || prepared.action_power.power || prepared.action_power.subtype ||
        prepared.preparation.move_effect!=input.action->move_effect || prepared.move_flags!=input.action->move_flags)
         throw std::invalid_argument("Unverified sampled player7 pass content");
-    auto state=input;state.action->power=prepared.action_power.power;
+    auto state=input;state.action->power=prepared.action_power.power;state.current.field.roster[5].stamina=prepared.energy.stamina;
     state.phase=FieldSessionPhase::sampled_score25_pass_prepared;validate_phase_session(state);return state;
 }
 PhaseSessionState prepare_sampled_human_empty_pass(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack) {

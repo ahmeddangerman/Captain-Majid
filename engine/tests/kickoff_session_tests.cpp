@@ -1672,6 +1672,20 @@ int main(){try{using namespace captain;
  auto score36_goal=prepare_sampled_opponent_goal(score35_keeper_result,keeper_test_content);
  check(score36_goal.score->left_goals==3 && score36_goal.score->right_goals==6 && score36_goal.recovery->opposing_player==4,
        "The observed opponent shot records the 3-6 goal");
+ auto score36_presented=acknowledge_sampled_opponent_goal_presentation(score36_goal);
+ auto score36_restart=begin_sampled_opponent_goal_restart(score36_presented);
+ check(score36_presented.current.field.side==0 && score36_restart.phase==FieldSessionPhase::sampled_score24_goal_restart && score36_restart.control->facing==64,
+       "The 3-6 goal advances to the observed home restart");
+ auto invalid_score36_goal=score36_goal;invalid_score36_goal.score->right_goals=5;
+ rejects([&]{bytes(invalid_score36_goal);});
+ auto invalid_score36_restart=score36_restart;invalid_score36_restart.control->facing=0;
+ rejects([&]{bytes(invalid_score36_restart);});
+ auto score36_formation=prepare_session_kickoff_formation(score36_restart,0,c);
+ auto score36_receiver=prepare_session_kickoff_receiver(score36_formation,0,{5,6,7,9,10});
+ auto score36_ball=prepare_session_kickoff_ball(score36_receiver);
+ auto score36_handoff=continue_prepared_session_kickoff(score36_ball);
+ check(score36_handoff.current.field.ball_owner==5 && score36_handoff.control->controlled_player==1 && !score36_handoff.control->facing,
+       "The 3-6 restart reaches home player5 control");
  auto player23_next_shot=capture_sampled_field_ai_choice(player23_next_ai,0,0);
  check(player23_next_shot.phase==FieldSessionPhase::sampled_score23_shot_choice && !player23_next_shot.action->action &&
        player23_next_shot.area_defender_cursor==1,"The 2-3 opponent shot preserves its observed cursor");
@@ -1836,6 +1850,25 @@ int main(){try{using namespace captain;
  player25_pass_input.current.field.motion[field_motion_index(7)].y=140<<8;
  player25_pass_input.action->action=1;player25_pass_input.action->cursor=225;player25_pass_input.action->menu_route=0;
  player25_pass_input.action->power=22;player25_pass_input.recovery->opposing_player=4;player25_pass_input.recovery->attack_subtype=128;
+ auto score36_pass_input=player25_pass_input;score36_pass_input.score=MatchScoreContext{3,6,4};score36_pass_input.current.clock.remaining=283;score36_pass_input.current.field.roster[5].stamina=10;
+ auto score36_pass_target=begin_sampled_human_pass_target(score36_pass_input);
+ for(auto held:{1,4,4,4,4})score36_pass_target=poll_sampled_human_pass_target(score36_pass_target,held,0);
+ auto score36_pass_confirmed=poll_sampled_human_pass_target(score36_pass_target,0,128);
+ check(score36_pass_confirmed.phase==FieldSessionPhase::sampled_score25_player7_confirmed && *score36_pass_confirmed.human_pass_cursor==103,
+       "The observed 3-6 pass selects player7");
+ auto score36_defenses=capture_sampled_score25_pass_defenses(score36_pass_confirmed,{1,1,1},{0,0,0});
+ auto score36_pass_prepared=prepare_sampled_score25_player7_pass(score36_defenses,sampled_attack_profiles,human_pass_content);
+ check(score36_pass_prepared.current.field.roster[5].stamina==0 && score36_pass_prepared.action->power==0,
+       "The 3-6 pass spends the remaining ten stamina");
+ auto score36_contact=score36_pass_prepared;
+ for(unsigned defender=0;defender<3;++defender) {
+  score36_contact=prepare_sampled_player3_pass_defender(score36_contact,sampled_attack_profiles,player3_defense_content);
+  score36_contact=compare_sampled_player3_pass_defender(score36_contact,{5,153,0,false,{154,96,68,0}});
+  score36_contact=advance_sampled_player3_pass_contact(score36_contact,player3_prelude,home_experience);
+ }
+ auto score36_dispatch=advance_sampled_player3_pass_dispatch(score36_contact);
+ check(score36_dispatch.current.clock.remaining==279 && score36_dispatch.area_defender_cursor==3,
+       "The observed 3-6 pass reaches dispatch after three defenders");
  auto player25_target=begin_sampled_human_pass_target(player25_pass_input);
  for(auto held:{1,4,4,4,4})player25_target=poll_sampled_human_pass_target(player25_target,held,0);
  check(player25_target.phase==FieldSessionPhase::sampled_score25_pass_target && *player25_target.human_pass_cursor==103 &&
