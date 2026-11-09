@@ -267,10 +267,10 @@ static std::vector<ObservedClockEvent> read_observed_events(std::istream& input,
                 throw std::invalid_argument("Invalid observed clock travel event");
             events.push_back({ObservedClockEventKind::travel, {}, static_cast<std::uint8_t>(held),
                               static_cast<std::uint16_t>(low | (high << 8))});
-        } else if ((token == "M" || token == "F") && !milestones) {
+        } else if ((token == "M" || token == "F" || token == "P") && !milestones) {
             unsigned value;
             if (!(input >> value) || value > 255) throw std::invalid_argument("Invalid observed presentation sample");
-            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : ObservedClockEventKind::facing_sample,
+            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : ObservedClockEventKind::field_player,
                               {}, static_cast<std::uint8_t>(value)});
         } else if (token == "S" && milestones) events.push_back({ObservedClockEventKind::schedule});
         else if (token == "E" && milestones) events.push_back({ObservedClockEventKind::energy});
@@ -316,6 +316,37 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
     }
     validate_phase_session(state);
     return {std::move(state), index};
+}
+NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement,std::uint8_t initial_random_index,
+    const std::vector<ObservedClockEvent>& events) {
+    validate_phase_session(input);
+    if (input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock || !input.current.field.elapsed || !input.control)
+        throw std::invalid_argument("Observed pass movement requires dispatch and elapsed time");
+    auto state=input;
+    auto& field=state.current.field;
+    field.movement_region=static_cast<std::uint8_t>(field_ball_region(field.ball_x,field.ball_y)|128u);
+    auto index=initial_random_index;
+    unsigned slot=0;
+    for (const auto& event:events) {
+        if (event.kind==ObservedClockEventKind::random) {
+            const auto next=advance_reference_random({index,field.random_first,field.random_second},event.random);
+            index=next.state.index;field.random_first=next.state.first;field.random_second=next.state.second;
+        } else if (event.kind==ObservedClockEventKind::travel) {
+            state.control->travel_accumulator=advance_control_travel(state.control->travel_accumulator,event.speed,
+                field.side,event.held,state.control->facing);
+        } else if (event.kind==ObservedClockEventKind::field_player) {
+            if (slot>=22 || event.held!=slot) throw std::invalid_argument("Observed pass movement needs each ordered player slot");
+            if (slot!=0 && slot!=11 && slot!=field.ball_owner)
+                advance_field_phase_player(field,static_cast<std::uint8_t>(slot),primary,movement);
+            ++slot;
+        } else throw std::invalid_argument("Unsupported observed pass movement event");
+    }
+    if (slot!=22) throw std::invalid_argument("Observed pass movement has incomplete player slots");
+    field.elapsed=0;
+    state.phase=FieldSessionPhase::ordinary_pass_field_moved;
+    validate_phase_session(state);
+    return {std::move(state),index};
 }
 
 ControlTickResult resume_control_added_time(const PhaseSessionState& post_presentation,

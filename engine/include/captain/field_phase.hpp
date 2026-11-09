@@ -32,6 +32,8 @@ struct FieldPhaseResult {
     std::vector<FieldAdvancedPlayer> players;
 };
 std::size_t field_motion_index(std::uint8_t player_id);
+FieldAdvancedPlayer advance_field_phase_player(FieldPhaseState& state, std::uint8_t id,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& content);
 // Supported ordinary in-field E074 phase; consumes supplied elapsed, preserves
 // keeper roles/stats and does not decide a match clock or presentation schedule.
 FieldPhaseResult advance_field_phase(const FieldPhaseState& input,

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Event-fed ordinary pass field movement
+
+Extracted the atomic per-player field movement kernel and added phase343 for ordered player/random/travel events after the ordinary-pass dispatch clock. The startup matched all represented fields and random index167 at $C612 using 22 interleaved captured event pairs; 24 earlier original encounters matched the handoff without NMI events. No frame schedule is inferred. Full Windows build, all 62 CTest checks and phase317 replays (576/1,152 boundaries) passed. Target/flight continuation from this new phase, AI and a complete match remain unsupported. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Ordinary pass dispatch clock
 
 Added guarded phase342 for the one-unit post-defender pass dispatch clock and keeper recovery, after all recorded defenders have completed result0 contact. One startup and 24 earlier original cases matched dispatch; startup matched three subsequent supplied random/travel pairs. The following original field movement is interleaved with those events per player, so a bulk step cannot establish live parity. All 62 Windows CTest checks and phase317 replays (576/1,152 boundaries) passed. Live AI, scheduling and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.

@@ -1331,6 +1331,23 @@ int main(){try{using namespace captain;
  const auto ordinary_dispatch_bytes=bytes(ordinary_dispatch);std::istringstream ordinary_dispatch_stream(ordinary_dispatch_bytes);
  check(bytes(load_phase_session(ordinary_dispatch_stream))==ordinary_dispatch_bytes,"Ordinary pass dispatch clock snapshot roundtrip");
  rejects([&]{advance_ordinary_pass_dispatch_clock(ordinary_contact);});
+ auto movement_dispatch=ordinary_dispatch;
+ for (auto& player : movement_dispatch.current.field.roster) player.type=1;
+ auto pass_movement_content=travel_movement;pass_movement_content.geometry.direction_thresholds.fill(65535);
+ std::vector<ObservedClockEvent> pass_movement_events;
+ for(unsigned slot=0;slot<22;++slot) pass_movement_events.push_back({ObservedClockEventKind::field_player,{},static_cast<std::uint8_t>(slot)});
+ const auto movement_expected=advance_field_phase(movement_dispatch.current.field,profile_mappings,pass_movement_content);
+ const auto pass_movement=advance_observed_pass_field_movement(movement_dispatch,profile_mappings,pass_movement_content,0,pass_movement_events);
+ check(pass_movement.state.phase==FieldSessionPhase::ordinary_pass_field_moved && !pass_movement.state.current.field.elapsed &&
+       pass_movement.state.current.field.random_first==movement_expected.state.random_first &&
+       pass_movement.state.current.field.motion[0].x==movement_expected.state.motion[0].x,
+       "Evidence-fed player order composes the existing field movement rules");
+ const auto pass_movement_bytes=bytes(pass_movement.state);std::istringstream pass_movement_stream(pass_movement_bytes);
+ check(bytes(load_phase_session(pass_movement_stream))==pass_movement_bytes,"Observed pass field movement snapshot roundtrip");
+ auto missing_movement=pass_movement_events;missing_movement.pop_back();
+ rejects([&]{advance_observed_pass_field_movement(movement_dispatch,profile_mappings,pass_movement_content,0,missing_movement);});
+ auto unordered_movement=pass_movement_events;std::swap(unordered_movement[1],unordered_movement[2]);
+ rejects([&]{advance_observed_pass_field_movement(movement_dispatch,profile_mappings,pass_movement_content,0,unordered_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

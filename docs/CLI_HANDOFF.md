@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: event-fed pass field movement
+
+Phase343/version150 follows the final ordinary-pass dispatch clock with an event-fed field phase. `--advance-observed-pass-movement FILE INITIAL_INDEX` reads `CMJNMISEQ1` records: `R` and `T` retain the documented captured random/travel meaning, and `P ID` advances the next required slot in order 0..21 (keepers and carrier skip field-player movement). The event sequence is validated atomically and does not generate frames. Existing `advance_field_phase` and this path share the extracted player movement kernel; individual kernel errors leave their input unchanged.
+
+The captured startup matched the complete represented original state at fixed-bank $C612 and final random index167, using 22 supplied random/travel pairs interleaved with player slots. Twenty-four earlier constructed original encounters matched the same handoff without interleaved NMI events. Private-path tools report the first differing boundary and field. Original movement reuses scratch $32/$33; the saved defender contact is compared with its original earlier comparison capture instead. Private evidence: ../Captain-Majid-analysis/live-pass-movement-atomic-20261109 and ../Captain-Majid-analysis/earlier-pass-movement-atomic-20261109.
+
+General: bounded shared field movement with explicit ordered events and the previously documented result0 defender sequence. Scenario-specific: captured event timing, defender choices, ball variant, and the separately guarded phase317 path. Unknown: autonomous scheduler/AI/presentation, generic pass target/flight continuation from phase343, other defender outcomes and a complete match. Full Windows build, all 62 CTest checks and phase317 replays (576/1,152 boundaries) passed. Next compare target setup and flight from this handoff, retaining explicit evidence for any original callbacks. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: ordinary pass dispatch clock
 
 Phase342/version150 advances the observed final one-unit ordinary pass dispatch clock and keeper recovery only after the last recorded action1 defender has completed a nonterminal contact. Non-ready clock continuations reject. The startup and 24 earlier original cases matched full represented dispatch-clock states; the startup then matched three supplied random/travel pairs to original bank26:$80ED. Private evidence: ../Captain-Majid-analysis/live-dispatch-clock-20261109 and ../Captain-Majid-analysis/earlier-dispatch-clock-20261109.

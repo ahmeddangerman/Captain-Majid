@@ -112,6 +112,21 @@ def compare_dispatch_clock(actual, raw, original_target, count, score, result, s
         raise ValueError(str(error).replace('boundary defender.contact', 'boundary pass.dispatch_clock')) from error
 
 
+def compare_movement(actual, raw, comparison_raw, original_target, count, score, result, strength, slot):
+    if int.from_bytes(actual[258:260], 'little') != 343:
+        raise ValueError('boundary pass.movement, session.phase: expected 343')
+    prior = bytearray(actual)
+    prior[258:260] = (342).to_bytes(2, 'little')
+    # Original reuses scratch $32/$33 while moving players; the saved contact
+    # remains compared against its earlier original preparation boundary.
+    adjusted = bytearray(raw)
+    adjusted[0x32:0x34] = comparison_raw[0x32:0x34]
+    try:
+        compare_dispatch_clock(prior, adjusted, original_target, count, score, result, strength, slot)
+    except ValueError as error:
+        raise ValueError(str(error).replace('boundary pass.dispatch_clock', 'boundary pass.movement')) from error
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):
@@ -135,6 +150,7 @@ def main():
     parser.add_argument('--next-contact-end-index', type=int)
     parser.add_argument('--dispatch-clock-index', type=int)
     parser.add_argument('--dispatch-end-index', type=int)
+    parser.add_argument('--movement-end-index', type=int, help='original fixed-bank pass handoff boundary')
     args = parser.parse_args()
     if args.defender_boundary_index is not None and args.prepared_boundary_index is None:
         raise ValueError('First-defender comparison requires the attacker-prepared boundary')
@@ -151,6 +167,8 @@ def main():
         raise ValueError('Next contact requires all six boundaries and the first contact')
     if (args.dispatch_clock_index is None) != (args.dispatch_end_index is None) or (args.dispatch_clock_index is not None and args.next_defender_index is None):
         raise ValueError('Dispatch requires both boundaries and the second defender contact')
+    if args.movement_end_index is not None and args.dispatch_end_index is None:
+        raise ValueError('Movement comparison requires the final dispatch boundary')
     if not 0 <= args.initial_index <= 255:
         raise ValueError('Initial random index must be a byte')
     lines, pcs, ram = trace_data(args.trace_directory)
@@ -380,8 +398,27 @@ def main():
         if index != ram(end)[0xe1]:
             raise ValueError(f'boundary pass.dispatch_clock, random.index: native {index}, original {ram(end)[0xe1]}')
         source = waiting
+    if args.movement_end_index is not None:
+        end = args.movement_end_index
+        if not args.dispatch_end_index < end < len(pcs) or pcs[end] != 'C612':
+            raise ValueError('boundary pass.movement: unsupported handoff ordering')
+        rows, last = menu_wait_events(lines, pcs, ram, args.dispatch_end_index, end)
+        if len(rows) != 44:
+            raise ValueError(f'boundary pass.movement: expected 22 captured random/travel pairs, got {len(rows) // 2}')
+        events = output / 'movement-events.txt'
+        events.write_text('CMJNMISEQ1\n' + ''.join(rows[2*slot] + '\n' + rows[2*slot+1] + '\nP ' + str(slot) + '\n' for slot in range(22)))
+        destination = output / 'movement-handoff.cmjsession'
+        run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(source), '--advance-observed-pass-movement', str(events), str(index), '--capture', str(destination)], capture_output=True, text=True, timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary pass.movement: {run.stderr.strip()}')
+        indices = re.findall(r'final random index (\d+);', run.stdout)
+        if indices != [str(ram(end)[0xe1])]:
+            raise ValueError(f'boundary pass.movement, random.index: native {indices}, original {ram(end)[0xe1]}')
+        compare_movement(destination.read_bytes(), ram(end), ram(args.next_comparison_index), original, count, score, result, strength, 1)
+        index = int(indices[0])
+        source = destination
     print(f'Matched ordered mode change and {count} explicitly recorded defender choices'
-          f'{" through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
+          f'{" through field movement and pass handoff" if args.movement_end_index is not None else " through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
           f'final random index {index}; checkpoint {source}.')
 
 

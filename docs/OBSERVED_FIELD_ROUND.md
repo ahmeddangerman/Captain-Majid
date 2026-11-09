@@ -1,5 +1,7 @@
 # Evidence-fed field-round comparison
 
+For an ordinary-pass dispatch, `--advance-observed-pass-movement FILE INITIAL_INDEX` accepts the same `CMJNMISEQ1` random/travel records interleaved with exactly 22 ordered `P ID` records, ID 0 through 21. This records the player order; IDs 0, 11 and the carrier are skipped by the field-player kernel. It finishes at the saved pass field-movement boundary and reports the final random index. It does not generate event timing. See CLI_HANDOFF for comparisons and bounds.
+
 The ordinary-pass defender trace can additionally feed explicit presentation samples `M VALUE` (motion request) and `F VALUE` (facing) at the guarded prepared-pass boundary. These copy observed bytes; they do not run presentation. First-defender preparation also requires an explicitly observed ball variant, and comparison requires the direct caller's supplied table row. See CLI_HANDOFF for coverage and limits.
 
 `--advance-observed-world-file PRIVATE_EVENTS` is a separate development operation for a saved field-round entry. It consumes 22 caller-supplied pre-poll observations. For each record it sets the represented random bytes to the supplied values, optionally applies one explicitly observed control-travel step, then runs the existing input and player-processing step. The existing `--advance-world` and `--advance-world-file` operations remain unchanged.
