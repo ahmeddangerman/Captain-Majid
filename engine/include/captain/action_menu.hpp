@@ -77,6 +77,14 @@ PhaseSessionState prepare_first_ordinary_pass_defender(const PhaseSessionState& 
     std::uint8_t observed_ball_variant, const FieldPlayerProfiles& players, const FieldDefenseContent& defense);
 PhaseSessionState compare_first_ordinary_pass_defender(const PhaseSessionState& input,
     const FieldComparisonSelection& comparison);
+PhaseSessionState advance_first_ordinary_pass_contact(const PhaseSessionState& input,
+    const ContactPreludeContent& prelude, const ExperienceContent& experience);
+PhaseSessionState prepare_next_ordinary_pass_defender(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players, const FieldDefenseContent& defense);
+PhaseSessionState compare_next_ordinary_pass_defender(const PhaseSessionState& input,
+    const FieldComparisonSelection& comparison);
+PhaseSessionState advance_next_ordinary_pass_contact(const PhaseSessionState& input,
+    const ContactPreludeContent& prelude, const ExperienceContent& experience);
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState poll_sampled_human_pass_target(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed);
 // Explicit defender choices observed for the bounded player7 pass; no AI is inferred.

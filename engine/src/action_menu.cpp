@@ -567,10 +567,10 @@ PhaseSessionState prepare_first_ordinary_pass_defender(const PhaseSessionState& 
     validate_phase_session(state);
     return state;
 }
-PhaseSessionState compare_first_ordinary_pass_defender(const PhaseSessionState& input,
+static PhaseSessionState compare_ordinary_pass_defender(const PhaseSessionState& input,
     const FieldComparisonSelection& comparison) {
     validate_phase_session(input);
-    if (input.phase != FieldSessionPhase::ordinary_pass_defender_prepared || !input.area_contact || !input.recovery)
+    if ((input.phase != FieldSessionPhase::ordinary_pass_defender_prepared && input.phase != FieldSessionPhase::ordinary_pass_next_defender_prepared) || !input.area_contact || !input.recovery)
         throw std::invalid_argument("First ordinary pass defender comparison requires preparation");
     DefenderContactInput contact{};
     contact.incoming_power = input.action->power;
@@ -599,7 +599,62 @@ PhaseSessionState compare_first_ordinary_pass_defender(const PhaseSessionState& 
     state.area_contact->score = result.score;
     state.area_contact->result = result.result_code;
     state.area_sequence_result = result.result_code;
-    state.phase = FieldSessionPhase::ordinary_pass_defender_compared;
+    state.phase = input.phase == FieldSessionPhase::ordinary_pass_defender_prepared ? FieldSessionPhase::ordinary_pass_defender_compared : FieldSessionPhase::ordinary_pass_next_defender_compared;
+    validate_phase_session(state);
+    return state;
+}
+PhaseSessionState compare_first_ordinary_pass_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison) {
+    if (input.phase != FieldSessionPhase::ordinary_pass_defender_prepared) throw std::invalid_argument("First defender comparison requires its prepared phase");
+    return compare_ordinary_pass_defender(input,comparison);
+}
+PhaseSessionState compare_next_ordinary_pass_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison) {
+    if (input.phase != FieldSessionPhase::ordinary_pass_next_defender_prepared) throw std::invalid_argument("Next defender comparison requires its prepared phase");
+    return compare_ordinary_pass_defender(input,comparison);
+}
+static PhaseSessionState advance_ordinary_pass_contact(const PhaseSessionState& input,
+    const ContactPreludeContent& prelude, const ExperienceContent& experience) {
+    validate_phase_session(input);
+    if ((input.phase != FieldSessionPhase::ordinary_pass_defender_compared && input.phase != FieldSessionPhase::ordinary_pass_next_defender_compared) || !input.experience ||
+        input.current.field.motion[field_motion_index(input.recovery->opposing_player)].status ||
+        prelude.field_elapsed[3]!=1 || prelude.defender_status[1]!=6)
+        throw std::invalid_argument("Unsupported ordinary pass contact clock");
+    const auto reward=award_player_experience(*input.experience,
+        input.current.field.roster[input.current.field.ball_owner].type,1,experience);
+    const auto applied=apply_contact_prelude({input.current,input.recovery->opposing_player,1,true},prelude);
+    if (applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready)
+        throw std::invalid_argument("Ordinary pass contact requires a ready clock continuation");
+    auto state=input;
+    state.current=applied.state;
+    state.experience=reward.state;
+    state.phase=input.phase==FieldSessionPhase::ordinary_pass_defender_compared ? FieldSessionPhase::ordinary_pass_first_contact_clock : FieldSessionPhase::ordinary_pass_next_contact_clock;
+    validate_phase_session(state);
+    return state;
+}
+PhaseSessionState advance_first_ordinary_pass_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience) {
+    if(input.phase!=FieldSessionPhase::ordinary_pass_defender_compared)throw std::invalid_argument("First contact requires its comparison");
+    return advance_ordinary_pass_contact(input,prelude,experience);
+}
+PhaseSessionState advance_next_ordinary_pass_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience) {
+    if(input.phase!=FieldSessionPhase::ordinary_pass_next_defender_compared)throw std::invalid_argument("Next contact requires its comparison");
+    return advance_ordinary_pass_contact(input,prelude,experience);
+}
+PhaseSessionState prepare_next_ordinary_pass_defender(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
+    validate_phase_session(input);
+    if ((input.phase!=FieldSessionPhase::ordinary_pass_first_contact_clock && input.phase!=FieldSessionPhase::ordinary_pass_next_contact_clock) ||
+        !input.scheduling || !input.ordinary_pass_defenses || unsigned(input.area_defender_cursor)+1>=input.ordinary_pass_defenses->count)
+        throw std::invalid_argument("No next recorded ordinary pass defender");
+    const auto cursor=static_cast<std::uint8_t>(input.area_defender_cursor+1);
+    const auto defender=input.scheduling->selected_ids[cursor];
+    const auto& player=input.current.field.roster[defender];
+    const auto prepared=prepare_profiled_field_defender({defender,player.type,
+        static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level},players,1,0,0,defense);
+    auto state=input;
+    state.recovery->opposing_player=defender;
+    state.area_defender_cursor=cursor;
+    state.area_contact=AreaContactContext{cursor,1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+    state.area_sequence_result=255;
+    state.phase=FieldSessionPhase::ordinary_pass_next_defender_prepared;
     validate_phase_session(state);
     return state;
 }

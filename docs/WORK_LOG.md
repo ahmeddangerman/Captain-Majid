@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Repeated ordinary pass defender contacts
+
+Added phases338-341 for observed nonterminal contact clock/experience and sequential defender preparation/comparison using shared kernels and explicit original inputs. The startup matched two defenders and their contact clocks with eight supplied intervening random/travel pairs; 24 earlier original cases matched all three defenders through their clocks. The live second comparison exposed a verifier error: X at $80D9 is not the strength; RAM $71 at $80D6 is. The first reported strength4 remains correct, and the second is2. Presentation later reuses $71. Unsupported results and clock continuations reject, and AI and presentation remain unimplemented. Full Windows build, all 62 CTest checks and both phase317 replays (576/1,152 boundaries) passed. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Ordinary pass first defender comparison
 
 Extended the general ordinary-pass state to first-defender preparation and observed nonterminal comparison with explicit original ball variant, presentation samples and direct comparison row. The startup original matched defender19 (power8, strength4, score192) and 24 earlier original cases matched defender17 (power18, strength0, score255). An initial use of the different $8D95 selector coincidentally matched startup but failed the earlier zero-power case; the $8D93 direct row corrected it. Both free-pass variants1 and2 were observed, so neither is inferred from recipient. Defender choices remain supplied; additional defenders, other outcomes and live scheduling remain unsupported. Full Windows build, 62 CTest tests and phase317 replays of 576/1,152 boundaries passed. Overall progress is unmeasured; suggested model Terra High.

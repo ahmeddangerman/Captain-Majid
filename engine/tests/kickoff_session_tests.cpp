@@ -1240,6 +1240,8 @@ int main(){try{using namespace captain;
  defended_pass.current.field.selected_defenders=2;
  defended_pass.scheduling->selected_ids={19,20,0,0,0};
  defended_pass.current.field.roster[19].type=1;
+ defended_pass.current.field.roster[20].type=1;
+ defended_pass.current.field.motion[field_motion_index(20)].status=0;
  defended_pass.recovery->ball_variant=0;
  const auto selection=begin_ordinary_pass_defense_selection(defended_pass);
  check(selection.phase==FieldSessionPhase::ordinary_pass_defense_selection && selection.ordinary_pass_defenses &&
@@ -1280,6 +1282,7 @@ int main(){try{using namespace captain;
  rejects([&]{prepare_first_ordinary_pass_defender(presentation_samples.state,0,sampled_attack_profiles,ordinary_pass_content);});
  auto comparable=general_defender;
  comparable.action->power=12;comparable.area_contact->defender_power=8;
+ comparable.current.field.motion[field_motion_index(19)].status=0;
  comparable.current.field.random_first=87;comparable.current.field.random_second=219;
  FieldComparisonSelection ordinary_comparison{5,153,0,false,{154,96,68,0}};
  const auto ordinary_compared=compare_first_ordinary_pass_defender(comparable,ordinary_comparison);
@@ -1292,6 +1295,34 @@ int main(){try{using namespace captain;
        comparable.area_sequence_result==255,"First defender comparison preserves the incoming pass power and records the original result");
  const auto compared_bytes=bytes(ordinary_compared);std::istringstream compared_stream(compared_bytes);
  check(bytes(load_phase_session(compared_stream))==compared_bytes,"Ordinary defender comparison snapshot roundtrip");
+ auto ordinary_prelude=home_prelude;ordinary_prelude.field_elapsed[3]=1;
+ const auto ordinary_contact=advance_first_ordinary_pass_contact(ordinary_compared,ordinary_prelude,home_experience);
+ check(ordinary_contact.phase==FieldSessionPhase::ordinary_pass_first_contact_clock &&
+       ordinary_contact.current.clock.remaining+1==ordinary_compared.current.clock.remaining &&
+       ordinary_contact.current.field.elapsed==ordinary_compared.current.field.elapsed+1 &&
+       ordinary_contact.current.field.motion[field_motion_index(19)].status==6 &&
+       ordinary_compared.current.field.motion[field_motion_index(19)].status==0,
+       "Nonterminal ordinary pass contact applies the original clock and defender status atomically");
+ const auto contact_bytes=bytes(ordinary_contact);std::istringstream contact_stream(contact_bytes);
+ check(bytes(load_phase_session(contact_stream))==contact_bytes,"Ordinary contact snapshot roundtrip");
+ rejects([&]{advance_first_ordinary_pass_contact(ordinary_contact,ordinary_prelude,home_experience);});
+ auto second_pass_content=ordinary_pass_content;second_pass_content.strength_curve.fill(8);
+ const auto ordinary_second=prepare_next_ordinary_pass_defender(ordinary_contact,sampled_attack_profiles,second_pass_content);
+ check(ordinary_second.phase==FieldSessionPhase::ordinary_pass_next_defender_prepared && ordinary_second.area_defender_cursor==1 &&
+       ordinary_second.recovery->opposing_player==20 && ordinary_second.area_contact->cursor==1,
+       "The next recorded defender is prepared in order");
+ const auto ordinary_second_compared=compare_next_ordinary_pass_defender(ordinary_second,ordinary_comparison);
+ const auto second_compared_bytes=bytes(ordinary_second_compared);std::istringstream second_compared_stream(second_compared_bytes);
+ check(bytes(load_phase_session(second_compared_stream))==second_compared_bytes,"Next defender comparison snapshot roundtrip");
+ const auto ordinary_second_contact=advance_next_ordinary_pass_contact(ordinary_second_compared,ordinary_prelude,home_experience);
+ check(ordinary_second_contact.phase==FieldSessionPhase::ordinary_pass_next_contact_clock &&
+       ordinary_second_contact.current.field.motion[field_motion_index(20)].status==6,
+       "The next defender uses the same bounded comparison and contact clock");
+ const auto second_contact_bytes=bytes(ordinary_second_contact);std::istringstream second_contact_stream(second_contact_bytes);
+ check(bytes(load_phase_session(second_contact_stream))==second_contact_bytes,"Next defender contact snapshot roundtrip");
+ const auto next_wait=advance_observed_nmi_events(ordinary_second_contact,255,{{ObservedClockEventKind::random,{0,0,0,false}}});
+ check(next_wait.random_index==0 && next_wait.state.area_defender_cursor==1,"Captured random events preserve the next defender cursor");
+ rejects([&]{prepare_next_ordinary_pass_defender(ordinary_second_contact,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

@@ -1,5 +1,15 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: repeated ordinary pass defender contacts
+
+Phases338-341/version150 use the existing contact clock, experience, defender preparation and comparison kernels for the selected defenders in order. The caller supplies recorded choices, direct comparison row and ordered NMI/travel events. Only action1/subtype0, zero initial defender status, nonterminal result0 and a ready clock continuation are supported. The last contact remains a boundary; dispatch and flight are not yet connected from this general path.
+
+The captured startup matched both defender contacts: defender19 strength4/score192 and defender20 strength2/score255. The first and second contact each occur after one supplied random/travel pair and before three further pairs; clock decremented and owner experience increased at each. A separate set of 24 earlier original encounters matched all three defender preparation, comparison and clock boundaries. Private evidence: ../Captain-Majid-analysis/live-defender-all-fixed2-20261109 and ../Captain-Majid-analysis/earlier-defender-all-fixed-20261109.
+
+The earlier verifier mistakenly used X at $80D9 for strength; that agreed in the first sample by coincidence. The second original defender exposed the discrepancy. The verifier now checks actual strength at RAM $71 and loss at $0619 at $80D6; presentation later reuses $71, so later checkpoints retain the comparison rather than claiming scratch parity. Original score and classification still come from the captured registers. The previously reported first-defender strength4 remains correct after checking RAM.
+
+General: bounded repeated defender preparation, nonterminal comparison, experience and clock using explicit original content and inputs. Scenario-specific: observed event schedules, choices, ball variant and the separately guarded phase317 routes. Unknown: defender AI, other actions/results, added-time/period-end continuation, generic pass dispatch, autonomous frames/audio/presentation, and a complete match. Full Windows build and all 62 CTest checks passed; phase317 replays matched 576 and 1,152 boundaries. Next establish the final defender-to-pass dispatch clock and movement from the live startup and earlier encounters. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: ordinary pass first defender comparison
 
 Phases336-337/version150 extend the score-independent ordinary-pass path through first-defender preparation and observed nonterminal action1/subtype0 comparison, reusing the existing profile preparation and defender comparison kernels. The caller supplies the original ball variant (1 or 2), the direct comparison table row, and recorded presentation motion/facing samples. Only the first defender and result0 are supported; other outcomes reject. These inputs are evidence, not generated AI or presentation.

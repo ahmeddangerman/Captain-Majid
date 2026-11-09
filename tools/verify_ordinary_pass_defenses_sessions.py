@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from verify_captured_pass_defenses import compare_defenses, compare_first_defender, compare_first_defender_result
+from verify_captured_pass_defenses import compare_defenses, compare_first_defender, compare_first_defender_result, compare_first_contact
 from verify_captured_pass_target import compare_confirmed_target
 from verify_observed_world_round import checkpoint
 from verify_player7_pass_end_to_end import case_ids, prepare_output
@@ -25,6 +25,10 @@ def main():
     parser.add_argument('--prepared-suffix', help='optional original attacker-prepared RAM suffix')
     parser.add_argument('--first-defender-suffix', help='optional original first-defender-prepared RAM suffix')
     parser.add_argument('--first-comparison-suffix', help='optional original first-defender-compared RAM suffix')
+    parser.add_argument('--first-contact-suffix', help='optional original first contact clock RAM suffix')
+    parser.add_argument('--next-defender-pattern', help='original preparation suffix with {slot} as one-based defender index')
+    parser.add_argument('--next-comparison-pattern', help='original comparison suffix with {slot}')
+    parser.add_argument('--next-contact-pattern', help='original contact suffix with {slot}')
     parser.add_argument('--comparison-score', type=int, help='original observed comparison score')
     parser.add_argument('--comparison-result', type=int, help='original observed result code')
     parser.add_argument('--comparison-strength', type=int, help='original observed defender strength')
@@ -33,6 +37,11 @@ def main():
     args = parser.parse_args()
     if args.first_defender_suffix and not args.prepared_suffix:
         raise ValueError('First defender comparison requires attacker-prepared observations')
+    if args.first_contact_suffix and not args.first_comparison_suffix:
+        raise ValueError('First contact requires the original comparison boundary')
+    patterns = (args.next_defender_pattern, args.next_comparison_pattern, args.next_contact_pattern)
+    if any(patterns) and (not all(patterns) or not args.first_contact_suffix or any('{slot}' not in pattern for pattern in patterns)):
+        raise ValueError('Additional defenders require all three suffix patterns and the first contact')
     if args.first_comparison_suffix and (not args.first_defender_suffix or any(value is None or not 0 <= value <= 255 for value in
             (args.comparison_score, args.comparison_result, args.comparison_strength))):
         raise ValueError('Defender comparison requires preparation and byte-valued original score, result and strength')
@@ -102,10 +111,32 @@ def main():
                         comparison_raw = (args.preparations / f'{case}{args.first_comparison_suffix}').read_bytes()
                         compare_first_defender_result(compared.read_bytes(), comparison_raw, original, original[0x600],
                                                       args.comparison_score, args.comparison_result, args.comparison_strength)
+                        if args.first_contact_suffix:
+                            contact = output / f'{case}-contact.cmjsession'
+                            invoke(compared, contact, '--advance-first-ordinary-pass-contact')
+                            contact_raw = (args.preparations / f'{case}{args.first_contact_suffix}').read_bytes()
+                            compare_first_contact(contact.read_bytes(), contact_raw, original, original[0x600],
+                                                  args.comparison_score, args.comparison_result, args.comparison_strength)
+                            if args.next_defender_pattern:
+                                for slot in range(1, original[0x600]):
+                                    prepared_next = output / f'{case}-defender-{slot + 1}.cmjsession'
+                                    invoke(contact, prepared_next, '--prepare-next-ordinary-pass-defender')
+                                    next_raw = (args.preparations / f'{case}{args.next_defender_pattern.format(slot=slot + 1)}').read_bytes()
+                                    compare_first_defender(prepared_next.read_bytes(), next_raw, original, original[0x600], slot)
+                                    compared_next = output / f'{case}-compared-{slot + 1}.cmjsession'
+                                    invoke(prepared_next, compared_next, '--compare-next-ordinary-pass-defender', *args.comparison_content)
+                                    comparison_raw = (args.preparations / f'{case}{args.next_comparison_pattern.format(slot=slot + 1)}').read_bytes()
+                                    compare_first_defender_result(compared_next.read_bytes(), comparison_raw, original, original[0x600],
+                                                                  args.comparison_score, args.comparison_result, args.comparison_strength, slot)
+                                    contact = output / f'{case}-contact-{slot + 1}.cmjsession'
+                                    invoke(compared_next, contact, '--advance-next-ordinary-pass-contact')
+                                    contact_raw = (args.preparations / f'{case}{args.next_contact_pattern.format(slot=slot + 1)}').read_bytes()
+                                    compare_first_contact(contact.read_bytes(), contact_raw, original, original[0x600],
+                                                          args.comparison_score, args.comparison_result, args.comparison_strength, slot)
         except (ValueError, RuntimeError) as error:
             raise ValueError(f'case {case}, {error}') from error
     print(f'Matched {len(cases)} original attacker-preparation entries'
-          f'{" and first-defender comparison" if args.first_comparison_suffix else " and first-defender preparation" if args.first_defender_suffix else " and prepared states" if args.prepared_suffix else ""} with explicitly supplied defender choices.')
+          f'{" and all recorded defender contacts" if args.next_defender_pattern else " and first contact clock" if args.first_contact_suffix else " and first-defender comparison" if args.first_comparison_suffix else " and first-defender preparation" if args.first_defender_suffix else " and prepared states" if args.prepared_suffix else ""} with explicitly supplied defender choices.')
 
 
 if __name__ == '__main__':

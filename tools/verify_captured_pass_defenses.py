@@ -42,10 +42,12 @@ def compare_defenses(actual, raw, original_target, phase, count):
                 raise ValueError(f'boundary defenses, choices[{slot}].{label}: native {actual[offset + slot]}, original {wanted}')
 
 
-def compare_first_defender(actual, raw, original_target, count):
-    if len(actual) != 440 or actual[10] != 150 or int.from_bytes(actual[258:260], 'little') != 336:
+def compare_first_defender(actual, raw, original_target, count, slot=0):
+    if len(actual) != 440 or actual[10] != 150 or int.from_bytes(actual[258:260], 'little') != (336 if slot == 0 else 339):
         raise ValueError('boundary defender.prepare: invalid native session format or phase')
-    wanted = (1, 0, 1, 0, raw[0x444], raw[0x32], raw[0x33], raw[0x43f], raw[0x440], 0, 0, 0, 0, 0)
+    if actual[413] != slot or raw[0x442] != original_target[0x601 + slot]:
+        raise ValueError(f'boundary defender.prepare, defender.cursor: expected {slot}')
+    wanted = (1, slot, 1, 0, raw[0x444], raw[0x32], raw[0x33], raw[0x43f], raw[0x440], 0, 0, 0, 0, 0)
     labels = ('present', 'cursor', 'action', 'subtype', 'effect', 'power.low', 'power.high',
               'cost.low', 'cost.high', 'strength', 'loss', 'score', 'result', 'weakened')
     for name, native_value, original_value in zip(labels, actual[399:413], wanted):
@@ -53,6 +55,7 @@ def compare_first_defender(actual, raw, original_target, count):
             raise ValueError(f'boundary defender.prepare, contact.{name}: native {native_value}, original {original_value}')
     prior = bytearray(actual)
     prior[399:413] = bytes(14)
+    prior[413] = 0
     prior[258:260] = (335).to_bytes(2, 'little')
     try:
         compare_defenses(prior, raw, original_target, 335, count)
@@ -60,10 +63,14 @@ def compare_first_defender(actual, raw, original_target, count):
         raise ValueError(str(error).replace('boundary defenses', 'boundary defender.prepare')) from error
 
 
-def compare_first_defender_result(actual, raw, original_target, count, score, result, strength):
-    if len(actual) != 440 or actual[10] != 150 or int.from_bytes(actual[258:260], 'little') != 337:
+def compare_first_defender_result(actual, raw, original_target, count, score, result, strength, slot=0, verify_scratch=True):
+    if len(actual) != 440 or actual[10] != 150 or int.from_bytes(actual[258:260], 'little') != (337 if slot == 0 else 340):
         raise ValueError('boundary defender.compare: invalid native session format or phase')
-    wanted = (1, 0, 1, 0, raw[0x444], raw[0x32], raw[0x33], raw[0x43f], raw[0x440],
+    if actual[413] != slot or raw[0x442] != original_target[0x601 + slot]:
+        raise ValueError(f'boundary defender.compare, defender.cursor: expected {slot}')
+    if verify_scratch and (raw[0x71] != strength or raw[0x619] != strength // 4):
+        raise ValueError(f'boundary defender.compare, original strength/loss: expected {strength}/{strength // 4}, original {raw[0x71]}/{raw[0x619]}')
+    wanted = (1, slot, 1, 0, raw[0x444], raw[0x32], raw[0x33], raw[0x43f], raw[0x440],
               strength, strength // 4, score, result, 0)
     labels = ('present', 'cursor', 'action', 'subtype', 'effect', 'power.low', 'power.high',
               'cost.low', 'cost.high', 'strength', 'loss', 'score', 'result', 'weakened')
@@ -74,12 +81,24 @@ def compare_first_defender_result(actual, raw, original_target, count, score, re
         raise ValueError(f'boundary defender.compare, sequence.result: native {actual[414]}, original {result}')
     prior = bytearray(actual)
     prior[399:413] = bytes(14)
+    prior[413] = 0
     prior[414] = 255
     prior[258:260] = (335).to_bytes(2, 'little')
     try:
         compare_defenses(prior, raw, original_target, 335, count)
     except ValueError as error:
         raise ValueError(str(error).replace('boundary defenses', 'boundary defender.compare')) from error
+
+
+def compare_first_contact(actual, raw, original_target, count, score, result, strength, slot=0):
+    if int.from_bytes(actual[258:260], 'little') != (338 if slot == 0 else 341):
+        raise ValueError('boundary defender.contact, session.phase: unexpected phase')
+    prior = bytearray(actual)
+    prior[258:260] = (337 if slot == 0 else 340).to_bytes(2, 'little')
+    try:
+        compare_first_defender_result(prior, raw, original_target, count, score, result, strength, slot, False)
+    except ValueError as error:
+        raise ValueError(str(error).replace('boundary defender.compare', 'boundary defender.contact')) from error
 
 
 def main():
@@ -92,8 +111,17 @@ def main():
     parser.add_argument('--prepared-boundary-index', type=int, help='original bank26 804F attacker-prepared boundary')
     parser.add_argument('--defender-boundary-index', type=int, help='original bank26 80B6 first-defender preparation boundary')
     parser.add_argument('--comparison-boundary-index', type=int, help='original bank26 80D6 comparison boundary')
-    parser.add_argument('--comparison-followup-index', type=int, help='original bank26 80D9 strength-register boundary')
+    parser.add_argument('--comparison-followup-index', type=int, help='original bank26 80D9 classification boundary')
     parser.add_argument('--comparison-content', nargs=7, type=int, metavar=('RANGE', 'OFFSET', 'ELIGIBLE', 'T0', 'T1', 'T2', 'T3'))
+    parser.add_argument('--contact-before-index', type=int, help='last original random/travel boundary before contact')
+    parser.add_argument('--contact-index', type=int, help='original boundary immediately after contact')
+    parser.add_argument('--contact-end-index', type=int, help='original contact-clock return boundary')
+    parser.add_argument('--next-defender-index', type=int)
+    parser.add_argument('--next-comparison-index', type=int)
+    parser.add_argument('--next-followup-index', type=int)
+    parser.add_argument('--next-contact-before-index', type=int)
+    parser.add_argument('--next-contact-index', type=int)
+    parser.add_argument('--next-contact-end-index', type=int)
     args = parser.parse_args()
     if args.defender_boundary_index is not None and args.prepared_boundary_index is None:
         raise ValueError('First-defender comparison requires the attacker-prepared boundary')
@@ -101,6 +129,13 @@ def main():
         raise ValueError('Defender comparison requires preparation and both original comparison boundaries')
     if args.comparison_boundary_index is not None and (args.comparison_content is None or any(not 0 <= value <= 255 for value in args.comparison_content) or args.comparison_content[2] > 1):
         raise ValueError('Defender comparison requires byte-valued direct table content and boolean eligibility')
+    contact_indices = (args.contact_before_index, args.contact_index, args.contact_end_index)
+    if any(value is not None for value in contact_indices) and (any(value is None for value in contact_indices) or args.comparison_boundary_index is None):
+        raise ValueError('First contact requires all three boundaries and the original comparison')
+    next_indices = (args.next_defender_index, args.next_comparison_index, args.next_followup_index,
+                    args.next_contact_before_index, args.next_contact_index, args.next_contact_end_index)
+    if any(value is not None for value in next_indices) and (any(value is None for value in next_indices) or args.contact_index is None):
+        raise ValueError('Next contact requires all six boundaries and the first contact')
     if not 0 <= args.initial_index <= 255:
         raise ValueError('Initial random index must be a byte')
     lines, pcs, ram = trace_data(args.trace_directory)
@@ -237,7 +272,7 @@ def main():
                 raise ValueError(f'boundary defender.compare: missing original register {name}')
             return int(match.group(1), 16)
         score, result = register(lines[comparison], 'A'), register(lines[comparison], 'Y')
-        strength = register(lines[followup], 'X')
+        strength = ram(comparison)[0x71]
         operation += 1
         destination = output / f'{operation:03d}-defender-compared.cmjsession'
         run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(source),
@@ -249,8 +284,75 @@ def main():
         if index != ram(comparison)[0xe1]:
             raise ValueError(f'boundary defender.compare, random.index: native {index}, original {ram(comparison)[0xe1]}')
         source = destination
+    if args.contact_index is not None:
+        before, contact, end = contact_indices
+        if not (args.comparison_followup_index < before < contact < end < len(pcs)) or pcs[before] != 'E406' or pcs[contact] != 'C9C5' or pcs[end] != '80DC' or ram(end)[0x24] != 26:
+            raise ValueError('boundary defender.contact: unsupported original ordering or bank')
+
+        def replay_wait(start, finish, state, random_index, label):
+            rows, last = menu_wait_events(lines, pcs, ram, start, finish + 1)
+            operation_path = output / f'{label}-events.txt'
+            operation_path.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
+            destination = output / f'{label}-wait.cmjsession'
+            run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(state),
+                                  '--advance-observed-nmi-sequence', str(operation_path), str(random_index),
+                                  '--capture', str(destination)], capture_output=True, text=True, timeout=30)
+            if run.returncode:
+                raise RuntimeError(f'boundary defender.contact.wait: {run.stderr.strip()}')
+            indices = re.findall(r'final random index (\d+);', run.stdout)
+            if indices != [str(ram(last)[0xe1])]:
+                raise ValueError(f'boundary defender.contact.wait, random.index: native {indices}, original {ram(last)[0xe1]}')
+            return destination, int(indices[0]), last
+
+        waiting, index, last = replay_wait(args.comparison_followup_index, before, source, index, 'contact-before')
+        if last != before:
+            raise ValueError('boundary defender.contact: incomplete pre-contact event')
+        compare_first_defender_result(waiting.read_bytes(), ram(before), original, count, score, result, strength, verify_scratch=False)
+        destination = output / 'contact-clock.cmjsession'
+        run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(waiting),
+                              '--advance-first-ordinary-pass-contact', '--capture', str(destination)],
+                             capture_output=True, text=True, timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary defender.contact: {run.stderr.strip()}')
+        compare_first_contact(destination.read_bytes(), ram(contact), original, count, score, result, strength)
+        waiting, index, last = replay_wait(contact - 1, end, destination, index, 'contact-after')
+        compare_first_contact(waiting.read_bytes(), ram(end), original, count, score, result, strength)
+        if index != ram(end)[0xe1]:
+            raise ValueError(f'boundary defender.contact, random.index: native {index}, original {ram(end)[0xe1]}')
+        source = waiting
+    if args.next_defender_index is not None:
+        defender, comparison, followup, before, contact, end = next_indices
+        if not (args.contact_end_index < defender < comparison < followup < before < contact < end < len(pcs)) or count < 2:
+            raise ValueError('boundary defender.next: unsupported original ordering')
+        if any(pcs[i] == 'C9C5' for i in range(args.contact_end_index + 1, followup)) or [pcs[i] for i in (defender, comparison, followup, before, contact, end)] != ['80B6', '80D6', '80D9', 'E406', 'C9C5', '80DC'] or any(ram(i)[0x24] != 26 for i in (defender, comparison, followup, end)):
+            raise ValueError('boundary defender.next: unsupported original bank or event ordering')
+        destination = output / 'next-defender-prepared.cmjsession'
+        run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(source), '--prepare-next-ordinary-pass-defender', '--capture', str(destination)], capture_output=True, text=True, timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary defender.next.prepare: {run.stderr.strip()}')
+        compare_first_defender(destination.read_bytes(), ram(defender), original, count, 1)
+        score, result, strength = register(lines[comparison], 'A'), register(lines[comparison], 'Y'), ram(comparison)[0x71]
+        compared = output / 'next-defender-compared.cmjsession'
+        run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(destination), '--compare-next-ordinary-pass-defender', *map(str, args.comparison_content), '--capture', str(compared)], capture_output=True, text=True, timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary defender.next.compare: {run.stderr.strip()}')
+        compare_first_defender_result(compared.read_bytes(), ram(comparison), original, count, score, result, strength, 1)
+        waiting, index, last = replay_wait(followup, before, compared, index, 'next-contact-before')
+        if last != before:
+            raise ValueError('boundary defender.next: incomplete pre-contact event')
+        compare_first_defender_result(waiting.read_bytes(), ram(before), original, count, score, result, strength, 1, False)
+        destination = output / 'next-contact-clock.cmjsession'
+        run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(waiting), '--advance-next-ordinary-pass-contact', '--capture', str(destination)], capture_output=True, text=True, timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary defender.next.contact: {run.stderr.strip()}')
+        compare_first_contact(destination.read_bytes(), ram(contact), original, count, score, result, strength, 1)
+        waiting, index, last = replay_wait(contact - 1, end, destination, index, 'next-contact-after')
+        compare_first_contact(waiting.read_bytes(), ram(end), original, count, score, result, strength, 1)
+        if index != ram(end)[0xe1]:
+            raise ValueError(f'boundary defender.next.contact, random.index: native {index}, original {ram(end)[0xe1]}')
+        source = waiting
     print(f'Matched ordered mode change and {count} explicitly recorded defender choices'
-          f'{" and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
+          f'{" and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
           f'final random index {index}; checkpoint {source}.')
 
 
