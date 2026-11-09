@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Controlled player19 shot and 3-6 goal
+
+Continued 48 constructed 3-5 states through 1,584 neutral polls, 96 clock ticks and 96 world rounds to player19's observed shot decision. The captured decision/preparation, presentation acknowledgement, clock, calculated field movement and handoff each match48 original boundaries. Target distance36/destination5 and fractions66/124 match48 target and 768 numeric flight setup, crossing, callback and arrival boundaries. The prompt, explicitly supplied ordinary goalkeeper action, confirmation, overlay acknowledgement, comparison and goal each match48; goalkeeper stamina falls from84 to64 and score becomes3-6. Original shot flight: ../Captain-Majid-analysis/mixed35-p19shotcells-original-a956ff5a; native flight: ../Captain-Majid-analysis/mixed35-p19shotcells-native-0054cda9; original keeper/goal: ../Captain-Majid-analysis/mixed35-p19keeperresult-original-9e341ef0; native keeper: ../Captain-Majid-analysis/mixed35-p19keeperresult-native-8861cf14; native goal: ../Captain-Majid-analysis/mixed36-goal-native-5d0e58d5. Narrow validation rejects unsupported later phases and malformed keeper stamina. Full Windows CMake build and all45 test executables passed.
+
+Next trace goal presentation, restart and kickoff. Original input states are constructed; AI/keeper choices are supplied and presentation acknowledged, not live timing, real audio/video or authentic match initialization. Complete playable match remains unverified; overall progress is unmeasured. Suggested model: Terra High.
+
 ## 2026-11-09 - Controlled 3-5 kickoff and opponent pass
 
 - After the 3-5 goal, compared original post-presentation cleanup in48 cases (24 constructed states, keeper choices0/1 supplied). Opponent kickoff formation, receiver, ball, handoff and control setup each match48; presentation is acknowledged rather than rendered. Another4,752 polls,384 clock ticks and384 world rounds match, reaching player16 AI decision at clock296/cell140. Evidence: ../Captain-Majid-analysis/mixed25-p7postgoal-native-dd1848cc, ../Captain-Majid-analysis/mixed25-p7kickoff-native-44d7ddba and ../Captain-Majid-analysis/mixed35-opponentpath-3059a8c5.

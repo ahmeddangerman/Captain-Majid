@@ -12,7 +12,7 @@ PhaseSessionState prepare_sampled_opponent_goal(const PhaseSessionState& input,c
  if(!reward.slot || *reward.slot!=0 || reward.award!=15)
   throw std::invalid_argument("Unverified sampled opponent goal reward");
  auto state=input;state.experience=reward.state;++state.score->right_goals;
- state.recovery->opposing_player=player19_return ? 5 : (score24 && scorer==17 ? 4 : 1);state.control->facing=(player19_return || score24) ? 0 : 64;state.control->motion_requested=3;
+ state.recovery->opposing_player=player19_return ? 5 : (score24 && (scorer==17 || input.score->left_goals==3) ? 4 : 1);state.control->facing=(player19_return || (score24 && input.score->left_goals!=3)) ? 0 : 64;state.control->motion_requested=3;
  if(score24)state.area_defender_cursor=0;
  state.phase=score24 ? FieldSessionPhase::sampled_score24_goal_scored : player19_return ? FieldSessionPhase::sampled_player19_return_goal_scored : FieldSessionPhase::sampled_opponent_goal_scored;validate_phase_session(state);return state;
 }

@@ -12,7 +12,8 @@ SessionApproachResult prepare_session_shot_approach(const PhaseSessionState& inp
  const auto& field=input.current.field;
  const auto approach=calculate_shot_approach({field.ball_x,field.ball_y,field.side,
   input.recovery->attack_subtype,field.random_first},content);
- if(score23 && (approach.distance_adjustment!=45 || approach.destination_cell!=5 || approach.random_first || approach.loose_ball))
+ const bool score35=score23 && input.score && input.score->left_goals==3 && input.score->right_goals==5;
+ if(score23 && (approach.distance_adjustment!=(score35 ? 36 : 45) || approach.destination_cell!=5 || approach.random_first || approach.loose_ball))
   throw std::invalid_argument("Unverified 2-3 shot destination");
  if(player7 && (approach.distance_adjustment!=99 || approach.destination_cell!=233 || approach.random_first || approach.loose_ball))
   throw std::invalid_argument("Unverified player7 shot target");

@@ -432,6 +432,16 @@ PhaseSessionState prepare_sampled_home_shot_target(const PhaseSessionState& inpu
 PhaseSessionState capture_sampled_field_ai_choice(const PhaseSessionState& input, std::uint8_t action, std::uint8_t subtype) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ai_cell_decision && input.action && input.score && input.recovery && input.control && input.experience &&
+    action==0 && subtype==0 && input.current.field.side==11 && input.current.field.ball_owner==19 &&
+    input.current.field.ball_x==85 && input.current.field.ball_y==157 && input.current.field.ball_cell==57 &&
+    input.current.field.roster[19].type==23 && input.current.field.roster[19].stamina==100 && input.current.field.elapsed==1 &&
+    !input.current.field.selected_defenders && !input.current.field.random_first && !input.current.field.random_second && !input.experience->opponent_stage &&
+    input.current.clock.remaining==294 && input.current.clock.extra_time==13 && input.control->controlled_player==2 && input.control->last_carrier_cell==57 &&
+    input.score->left_goals==3 && input.score->right_goals==5 && input.score->kickoff==4 && input.action->action==1 &&
+    input.action->power==21 && input.recovery->attack_subtype==128 && input.saved_ball_flight_flag==1 && !input.area_defender_cursor) {
+  auto state=input;state.action->action=0;state.recovery->attack_subtype=0;state.phase=FieldSessionPhase::sampled_score23_shot_choice;validate_phase_session(state);return state;
+ }
+ if(input.phase==FieldSessionPhase::ai_cell_decision && input.action && input.score && input.recovery && input.control && input.experience &&
     action==0 && subtype==0 && input.current.field.side==11 && input.current.field.ball_owner==17 &&
     input.current.field.ball_x==94 && input.current.field.ball_y==106 && input.current.field.ball_cell==63 &&
     input.current.field.roster[17].type==23 && input.current.field.roster[17].stamina==100 && input.current.field.elapsed==1 &&

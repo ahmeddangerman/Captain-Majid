@@ -56,6 +56,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool score24_dribble=phase>=303 && phase<=309;
     const bool score25_human_pass=phase>=310 && phase<=326;
     const bool score25_shot=phase>=327 && phase<=330;
+    const bool score35_opponent_shot=state.score && state.score->left_goals==3 && (state.score->right_goals==5 || (phase>=300 && state.score->right_goals==6)) && state.current.field.ball_owner==19;
     const bool player17_score24=state.score && state.score->left_goals==2 && state.score->right_goals==4 && state.current.field.ball_owner==17;
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
     const bool extended_opponent=player14_pass || player19_return_shot || player19_return_keeper || score23_opponent_shot;
@@ -144,7 +145,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Invalid sampled 2-3 defender comparison at phase "+std::to_string(phase)+
             ", status "+std::to_string(state.current.field.motion[field_motion_index(17)].status)+
             ", cursor "+std::to_string(state.area_defender_cursor));
-    if(score23_shot_preflight && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
+    if(score23_shot_preflight && !score35_opponent_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
        state.current.field.side!=11 || state.current.field.ball_owner!=(player17_score24 ? 17 : 19) || state.current.field.ball_x!=94 || state.current.field.ball_y!=(player17_score24 ? 106 : 108) ||
        state.current.field.ball_cell!=63 || state.current.field.elapsed!=(phase>=289 ? 0 : phase==288 ? 2 : 1) || state.current.field.selected_defenders ||
        state.current.field.roster[player17_score24 ? 17 : 19].type!=23 || state.current.field.roster[player17_score24 ? 17 : 19].stamina!=100 || state.current.field.random_first || state.current.field.random_second ||
@@ -160,7 +161,20 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.human_defense_choices || state.human_pass_cursor || state.sampled_field_pass || state.keeper_menu_action ||
        state.area_action4_restart || state.area_action4_restart_power || state.area_action4_restart_pass_counter))
         throw std::invalid_argument("Invalid sampled 2-3 opponent shot state");
-    if(score23_shot_flight && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
+    if(score23_shot_preflight && score35_opponent_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling || !state.kickoff_formation ||
+       state.current.field.side!=11 || state.current.field.ball_x!=85 || state.current.field.ball_y!=157 || state.current.field.ball_cell!=57 ||
+       state.current.field.elapsed!=(phase>=289 ? 0 : phase==288 ? 2 : 1) || state.current.field.selected_defenders ||
+       state.current.field.roster[19].type!=23 || state.current.field.roster[19].stamina!=100 || state.current.field.random_first || state.current.field.random_second ||
+       state.experience->opponent_stage || state.current.clock.remaining!=(phase>=288 ? 293 : 294) || state.current.clock.extra_time!=13 ||
+       state.current.clock.script_flags!=(phase>=287 ? 0 : 128) || state.current.clock.ball_mode!=(phase>=287 ? 0 : 128) || state.score->kickoff!=4 || state.action->action ||
+       state.action->power!=(phase==285 ? 21 : 22) || state.recovery->attack_subtype!=(phase==285 ? 0 : 128) || state.recovery->opposing_player ||
+       state.recovery->ball_variant!=(phase==290 ? 1 : 0) || state.control->controlled_player!=2 ||
+       state.control->last_carrier_cell!=(phase==290 ? 128 : phase==289 ? 0 : 57) || state.control->facing ||
+       (phase>=289 && state.current.field.movement_region!=139) || (phase==290 && (state.control->display_parameter || state.control->motion_requested!=2)) ||
+       state.area_defender_cursor || state.saved_ball_flight_flag!=1 || state.human_defense_choices || state.human_pass_cursor || state.sampled_field_pass || state.keeper_menu_action ||
+       state.area_action4_restart || state.area_action4_restart_power || state.area_action4_restart_pass_counter))
+        throw std::invalid_argument("Invalid sampled 3-5 opponent shot state");
+    if(score23_shot_flight && !score35_opponent_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
        !state.shot_flight || state.current.field.side!=11 || state.current.field.ball_owner!=(player17_score24 ? 17 : 19) || state.current.field.selected_defenders ||
        state.current.field.elapsed || state.current.field.movement_region!=129 || state.current.field.random_first || state.current.field.random_second ||
        state.current.clock.remaining!=(player17_score24 ? 335 : 348) || state.current.clock.extra_time!=13 || state.current.clock.script_flags || state.current.clock.ball_mode ||
@@ -173,7 +187,28 @@ void validate_phase_session(const PhaseSessionState& state) {
        (phase==292 && state.current.field.ball_cell==5) || (phase==293 && state.current.field.ball_cell==5) ||
        (phase==294 && state.current.field.ball_cell!=5)))
         throw std::invalid_argument("Invalid sampled 2-3 numeric shot flight");
-    if(score23_keeper && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
+    if(score23_shot_flight && score35_opponent_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling || !state.kickoff_formation ||
+       !state.shot_flight || state.current.field.side!=11 || state.current.field.selected_defenders || state.current.field.elapsed ||
+       state.current.field.movement_region!=139 || state.current.field.random_first || state.current.field.random_second ||
+       state.current.clock.remaining!=293 || state.current.clock.extra_time!=13 || state.current.clock.script_flags || state.current.clock.ball_mode ||
+       state.score->kickoff!=4 || state.action->action || state.action->power!=22 || state.recovery->attack_subtype!=128 || state.recovery->opposing_player ||
+       state.recovery->ball_variant!=1 || state.control->controlled_player!=2 || state.control->last_carrier_cell!=128 || state.control->display_parameter ||
+       state.control->motion_requested!=2 || state.control->facing || state.area_defender_cursor || state.saved_ball_flight_flag!=(phase==291 ? 1 : 0) ||
+       state.shot_flight->distance!=36 || state.shot_flight->destination!=5 || state.shot_flight->counter!=255 || state.shot_flight->loose_ball ||
+       (phase==291 && (state.current.field.ball_x!=85 || state.current.field.ball_y!=157 || state.current.field.ball_cell!=57)) ||
+       ((phase==292 || phase==293) && state.current.field.ball_cell==5) || (phase==294 && state.current.field.ball_cell!=5)))
+        throw std::invalid_argument("Invalid sampled 3-5 opponent numeric shot flight");
+    if(score23_keeper && score35_opponent_shot && (phase>=301 || !state.action || !state.recovery || !state.control || !state.experience || !state.scheduling || !state.kickoff_formation ||
+       state.current.field.side!=11 || state.current.field.ball_x!=52 || state.current.field.ball_y!=124 || state.current.field.ball_cell!=5 ||
+       state.current.field.elapsed || state.current.field.selected_defenders!=1 || state.current.field.roster[0].stamina!=(phase>=299 ? 64 : 84) ||
+       state.current.field.random_first || state.current.field.random_second || state.current.clock.remaining!=293 || state.current.clock.extra_time!=13 ||
+       state.current.clock.script_flags || state.current.clock.ball_mode || state.score->kickoff!=4 || state.action->action || state.action->power!=22 ||
+       state.action->menu_route!=4 || state.action->cursor!=(phase==295 ? 0 : 224) || state.recovery->attack_subtype!=128 || state.recovery->opposing_player!=(phase>=300 ? 4 : 0) ||
+       state.recovery->ball_variant!=1 || state.recovery->x_jitter_control!=159 || state.control->controlled_player!=2 ||
+       state.control->last_carrier_cell!=128 || state.control->display_parameter || state.control->motion_requested!=(phase==300 ? 3 : 0) || state.control->facing!=(phase==300 ? 64 : 0) ||
+       state.area_defender_cursor || state.saved_ball_flight_flag || (phase==295 ? bool(state.keeper_menu_action) : state.keeper_menu_action!=0) || state.shot_flight || state.ball_trajectory))
+        throw std::invalid_argument("Invalid sampled 3-5 goalkeeper prompt");
+    if(score23_keeper && !score35_opponent_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
        state.current.field.side!=(phase>=301 ? 0 : 11) || state.current.field.ball_owner!=(player17_keeper ? 17 : 19) || state.current.field.ball_x!=52 || state.current.field.ball_y!=124 ||
        state.current.field.ball_cell!=5 || state.current.field.elapsed || state.current.field.selected_defenders!=1 ||
        state.current.field.roster[0].stamina!=(player17_keeper ? (phase>=299 ? 24 : 44) : (phase>=299 ? 22 : 42)) || state.current.field.random_first || state.current.field.random_second ||

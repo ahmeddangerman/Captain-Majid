@@ -11,7 +11,7 @@ PhaseSessionState compare_sampled_home_goalkeeper(const PhaseSessionState& input
    0,status.timer,0,status.penalty,content.keeper_thresholds};
   const auto result=prepare_goalkeeper({{0,player.type,static_cast<std::uint8_t>(player.stamina),
    static_cast<std::uint8_t>(player.stamina>>8),player.level},11,0,0,0,128,false,comparison},content.goalkeepers,content.keeper);
-  if(result.preparation.base_strength!=10 || result.preparation.stamina_cost!=20 || result.energy.stamina!=(score23 && field.ball_owner!=17 ? 22 : 24) || result.energy.weakened ||
+  if(result.preparation.base_strength!=10 || result.preparation.stamina_cost!=20 || result.energy.stamina!=(input.score && input.score->left_goals==3 && input.score->right_goals==5 ? 64 : score23 && field.ball_owner!=17 ? 22 : 24) || result.energy.weakened ||
      result.comparison.strength!=5 || result.comparison.score!=255 || result.comparison.result_code!=0)
    throw std::invalid_argument("Unverified player19 return goalkeeper result");
   auto state=input;state.current.field.roster[0].stamina=result.energy.stamina;
