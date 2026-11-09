@@ -1788,6 +1788,39 @@ int main(){try{using namespace captain;
  auto bad_postgoal_content=postgoal_content;bad_postgoal_content.strength_curve.fill(12);
  rejects([&]{prepare_postgoal_opponent_action(postgoal_choice,postgoal_profiles,bad_postgoal_content);});
  rejects([&]{prepare_postgoal_opponent_action(postgoal_prepared,postgoal_profiles,postgoal_content);});
+ const auto postgoal_wait=begin_postgoal_opponent_action_wait(postgoal_prepared);
+ const auto postgoal_wait_events=advance_observed_nmi_events(postgoal_wait,37,
+   {{ObservedClockEventKind::ball_mode_sample,{},192}, {ObservedClockEventKind::ball_mode_sample,{},128},
+    {ObservedClockEventKind::ball_mode_sample,{},192}});
+ check(postgoal_wait_events.state.phase==FieldSessionPhase::postgoal_opponent_action_wait &&
+       postgoal_wait_events.state.current.clock.ball_mode==192 && postgoal_wait_events.state.area_ai_target->recipient==14,
+       "Observed action presentation retains the selected target and ordered ball-mode samples");
+ auto postgoal_handoff_input=postgoal_wait_events.state;postgoal_handoff_input.current.field.random_first=191;
+ postgoal_handoff_input.current.field.random_second=238;
+ const auto postgoal_handoff=acknowledge_postgoal_opponent_action(postgoal_handoff_input);
+ check(postgoal_handoff.phase==FieldSessionPhase::postgoal_opponent_action_handoff &&
+       !postgoal_handoff.current.clock.ball_mode && !postgoal_handoff.current.clock.script_flags &&
+       postgoal_handoff.area_ai_target->recipient==14,"Acknowledged action presentation reaches the observed handler");
+ const auto postgoal_handoff_bytes=bytes(postgoal_handoff);std::istringstream postgoal_handoff_stream(postgoal_handoff_bytes);
+ check(bytes(load_phase_session(postgoal_handoff_stream))==postgoal_handoff_bytes,"Post-goal action handoff snapshot roundtrips");
+ rejects([&]{acknowledge_postgoal_opponent_action(postgoal_wait);});
+ rejects([&]{acknowledge_postgoal_opponent_action(postgoal_handoff);});
+ const auto postgoal_clocked=advance_postgoal_opponent_clock(postgoal_handoff);
+ check(postgoal_clocked.phase==FieldSessionPhase::postgoal_opponent_clocked &&
+       postgoal_clocked.current.clock.remaining==157 && postgoal_clocked.current.field.elapsed==2 &&
+       postgoal_clocked.control->last_carrier_cell==135,"Observed opponent action advances its original one-tick clock");
+ const auto postgoal_clock_wait=advance_observed_nmi_events(postgoal_clocked,47,{});
+ auto postgoal_dispatch_input=postgoal_clock_wait.state;postgoal_dispatch_input.current.field.random_first=204;
+ postgoal_dispatch_input.current.field.random_second=253;
+ const auto postgoal_dispatch=dispatch_postgoal_opponent_action(postgoal_dispatch_input);
+ check(postgoal_dispatch.phase==FieldSessionPhase::postgoal_opponent_dispatch &&
+       !postgoal_dispatch.control->last_carrier_cell && postgoal_dispatch.area_ai_target->recipient==14,
+       "Observed opponent action dispatch clears the carrier-cell marker");
+ const auto postgoal_dispatch_bytes=bytes(postgoal_dispatch);std::istringstream postgoal_dispatch_stream(postgoal_dispatch_bytes);
+ check(bytes(load_phase_session(postgoal_dispatch_stream))==postgoal_dispatch_bytes,"Post-goal action dispatch snapshot roundtrips");
+ rejects([&]{advance_postgoal_opponent_clock(postgoal_clocked);});
+ rejects([&]{dispatch_postgoal_opponent_action(postgoal_clocked);});
+ rejects([&]{dispatch_postgoal_opponent_action(postgoal_dispatch);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

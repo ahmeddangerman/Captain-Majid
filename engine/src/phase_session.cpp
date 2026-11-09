@@ -68,7 +68,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool score35_opponent_shot=state.score && state.score->left_goals==3 && (state.score->right_goals==5 || (phase>=300 && state.score->right_goals==6)) && state.current.field.ball_owner==19;
     const bool player17_score24=state.score && state.score->left_goals==2 && state.score->right_goals==4 && state.current.field.ball_owner==17;
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
-    const bool postgoal_opponent_action=phase==392 || phase==393;
+    const bool postgoal_opponent_action=phase>=392 && phase<=397;
     const bool extended_opponent=player14_pass || player19_return_shot || player19_return_keeper || score23_opponent_shot || postgoal_opponent_action;
     if(phase>255 && !(phase>=345 && phase<=391) && !extended_opponent && !score23_human_pass && !score24_dribble && !score25_human_pass && !score25_shot && !ordinary_human_target)throw std::invalid_argument("Unsupported extended phase session state");
     if (ordinary_human_target) {
@@ -439,13 +439,18 @@ void validate_phase_session(const PhaseSessionState& state) {
     if(bool(state.area_ai_target)!=((phase>=78 && phase<=94) || area_flight || area_action4 || area_action6 || postgoal_opponent_action))throw std::invalid_argument("Area AI choice needs saved target context");
     if(postgoal_opponent_action && (!state.action || !state.score || !state.recovery || !state.control || !state.scheduling || !state.experience || !state.kickoff_formation ||
        state.score->left_goals!=1 || state.score->right_goals!=0 || state.score->kickoff!=4 ||
-       state.current.clock.remaining!=158 || state.current.clock.extra_time || state.current.clock.ball_mode!=128 ||
+       state.current.clock.remaining!=(phase>=396 ? 157 : 158) || state.current.clock.extra_time ||
+       (phase>=395 ? (state.current.clock.ball_mode || state.current.clock.script_flags) :
+        (state.current.clock.script_flags!=128 || (state.current.clock.ball_mode!=128 && !(phase==394 && state.current.clock.ball_mode==192)))) ||
        state.current.field.side!=11 || state.current.field.ball_owner!=18 || state.current.field.ball_x!=141 || state.current.field.ball_y!=108 || state.current.field.ball_cell!=135 ||
        state.current.field.roster[18].type || state.current.field.roster[18].stamina || state.current.field.roster[18].level ||
-       state.current.field.elapsed!=1 || state.current.field.selected_defenders || state.current.field.random_first!=93 || state.current.field.random_second!=128 ||
-       state.control->controlled_player!=10 || state.control->last_carrier_cell!=135 || state.action->action!=3 || state.action->move_effect || state.recovery->attack_subtype ||
-       state.area_ai_target->recipient!=14 || state.area_ai_target->cell!=161 || state.area_ai_target->cost!=(phase==393 ? 60 : 0) ||
-       state.action->power!=(phase==393 ? 12 : 11) || state.action->move_flags!=(phase==393 ? 3 : 0)))
+       state.current.field.elapsed!=(phase>=396 ? 2 : 1) || state.current.field.selected_defenders ||
+       (phase<=393 && (state.current.field.random_first!=93 || state.current.field.random_second!=128)) ||
+       (phase==395 && (state.current.field.random_first!=191 || state.current.field.random_second!=238)) ||
+       (phase==397 && (state.current.field.random_first!=204 || state.current.field.random_second!=253)) ||
+       state.control->controlled_player!=10 || state.control->last_carrier_cell!=(phase==397 ? 0 : 135) || state.action->action!=3 || state.action->move_effect || state.recovery->attack_subtype ||
+       state.area_ai_target->recipient!=14 || state.area_ai_target->cell!=161 || state.area_ai_target->cost!=(phase>=393 ? 60 : 0) ||
+       state.action->power!=(phase>=393 ? 12 : 11) || state.action->move_flags!=(phase>=393 ? 3 : 0)))
         throw std::invalid_argument("Invalid captured post-goal opponent action");
     if(area_action6 && (!state.action || state.action->action!=6 || !state.area_ai_target || state.area_ai_target->recipient || state.area_ai_target->cell!=state.current.field.ball_cell || ((phase==104 || phase==107) && state.current.field.side!=11) || state.current.field.selected_defenders>4))
         throw std::invalid_argument("Area action6 destination needs its captured target cell");

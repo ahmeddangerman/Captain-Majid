@@ -315,7 +315,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
          input.phase != FieldSessionPhase::ordinary_pass_next_defender_compared && input.phase != FieldSessionPhase::ordinary_pass_next_contact_clock && input.phase != FieldSessionPhase::ordinary_pass_dispatch_clock &&
          input.phase != FieldSessionPhase::ordinary_pass_flight_ready && input.phase != FieldSessionPhase::ordinary_pass_flight_callback &&
          input.phase != FieldSessionPhase::ordinary_free_pass_contest_winner && input.phase != FieldSessionPhase::ordinary_pass_control_entry &&
-         input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::ordinary_return_contact_pending &&
+         input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::postgoal_opponent_action_wait && input.phase != FieldSessionPhase::postgoal_opponent_clocked && input.phase != FieldSessionPhase::ordinary_return_contact_pending &&
          input.phase != FieldSessionPhase::ordinary_return_action_menu && input.phase != FieldSessionPhase::ordinary_return_shot_choice && input.phase != FieldSessionPhase::ordinary_return_shot_prepared &&
          input.phase != FieldSessionPhase::ordinary_return_shot_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_contact && input.phase != FieldSessionPhase::ordinary_return_shot_dispatch &&
          input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival && input.phase != FieldSessionPhase::ordinary_return_shot_defenders_pending && input.phase != FieldSessionPhase::ordinary_return_shot_flight_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_blocked_clocked && input.phase != FieldSessionPhase::ordinary_return_goal_area_defenders && input.phase != FieldSessionPhase::ordinary_return_goal_area_menu && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_choice && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_prepared && input.phase != FieldSessionPhase::ordinary_return_goal_area_first_clock && input.phase != FieldSessionPhase::ordinary_return_goal_area_field_moved && input.phase != FieldSessionPhase::ordinary_return_goal_area_dispatch && input.phase != FieldSessionPhase::ordinary_return_goal_area_keeper_ready && input.phase != FieldSessionPhase::ordinary_return_goal_area_keeper_compared && input.phase != FieldSessionPhase::ordinary_return_goal_area_goal_scored && input.phase != FieldSessionPhase::goal_kickoff_pending) || !input.control)
@@ -344,6 +344,11 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::motion_sample && captured_kickoff_control) {
             if (event.held != 0 && event.held != 1) throw std::invalid_argument("Only observed control presentation motion is supported");
             state.control->motion_requested = event.held;
+        } else if (event.kind == ObservedClockEventKind::ball_mode_sample && input.phase == FieldSessionPhase::postgoal_opponent_action_wait) {
+            if (!((event.held == 192 && state.current.clock.ball_mode == 128) ||
+                  (event.held == 128 && state.current.clock.ball_mode == 192)))
+                throw std::invalid_argument("Only the observed opponent action ball-mode changes are supported");
+            state.current.clock.ball_mode = event.held;
         } else if (event.kind == ObservedClockEventKind::ball_mode_sample && input.phase == FieldSessionPhase::control_ready &&
                    input.score && input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 &&
                    (input.current.clock.remaining == 160 || input.current.clock.remaining == 159 || input.current.clock.remaining == 158) && input.current.clock.extra_time == 0 &&

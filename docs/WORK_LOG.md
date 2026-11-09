@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-10 - Opponent action3 reaches dispatch
+
+The captured startup continues through the opponent action3 presentation and dispatch. Phase394 accepts ten recorded random/travel pairs and three ordered ball-mode samples; explicitly acknowledging the observed script/mode reset reaches phase395 and matches original bank26:$8027. The original executes D193 with elapsed1; phase396 reuses keeper recovery and match-clock arithmetic, matching the original clock158 to157 and elapsed1 to2 before the next NMI. Three recorded random/travel pairs then reach random index50, and phase397 clears the observed carrier-cell marker at original $C606. Represented state, score/formation and retained selected target/cost match at each compared boundary. Private replays: ../Captain-Majid-analysis/post-kickoff-action3-handoff-20261110 and ../Captain-Majid-analysis/post-kickoff-action3-dispatch-20261110.
+
+A fresh Windows build and all62 registered checks passed; focused tests cover guards, replay rejection and snapshot roundtrip. The replay supplies original timing and explicitly acknowledges presentation; no autonomous AI, live presentation or complete playable match is established. The original later reaches ball flight, still unconnected. Overall progress unmeasured; next trace the ordered field movement after $C606 and compare the flight handoff. Suggested model GPT-6.1 Terra High.
+
+
 ## 2026-11-10 - Captured opponent action3 prepared in session
 
 The continuously connected startup now matches original E1B2 choice and E1CB preparation after the 1-0 kickoff: phase392 records the explicitly supplied action3/subtype0, recipient14 and target161, and phase393 uses the shared attack kernel to reproduce base13, cost60, move flags3 and power12. Both represented states and score/formation fields match captured original RAM. The existing serialized target context preserves recipient/cell/cost; both new phases roundtrip without changing old snapshot layouts. Focused tests cover guards, source preservation, truncated/missing context, invalid content and replay rejection. The original arithmetic also matched14 independent controlled outputs, as recorded below. Evidence: ../Captain-Majid-analysis/post-kickoff-action3-session-final-20261110 and ../Captain-Majid-analysis/post-kickoff-attack-kernel-20261110.py.

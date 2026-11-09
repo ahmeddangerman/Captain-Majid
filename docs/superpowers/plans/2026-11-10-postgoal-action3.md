@@ -26,3 +26,17 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Add guarded phases and target context validation; reuse the existing serialized target layout.
 - [x] Expose the transitions to the phase-session CLI and compare both original boundaries from private evidence.
 - [x] Run the full build and registered tests, and update the dated work log and handoff with comparison scope.
+
+## Task 2: Compare the captured action presentation handoff
+
+- [x] Add failing tests for entering the observed presentation wait, ordered ball-mode samples, explicit handoff and invalid/replayed operations.
+- [x] Add guarded saved phases for the observed wait and handoff; retain target and preparation context.
+- [x] Replay the captured random/travel events and presentation samples, comparing before and after the original bank26:$8027 boundary.
+- [x] Run the full build and registered tests, and record the verified boundary and remaining limitations.
+
+## Task 3: Compare the captured action clock and dispatch
+
+- [x] Add failing tests for the original one-tick clock, ordered waits and carrier-cell reset, including invalid or repeated operations.
+- [x] Reuse the shared keeper recovery and match-clock arithmetic in guarded saved phases.
+- [x] Replay the three captured random/travel pairs and compare the original pre-wait and $C606 boundaries.
+- [x] Run the full build and checks and update the dated handoff.

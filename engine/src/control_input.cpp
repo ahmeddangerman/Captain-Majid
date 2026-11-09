@@ -481,6 +481,40 @@ PhaseSessionState prepare_postgoal_opponent_action(const PhaseSessionState& inpu
  state.area_ai_target->cost=result.preparation.stamina_cost;
  state.phase=FieldSessionPhase::postgoal_opponent_action_prepared;validate_phase_session(state);return state;
 }
+PhaseSessionState begin_postgoal_opponent_action_wait(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_action_prepared)
+  throw std::invalid_argument("Post-goal action wait requires its prepared action");
+ auto state=input;state.phase=FieldSessionPhase::postgoal_opponent_action_wait;
+ validate_phase_session(state);return state;
+}
+PhaseSessionState acknowledge_postgoal_opponent_action(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_action_wait || input.current.clock.ball_mode!=192 ||
+    input.current.field.random_first!=191 || input.current.field.random_second!=238)
+  throw std::invalid_argument("Post-goal action handoff requires the observed presentation boundary");
+ auto state=input;state.current.clock.ball_mode=0;state.current.clock.script_flags=0;
+ state.phase=FieldSessionPhase::postgoal_opponent_action_handoff;validate_phase_session(state);return state;
+}
+PhaseSessionState advance_postgoal_opponent_clock(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_action_handoff)
+  throw std::invalid_argument("Post-goal opponent clock requires the observed action handoff");
+ auto state=input;state.current.field.elapsed=static_cast<std::uint8_t>(unsigned(state.current.field.elapsed)+1u);
+ const auto recovery=advance_keeper_recovery({state.current.field.keepers,state.current.shared_recovery_flags,state.current.shared_recovery_timer},1);
+ state.current.field.keepers=recovery.keepers;state.current.shared_recovery_flags=recovery.shared_flags;state.current.shared_recovery_timer=recovery.shared_timer;
+ const auto clock=advance_match_clock(state.current.clock,1,state.current.field.random_first);
+ if(clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Unsupported post-goal clock continuation");
+ state.current.clock=clock.state;state.phase=FieldSessionPhase::postgoal_opponent_clocked;
+ validate_phase_session(state);return state;
+}
+PhaseSessionState dispatch_postgoal_opponent_action(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_clocked || input.current.field.random_first!=204 || input.current.field.random_second!=253)
+  throw std::invalid_argument("Post-goal opponent dispatch requires the observed clock wait");
+ auto state=input;state.control->last_carrier_cell=0;state.phase=FieldSessionPhase::postgoal_opponent_dispatch;
+ validate_phase_session(state);return state;
+}
 PhaseSessionState capture_sampled_field_ai_choice(const PhaseSessionState& input, std::uint8_t action, std::uint8_t subtype) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ai_cell_decision && input.action && input.score && input.recovery && input.control && input.experience &&

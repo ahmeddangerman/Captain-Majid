@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - opponent action3 dispatch (2026-11-10):** One captured startup matches through goal, opposing kickoff, supplied action3 preparation, presentation acknowledgement and dispatch at $C606. The later field movement and flight remain unconnected. Autonomous timing/AI and a complete playable match remain unsupported. Windows build and all62 registered checks passed; overall progress unmeasured.
+
+
 **Latest - captured opponent action3 (2026-11-10):** One startup matches through the 1-0 goal, opposing kickoff and a supplied action3 choice/preparation. Later action presentation and routing are original-only; autonomous AI/timing and a complete playable match remain unsupported. Windows build and all62 registered checks passed; overall progress unmeasured.
 
 

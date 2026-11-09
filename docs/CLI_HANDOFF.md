@@ -1,5 +1,10 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: opponent action3 dispatch
+
+The captured 1-0 startup now matches through opponent action3's presentation handoff, one-tick clock and dispatch at original $C606. Ten recorded random/travel pairs and three ball-mode samples lead to explicitly acknowledged bank26:$8027; shared clock/recovery arithmetic reaches clock157, elapsed2; three more pairs and the carrier-cell reset match $C606, random index50. The selected target14/cell161 and cost60 remain saved. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-handoff-20261110 and ../Captain-Majid-analysis/post-kickoff-action3-dispatch-20261110. Original later reaches flight but native field movement/flight is unconnected. Presentation, AI and timing remain supplied, and a complete playable match is unsupported. Fresh Windows build/all62 checks passed. Overall progress unmeasured; next trace field movement after $C606. Suggested model GPT-6.1 Terra High.
+
+
 ## Current stopping point - 2026-11-10: captured opponent action3 prepared
 
 After the matched 1-0 goal and opponent kickoff, explicitly supplied action3/subtype0/recipient14/target161 is saved in phase392 and matches original E1B2. Phase393 reuses the shared attack kernel and matches E1CB: base13, cost60, flags3, power12. The target/cost survive reload; original/native represented fields and score/formation match both boundaries. Private replay: ../Captain-Majid-analysis/post-kickoff-action3-session-final-20261110. The original-only later route reaches bank26:$8027, $C606 and $E773; action presentation, routing, autonomous AI/timing and a complete playable match remain unsupported. Full Windows build and all62 checks passed. Overall progress unmeasured; next compare action3 presentation and handoff. Suggested model GPT-6.1 Terra High.
