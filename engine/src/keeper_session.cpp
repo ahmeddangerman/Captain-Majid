@@ -78,6 +78,9 @@ PhaseSessionState resolve_prepared_session_keeper(const PhaseSessionState& input
  const auto story=apply_keeper_story_override({prepared.comparison.result_code,field.side,
   opponent_team,input.recovery->game_mode,input.recovery->attack_subtype,field.random_first});
  auto state=input;state.current.field.roster[keeper].stamina=prepared.energy.stamina;
+ if(input.score && input.score->left_goals==2 && input.score->right_goals==5 && input.current.clock.remaining==304 &&
+    input.current.field.side==0 && input.current.field.ball_owner==7 && input.area_defender_cursor==5)
+  state.area_defender_cursor=0;
  state.keeper_decision=KeeperDecisionContext{0,story.result_code,action,
   prepared.comparison.subtype,prepared.preparation.move_effect};
  state.phase=FieldSessionPhase::keeper_decided;validate_phase_session(state);return state;

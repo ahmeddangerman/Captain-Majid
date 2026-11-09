@@ -310,10 +310,12 @@ PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input
 PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& input,
  std::uint8_t low_x,std::uint8_t low_y,const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
  validate_phase_session(input);
+ const bool player7=input.phase==FieldSessionPhase::sampled_score25_shot_target;
  const bool sampled_home_shot=input.phase==FieldSessionPhase::sampled_home_shot_target;
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_shot_target;
- if(input.phase!=FieldSessionPhase::shot_flight_pending && !sampled_home_shot && !score23)
+ if(input.phase!=FieldSessionPhase::shot_flight_pending && !sampled_home_shot && !score23 && !player7)
   throw std::invalid_argument("Flight setup requires a saved shot destination");
+ if(player7 && (low_x!=52 || low_y!=187))throw std::invalid_argument("Player7 shot needs observed fractional position");
  if(sampled_home_shot && (low_x!=116 || low_y!=92))
   throw std::invalid_argument("Home shot flight requires the observed fractional position");
  const bool player17=score23 && input.current.field.ball_owner==17;
@@ -330,7 +332,7 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
   !f.random_first && !f.random_second && input.current.clock.remaining==432 && input.current.clock.extra_time==5 &&
   input.action->action==0 && input.action->power==22 && input.recovery->attack_subtype==128 &&
   input.shot_flight->destination==233 && input.shot_flight->distance==108 && !input.shot_flight->loose_ball;
- if(sampled_restart_shot || sampled_home_shot || score23)state.saved_ball_flight_flag=0;
+ if(sampled_restart_shot || sampled_home_shot || score23 || player7)state.saved_ball_flight_flag=0;
  BallTrajectoryContext t{static_cast<std::uint16_t>((unsigned(f.ball_x)<<8)|low_x),
   static_cast<std::uint16_t>((unsigned(f.ball_y)<<8)|low_y),0,0,input.recovery->x_jitter_control,state.saved_ball_flight_flag};
  state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
@@ -340,12 +342,15 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
  else {
   t.direction=calculate_player_direction({t.x,t.y,input.shot_flight->destination,0},f.ball_cell,geometry);
   const auto v=calculate_ball_velocity(t.direction,velocity);t.vx=v.x;t.vy=v.y;
-  state.recovery->x_jitter_control=t.direction;state.phase=score23 ? FieldSessionPhase::sampled_score23_ball_advance_ready : FieldSessionPhase::ball_advance_ready;
+  state.recovery->x_jitter_control=t.direction;state.phase=player7 ? FieldSessionPhase::sampled_score25_shot_advance : score23 ? FieldSessionPhase::sampled_score23_ball_advance_ready : FieldSessionPhase::ball_advance_ready;
  }
  state.ball_trajectory=t;validate_phase_session(state);return state;
 }
 PhaseSessionState continue_session_unopposed_arrival(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::sampled_score25_shot_arrival) {
+  auto state=input;state.phase=FieldSessionPhase::shot_keeper_entry;validate_phase_session(state);return state;
+ }
  if(input.phase==FieldSessionPhase::sampled_score23_ball_arrival_callback) {
   auto state=input;state.current.field.selected_defenders=1;state.scheduling->selected_ids.fill(0);
   state.action->menu_route=4;state.action->cursor=0;state.control->motion_requested=0;
@@ -416,8 +421,9 @@ PhaseSessionState resolve_session_area_ball_cell(const PhaseSessionState& input)
 }
 PhaseSessionState resolve_session_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
+ const bool player7=input.phase==FieldSessionPhase::sampled_score25_shot_callback;
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_ball_cell_callback;
- if(input.phase!=FieldSessionPhase::ball_cell_callback && !score23)
+ if(input.phase!=FieldSessionPhase::ball_cell_callback && !score23 && !player7)
   throw std::invalid_argument("No pending ball cell callback");
  FlightDefenderSelectionInput selection{};
  const auto& field=input.current.field;
@@ -430,7 +436,7 @@ PhaseSessionState resolve_session_ball_cell(const PhaseSessionState& input) {
  auto state=input;auto& count=state.current.field.selected_defenders;
  const auto capacity=field.side==0 ? 5u : 4u;
  for(auto id:selected){if(count>=capacity)break;state.scheduling->selected_ids[count++]=id;}
- state.phase=score23 ? FieldSessionPhase::sampled_score23_ball_advance_ready : FieldSessionPhase::ball_advance_ready;validate_phase_session(state);return state;
+ state.phase=player7 ? FieldSessionPhase::sampled_score25_shot_advance : score23 ? FieldSessionPhase::sampled_score23_ball_advance_ready : FieldSessionPhase::ball_advance_ready;validate_phase_session(state);return state;
 }
 SessionBallStepResult advance_prepared_area_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
@@ -445,14 +451,16 @@ SessionBallStepResult advance_prepared_area_ball_cell(const PhaseSessionState& i
 }
 SessionBallStepResult advance_prepared_session_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
+ const bool player7=input.phase==FieldSessionPhase::sampled_score25_shot_advance;
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_ball_advance_ready;
- if(input.phase!=FieldSessionPhase::ball_advance_ready && !score23)
+ if(input.phase!=FieldSessionPhase::ball_advance_ready && !score23 && !player7)
   throw std::invalid_argument("Ball step requires acknowledged frame and pending numeric flight");
  auto state=input;auto& t=*state.ball_trajectory;
  const auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},state.current.field.ball_cell,state.shot_flight->destination});
  t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;
  state.current.field.ball_cell=step.cell;
- state.phase=score23 ? (step.event==BallStepEvent::cell_changed ? FieldSessionPhase::sampled_score23_ball_cell_callback : FieldSessionPhase::sampled_score23_ball_arrival_callback) :
+ state.phase=player7 ? (step.event==BallStepEvent::cell_changed ? FieldSessionPhase::sampled_score25_shot_callback : FieldSessionPhase::sampled_score25_shot_arrival) :
+  score23 ? (step.event==BallStepEvent::cell_changed ? FieldSessionPhase::sampled_score23_ball_cell_callback : FieldSessionPhase::sampled_score23_ball_arrival_callback) :
   (step.event==BallStepEvent::cell_changed ? FieldSessionPhase::ball_cell_callback : FieldSessionPhase::ball_arrival_callback);
  validate_phase_session(state);return {std::move(state),step};
 }

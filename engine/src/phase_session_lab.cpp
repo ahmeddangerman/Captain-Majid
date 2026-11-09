@@ -189,6 +189,10 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::sampled_score25_dispatch_clock: return "sampled player7 dispatch clock";
     case captain::FieldSessionPhase::sampled_score25_pass_handoff: return "sampled player7 pass handoff";
     case captain::FieldSessionPhase::sampled_score25_pass_target_captured: return "sampled player7 pass target";
+    case captain::FieldSessionPhase::sampled_score25_shot_target: return "sampled player7 shot target";
+    case captain::FieldSessionPhase::sampled_score25_shot_advance: return "sampled player7 shot flight";
+    case captain::FieldSessionPhase::sampled_score25_shot_callback: return "sampled player7 shot callback";
+    case captain::FieldSessionPhase::sampled_score25_shot_arrival: return "sampled player7 shot arrival";
     case captain::FieldSessionPhase::sampled_player3_contact_clock: return "sampled player3 contact clock advanced";
     case captain::FieldSessionPhase::sampled_player3_dispatch_clock: return "sampled player3 pass dispatch clock advanced";
     case captain::FieldSessionPhase::sampled_player3_pass_handoff: return "sampled player3 pass handoff";
