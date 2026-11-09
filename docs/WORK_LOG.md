@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Reverified shared defender calculations against original routines
+
+Using the private verified original ROM and current Windows build, reran four existing non-scenario-specific original CPU comparison harnesses. `verify_field_defender_preparation.py` matched16,064 cases for selected skill/index, strength, effect, cost and player pointer. `verify_field_player_profiles.py` matched91,392 synthetic ordinary/alternate profile-selection and preparation fixtures. `verify_field_comparison_selection.py` matched550 selection, arithmetic and classification fixtures. `verify_defender_contact.py` matched all eight outputs for19,200 cases, with6,511 special,4,584 weakened,3,093 zero-strength and1,111 loss-branch cases. These are controlled constructed routine inputs, not proof of which choices or profiles occur in a live match. No engine code changed; all53 registered CTest tests passed at the preceding checkpoint. Original ROM and any derived private data remain outside Git.
+
+The numerical/profile routines have broader evidence than the bounded phase317 encounter replay; arbitrary AI decisions, live presentation, hardware timing, authentic initialization and a complete playable match remain unsupported. Overall progress is unmeasured. Next continue evidence-backed verification and shared work without expanding to new score-specific scenarios. Suggested model: Terra High.
+
 ## 2026-11-09 - Replay integrity safeguards
 
 Hardened the existing phase317 replay to reject truncated, invalid-magic and unsupported-layout snapshots before reading fields; improved pending-contact field names; tested that output cannot be created inside the checkout or overwrite a nonempty evidence directory. An optional `--expected-cases` rejects an incomplete input set before any output is created. Focused tests cover these safeguards and replay diagnostics. Both established replays remain unchanged at576 matching boundaries for24 cases and1,152 for48; private outputs: ../Captain-Majid-analysis/e2e-phase317-25-complete and ../Captain-Majid-analysis/e2e-phase317-36-complete. Two separate earlier runs generated exactly matching SHA-256 hashes for all552 and1,104 native checkpoints respectively. All53 Windows CTest checks passed.
