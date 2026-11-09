@@ -1,5 +1,8 @@
 # Evidence-fed field-round comparison
 
+The guarded recovered goal-area shot accepts an explicit `U 1` attack-subtype sample during the confirmed menu wait. This records the observed volley change and does not infer the original presentation/input logic that caused it. See CLI_HANDOFF.
+
+
 A guarded blocked-shot recovery now uses the same 22-slot event-fed field movement after explicit original-backed ball jitter. It requires captured random/travel order and leaves the stale original ball-cell byte untouched. A subsequent nearest-player selection is compared separately; see CLI_HANDOFF for bounds.
 
 

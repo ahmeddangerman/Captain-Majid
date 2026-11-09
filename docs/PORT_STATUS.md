@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - goal-area volley preparation (2026-11-09):** One captured startup now matches48 area-menu polls through an explicitly sampled volley subtype and profile-based attack preparation. Later clocks, goalkeeper outcome and goal remain original-only for this continuation. All62 Windows tests and both phase317 replay sets passed; overall progress unmeasured.
+
+
 **Latest - recovered goal-area menu (2026-11-09):** One captured startup now matches through blocked-shot recovery, both opponent-area defender scans and the route1 menu. Keeper entry arithmetic matched12,320 controlled original cases, but a selected keeper and menu input remain unsupported. All62 Windows tests and both phase317 replay sets passed; overall progress unmeasured.
 
 

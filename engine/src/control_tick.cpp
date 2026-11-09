@@ -267,10 +267,10 @@ static std::vector<ObservedClockEvent> read_observed_events(std::istream& input,
                 throw std::invalid_argument("Invalid observed clock travel event");
             events.push_back({ObservedClockEventKind::travel, {}, static_cast<std::uint8_t>(held),
                               static_cast<std::uint16_t>(low | (high << 8))});
-        } else if ((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "P") && !milestones) {
+        } else if ((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "U" || token == "P") && !milestones) {
             unsigned value;
             if (!(input >> value) || value > 255) throw std::invalid_argument("Invalid observed presentation sample");
-            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : token == "D" ? ObservedClockEventKind::display_sample : token == "L" ? ObservedClockEventKind::carrier_cell_sample : token == "C" ? ObservedClockEventKind::defender_cursor_sample : ObservedClockEventKind::field_player,
+            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : token == "D" ? ObservedClockEventKind::display_sample : token == "L" ? ObservedClockEventKind::carrier_cell_sample : token == "C" ? ObservedClockEventKind::defender_cursor_sample : token == "U" ? ObservedClockEventKind::attack_subtype_sample : ObservedClockEventKind::field_player,
                               {}, static_cast<std::uint8_t>(value)});
         } else if (token == "S" && milestones) events.push_back({ObservedClockEventKind::schedule});
         else if (token == "E" && milestones) events.push_back({ObservedClockEventKind::energy});
@@ -299,7 +299,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
          input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::ordinary_return_contact_pending &&
          input.phase != FieldSessionPhase::ordinary_return_action_menu && input.phase != FieldSessionPhase::ordinary_return_shot_choice && input.phase != FieldSessionPhase::ordinary_return_shot_prepared &&
          input.phase != FieldSessionPhase::ordinary_return_shot_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_contact && input.phase != FieldSessionPhase::ordinary_return_shot_dispatch &&
-         input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival && input.phase != FieldSessionPhase::ordinary_return_shot_defenders_pending && input.phase != FieldSessionPhase::ordinary_return_shot_flight_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_blocked_clocked && input.phase != FieldSessionPhase::ordinary_return_goal_area_defenders && input.phase != FieldSessionPhase::ordinary_return_goal_area_menu) || !input.control)
+         input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival && input.phase != FieldSessionPhase::ordinary_return_shot_defenders_pending && input.phase != FieldSessionPhase::ordinary_return_shot_flight_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_blocked_clocked && input.phase != FieldSessionPhase::ordinary_return_goal_area_defenders && input.phase != FieldSessionPhase::ordinary_return_goal_area_menu && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_choice) || !input.control)
         throw std::invalid_argument("Observed NMI sequence requires a supported contact, menu or pass-target boundary");
     auto state = input;
     auto index = initial_random_index;
@@ -325,6 +325,9 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::defender_cursor_sample && input.phase == FieldSessionPhase::ordinary_return_shot_prepared) {
             if(event.held!=0)throw std::invalid_argument("Only the observed defender cursor reset is supported");
             state.area_defender_cursor = event.held;
+        } else if (event.kind == ObservedClockEventKind::attack_subtype_sample && input.phase == FieldSessionPhase::ordinary_return_goal_area_shot_choice) {
+            if(event.held!=1)throw std::invalid_argument("Only the observed goal-area shot subtype is supported");
+            state.recovery->attack_subtype=event.held;
         } else throw std::invalid_argument("Observed NMI sequence contains an unsupported event for this phase");
     }
     validate_phase_session(state);

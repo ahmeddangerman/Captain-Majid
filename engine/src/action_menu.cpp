@@ -399,6 +399,18 @@ ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uin
     result.presentation.push_back({ControlPresentationKind::sprite, icon});
     return result;
 }
+ActionMenuResult poll_ordinary_return_goal_area_menu(const PhaseSessionState& input,std::uint8_t pressed,const ActionMenuContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_goal_area_menu)
+  throw std::invalid_argument("Recovered goal-area menu requires its saved poll boundary");
+ auto normalized=input;normalized.phase=FieldSessionPhase::human_action_menu;normalized.area_contact.reset();
+ normalized.shot_flight.reset();normalized.ball_trajectory.reset();normalized.area_sequence_result=255;
+ const auto polled=poll_human_action_menu(normalized,pressed,content);
+ if(polled.state.action->action!=0)throw std::invalid_argument("Only the observed ordinary goal-area shot is supported");
+ ActionMenuResult result{input};result.state.action=polled.state.action;result.confirmed=polled.confirmed;result.presentation=polled.presentation;
+ result.state.phase=polled.confirmed ? FieldSessionPhase::ordinary_return_goal_area_shot_choice : FieldSessionPhase::ordinary_return_goal_area_menu;
+ validate_phase_session(result.state);return result;
+}
 ActionMenuResult poll_ordinary_return_action_menu(const PhaseSessionState& input,std::uint8_t pressed,const ActionMenuContent& content) {
     validate_phase_session(input);
     if(input.phase!=FieldSessionPhase::ordinary_return_action_menu)
@@ -413,6 +425,21 @@ ActionMenuResult poll_ordinary_return_action_menu(const PhaseSessionState& input
     validate_phase_session(result.state);return result;
 }
 
+SessionAttackResult prepare_ordinary_return_goal_area_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_goal_area_shot_choice || input.recovery->attack_subtype!=1 || input.recovery->ball_variant!=1)
+  throw std::invalid_argument("Goal-area shot preparation requires the captured volley and ball variant");
+ const auto& field=input.current.field;const auto& player=field.roster[field.ball_owner];
+ const auto prepared=prepare_attacking_action({{field.ball_owner,player.type,static_cast<std::uint8_t>(player.stamina),
+  static_cast<std::uint8_t>(player.stamina>>8),player.level},0,1,1,field.side,field.selected_defenders,
+  field.random_first,field.random_second,false},players,attack);
+ const auto remaining=static_cast<std::uint16_t>(unsigned(player.stamina)-prepared.preparation.stamina_cost);
+ if((remaining&32768u) || prepared.action_power.subtype!=1)
+  throw std::invalid_argument("Unavailable or unsupported goal-area volley preparation");
+ auto state=input;state.current.field.roster[field.ball_owner].stamina=prepared.energy.stamina;
+ state.action->power=prepared.action_power.power;state.action->move_effect=prepared.preparation.move_effect;state.action->move_flags=prepared.move_flags;
+ state.phase=FieldSessionPhase::ordinary_return_goal_area_shot_prepared;validate_phase_session(state);return {std::move(state),prepared};
+}
 SessionAttackResult prepare_session_basic_shot(const PhaseSessionState& input,
     const FieldPlayerProfiles& players, const FieldDefenseContent& attack) {
     validate_phase_session(input);

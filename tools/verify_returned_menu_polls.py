@@ -94,6 +94,13 @@ def main():
     parser.add_argument('--area-defense-index',type=int)
     parser.add_argument('--area-menu-index',type=int)
     parser.add_argument('--keeper-cells',type=Path)
+    parser.add_argument('--area-poll-trace-directory',type=Path)
+    parser.add_argument('--area-poll-entry-index',type=int)
+    parser.add_argument('--expected-area-polls',type=int)
+    parser.add_argument('--volley-trace-directory',type=Path)
+    parser.add_argument('--volley-entry-index',type=int)
+    parser.add_argument('--volley-prepare-index',type=int)
+    parser.add_argument('--volley-prepared-index',type=int)
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -542,7 +549,86 @@ def main():
         compare_shot_flight(destination.read_bytes(),area_ram(menu),379,'returned.goal_area.menu')
         if index!=area_ram(menu)[0xe1]:raise ValueError('boundary returned.goal_area.menu, random.index: original and native differ')
         source=destination
-    print(f'Matched {count} returned menu polls through {"opponent goal-area menu" if args.area_menu_index is not None else "blocked-shot recovered owner" if args.owner_positioned_index is not None else "blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    area_poll_args=(args.area_poll_trace_directory,args.area_poll_entry_index,args.expected_area_polls)
+    if any(value is not None for value in area_poll_args):
+        if any(value is None for value in area_poll_args) or args.area_menu_index is None or args.expected_area_polls<1:
+            raise ValueError('boundary returned.goal_area.poll: menu and all polling trace inputs are required')
+        poll_lines,poll_pcs,poll_ram=trace_data(args.area_poll_trace_directory)
+        entry=args.area_poll_entry_index
+        if not 0<=entry<len(poll_pcs) or poll_pcs[entry]!='D5E5':raise ValueError('boundary returned.goal_area.poll: expected menu entry')
+        original=area_ram(args.area_menu_index);followup=poll_ram(entry)
+        for address,(value,wanted) in enumerate(zip(followup,original)):
+            if value!=wanted:raise ValueError(f'boundary returned.goal_area.poll_handoff, RAM[0x{address:03x}]: follow-up {value}, menu {wanted}')
+        previous=entry;area_count=0;confirmed=False
+        for at in range(entry+1,len(poll_pcs)):
+            if poll_pcs[at]!='D5EA' or at<=previous:continue
+            label=f'returned.goal_area.poll[{area_count+1}]'
+            rows,last=menu_wait_events(poll_lines,poll_pcs,poll_ram,previous,at)
+            if rows:
+                operation+=1;events=output/f'{operation:03d}-goal-poll-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+                waiting=output/f'{operation:03d}-goal-poll-wait.cmjsession'
+                run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+                if run.returncode:raise RuntimeError(f'boundary {label}.wait: {run.stderr.strip()}')
+                indices=re.findall(r'final random index (\d+);',run.stdout)
+                if indices!=[str(poll_ram(last)[0xe1])]:raise ValueError(f'boundary {label}.wait, random.index: original and native differ')
+                source=waiting;index=int(indices[0])
+            compare_shot_flight(source.read_bytes(),poll_ram(at),379,label+'.input')
+            operation+=1;destination=output/f'{operation:03d}-goal-poll.cmjsession'
+            run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--menu-input',str(poll_ram(at)[0x1e]),'--capture',str(destination)],capture_output=True,text=True,timeout=30)
+            if run.returncode:raise RuntimeError(f'boundary {label}: {run.stderr.strip()}')
+            end=next(j for j in range(at+1,len(poll_pcs)) if poll_pcs[j] in ('D5E5','D67C','D5EA'))
+            if poll_pcs[end]=='D5EA':raise ValueError(f'boundary {label}: missing post-poll boundary')
+            rows,last=menu_wait_events(poll_lines,poll_pcs,poll_ram,at,end) if any(poll_pcs[j]=='C9C5' for j in range(at+1,end)) else ([],at)
+            if rows:
+                operation+=1;events=output/f'{operation:03d}-goal-poll-after-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+                waiting=output/f'{operation:03d}-goal-poll-after.cmjsession'
+                run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(destination),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+                if run.returncode:raise RuntimeError(f'boundary {label}.after: {run.stderr.strip()}')
+                indices=re.findall(r'final random index (\d+);',run.stdout)
+                if indices!=[str(poll_ram(last)[0xe1])]:raise ValueError(f'boundary {label}.after, random.index: original and native differ')
+                destination=waiting;index=int(indices[0])
+            phase=380 if poll_pcs[end]=='D67C' else 379
+            compare_shot_flight(destination.read_bytes(),poll_ram(end),phase,label+'.result')
+            if index!=poll_ram(end)[0xe1]:raise ValueError(f'boundary {label}.result, random.index: original and native differ')
+            source=destination;previous=end;area_count+=1
+            if phase==380:confirmed=True;break
+        if not confirmed or area_count!=args.expected_area_polls:
+            raise ValueError(f'Expected {args.expected_area_polls} goal-area polls through shot confirmation; got {area_count}, confirmed={confirmed}')
+    volley_args=(args.volley_trace_directory,args.volley_entry_index,args.volley_prepare_index,args.volley_prepared_index)
+    if any(value is not None for value in volley_args):
+        if any(value is None for value in volley_args) or args.expected_area_polls is None:
+            raise ValueError('boundary returned.goal_area.volley: confirmed menu and all volley trace inputs are required')
+        volley_lines,volley_pcs,volley_ram=trace_data(args.volley_trace_directory)
+        entry,prepare,prepared=volley_args[1:]
+        if not 0<=entry<prepare<prepared<len(volley_pcs) or [volley_pcs[i] for i in (entry,prepare,prepared)]!=['D67C','8298','82A0'] or any(volley_ram(i)[0x24]!=26 for i in (entry,prepare,prepared)):
+            raise ValueError('boundary returned.goal_area.volley: unsupported original ordering or bank')
+        original=poll_ram(previous);followup=volley_ram(entry)
+        for address,(value,wanted) in enumerate(zip(followup,original)):
+            if value!=wanted:raise ValueError(f'boundary returned.goal_area.volley_handoff, RAM[0x{address:03x}]: follow-up {value}, menu {wanted}')
+        if any(volley_pcs[i]=='C9C5' for i in range(prepare+1,prepared)):
+            raise ValueError('boundary returned.goal_area.volley: unexpected random event during preparation')
+        rows,last=menu_wait_events(volley_lines,volley_pcs,volley_ram,entry,prepare)
+        points=[i for i in range(entry+1,prepare) if volley_pcs[i] in ('C9C5','E3CA')]
+        if len(points)!=len(rows):raise ValueError('boundary returned.goal_area.volley_wait: ambiguous subtype ordering')
+        subtype=source.read_bytes()[292];ordered=[]
+        for row,point in zip(rows,points):
+            observed=volley_ram(point)[0x43c]
+            if observed!=subtype:subtype=observed;ordered.append(f'U {subtype}')
+            ordered.append(row)
+        operation+=1;events=output/f'{operation:03d}-volley-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(ordered)+'\n')
+        waiting=output/f'{operation:03d}-volley-wait.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_wait: {run.stderr.strip()}')
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(volley_ram(prepare)[0xe1])]:raise ValueError('boundary returned.goal_area.volley_wait, random.index: original and native differ')
+        index=int(indices[0]);compare_shot_flight(waiting.read_bytes(),volley_ram(prepare),380,'returned.goal_area.volley_wait')
+        operation+=1;destination=output/f'{operation:03d}-volley-prepared.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--prepare-basic-shot','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_prepare: {run.stderr.strip()}')
+        compare_shot_flight(destination.read_bytes(),volley_ram(prepared),381,'returned.goal_area.volley_prepare')
+        if index!=volley_ram(prepared)[0xe1]:raise ValueError('boundary returned.goal_area.volley_prepare, random.index: original and native differ')
+        source=destination
+    print(f'Matched {count} returned menu polls through {"opponent goal-area volley preparation" if args.volley_prepared_index is not None else "opponent goal-area shot confirmation" if args.expected_area_polls is not None else "opponent goal-area menu" if args.area_menu_index is not None else "blocked-shot recovered owner" if args.owner_positioned_index is not None else "blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

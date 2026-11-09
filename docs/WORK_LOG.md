@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Recovered goal-area volley preparation
+
+The controlled startup chain matches48 route1 menu polls, shot confirmation, explicit observed `U 1` volley subtype and shared attack preparation: player8 stamina416 to326, cost90, power11 and random index7. Original later reaches a goalkeeper comparison and goal, not yet connected or native-compared. The independent banked attacker oracle passed3,882 cases; full Windows build, all62 tests and phase317 replays (576/1152 boundaries) passed. Evidence: ../Captain-Majid-analysis/live-return-area-volley-prepare-final-20261109. Overall progress unmeasured; next compare attack clocks and goalkeeper handoff; suggested model Terra High.
+
+
 ## 2026-11-09 - Recovered opponent goal-area menu
 
 The startup replay now matches both goal-area defender scans, the no-keeper branch and route1 menu after152 captured NMI/travel pairs; player8 owns the ball and final random index is203. The original keeper entry rule was checked against12,320 controlled original cases using private extracted content. Goalkeeper-selected continuations and menu input remain guarded. Full Windows build, all62 tests and phase317 replay sets (576/1152 boundaries) passed. Private evidence: ../Captain-Majid-analysis/live-return-shot-area-menu-final-20261109 and ../Captain-Majid-analysis/goal-area-keeper-original-check-final-20261109. Overall progress unmeasured; next trace goal-area menu input and keeper-selected routing; suggested model Terra High.

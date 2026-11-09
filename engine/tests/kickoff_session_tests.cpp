@@ -1609,6 +1609,23 @@ int main(){try{using namespace captain;
  const auto recovered_area_menu=open_ordinary_return_goal_area_menu(recovered_area_resolved);
  check(recovered_area_menu.action->cursor==0 && recovered_area_menu.action->menu_route==1 &&
        recovered_area_menu.current.field.ball_owner==8,"Recovered opponent goal-area menu preserves route and owner while resetting the cursor");
+ auto area_menu_content=pass_menu_content;area_menu_content.directions[1][0]=0;
+ const auto selected_area_shot=poll_ordinary_return_goal_area_menu(recovered_area_menu,1,area_menu_content);
+ check((selected_area_shot.state.action->cursor&128u) && selected_area_shot.state.action->action==0 &&
+       selected_area_shot.state.action->menu_route==1,"Goal-area menu selects its route-specific ordinary shot");
+ const auto confirmed_area_shot=poll_ordinary_return_goal_area_menu(selected_area_shot.state,128,area_menu_content);
+ check(confirmed_area_shot.confirmed && confirmed_area_shot.state.action->action==0 &&
+       confirmed_area_shot.state.action->menu_route==1,"Goal-area menu confirms its selected shot without losing route context");
+ const auto area_shot_subtype=advance_observed_nmi_events(confirmed_area_shot.state,0,{{ObservedClockEventKind::attack_subtype_sample,{},1}});
+ check(area_shot_subtype.state.recovery->attack_subtype==1 && confirmed_area_shot.state.recovery->attack_subtype==0,
+       "Goal-area shot accepts its captured volley subtype without mutating the source");
+ rejects([&]{advance_observed_nmi_events(confirmed_area_shot.state,0,{{ObservedClockEventKind::attack_subtype_sample,{},2}});});
+ auto volley_fixture=area_shot_subtype.state;volley_fixture.current.field.roster[8].stamina=500;
+ FieldDefenseContent volley_content{};volley_content.skill_selectors[0][1]=1;
+ volley_content.moves[0]={{0,0,80,0},{0,0,90,0}};volley_content.strength_curve.fill(11);
+ const auto area_shot_prepared=prepare_ordinary_return_goal_area_shot(volley_fixture,sampled_attack_profiles,volley_content);
+ check(area_shot_prepared.state.current.field.roster[8].stamina==410 && area_shot_prepared.state.recovery->attack_subtype==1 &&
+       area_shot_prepared.state.action->menu_route==1,"Goal-area shot uses the captured volley and variant-specific preparation");
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});

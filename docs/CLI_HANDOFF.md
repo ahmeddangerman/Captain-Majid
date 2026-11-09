@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: goal-area volley prepared
+
+The captured startup now replays48 opponent goal-area menu polls and confirms a shot. The original changes its attack subtype from0 to1 during the subsequent wait; an explicit `U 1` observation records this volley rather than deriving an unverified input/presentation rule. The shared profiled attack preparation with situation1/subtype1 then matches $82A0: player8 stamina416 to326, cost90, power11 and random index7. Route1 is retained. Other goal-area actions, subtypes and special outcomes remain guarded. The original later reaches goalkeeper comparison and a goal, but those later states are not yet connected or native-compared here.
+
+General: reused menu polling and attack preparation; the banked attacker oracle independently matches3,882 constructed cases. Scenario-specific: the captured sequence, event order and volley sample. Full Windows build and all62 tests passed; phase317 replay sets matched576/1152 boundaries. AI, live timing/presentation, goalkeeper outcome, scoring in this continuation and a complete playable match remain unverified. Evidence: ../Captain-Majid-analysis/live-return-area-volley-prepare-final-20261109 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-area-shot-preparation. Next compare the unopposed attack clocks and direct goalkeeper handoff. Overall progress unmeasured; suggested model Terra High.
+
+
 ## Current stopping point - 2026-11-09: recovered opponent goal-area menu
 
 The captured startup now matches from the returned action menu through defended shot, blocked recovery, player8 ownership and the opponent goal-area menu. After recovery the original first scans stale cell234 (selecting player15), then replaces that prefix with a radius10 scan and applies the opposing-keeper entry check; this run has no nearby defender or selected keeper. The final menu boundary has route1, owner8, cursor0 and random index203 after152 captured random/travel pairs. Phases377-379 keep the recorded context and only open the menu when no defenders or keeper remain. A selected goalkeeper continuation rejects; menu input, live presentation and autonomous timing are not yet connected.

@@ -186,6 +186,8 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::ordinary_return_recovered_goal_area: return "ordinary returned recovered goal area";
     case captain::FieldSessionPhase::ordinary_return_goal_area_defenders: return "ordinary returned goal area defenders";
     case captain::FieldSessionPhase::ordinary_return_goal_area_menu: return "ordinary returned goal area menu";
+    case captain::FieldSessionPhase::ordinary_return_goal_area_shot_choice: return "ordinary returned goal area shot choice";
+    case captain::FieldSessionPhase::ordinary_return_goal_area_shot_prepared: return "ordinary returned goal area shot prepared";
     case captain::FieldSessionPhase::sampled_human_pass_empty_confirmed: return "sampled empty pass target confirmed";
     case captain::FieldSessionPhase::sampled_human_pass_cancel_pending: return "sampled human pass cancel pending";
     case captain::FieldSessionPhase::sampled_human_pass_prepared: return "sampled human pass prepared";
@@ -823,7 +825,9 @@ void open_action_menu(captain::PhaseSessionState& state, const captain::ShotCont
 }
 void menu_input(captain::PhaseSessionState& state, const captain::ShotContent& content, unsigned pressed) {
     if (!content.action_menu) throw std::invalid_argument("Action menu polling requires version9 menu content");
-    const auto result = state.phase==captain::FieldSessionPhase::ordinary_return_action_menu ?
+    const auto result = state.phase==captain::FieldSessionPhase::ordinary_return_goal_area_menu ?
+        captain::poll_ordinary_return_goal_area_menu(state,static_cast<std::uint8_t>(pressed),*content.action_menu) :
+        state.phase==captain::FieldSessionPhase::ordinary_return_action_menu ?
         captain::poll_ordinary_return_action_menu(state,static_cast<std::uint8_t>(pressed),*content.action_menu) :
         captain::poll_human_action_menu(state, static_cast<std::uint8_t>(pressed), *content.action_menu);
     state = result.state;
@@ -958,7 +962,9 @@ void clearance_race_file(captain::PhaseSessionState& state,const captain::ShotCo
 }
 void prepare_basic_shot(captain::PhaseSessionState& state, const captain::ShotContent& content) {
     if (!content.action_menu) throw std::invalid_argument("Shot preparation requires version9 menu content");
-    const auto result = captain::prepare_session_basic_shot(state, content.field_players, content.attack);
+    const auto result = state.phase==captain::FieldSessionPhase::ordinary_return_goal_area_shot_choice ?
+        captain::prepare_ordinary_return_goal_area_shot(state,content.field_players,content.attack) :
+        captain::prepare_session_basic_shot(state, content.field_players, content.attack);
     state = result.state;
     std::cout << "Prepared ordinary shot | stamina " << state.current.field.roster[state.current.field.ball_owner].stamina
               << " | raw cost " << result.preparation.preparation.stamina_cost
