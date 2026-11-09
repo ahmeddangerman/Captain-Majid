@@ -25,6 +25,17 @@ PhaseSessionState capture_sampled_player5_defense_choices(const PhaseSessionStat
  const std::array<std::uint8_t,5>& actions,const std::array<std::uint8_t,5>& subtypes) {
  validate_phase_session(input);
  const auto& f=input.current.field;
+ if(input.phase==FieldSessionPhase::attack_choice_pending && !input.human_defense_choices && input.score && input.scheduling &&
+    input.score->left_goals==2 && input.score->right_goals==5 && input.score->kickoff==4 && input.current.clock.remaining==311 &&
+    input.current.clock.extra_time==13 && f.side==0 && f.ball_owner==7 && f.ball_x==117 && f.ball_y==139 && f.ball_cell==103 &&
+    f.roster[7].type==23 && f.roster[7].stamina==210 && f.selected_defenders==5 &&
+    input.scheduling->selected_ids==std::array<std::uint8_t,5>{12,14,15,16,18} &&
+    actions==std::array<std::uint8_t,5>{1,1,1,1,1} && subtypes==std::array<std::uint8_t,5>{} &&
+    input.action->action==0 && input.action->cursor==224 && input.area_defender_cursor==3 &&
+    !f.random_first && !f.random_second && input.saved_ball_flight_flag==1) {
+  auto state=input;state.human_defense_choices=HumanDefenseChoices{actions,subtypes};state.recovery->opposing_player=18;
+  validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::attack_choice_pending || input.human_defense_choices || !input.score || !input.scheduling ||
     input.score->left_goals!=2 || input.score->right_goals!=2 || input.score->kickoff!=4 ||
     input.current.clock.remaining!=367 || input.current.clock.extra_time!=13 || f.side!=0 || f.ball_owner!=5 ||

@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - player7 shot preparation (2026-11-09):** Ten field rounds lead to five defenders; all24 constructed original/native cases match menu, captured choices and numerical shot preparation. Defender comparison and completion remain open. Actual startup, live presentation and a complete playable match remain unverified; overall progress is unmeasured.
+
 **Latest - player7 pass to control (2026-11-09):** Numeric flight, reception and control setup match24 constructed original/native cases. A reusable private-evidence replay checks336 boundaries. Authentic startup, live timing/presentation and a complete playable match remain unverified; overall progress is unmeasured.
 
 **Latest - player7 pass target saved (2026-11-09):** All24 constructed original/native target states match; version147 saves target and cursor. Original-only flight and control are traced, but not yet compared natively. Complete match, authentic initialization and live presentation remain unverified; overall progress is unmeasured.

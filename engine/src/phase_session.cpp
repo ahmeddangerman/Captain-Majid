@@ -408,9 +408,9 @@ void validate_phase_session(const PhaseSessionState& state) {
         (phase==12 && state.current.field.ball_cell==63)) && state.saved_ball_flight_flag==1 &&
        ((phase==2 && state.current.field.side==0 && state.current.field.ball_owner==5) ||
         ((phase==1 || phase==6 || phase==9 || phase==10 || phase==12 || phase==13) && state.current.field.side==11 && state.current.field.ball_owner==19));
-    const bool score25_player7_cursor=(phase==1 || phase==9 || phase==10 || phase==13) && state.area_defender_cursor==3 &&
+    const bool score25_player7_cursor=(phase==1 || phase==9 || phase==10 || phase==13 || phase==15 || phase==18 || phase==19 || (phase==20 && state.human_defense_choices)) && state.area_defender_cursor==3 &&
        state.score && state.score->left_goals==2 && state.score->right_goals==5 && state.score->kickoff==4 &&
-       state.current.clock.remaining==321 && state.current.field.side==0 && state.current.field.ball_owner==7 &&
+       state.current.clock.remaining>=311 && state.current.clock.remaining<=321 && state.current.field.side==0 && state.current.field.ball_owner==7 &&
        state.current.field.ball_cell==103 && state.saved_ball_flight_flag==1;
     if((phase<82 && state.area_defender_cursor && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor) ||
        (phase>=82 && phase<=94 && (state.area_defender_cursor>state.current.field.selected_defenders ||
@@ -421,7 +421,14 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Invalid saved area defender cursor or exit at phase "+std::to_string(phase)+
             ", owner "+std::to_string(state.current.field.ball_owner));
     const bool player5_dribble_terminal=player5_dribble_contact && state.area_sequence_result==3 && state.current.clock.remaining==366;
-    if(state.human_defense_choices && ((phase!=19 && phase!=20) || !state.score || !state.action || !state.recovery || !state.scheduling || !state.control || !state.experience ||
+    const bool player7_shot_choices=state.human_defense_choices && (phase==19 || phase==20) && state.score && state.action && state.recovery && state.scheduling && state.control && state.experience &&
+       state.human_defense_choices->actions==std::array<std::uint8_t,5>{1,1,1,1,1} && state.human_defense_choices->subtypes==std::array<std::uint8_t,5>{} &&
+       state.score->left_goals==2 && state.score->right_goals==5 && state.score->kickoff==4 && state.current.clock.remaining==311 && state.current.clock.extra_time==13 &&
+       state.current.field.side==0 && state.current.field.ball_owner==7 && state.current.field.ball_x==117 && state.current.field.ball_y==139 && state.current.field.ball_cell==103 &&
+       state.current.field.roster[7].type==23 && state.current.field.roster[7].stamina==(phase==19 ? 210 : 130) && state.current.field.selected_defenders==5 &&
+       state.scheduling->selected_ids==std::array<std::uint8_t,5>{12,14,15,16,18} && state.recovery->opposing_player==18 &&
+       state.action->action==0 && state.action->cursor==224 && state.area_defender_cursor==3 && state.saved_ball_flight_flag==1;
+    if(state.human_defense_choices && !player7_shot_choices && ((phase!=19 && phase!=20) || !state.score || !state.action || !state.recovery || !state.scheduling || !state.control || !state.experience ||
        state.human_defense_choices->actions!=std::array<std::uint8_t,5>{1,1,1,1,1} ||
        state.human_defense_choices->subtypes!=std::array<std::uint8_t,5>{} ||
        state.score->left_goals!=2 || state.score->right_goals!=2 || state.score->kickoff!=4 ||

@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Player7 field contact and ordinary shot preparation
+
+- Continued24 constructed player7 control cases with no input: 2,640 original/native polls,240 clock updates and240 field rounds match through a five-defender contact at clock311/cell103. The original retains cursor3 and flight flag1. Corrected validation to preserve this observed cursor through field, contact and action-menu states. Original/native menu opening, shot selection and confirmation each match24. Evidence: ../Captain-Majid-analysis/mixed25-p7path-f2a1d041 and ../Captain-Majid-analysis/mixed25-p7menu-native-cf2c311a.
+- Captured the original five defender choices [1,1,1,1,1] and reused the profile-based ordinary shot preparation. All24 original/native boundaries match each operation: player7 stamina210 to130, cost80, power22 and subtype128. Existing version142 saves the five choices. Focused tests cover cursor preservation, choice roundtrip, rejected changed choices and shot preparation roundtrip. Evidence: ../Captain-Majid-analysis/mixed25-p7shot-original-bd15dda1 and ../Captain-Majid-analysis/mixed25-p7shot-native-585d5d51.
+- Full Windows CMake build and all45 tests passed. An intermediate attempt to relink while the comparison repeatedly launched the executable was blocked by Windows file locking; rebuilding after the comparison ended succeeded. Next compare the five original defender results and subsequent shot route. AI choices are captured, presentation is cooperatively acknowledged; live timing, actual initialization and a full playable match remain unverified. Overall progress is unmeasured. Suggested model: Terra High.
+
 ## 2026-11-09 - Numeric player7 flight and return to control
 
 - Reused the numeric pass-flight calculation for the sampled home-side player7 route, guarded by score, owner, cursor, target and flag. All24 original/native setups match starting fractions167/221, direction and velocity; four cell crossings and the final arrival match across the cases. Recipient selection, ball positioning, player-control entry and control-ready setup each match24; player7 receives at117,139/cell103. The original retains defender cursor3 and flight flag1 through these states. Earlier defender AI choices remain supplied, presentation acknowledged.
