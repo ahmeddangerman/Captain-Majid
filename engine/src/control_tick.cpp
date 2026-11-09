@@ -283,8 +283,9 @@ std::vector<ObservedClockEvent> load_observed_nmi_events(std::istream& input) {
 NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& input,
     std::uint8_t initial_random_index, const std::vector<ObservedClockEvent>& events) {
     validate_phase_session(input);
-    if ((input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu) || !input.control)
-        throw std::invalid_argument("Observed NMI sequence requires a field contact or human menu boundary");
+    if ((input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
+         input.phase != FieldSessionPhase::attack_choice_pending) || !input.control)
+        throw std::invalid_argument("Observed NMI sequence requires a field contact, human menu or confirmed action boundary");
     auto state = input;
     auto index = initial_random_index;
     for (const auto& event : events) {

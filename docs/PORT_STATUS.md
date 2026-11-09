@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - saved ordinary target (2026-11-09):** The captured startup reaches an initialized, score-independent ordinary-pass target using 571 recorded NMI/travel pairs and an acknowledged pass-type selection. Sixteen full target checkpoints matched across two encounter contexts and eight positions. General target movement/confirmation, autonomous timing and a complete match remain unsupported. All 62 Windows CTest tests and both phase317 replays passed; overall progress is unmeasured.
+
 **Latest - ordinary pass initialization (2026-11-09):** The captured startup continues through 95 matched menu polls to ordinary pass confirmation. A separate pure target initializer matches 32 constructed original CPU cases across two encounters, including stale ball coordinates and carrier fractions. The pass-type submenu and generic saved target phase remain unsupported. All 62 Windows CTest tests passed; a complete match remains unsupported and overall progress is unmeasured.
 
 **Latest - captured encounter menu (2026-11-09):** One original startup continuously matches 68 native represented-state/random-index boundaries through encounter, acknowledged action-menu entry and a neutral menu wait, using supplied NMI/travel events. An original-only down/confirm probe opens the pass target, which is not yet connected to the native sequence. All 62 Windows CTest tests and both phase317 replays passed. Live scheduling, AI and a complete playable match remain unsupported; overall progress is unmeasured.

@@ -1182,6 +1182,18 @@ int main(){try{using namespace captain;
  ActionMenuContent pass_menu_content{};pass_menu_content.directions[0][1]=1;
  auto pass_selected=poll_human_action_menu(returned_menu,2,pass_menu_content).state;
  auto pass_confirmed=poll_human_action_menu(pass_selected,128,pass_menu_content).state;
+ auto general_pass_input=pass_confirmed;
+ general_pass_input.current.field.motion[field_motion_index(5)].x=0x7f32;
+ general_pass_input.current.field.motion[field_motion_index(5)].y=0x8467;
+ const auto general_pass=begin_ordinary_human_pass_target(general_pass_input);
+ check(general_pass.phase==FieldSessionPhase::ordinary_human_pass_target && general_pass.human_pass_cursor==114 &&
+       general_pass.current.field.ball_x==127 && general_pass.current.field.ball_y==132 && general_pass.current.field.ball_cell==114 &&
+       general_pass.current.clock.ball_mode==129 && !general_pass.recovery->attack_subtype &&
+       general_pass_input.current.field.ball_x==108,"Ordinary pass target refreshes from carrier and preserves input");
+ const auto general_bytes=bytes(general_pass);std::istringstream general_stream(general_bytes);
+ check(bytes(load_phase_session(general_stream))==general_bytes,"Ordinary pass target snapshot roundtrip");
+ auto wrong_action=general_pass_input;wrong_action.action->action=3;
+ rejects([&]{begin_ordinary_human_pass_target(wrong_action);});
  auto stale_flight_pass=pass_confirmed;stale_flight_pass.saved_ball_flight_flag=1;
  rejects([&]{begin_sampled_human_pass_target(stale_flight_pass);});
  auto pass_target_cursor=begin_sampled_human_pass_target(pass_confirmed);

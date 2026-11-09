@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: general saved ordinary-pass target boundary
+
+`--begin-ordinary-human-pass-target` now saves phase331 after a confirmed side-zero pass and an explicitly acknowledged ordinary pass-type choice. It uses the original-backed carrier-position target initializer, preserves unrelated context and supports score-independent field positions and opposing prefixes; the existing extended snapshot format is reused. The target cursor is initialized but cannot yet be moved or confirmed in this general phase. The pass-type submenu is acknowledged, not simulated.
+
+The captured startup chain now continues from confirmed ordinary pass through 571 supplied NMI/travel pairs and acknowledged subtype selection to the original initial target at cell114, with full represented state and random index matched: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/pass-target-verifier-20261109. `tools/verify_captured_pass_target.py` accepts private evidence paths and reports the first differing boundary/field. Sixteen complete saved target checkpoints across eight carrier positions in two independently observed encounter contexts also matched: ../Captain-Majid-analysis/ordinary-pass-sessions-20261109. The independent 32-case original CPU arithmetic check remains in tools/verify_ordinary_pass_initialization.py.
+
+General: initial ordinary-pass target state and explicit captured-event replay. Scenario-specific: this startup, supplied event timing and the separately guarded phase317 pass sequence. Unknown: live submenu/NMI/audio/presentation, general target-cursor input, defender AI and continuation, and a complete match. Full Windows build and all 62 registered CTest tests passed; the 24/48-case phase317 possession replays still matched 576/1,152 boundaries. Next derive and compare general target-cursor movement and confirmation on the original, including field edges, before connecting defender processing. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: confirmed ordinary pass and target initialization
 
 `tools/verify_captured_menu_polls.py` continues the captured startup's 68-boundary control/menu chain from its saved native session and separately retained random index. Ninety-five consecutive original-emulator menu polls matched both input and output represented states through left/confirm selecting ordinary pass action 1; recorded NMI/travel and button events were supplied. The separately captured pass-type submenu then reaches the target screen after an additional original input, but that submenu has not been replayed natively. Private evidence: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/menu-pass-verifier4-20261109.

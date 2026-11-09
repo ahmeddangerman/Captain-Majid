@@ -83,6 +83,11 @@ int main() {
         try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
         catch (const std::invalid_argument&) { marker_rejected = true; }
         if (!marker_rejected) return 1;
+        auto confirmed_pass = event_input; confirmed_pass.phase = FieldSessionPhase::attack_choice_pending;
+        confirmed_pass.action->action = 1;
+        const auto waiting_pass = advance_observed_nmi_events(confirmed_pass, 255,
+            {{ObservedClockEventKind::random, {0, 0, 0, false}}});
+        if (waiting_pass.random_index != 0 || waiting_pass.state.phase != FieldSessionPhase::attack_choice_pending) return 1;
         for (auto& player : state.current.field.roster) player.type = 1;
         for (auto& motion : state.current.field.motion) { motion.x = 124u << 8; motion.y = 124u << 8; motion.target_cell = 113; }
         PlayerProfileMappings profiles{}; FieldPhaseContent movement{};

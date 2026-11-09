@@ -63,6 +63,8 @@ SessionAttackResult prepare_session_basic_shot(const PhaseSessionState& input,
 // Acknowledge the captured return to the menu after an unaffordable ordinary shot.
 PhaseSessionState acknowledge_sampled_unaffordable_shot(const PhaseSessionState& input,
     const FieldPlayerProfiles& players, const FieldDefenseContent& attack);
+// Acknowledges an explicitly selected ordinary pass type; does not run the submenu.
+PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState poll_sampled_human_pass_target(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed);
 // Explicit defender choices observed for the bounded player7 pass; no AI is inferred.

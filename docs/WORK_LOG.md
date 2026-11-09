@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - General ordinary-pass target initialization boundary
+
+Added score-independent phase331 for an explicitly acknowledged ordinary pass type, using the carrier-position target kernel and existing extended snapshot format. The startup replay continued through 571 captured NMI/travel pairs and acknowledged submenu to the original initial target; 16 full saved-session comparisons over eight positions in this and an earlier encounter matched. Cursor movement and confirmation in the new phase remain unsupported, as do live presentation, frame scheduling and a complete match. All 62 Windows CTest tests and both phase317 regressions (576/1,152 boundaries) passed. Evidence remains private. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Captured ordinary pass selection and target arithmetic
 
 Continued the startup's 68-boundary chain with 95 consecutive original menu polls through ordinary pass confirmation, with captured button, random and travel events. The next original pass-type submenu is not yet natively replayed. Added the pure ordinary target initializer: carrier high-byte coordinates refresh ball position and determine cell/cursor; ordinary mode/subtype become 129/0. Across the startup and an earlier independent encounter, 32 constructed original CPU cases matched eight positions and two fraction patterns with intentionally stale ball state. This kernel has no generic saved-session continuation yet. All 62 registered Windows tests passed; an initial build/replay concurrency attempt hit an executable lock and was rerun successfully in sequence. Earlier phase317 replays matched 576/1,152 boundaries. Evidence remains outside Git. Overall progress is unmeasured; suggested model Terra High.
