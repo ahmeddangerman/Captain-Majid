@@ -53,6 +53,9 @@ int main() {
         try { std::istringstream bad("CMJCLOCKNMI1\nR 1 2 3 2\nS\nE\n"); load_observed_clock_events(bad); }
         catch (const std::invalid_argument&) { bad_clock_rejected = true; }
         if (!bad_clock_rejected) return 1;
+        std::istringstream sequence_stream("CMJNMISEQ1\nR 1 2 3 1\nT 1 160 3\n");
+        const auto parsed_sequence = load_observed_nmi_events(sequence_stream);
+        if (parsed_sequence.size() != 2 || parsed_sequence[1].speed != 928) return 1;
         const std::string good_nmi_record = "0 0 0 0 0 0 0 0 0 0";
         for (const std::string& bad_record : {"0 0 0 0 0 2 0 0 0 0", "0 0 0 0 0 0 0 1 0 0", "0 0 256 0 0 0 0 0 0 0"}) {
             auto invalid = nmi_records;
@@ -69,6 +72,17 @@ int main() {
         state.current.field.ball_x = 124; state.current.field.ball_y = 124;
         state.current.field.ball_cell = 113; state.current.field.elapsed = 1;
         state.current.field.movement_region = 7; state.control->facing = 64;
+        auto event_input = state; event_input.phase = FieldSessionPhase::field_contact_pending;
+        event_input.action = ActionContext{}; event_input.current.field.selected_defenders = 1;
+        event_input.scheduling->selected_ids[0] = 12;
+        const auto event_result = advance_observed_nmi_events(event_input, 255,
+            {{ObservedClockEventKind::random, {0, 0, 0, false}}, {ObservedClockEventKind::travel, {}, 1, 928}});
+        if (event_result.random_index != 0 || event_result.state.control->travel_accumulator != 232 ||
+            event_input.control->travel_accumulator != 0) return 1;
+        bool marker_rejected = false;
+        try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
+        catch (const std::invalid_argument&) { marker_rejected = true; }
+        if (!marker_rejected) return 1;
         for (auto& player : state.current.field.roster) player.type = 1;
         for (auto& motion : state.current.field.motion) { motion.x = 124u << 8; motion.y = 124u << 8; motion.target_cell = 113; }
         PlayerProfileMappings profiles{}; FieldPhaseContent movement{};

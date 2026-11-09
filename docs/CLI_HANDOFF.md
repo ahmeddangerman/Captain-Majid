@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: captured encounter to human menu
+
+Added `--advance-observed-nmi-sequence FILE INITIAL_INDEX`, an explicit random/travel sequence allowed at field contact and human action-menu boundaries. The private-path control-chain verifier can now follow captured events through acknowledged menu entry and a neutral menu wait. One original-emulator startup continuously matched 68 represented-state and random-index boundaries from control through a two-defender encounter and the menu wait, including 13 captured NMI/travel pairs before entry and 184 afterward. No captured boundary reseeds the native state. Presentation is acknowledged rather than rendered, and all timing/memory inputs remain supplied. Evidence: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/control-chain-menu-neutral-20261109.
+
+A separate original-emulator probe restored the same state, reproduced the initial run through frame 13600, and showed down then confirm opens the pass target screen; this is not yet a native comparison or a continuous defender/pass replay. General: bounded random/travel composition and existing action-menu transition. Scenario-specific: the captured startup, neutral wait, two defenders and chosen input probe. Unknown: autonomous NMI/audio/presentation scheduling, input choice and defender AI, pass continuation from this encounter, and a complete match. Full Windows build and all 62 registered CTest tests passed; both phase317 possession replays matched 576/1,152 boundaries. Next capture actual menu/target and defender instruction boundaries and compare the existing reusable rules. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: continuously chained captured control to encounter
 
 Added the bounded `--advance-observed-nmi-clock FILE INITIAL_INDEX` comparison operation. It retains the existing normal clock, field-cycle and stamina kernels while accepting explicitly ordered captured random/travel events around the logical schedule and energy milestones. It rejects warning, added-time, period-end and goal-area paths, and it cannot interrupt the logical kernels internally. Neither frame timing nor audio or presentation is generated. Snapshot formats remain unchanged and the random index stays an explicit separate input/output.

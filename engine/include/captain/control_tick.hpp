@@ -65,6 +65,13 @@ struct NmiClockResult {
     std::uint8_t random_index = 0;
 };
 std::vector<ObservedClockEvent> load_observed_clock_events(std::istream& input);
+std::vector<ObservedClockEvent> load_observed_nmi_events(std::istream& input);
+struct NmiEventSequenceResult {
+    PhaseSessionState state;
+    std::uint8_t random_index = 0;
+};
+NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& input,
+    std::uint8_t initial_random_index, const std::vector<ObservedClockEvent>& events);
 NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input,
     const FieldPlayerProfiles& field, const GoalkeeperProfiles& keepers, const WorldStepContent& content,
     std::uint8_t initial_random_index, const std::vector<ObservedClockEvent>& events);

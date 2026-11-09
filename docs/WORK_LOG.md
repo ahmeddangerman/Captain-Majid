@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Original encounter to menu with captured NMI events
+
+Added explicit ordered random/travel sequence handling at field-contact and human-menu boundaries and extended the private-path continuous verifier through acknowledged menu entry and neutral wait. One startup now matches 68 sequential original boundaries without reseeding, including 197 supplied random/travel pairs through the menu interval. A separate original input probe selected pass target with down then confirm; native comparison beyond the neutral menu remains pending. All 62 registered Windows tests and the 576/1,152-boundary phase317 regressions passed. Evidence stays in ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/control-chain-menu-neutral-20261109. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Captured control chain through encounter
 
 Split the existing normal control-clock continuation into logical clock, field-cycle and stamina milestones, and added an evidence-fed operation that applies explicitly ordered random/travel events between them. It rejects unverified clock and goal-area branches; it does not generate frames, sound, presentation or interrupt individual kernels. The new private-path verifier continuously feeds 55 polls, five clocks and five field rounds from one startup through the first two-defender encounter, checking 65 original boundaries, represented fields and random index without reseeding. This is not yet connected to the separately verified phase317 pass/reception sequence. All 62 registered Windows tests passed, 12 earlier clock outputs remained byte-identical, and phase317 replays matched 576/1,152 boundaries. Evidence stays in ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/control-chain-verifier-20261109. Overall progress is unmeasured; suggested model Terra High.

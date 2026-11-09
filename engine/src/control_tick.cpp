@@ -248,10 +248,10 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
     return {std::move(final), index};
 }
 
-std::vector<ObservedClockEvent> load_observed_clock_events(std::istream& input) {
+static std::vector<ObservedClockEvent> read_observed_events(std::istream& input, const char* magic, bool milestones) {
     std::string token;
-    if (!(input >> token) || token != "CMJCLOCKNMI1")
-        throw std::invalid_argument("Invalid observed clock event header");
+    if (!(input >> token) || token != magic)
+        throw std::invalid_argument("Invalid observed event header");
     std::vector<ObservedClockEvent> events;
     while (input >> token) {
         if (token == "R") {
@@ -267,12 +267,40 @@ std::vector<ObservedClockEvent> load_observed_clock_events(std::istream& input) 
                 throw std::invalid_argument("Invalid observed clock travel event");
             events.push_back({ObservedClockEventKind::travel, {}, static_cast<std::uint8_t>(held),
                               static_cast<std::uint16_t>(low | (high << 8))});
-        } else if (token == "S") events.push_back({ObservedClockEventKind::schedule});
-        else if (token == "E") events.push_back({ObservedClockEventKind::energy});
+        } else if (token == "S" && milestones) events.push_back({ObservedClockEventKind::schedule});
+        else if (token == "E" && milestones) events.push_back({ObservedClockEventKind::energy});
         else throw std::invalid_argument("Unknown observed clock event");
     }
     if (input.bad() || !input.eof()) throw std::invalid_argument("Unreadable observed clock events");
     return events;
+}
+std::vector<ObservedClockEvent> load_observed_clock_events(std::istream& input) {
+    return read_observed_events(input, "CMJCLOCKNMI1", true);
+}
+std::vector<ObservedClockEvent> load_observed_nmi_events(std::istream& input) {
+    return read_observed_events(input, "CMJNMISEQ1", false);
+}
+NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& input,
+    std::uint8_t initial_random_index, const std::vector<ObservedClockEvent>& events) {
+    validate_phase_session(input);
+    if ((input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu) || !input.control)
+        throw std::invalid_argument("Observed NMI sequence requires a field contact or human menu boundary");
+    auto state = input;
+    auto index = initial_random_index;
+    for (const auto& event : events) {
+        if (event.kind == ObservedClockEventKind::random) {
+            const auto next = advance_reference_random(
+                {index, state.current.field.random_first, state.current.field.random_second}, event.random);
+            index = next.state.index;
+            state.current.field.random_first = next.state.first;
+            state.current.field.random_second = next.state.second;
+        } else if (event.kind == ObservedClockEventKind::travel) {
+            state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
+                event.speed, state.current.field.side, event.held, state.control->facing);
+        } else throw std::invalid_argument("Observed NMI sequence cannot contain clock milestones");
+    }
+    validate_phase_session(state);
+    return {std::move(state), index};
 }
 
 ControlTickResult resume_control_added_time(const PhaseSessionState& post_presentation,
