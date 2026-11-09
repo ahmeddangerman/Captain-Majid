@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+**Latest research - selected keeper arithmetic (2026-11-09):** Sixteen controlled original/native keeper preparations and results match for the captured input varied over four actions and random pairs; another5,248 goalkeeper routine cases pass. The live keeper choice/result and score/restart remain unsupported in this continuation. Overall progress unmeasured.
+
+
+
 **Latest - selected goalkeeper timing (2026-11-09):** One captured startup matches active goalkeeper11 and one recorded timing event. Goalkeeper preparation scratch, outcome, scoring and autonomous match remain unsupported in this continuation. All62 Windows tests passed; overall progress unmeasured.
 
 

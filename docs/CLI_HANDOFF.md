@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current research - 2026-11-09: goalkeeper calculation independently checked
+
+Using the captured selected-keeper state, an isolated original CPU run from $852F to $8599 matches the existing native goalkeeper kernel for action0: cost20, base power11, unchanged zero stamina, subtype0 and result0 with random206/74. Sixteen constructed variations across four actions and four random pairs match cost, base power, stamina and result. A separate existing oracle matched69,632 skill, 7,456 action-power and 5,248 goalkeeper routine cases. The CPU run explicitly supplies the action and freezes timing; it does not establish the live decision, event order, presentation or score handoff. Private driver/check: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/keeper_check.py.
+
+The last end-to-end represented checkpoint remains bank26:$856B at random index149. Next establish the original live presentation and comparison boundary, then connect the existing keeper calculation with evidence guards and compare the resulting score/restart. Overall progress remains unmeasured; suggested model Terra High.
+
+
+
 ## Current stopping point - 2026-11-09: selected goalkeeper timing boundary
 
 The captured same-cell volley now also matches the selected goalkeeper becoming the active defender at $80D9 and one recorded random/travel event through bank26:$856B (random index149). The comparison covers represented session fields and the keeper prefix; original scratch cost changes from90 to20 before $856B and is not represented or native-compared at this boundary. It must not be mistaken for a verified goalkeeper preparation or outcome. Private replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-precompare-20261109.

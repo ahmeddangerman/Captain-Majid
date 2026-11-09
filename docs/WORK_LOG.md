@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Controlled selected-keeper calculations
+
+At captured selected-keeper input, the existing native preparation/comparison matches isolated original $852F..$8599 for action0: cost20, base11, stamina0 and result0. Sixteen constructed cases across four actions and four random pairs match cost, base, stamina and result; the supplied actions and frozen timing do not establish autonomous live choice or a scored goal. Existing oracles independently matched69,632 skill-index, 7,456 action-power and 5,248 keeper cases. Private script: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/keeper_check.py. Overall progress unmeasured; next compare live keeper presentation and result handoff; suggested model Terra High.
+
+
+
 ## 2026-11-09 - Selected goalkeeper timing boundary
 
 The same-cell volley replay matches active defender11 and one recorded random/travel event through bank26:$856B, random index149. Original keeper-cost scratch changes to20 and is not yet compared; keeper outcome remains unsupported. Full Windows build and all62 tests passed. Private replay: ../Captain-Majid-analysis/live-return-area-volley-keeper-precompare-20261109. Overall progress unmeasured; next compare keeper preparation and outcome; suggested model Terra High.
