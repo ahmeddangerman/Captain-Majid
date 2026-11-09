@@ -1,5 +1,10 @@
 # Codex CLI handoff
 
+## Original-only blocked-shot recovery observation - 2026-11-09
+
+After defender14's result2, the continued original reaches bank26:$8BDF at frame15327 with selected count0 and ball x164/y132, then frame15350 shows side0 owner8 at x188/y124. These are original-only snapshots, not a demonstrated native recovery or control handoff. Next instrument the recovery/race and compare its transition from the flight interruption; retain captured presentation/timing distinctions. Private trace: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-shot-interruption. Overall progress remains unmeasured; suggested model Terra High.
+
+
 ## Current stopping point - 2026-11-09: original shot flight component comparisons
 
 Using the private original continuation and existing shared kernels, native direction/velocity matched $E773 (255, 256, 0); seven independent ball-cell steps matched through destination234, including the final snap; and six intermediate defender-selection comparisons matched additions `[], [14], [12], [], [], []`. They use captured original motion/random values at each boundary, and do not constitute a connected session replay or a comparison of the result2 interruption. The prior phase364 target replay and all62 Windows tests remain the last integrated checkpoint. Private source drivers and notes: ../Captain-Majid-analysis/shot-flight-setup-live-20261109; original trace: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-shot-interruption/trace. Next connect these existing kernels with captured event order, compare the full session at each cell, then compare defender14 result2 and resulting possession. Timing, AI, presentation, full match progression and a complete faithful match remain unsupported. Overall progress is unmeasured; suggested model Terra High.

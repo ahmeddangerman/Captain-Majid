@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Original blocked-shot recovery observation
+
+After original defender14 result2, bank26:$8BDF was reached at frame15327 with selected count0 and ball164/132. At frame15350 the original snapshot shows side0 owner8 at188/124. These original-only boundaries do not verify native recovery, a control handoff or a complete match; instrument and compare the intervening recovery/race. Evidence: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-shot-interruption. Overall progress unmeasured; suggested model Terra High.
+
+
 ## 2026-11-09 - Returned shot flight numerical comparisons
 
 Compared the shared native setup and ball/selection kernels to the private live continuation: direction/velocity255/256/0 matched at $E773; seven individual cell steps matched through234; six intermediate selections matched additions [], [14], [12], [], [], []. Inputs came directly from each original snapshot, so these are component comparisons, not a continuous native replay or verification of defender14 result2. Drivers and notes: ../Captain-Majid-analysis/shot-flight-setup-live-20261109. The integrated phase364 target and full62-test Windows suite remain the preceding verified checkpoint. Next connect flight events and compare full state; overall progress unmeasured; suggested model Terra High.
