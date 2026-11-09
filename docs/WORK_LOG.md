@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Player7 pass target saved
+
+- Phase326 saves recipient7, destination103, counter255 and distance3, plus the existing cursor and step count. Added version147 to retain both contexts while preserving previous snapshot layouts. All24 constructed original/native target boundaries match represented session bytes11..323, target, cursor and flag. Focused tests cover roundtrip, wrong version, truncation, replay and changed recipient. Private evidence: ../Captain-Majid-analysis/mixed25-target-native-10821ce7 and ../Captain-Majid-analysis/mixed25-corrected-flight-original-c7504f3f.
+- Full Windows CMake build and all45 Windows test executables passed. Next calculate flight and compare the five original callbacks and subsequent control; original flight remains unpaired. AI choices are supplied and presentation acknowledged, not live audiovisual timing. Real initialization and a complete playable match remain unverified; overall progress is unmeasured. Suggested model: Terra High.
+
 ## 2026-11-09 - Corrected post-pass flight observer
 
 - Diagnosed the earlier bounded observer: it checked bank30 for $E773 and $E0DF, but those fixed addresses are in bank31. After correcting the hooks, all24 constructed original cases reach five $E773 callbacks and $E0DF; target recipient7 and retained flag1 were observed. The earlier 10,000-wait trace missed those events and does not establish an actual scheduler wait. Original-only evidence: ../Captain-Majid-analysis/mixed25-corrected-flight-original-c7504f3f; corrected observer: ../Captain-Majid-analysis/trace_mixed25_afterdispatch_corrected_20261109.py.

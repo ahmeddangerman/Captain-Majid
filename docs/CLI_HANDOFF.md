@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: player7 pass target
+
+Phase326 saves the selected player7 target (destination103, counter255, distance3) and cursor in session version147. All24 constructed original/native target boundaries match represented session bytes11..323 plus cursor, flag and target context. Native outputs: ../Captain-Majid-analysis/mixed25-target-native-10821ce7; corrected original flight/control: ../Captain-Majid-analysis/mixed25-corrected-flight-original-c7504f3f. Next connect numerical flight and compare all five original callbacks and reception/control. Full Windows CMake build and all45 test executables passed. Supplied AI and acknowledged presentation do not establish live timing or authentic initialization; a playable match remains unverified, and overall progress is unmeasured.
+
 ## Current stopping point - 2026-11-09: corrected player7 flight observer
 
 The previous observer incorrectly required bank30 at $E773 and $E0DF; these addresses are in fixed bank31. Correcting the hooks shows that all24 constructed original cases pass through five $E773 flight callbacks and reach $E0DF control, with target player7 and flight flag1. These are original-only observations; native parity after phase325 is not yet implemented. Continue from ../Captain-Majid-analysis/mixed25-fieldhandoff-native-d0fe5255 and compare against ../Captain-Majid-analysis/mixed25-corrected-flight-original-c7504f3f. The prior 10,000-wait claim reflects missed hooks, not a verified scheduler stall. AI and presentation are still supplied/acknowledged, and a playable match and real initialization remain unverified. Overall progress is unmeasured.

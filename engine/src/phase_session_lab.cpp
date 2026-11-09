@@ -188,6 +188,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::sampled_score25_third_contact_clock: return "sampled player7 third contact clock";
     case captain::FieldSessionPhase::sampled_score25_dispatch_clock: return "sampled player7 dispatch clock";
     case captain::FieldSessionPhase::sampled_score25_pass_handoff: return "sampled player7 pass handoff";
+    case captain::FieldSessionPhase::sampled_score25_pass_target_captured: return "sampled player7 pass target";
     case captain::FieldSessionPhase::sampled_player3_contact_clock: return "sampled player3 contact clock advanced";
     case captain::FieldSessionPhase::sampled_player3_dispatch_clock: return "sampled player3 pass dispatch clock advanced";
     case captain::FieldSessionPhase::sampled_player3_pass_handoff: return "sampled player3 pass handoff";
@@ -1640,7 +1641,7 @@ int main(int argc, char** argv) {
         if(sampled_field_defense_blink)state=captain::acknowledge_sampled_field_defense_prompt(state,*sampled_field_defense_blink);
         if(sampled_field_pass_target) {
             const auto& t=*sampled_field_pass_target;
-            state=state.phase==captain::FieldSessionPhase::sampled_player3_pass_handoff
+            state=(state.phase==captain::FieldSessionPhase::sampled_player3_pass_handoff || state.phase==captain::FieldSessionPhase::sampled_score25_pass_handoff)
                 ? captain::capture_sampled_player3_pass_target(state,t[0],t[1],t[2],t[3])
                 : captain::capture_sampled_field_pass_target(state,t[0],t[1],t[2],t[3]);
         }

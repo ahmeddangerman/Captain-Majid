@@ -1866,6 +1866,16 @@ int main(){try{using namespace captain;
  auto player25_handoff_bytes=bytes(player25_field_handoff);std::istringstream player25_handoff_stream(player25_handoff_bytes);
  check(bytes(load_phase_session(player25_handoff_stream))==player25_handoff_bytes,"The player7 pass handoff snapshot roundtrips");
  rejects([&]{advance_sampled_score23_pass_handoff(player25_field_handoff,player3_race_mappings,player3_race_movement);});
+ auto player25_target_captured=capture_sampled_player3_pass_target(player25_field_handoff,7,103,255,3);
+ check(player25_target_captured.phase==FieldSessionPhase::sampled_score25_pass_target_captured && player25_target_captured.sampled_field_pass->recipient==7,"The player7 pass target is saved");
+ auto player25_target_saved=bytes(player25_target_captured);std::istringstream player25_target_read(player25_target_saved);
+ check(bytes(load_phase_session(player25_target_read))==player25_target_saved,"Player7 target and cursor survive reload");
+ rejects([&]{capture_sampled_player3_pass_target(player25_field_handoff,8,103,255,3);});
+ auto wrong_player25_target=player25_target_saved;wrong_player25_target[10]=static_cast<char>(146);
+ rejects([&]{std::istringstream in(wrong_player25_target);load_phase_session(in);});
+ wrong_player25_target=player25_target_saved;wrong_player25_target.pop_back();
+ rejects([&]{std::istringstream in(wrong_player25_target);load_phase_session(in);});
+ rejects([&]{capture_sampled_player3_pass_target(player25_target_captured,7,103,255,3);});
  auto confirmed_empty_bytes=bytes(pass_empty_confirm);std::istringstream confirmed_empty_stream(confirmed_empty_bytes);
  auto cancel_pending_bytes=bytes(pass_cancel_pending);std::istringstream cancel_pending_stream(cancel_pending_bytes);
  check(bytes(load_phase_session(confirmed_empty_stream))==confirmed_empty_bytes && bytes(load_phase_session(cancel_pending_stream))==cancel_pending_bytes,

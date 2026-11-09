@@ -266,6 +266,12 @@ PhaseSessionState advance_sampled_score23_pass_handoff(const PhaseSessionState& 
 }
 PhaseSessionState capture_sampled_player3_pass_target(const PhaseSessionState& input,std::uint8_t recipient,std::uint8_t destination,std::uint8_t counter,std::uint8_t distance) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::sampled_score25_pass_handoff) {
+  if(recipient!=7 || destination!=103 || counter!=255 || distance!=3 || destination!=*input.human_pass_cursor)
+   throw std::invalid_argument("Unsupported sampled player7 pass target");
+  auto state=input;state.sampled_field_pass=SampledFieldPassContext{recipient,destination,counter,distance};
+  state.phase=FieldSessionPhase::sampled_score25_pass_target_captured;validate_phase_session(state);return state;
+ }
  if(input.phase!=FieldSessionPhase::sampled_player3_pass_handoff || recipient!=255 || destination!=87 || counter!=255 || distance!=2 || destination!=*input.human_pass_cursor)
   throw std::invalid_argument("Unsupported sampled player3 pass target");
  auto state=input;state.sampled_field_pass=SampledFieldPassContext{recipient,destination,counter,distance};
