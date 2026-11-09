@@ -169,6 +169,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::ordinary_return_shot_contact: return "ordinary returned shot contact clock";
     case captain::FieldSessionPhase::ordinary_return_shot_dispatch: return "ordinary returned shot dispatch clock";
     case captain::FieldSessionPhase::ordinary_return_shot_field_moved: return "ordinary returned shot field movement";
+    case captain::FieldSessionPhase::ordinary_return_shot_target: return "ordinary returned shot target";
     case captain::FieldSessionPhase::sampled_human_pass_empty_confirmed: return "sampled empty pass target confirmed";
     case captain::FieldSessionPhase::sampled_human_pass_cancel_pending: return "sampled human pass cancel pending";
     case captain::FieldSessionPhase::sampled_human_pass_prepared: return "sampled human pass prepared";

@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - returned shot target (2026-11-09):** The supported shot now matches the original target through $DD08 using shared approach arithmetic. Original-only flight then finds two players and defender14 yields result2 before any verified keeper comparison. Native shot flight/interruption, live AI/presentation and a complete match remain unsupported. All62 Windows tests passed; overall progress is unmeasured.
+
+
 **Latest - returned shot field movement (2026-11-09):** One live startup now matches the evidence-fed field-player movement from shot dispatch through $C618, reusing the pass movement kernel. Original-only flight later selects two players; shot flight, goalkeeper outcome, live AI/presentation and a complete match remain unverified. All62 Windows tests and phase317 replay sets passed; overall progress is unmeasured.
 
 

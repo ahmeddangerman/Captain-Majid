@@ -51,6 +51,9 @@ def main():
     parser.add_argument('--dispatch-index',type=int)
     parser.add_argument('--dispatch-end-index',type=int)
     parser.add_argument('--movement-end-index',type=int,help='original shot handoff after ordered player movement')
+    parser.add_argument('--target-trace-directory',type=Path,help='private follow-up trace matching the movement handoff')
+    parser.add_argument('--target-entry-index',type=int,help='follow-up original C618 handoff index')
+    parser.add_argument('--target-index',type=int,help='follow-up original DD08 target index')
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -219,7 +222,36 @@ def main():
         normalized=bytearray(destination.read_bytes());normalized[258:260]=(362).to_bytes(2,'little')
         compare_menu(normalized,adjusted,362,'returned.shot.movement',score,strength,ram(args.comparison_index))
         source=destination;index=int(indices[0])
-    print(f'Matched {count} returned menu polls through {"shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    target_args=(args.target_trace_directory,args.target_entry_index,args.target_index)
+    if any(value is not None for value in target_args):
+        if any(value is None for value in target_args) or args.movement_end_index is None:
+            raise ValueError('boundary returned.shot.target: target comparison requires movement and all follow-up trace inputs')
+        target_lines,target_pcs,target_ram=trace_data(args.target_trace_directory)
+        entry,target=args.target_entry_index,args.target_index
+        if not 0<=entry<target<len(target_pcs) or target_pcs[entry]!='C618' or target_pcs[target]!='DD08' or any(target_pcs[i]=='C9C5' for i in range(entry+1,target)):
+            raise ValueError('boundary returned.shot.target: unsupported original ordering')
+        handoff=ram(args.movement_end_index);followup=target_ram(entry)
+        for address,(value,wanted) in enumerate(zip(followup,handoff)):
+            if value!=wanted:
+                raise ValueError(f'boundary returned.shot.target_handoff, RAM[0x{address:03x}]: follow-up {value}, movement {wanted}')
+        operation+=1;destination=output/f'{operation:03d}-target.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--prepare-shot-approach','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.target: {run.stderr.strip()}')
+        actual=bytearray(destination.read_bytes());observed=target_ram(target)
+        if len(actual)!=419:raise ValueError('boundary returned.shot.target: invalid native session size')
+        if int.from_bytes(actual[258:260],'little')!=364:
+            raise ValueError('boundary returned.shot.target, session.phase: expected 364')
+        flags=re.search(r'\bP=([0-9A-Fa-f]{2})\b',target_lines[target])
+        if flags is None:raise ValueError('boundary returned.shot.target: missing original carry')
+        expected=(1,observed[0x62b],observed[0x638],observed[0x61a],int(flags.group(1),16)&1)
+        for label,value,wanted in zip(('present','distance','destination','counter','loose_ball'),actual[340:345],expected):
+            if value!=wanted:raise ValueError(f'boundary returned.shot.target, flight.{label}: native {value}, original {wanted}')
+        adjusted=bytearray(observed);adjusted[0x32:0x34]=ram(args.comparison_index)[0x32:0x34]
+        actual[258:260]=(362).to_bytes(2,'little')
+        compare_menu(actual,adjusted,362,'returned.shot.target',score,strength,ram(args.comparison_index))
+        if index!=observed[0xe1]:raise ValueError(f'boundary returned.shot.target, random.index: native {index}, original {observed[0xe1]}')
+        source=destination
+    print(f'Matched {count} returned menu polls through {"shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

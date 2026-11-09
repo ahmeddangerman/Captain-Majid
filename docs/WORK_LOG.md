@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Returned shot target and interruption trace
+
+Reused the shot-approach calculation in guarded phase364 and compared the original $DD08 target: distance63, destination234, counter255, non-loose and final random index81 matched. The replay verifies exact RAM equality at the handoff between two private traces and reports the first changed byte; a deliberate alteration reported RAM[0x635]. The continued original selected14 and12 in flight, then defender14 produced result2 at $88A8 before a keeper comparison. This interruption remains original-only, with native flight and resulting possession unverified. Full Windows build and all62 tests passed; previous phase317 sets matched576/1152 boundaries. Private evidence: ../Captain-Majid-analysis/live-return-shot-target-final-20261109. Overall progress unmeasured; next compare flight/interruption; suggested model Terra High.
+
+
 ## 2026-11-09 - Returned shot field movement
 
 Reused the pass field-player movement kernel after the separately guarded returned shot dispatch. Twenty-two original random/travel pairs and player slots match the $C618 handoff in the live startup; full replay covers75 menu polls through that handoff, final random index81. A rerun's RAM matched the earlier run at all five sampled frames14900-15300. The original-only continuation reaches shot destination234/distance63 and later selects two players in flight; it does not establish native flight parity or a goalkeeper outcome. Full Windows build and all62 registered tests passed; phase317 replay sets matched576/1152 boundaries. Private evidence: ../Captain-Majid-analysis/live-return-shot-movement-final2-20261109. Overall progress is unmeasured; next compare target/flight and its selected-player interruption; suggested model Terra High.

@@ -1476,6 +1476,12 @@ int main(){try{using namespace captain;
  const auto shot_movement_bytes=bytes(shot_movement.state);std::istringstream shot_movement_stream(shot_movement_bytes);
  check(bytes(load_phase_session(shot_movement_stream))==shot_movement_bytes,"Returned shot movement snapshot roundtrip");
  rejects([&]{advance_observed_pass_field_movement(shot_movement_input,profile_mappings,pass_movement_content,0,missing_movement);});
+ ShotApproachContent returned_approach{};returned_approach.outer_distance.fill(7);returned_approach.inner_distance.fill(7);
+ const auto returned_shot_target=prepare_session_shot_approach(shot_movement.state,returned_approach).state;
+ check(returned_shot_target.phase==FieldSessionPhase::ordinary_return_shot_target && returned_shot_target.shot_flight &&
+       returned_shot_target.shot_flight->distance==63,"Returned shot calculates the shared approach target");
+ const auto returned_shot_target_bytes=bytes(returned_shot_target);std::istringstream returned_shot_target_stream(returned_shot_target_bytes);
+ check(bytes(load_phase_session(returned_shot_target_stream))==returned_shot_target_bytes,"Returned shot target snapshot roundtrip");
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
