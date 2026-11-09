@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: player7 control after pass
+
+The 2-5 player7 pass now calculates flight, four intermediate crossings, arrival, recipient ownership, ball placement, player-control entry and control setup. All24 constructed cases match original boundaries; the reusable `tools/verify_player7_pass.py` checks 336 boundaries using private input paths and an empty private output directory. Inputs: targets ../Captain-Majid-analysis/mixed25-target-native-10821ce7; flight/arrival ../Captain-Majid-analysis/mixed25-arrival-original-f724c54d; receipt/control ../Captain-Majid-analysis/mixed25-receive-original-70bc035f; control setup ../Captain-Majid-analysis/mixed25-player7ready-native-b569c752. Pass the existing team3 pack and area-flight-session-20261104-final4/velocity.cmjball; use --help for arguments. Latest native and original ready pairs are in the control setup directory.
+
+Next compare held/pressed player input and subsequent player7 field cycles from this checkpoint, then follow the next actual interaction. Presentation effects are acknowledged cooperatively and AI choices supplied. Real startup, live audiovisual timing and a complete playable match are unverified; overall progress is unmeasured. Full Windows CMake build and all45 tests passed. Suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: player7 pass target
 
 Phase326 saves the selected player7 target (destination103, counter255, distance3) and cursor in session version147. All24 constructed original/native target boundaries match represented session bytes11..323 plus cursor, flag and target context. Native outputs: ../Captain-Majid-analysis/mixed25-target-native-10821ce7; corrected original flight/control: ../Captain-Majid-analysis/mixed25-corrected-flight-original-c7504f3f. Next connect numerical flight and compare all five original callbacks and reception/control. Full Windows CMake build and all45 test executables passed. Supplied AI and acknowledged presentation do not establish live timing or authentic initialization; a playable match remains unverified, and overall progress is unmeasured.

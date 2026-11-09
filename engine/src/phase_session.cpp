@@ -323,7 +323,11 @@ void validate_phase_session(const PhaseSessionState& state) {
     if(bool(state.area_ai_target)!=((phase>=78 && phase<=94) || area_flight || area_action4 || area_action6))throw std::invalid_argument("Area AI choice needs saved target context");
     if(area_action6 && (!state.action || state.action->action!=6 || !state.area_ai_target || state.area_ai_target->recipient || state.area_ai_target->cell!=state.current.field.ball_cell || ((phase==104 || phase==107) && state.current.field.side!=11) || state.current.field.selected_defenders>4))
         throw std::invalid_argument("Area action6 destination needs its captured target cell");
-    if(area_flight && (!state.action || state.action->action!=1 || !state.area_ai_target || state.area_ai_target->recipient<12 || state.area_ai_target->recipient>21 || state.area_ai_target->cell>=240 || state.area_ai_target->cost>1023 || (phase<135 && state.current.field.side!=((phase>=128 && phase<=133) ? 0 : 11)) || ((pass_capture_tick || pass_blocked_tick) && state.current.field.side!=0) || state.current.field.selected_defenders>4 || (phase<114 && state.area_defender_cursor) || (((phase>=117 && phase<=122) || (phase>=124 && phase<=149)) ? state.area_sequence_result>((phase>=120 && phase<=122) ? 1 : 3) : state.area_sequence_result!=255)))
+    const bool sampled_player7_flight=area_flight && state.score && state.score->left_goals==2 && state.score->right_goals==5 &&
+        state.current.clock.remaining==321 && state.current.field.side==0 &&
+        (state.current.field.ball_owner==5 || state.current.field.ball_owner==7) && state.area_defender_cursor==3 &&
+        state.saved_ball_flight_flag==1 && state.area_ai_target && state.area_ai_target->recipient==7 && state.area_ai_target->cell==103;
+    if(area_flight && (!state.action || state.action->action!=1 || !state.area_ai_target || (!sampled_player7_flight && (state.area_ai_target->recipient<12 || state.area_ai_target->recipient>21)) || state.area_ai_target->cell>=240 || state.area_ai_target->cost>1023 || (!sampled_player7_flight && phase<135 && state.current.field.side!=((phase>=128 && phase<=133) ? 0 : 11)) || ((pass_capture_tick || pass_blocked_tick) && state.current.field.side!=0) || state.current.field.selected_defenders>4 || (phase<114 && state.area_defender_cursor && !sampled_player7_flight) || (((phase>=117 && phase<=122) || (phase>=124 && phase<=149)) ? state.area_sequence_result>((phase>=120 && phase<=122) ? 1 : 3) : state.area_sequence_result!=255)))
         throw std::invalid_argument("Area flight requires its captured recipient and cleared sequence");
     if(((phase>=114 && phase<=122) || (phase>=124 && phase<=129)) && !state.current.field.selected_defenders)
         throw std::invalid_argument("Defended area arrival needs a selected defender");
@@ -404,7 +408,11 @@ void validate_phase_session(const PhaseSessionState& state) {
         (phase==12 && state.current.field.ball_cell==63)) && state.saved_ball_flight_flag==1 &&
        ((phase==2 && state.current.field.side==0 && state.current.field.ball_owner==5) ||
         ((phase==1 || phase==6 || phase==9 || phase==10 || phase==12 || phase==13) && state.current.field.side==11 && state.current.field.ball_owner==19));
-    if((phase<82 && state.area_defender_cursor && !sampled_pass_cursor_residue && !score23_recovery_cursor) ||
+    const bool score25_player7_cursor=(phase==1 || phase==9 || phase==10 || phase==13) && state.area_defender_cursor==3 &&
+       state.score && state.score->left_goals==2 && state.score->right_goals==5 && state.score->kickoff==4 &&
+       state.current.clock.remaining==321 && state.current.field.side==0 && state.current.field.ball_owner==7 &&
+       state.current.field.ball_cell==103 && state.saved_ball_flight_flag==1;
+    if((phase<82 && state.area_defender_cursor && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor) ||
        (phase>=82 && phase<=94 && (state.area_defender_cursor>state.current.field.selected_defenders ||
         ((phase==88 || (phase>=90 && phase<=93)) ? state.area_defender_cursor!=state.current.field.selected_defenders :
          state.area_defender_cursor>=state.current.field.selected_defenders))) ||

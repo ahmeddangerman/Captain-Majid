@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Numeric player7 flight and return to control
+
+- Reused the numeric pass-flight calculation for the sampled home-side player7 route, guarded by score, owner, cursor, target and flag. All24 original/native setups match starting fractions167/221, direction and velocity; four cell crossings and the final arrival match across the cases. Recipient selection, ball positioning, player-control entry and control-ready setup each match24; player7 receives at117,139/cell103. The original retains defender cursor3 and flight flag1 through these states. Earlier defender AI choices remain supplied, presentation acknowledged.
+- Added `tools/verify_player7_pass.py`, which replays setup, four crossings/callbacks, arrival, receipt, positioning, control and ready, comparing336 boundaries against private original snapshots across24 cases. It requires an empty output directory and does not embed private data. Private evidence: ../Captain-Majid-analysis/mixed25-arrival-original-f724c54d, ../Captain-Majid-analysis/mixed25-receive-original-70bc035f, ../Captain-Majid-analysis/mixed25-player7ready-native-b569c752 and ../Captain-Majid-analysis/mixed25-player7-replay-final-20261109.
+- Full Windows CMake build, all45 tests and the replay passed. A replay attempt using an existing output directory was safely rejected by the CLI; the verifier now checks for an empty directory before starting. Next compare input polls and field rounds from player7 control. Real initialization, live timing/audio/video and a complete playable match remain unverified; overall progress is unmeasured. Suggested model: Terra High.
+
 ## 2026-11-09 - Player7 pass target saved
 
 - Phase326 saves recipient7, destination103, counter255 and distance3, plus the existing cursor and step count. Added version147 to retain both contexts while preserving previous snapshot layouts. All24 constructed original/native target boundaries match represented session bytes11..323, target, cursor and flag. Focused tests cover roundtrip, wrong version, truncation, replay and changed recipient. Private evidence: ../Captain-Majid-analysis/mixed25-target-native-10821ce7 and ../Captain-Majid-analysis/mixed25-corrected-flight-original-c7504f3f.

@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - player7 pass to control (2026-11-09):** Numeric flight, reception and control setup match24 constructed original/native cases. A reusable private-evidence replay checks336 boundaries. Authentic startup, live timing/presentation and a complete playable match remain unverified; overall progress is unmeasured.
+
 **Latest - player7 pass target saved (2026-11-09):** All24 constructed original/native target states match; version147 saves target and cursor. Original-only flight and control are traced, but not yet compared natively. Complete match, authentic initialization and live presentation remain unverified; overall progress is unmeasured.
 
 **Latest - corrected flight observer (2026-11-09):** The previous observer checked the wrong bank for flight/control hooks. With bank31 corrected, all24 constructed original cases reach five flight callbacks and control; native flight and reception remain unimplemented. Real match initialization, live presentation and a complete playable match remain unverified. Overall progress is unmeasured.
