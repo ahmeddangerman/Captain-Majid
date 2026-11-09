@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Ordinary teammate pass through resumed control
+
+Extended phases345-350 through empty flight callbacks, teammate arrival, possession, positioning and acknowledged control entry; the existing setup reaches control_ready. Twenty-four earlier original encounters matched every boundary through resumed control with explicitly supplied choices, fractions, timing and facing. Free-recipient arrival and defended callbacks reject pending evidence. Original cursor residue2 at the independent startup control entry and3 in the earlier teammate cases support bounded side-zero cursor preservation at control entry/ready; later phases retain their guards. Full Windows build, all 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. Autonomous AI, timing/presentation and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Ordinary pass target and flight setup
 
 Added phase344/version151 for resolved recipient/cell/distance and phase345 for original-backed initial numeric flight with explicitly sampled ball fractions. The startup free pass and 24 earlier teammate-pass cases matched original target and flight setup. An initial reuse of the existing flight phase relaxed an older scenario guard; its regression caught the mistake, and a dedicated phase restored that guard. Same-cell flight and continuation of the new flight phase remain unsupported. Full Windows build, 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. AI, autonomous frame/presentation behavior and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.

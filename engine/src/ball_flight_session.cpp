@@ -445,6 +445,64 @@ PhaseSessionState resolve_session_area_ball_cell(const PhaseSessionState& input)
  for(auto id:selected){if(count>=4)break;state.scheduling->selected_ids[count++]=id;}
  state.phase=FieldSessionPhase::area_ball_advance_ready;validate_phase_session(state);return state;
 }
+PhaseSessionState resolve_ordinary_pass_ball_cell(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_pass_flight_callback || input.current.field.selected_defenders)
+  throw std::invalid_argument("Ordinary pass callback requires an empty defender prefix");
+ FlightDefenderSelectionInput selection{};const auto& field=input.current.field;
+ selection.possession_side=field.side;selection.ball_cell=field.ball_cell;
+ selection.random_first=field.random_first;selection.random_second=field.random_second;
+ selection.threshold=input.shot_flight->counter;
+ for(unsigned i=0;i<field.motion.size();++i){const auto& m=field.motion[i];
+  selection.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};}
+ if(!select_flight_defenders(selection).empty())throw std::invalid_argument("Ordinary pass defended flight callback is unsupported");
+ auto state=input;state.phase=FieldSessionPhase::ordinary_pass_flight_ready;validate_phase_session(state);return state;
+}
+PhaseSessionState continue_ordinary_pass_reception(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_pass_flight_arrival || !input.area_ai_target ||
+    input.area_ai_target->recipient<1 || input.area_ai_target->recipient>10 || input.current.field.selected_defenders)
+  throw std::invalid_argument("Ordinary reception requires an unopposed teammate arrival");
+ auto state=input;state.current.field.ball_owner=state.area_ai_target->recipient;
+ state.phase=FieldSessionPhase::ordinary_pass_received;validate_phase_session(state);return state;
+}
+PhaseSessionState position_ordinary_pass_recipient(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_pass_received)throw std::invalid_argument("Ordinary recipient positioning requires possession");
+ const auto& player=input.current.field.motion[field_motion_index(input.current.field.ball_owner)];
+ const auto x=static_cast<std::uint8_t>(player.x>>8),y=static_cast<std::uint8_t>(player.y>>8);
+ const auto cell=field_cell_at(x,y);
+ if(cell==255)throw std::invalid_argument("Ordinary pass recipient is outside the field");
+ auto state=input;state.current.field.ball_x=x;state.current.field.ball_y=y;state.current.field.ball_cell=cell;
+ state.ball_trajectory->x=static_cast<std::uint16_t>((unsigned(x)<<8)|(state.ball_trajectory->x&255));
+ state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(y)<<8)|(state.ball_trajectory->y&255));
+ state.phase=FieldSessionPhase::ordinary_pass_recipient_positioned;validate_phase_session(state);return state;
+}
+PhaseSessionState continue_ordinary_pass_control(const PhaseSessionState& input,std::uint8_t observed_facing) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_pass_recipient_positioned || (observed_facing!=0 && observed_facing!=64))
+  throw std::invalid_argument("Ordinary pass control requires positioned possession and observed facing");
+ const auto& field=input.current.field;
+ if((field.ball_y>=96 && field.ball_y<160 && (field.ball_x<80 || field.ball_x>=176)) ||
+    (input.recovery->game_mode==4 && field.roster[field.ball_owner].type!=1 && field.ball_x>=128))
+  throw std::invalid_argument("Ordinary pass awaits keeper-area or story continuation");
+ auto state=input;state.control->facing=observed_facing;
+ state.area_ai_target.reset();state.shot_flight.reset();state.ball_trajectory.reset();
+ state.phase=FieldSessionPhase::ordinary_pass_control_entry;validate_phase_session(state);return state;
+}
+SessionBallStepResult advance_ordinary_pass_ball_cell(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_pass_flight_ready || input.current.field.selected_defenders)
+  throw std::invalid_argument("Ordinary ball step requires an empty flight boundary");
+ auto state=input;auto& t=*state.ball_trajectory;
+ const auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},state.current.field.ball_cell,state.shot_flight->destination});
+ if(step.event!=BallStepEvent::cell_changed && state.area_ai_target->recipient==255)
+  throw std::invalid_argument("Free-ball pass arrival needs original contest handling");
+ t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;
+ state.current.field.ball_cell=step.cell;
+ state.phase=step.event==BallStepEvent::cell_changed ? FieldSessionPhase::ordinary_pass_flight_callback : FieldSessionPhase::ordinary_pass_flight_arrival;
+ validate_phase_session(state);return {std::move(state),step};
+}
 PhaseSessionState resolve_session_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
  const bool player7=input.phase==FieldSessionPhase::sampled_score25_shot_callback;

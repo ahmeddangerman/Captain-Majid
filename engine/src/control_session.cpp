@@ -76,7 +76,7 @@ ControlSetupResult prepare_session_area_action6_control(const PhaseSessionState&
 }
 ControlSetupResult prepare_session_control(const PhaseSessionState& input) {
     validate_phase_session(input);
-    if ((input.phase != FieldSessionPhase::player_control && input.phase != FieldSessionPhase::kickoff_control_pending &&
+    if ((input.phase != FieldSessionPhase::player_control && input.phase != FieldSessionPhase::ordinary_pass_control_entry && input.phase != FieldSessionPhase::kickoff_control_pending &&
          input.phase != FieldSessionPhase::sampled_field_contact_presentation) || !input.control ||
         !input.recovery || !input.experience)
         throw std::invalid_argument("Control setup requires a player-control handoff and captured contexts");

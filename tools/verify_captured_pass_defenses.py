@@ -143,13 +143,23 @@ def compare_flight_target(actual, raw, comparison_raw, original_target, count, s
         raise ValueError(str(error).replace('boundary pass.movement', 'boundary pass.flight_target')) from error
 
 
-def compare_flight_setup(actual, raw, case):
-    if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260], 'little')!=345:
+def compare_flight_setup(actual, raw, case, phase=345, boundary='flight.setup'):
+    if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260], 'little')!=phase:
         raise ValueError(f'case {case}, boundary flight.setup: invalid native session format or phase')
     prior=bytearray(actual[:259]+actual[260:])
     prior[10]=133
-    prior[258]=96
-    compare_checkpoint(prior,raw,96,19,case,'flight.setup',None,True,False)
+    legacy={345:96,346:98,347:99,348:100,349:101}[phase]
+    prior[258]=legacy
+    compare_checkpoint(prior,raw,legacy,19,case,boundary,None,True,False)
+
+
+def compare_control_entry(actual, raw, case):
+    if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260], 'little')!=350:
+        raise ValueError(f'case {case}, boundary control.entry: invalid native session format or phase')
+    prior=bytearray(actual[:259]+actual[260:])
+    prior[10]=133
+    prior[258]=1
+    compare_checkpoint(prior,raw,1,19,case,'control.entry',None,False,False)
 
 
 def main():

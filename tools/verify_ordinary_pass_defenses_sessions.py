@@ -10,10 +10,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-from verify_captured_pass_defenses import compare_defenses, compare_first_defender, compare_first_defender_result, compare_first_contact, compare_dispatch_clock, compare_movement, compare_flight_target, compare_flight_setup
+from verify_captured_pass_defenses import compare_defenses, compare_first_defender, compare_first_defender_result, compare_first_contact, compare_dispatch_clock, compare_movement, compare_flight_target, compare_flight_setup, compare_control_entry
 from verify_captured_pass_target import compare_confirmed_target
 from verify_observed_world_round import checkpoint
-from verify_player7_pass_end_to_end import case_ids, prepare_output
+from verify_player7_pass_end_to_end import case_ids, prepare_output, compare_checkpoint
 
 
 def main():
@@ -36,6 +36,15 @@ def main():
     parser.add_argument('--distance-table', type=Path, help='private original-derived distance table')
     parser.add_argument('--flight-setup-suffix', help='original initial flight callback suffix')
     parser.add_argument('--velocity', type=Path, help='private original-derived ball velocity content')
+    parser.add_argument('--flight-callback-pattern', help='original flight callback suffix with {step}')
+    parser.add_argument('--flight-callback-count', type=int)
+    parser.add_argument('--flight-arrival-suffix', help='original flight arrival suffix')
+    parser.add_argument('--reception-original', type=Path, help='private original reception capture directory')
+    parser.add_argument('--reception-owner-suffix', help='original owner write suffix')
+    parser.add_argument('--reception-position-suffix', help='original recipient position write suffix')
+    parser.add_argument('--control-entry-suffix', help='original return-to-control entry suffix')
+    parser.add_argument('--control-ready-original', type=Path, help='private original control-ready directory')
+    parser.add_argument('--control-ready-suffix', help='original control-ready RAM suffix')
     parser.add_argument('--comparison-score', type=int, help='original observed comparison score')
     parser.add_argument('--comparison-result', type=int, help='original observed result code')
     parser.add_argument('--comparison-strength', type=int, help='original observed defender strength')
@@ -57,6 +66,16 @@ def main():
         raise ValueError('Flight target requires handoff evidence and a private distance table')
     if (args.flight_setup_suffix is None) != (args.velocity is None) or (args.flight_setup_suffix and not args.flight_target_suffix):
         raise ValueError('Flight setup requires target evidence and private velocity content')
+    callbacks=(args.flight_callback_pattern,args.flight_callback_count,args.flight_arrival_suffix)
+    if any(value is not None for value in callbacks) and (any(value is None for value in callbacks) or not args.flight_setup_suffix or '{step}' not in args.flight_callback_pattern or args.flight_callback_count<0):
+        raise ValueError('Flight replay requires the setup, callback pattern/count and arrival suffix')
+    reception=(args.reception_original,args.reception_owner_suffix,args.reception_position_suffix)
+    if any(value is not None for value in reception) and (any(value is None for value in reception) or not args.flight_arrival_suffix):
+        raise ValueError('Reception comparison requires arrival and all three private evidence arguments')
+    if args.control_entry_suffix and not args.reception_original:
+        raise ValueError('Control comparison requires original reception evidence')
+    if (args.control_ready_original is None) != (args.control_ready_suffix is None) or (args.control_ready_suffix and not args.control_entry_suffix):
+        raise ValueError('Control-ready comparison requires control entry and both private evidence arguments')
     if args.first_comparison_suffix and (not args.first_defender_suffix or any(value is None or not 0 <= value <= 255 for value in
             (args.comparison_score, args.comparison_result, args.comparison_strength))):
         raise ValueError('Defender comparison requires preparation and byte-valued original score, result and strength')
@@ -173,10 +192,42 @@ def main():
                                                 invoke(target,flight,'--begin-ordinary-pass-flight',args.velocity,target_raw[0x634],target_raw[0x636])
                                                 flight_raw=(args.movement_original / f'{case}{args.flight_setup_suffix}').read_bytes()
                                                 compare_flight_setup(flight.read_bytes(),flight_raw,case)
+                                                if args.flight_callback_pattern:
+                                                    for step in range(2,args.flight_callback_count+2):
+                                                        callback=output / f'{case}-flight-step-{step}.cmjsession'
+                                                        invoke(flight,callback,'--advance-ordinary-pass-ball-cell')
+                                                        callback_raw=(args.movement_original / f'{case}{args.flight_callback_pattern.format(step=step)}').read_bytes()
+                                                        compare_flight_setup(callback.read_bytes(),callback_raw,case,346,f'flight.step{step}')
+                                                        flight=output / f'{case}-flight-callback-{step}.cmjsession'
+                                                        invoke(callback,flight,'--resolve-ordinary-pass-ball-cell')
+                                                        compare_flight_setup(flight.read_bytes(),callback_raw,case,345,f'flight.callback{step}')
+                                                    arrival=output / f'{case}-flight-arrival.cmjsession'
+                                                    invoke(flight,arrival,'--advance-ordinary-pass-ball-cell')
+                                                    arrival_raw=(args.movement_original / f'{case}{args.flight_arrival_suffix}').read_bytes()
+                                                    compare_flight_setup(arrival.read_bytes(),arrival_raw,case,347,'flight.arrival')
+                                                    if args.reception_original:
+                                                        owner=output / f'{case}-reception-owner.cmjsession'
+                                                        invoke(arrival,owner,'--continue-ordinary-pass-reception')
+                                                        owner_raw=(args.reception_original / f'{case}{args.reception_owner_suffix}').read_bytes()
+                                                        compare_flight_setup(owner.read_bytes(),owner_raw,case,348,'reception.owner')
+                                                        position=output / f'{case}-reception-position.cmjsession'
+                                                        invoke(owner,position,'--position-ordinary-pass-recipient')
+                                                        position_raw=(args.reception_original / f'{case}{args.reception_position_suffix}').read_bytes()
+                                                        compare_flight_setup(position.read_bytes(),position_raw,case,349,'reception.position')
+                                                        if args.control_entry_suffix:
+                                                            entry_raw=(args.reception_original / f'{case}{args.control_entry_suffix}').read_bytes()
+                                                            control=output / f'{case}-control-entry.cmjsession'
+                                                            invoke(position,control,'--continue-ordinary-pass-control',entry_raw[0x517])
+                                                            compare_control_entry(control.read_bytes(),entry_raw,case)
+                                                            if args.control_ready_original:
+                                                                ready=output / f'{case}-control-ready.cmjsession'
+                                                                invoke(control,ready,'--setup-control')
+                                                                ready_raw=(args.control_ready_original / f'{case}{args.control_ready_suffix}').read_bytes()
+                                                                compare_checkpoint(ready.read_bytes(),ready_raw,9,9,case,'control.ready',None,False,False)
         except (ValueError, RuntimeError) as error:
             raise ValueError(f'case {case}, {error}') from error
     print(f'Matched {len(cases)} original attacker-preparation entries'
-          f'{" through flight setup" if args.flight_setup_suffix else " through pass flight target" if args.flight_target_suffix else " through field movement and pass handoff" if args.movement_suffix else " through dispatch clock" if args.dispatch_suffix else " and all recorded defender contacts" if args.next_defender_pattern else " and first contact clock" if args.first_contact_suffix else " and first-defender comparison" if args.first_comparison_suffix else " and first-defender preparation" if args.first_defender_suffix else " and prepared states" if args.prepared_suffix else ""} with explicitly supplied defender choices.')
+          f'{" through resumed control" if args.control_ready_original else " through control entry" if args.control_entry_suffix else " through teammate reception" if args.reception_original else " through flight arrival" if args.flight_callback_pattern else " through flight setup" if args.flight_setup_suffix else " through pass flight target" if args.flight_target_suffix else " through field movement and pass handoff" if args.movement_suffix else " through dispatch clock" if args.dispatch_suffix else " and all recorded defender contacts" if args.next_defender_pattern else " and first contact clock" if args.first_contact_suffix else " and first-defender comparison" if args.first_comparison_suffix else " and first-defender preparation" if args.first_defender_suffix else " and prepared states" if args.prepared_suffix else ""} with explicitly supplied defender choices.')
 
 
 if __name__ == '__main__':

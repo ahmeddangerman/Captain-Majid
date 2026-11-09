@@ -95,7 +95,8 @@ enum class FieldSessionPhase : std::uint16_t {
     ordinary_pass_defender_prepared = 336, ordinary_pass_defender_compared = 337, ordinary_pass_first_contact_clock = 338,
     ordinary_pass_next_defender_prepared = 339, ordinary_pass_next_defender_compared = 340, ordinary_pass_next_contact_clock = 341,
     ordinary_pass_dispatch_clock = 342, ordinary_pass_field_moved = 343, ordinary_pass_flight_target = 344,
-    ordinary_pass_flight_ready = 345
+    ordinary_pass_flight_ready = 345, ordinary_pass_flight_callback = 346, ordinary_pass_flight_arrival = 347,
+    ordinary_pass_received = 348, ordinary_pass_recipient_positioned = 349, ordinary_pass_control_entry = 350
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

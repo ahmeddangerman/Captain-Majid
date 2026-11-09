@@ -1367,6 +1367,44 @@ int main(){try{using namespace captain;
        "Ordinary flight setup transfers the resolved target and clears defender state");
  const auto ordinary_flight_bytes=bytes(ordinary_flight);std::istringstream ordinary_flight_stream(ordinary_flight_bytes);
  check(bytes(load_phase_session(ordinary_flight_stream))==ordinary_flight_bytes,"Ordinary flight setup snapshot roundtrip");
+ auto home_flight_for_step=ordinary_flight;
+ home_flight_for_step.area_ai_target->recipient=7;
+ const auto ordinary_ball_step=advance_ordinary_pass_ball_cell(home_flight_for_step);
+ if(ordinary_ball_step.state.phase==FieldSessionPhase::ordinary_pass_flight_arrival)
+  rejects([&]{advance_ordinary_pass_ball_cell(ordinary_flight);});
+ check((ordinary_ball_step.state.phase==FieldSessionPhase::ordinary_pass_flight_callback ||
+        ordinary_ball_step.state.phase==FieldSessionPhase::ordinary_pass_flight_arrival) && ordinary_ball_step.state.ball_trajectory,
+       "Ordinary pass flight advances to an explicit cell or arrival callback");
+ const auto ordinary_step_bytes=bytes(ordinary_ball_step.state);std::istringstream ordinary_step_stream(ordinary_step_bytes);
+ check(bytes(load_phase_session(ordinary_step_stream))==ordinary_step_bytes,"Ordinary ball step snapshot roundtrip");
+ auto ordinary_arrival=ordinary_ball_step.state;
+ ordinary_arrival.phase=FieldSessionPhase::ordinary_pass_flight_arrival;
+ const auto arrival_cell=ordinary_arrival.shot_flight->destination;
+ ordinary_arrival.current.field.ball_x=static_cast<std::uint8_t>(48+(arrival_cell/12)*8+4);
+ ordinary_arrival.current.field.ball_y=static_cast<std::uint8_t>(80+(arrival_cell%12)*8+4);
+ ordinary_arrival.current.field.ball_cell=arrival_cell;
+ ordinary_arrival.ball_trajectory->x=static_cast<std::uint16_t>(ordinary_arrival.current.field.ball_x<<8);
+ ordinary_arrival.ball_trajectory->y=static_cast<std::uint16_t>(ordinary_arrival.current.field.ball_y<<8);
+ const auto ordinary_owner=continue_ordinary_pass_reception(ordinary_arrival);
+ check(ordinary_owner.phase==FieldSessionPhase::ordinary_pass_received && ordinary_owner.current.field.ball_owner==7,
+       "Ordinary pass arrival transfers possession to its saved teammate");
+ const auto ordinary_position=position_ordinary_pass_recipient(ordinary_owner);
+ check(ordinary_position.phase==FieldSessionPhase::ordinary_pass_recipient_positioned &&
+       ordinary_position.current.field.ball_x==(ordinary_position.current.field.motion[field_motion_index(7)].x>>8),
+       "Ordinary reception places the ball at the recipient");
+ const auto ordinary_received_bytes=bytes(ordinary_owner);std::istringstream ordinary_received_stream(ordinary_received_bytes);
+ check(bytes(load_phase_session(ordinary_received_stream))==ordinary_received_bytes,"Ordinary reception snapshot roundtrip");
+ const auto ordinary_position_bytes=bytes(ordinary_position);std::istringstream ordinary_position_stream(ordinary_position_bytes);
+ check(bytes(load_phase_session(ordinary_position_stream))==ordinary_position_bytes,"Ordinary recipient position snapshot roundtrip");
+ const auto ordinary_control=continue_ordinary_pass_control(ordinary_position,0);
+ check(ordinary_control.phase==FieldSessionPhase::ordinary_pass_control_entry && ordinary_control.control->facing==0 &&
+       !ordinary_control.ball_trajectory && !ordinary_control.area_ai_target,
+       "Acknowledged teammate reception returns to control without the flight context");
+ const auto ordinary_ready=prepare_session_control(ordinary_control);
+ check(ordinary_ready.state.phase==FieldSessionPhase::control_ready && ordinary_ready.state.area_defender_cursor==2 &&
+       ordinary_ready.state.current.field.ball_owner==7,"Ordinary reception uses the existing control setup and preserves the original cursor residue");
+ auto forged_ready=ordinary_ready.state;forged_ready.area_defender_cursor=6;
+ rejects([&]{validate_phase_session(forged_ready);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

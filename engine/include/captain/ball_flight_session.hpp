@@ -4,6 +4,7 @@
 #include "captain/defender_contact.hpp"
 #include "captain/flight_contact.hpp"
 namespace captain {
+struct SessionBallStepResult;
 struct AreaFlightAcknowledgement {
  std::uint8_t x_fraction,y_fraction,distance,facing,motion;
  std::uint16_t prior_vx,prior_vy;
@@ -14,6 +15,11 @@ PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& inp
  const BallVelocityContent& velocity,const ExperienceContent* experience);
 PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity);
 PhaseSessionState begin_ordinary_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity);
+SessionBallStepResult advance_ordinary_pass_ball_cell(const PhaseSessionState& input);
+PhaseSessionState resolve_ordinary_pass_ball_cell(const PhaseSessionState& input);
+PhaseSessionState continue_ordinary_pass_reception(const PhaseSessionState& input);
+PhaseSessionState position_ordinary_pass_recipient(const PhaseSessionState& input);
+PhaseSessionState continue_ordinary_pass_control(const PhaseSessionState& input,std::uint8_t observed_facing);
 PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& input,
  std::uint8_t x_fraction,std::uint8_t y_fraction,const MovementGeometryContent& geometry,
  const BallVelocityContent& velocity);
