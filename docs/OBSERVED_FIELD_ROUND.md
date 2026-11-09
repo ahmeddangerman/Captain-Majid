@@ -33,3 +33,20 @@ The caller supplies the three bytes sampled by the original random routine, its 
 `tools/verify_observed_nmi_poll.py` accepts a private trace directory, private pack, executable, private output directory and expected poll count. It checks event order, reports the first differing poll and represented field, and checks the final random index. Fifty-five control polls in one original-emulator run matched 322 original-derived bytes and canonical context, but each comparison was independently seeded from its original entry boundary.
 
 Both field-round comparators accept `--round N` to select a one-based round in a longer trace. Five independently seeded rounds in the same startup trace matched the represented state and random index; the first four reached control and the fifth reached a two-defender encounter. Clock intervals between those rounds have not been continuously replayed. Original instruction traces show NMI/random and travel events interleaved with both clock and stamina work; their schedule remains explicit and unsupported by the existing monolithic clock transition.
+
+## Ordered clock interval and continuous captured control chain
+
+`--advance-observed-nmi-clock PRIVATE_EVENTS INITIAL_INDEX` is a bounded comparison operation for `control_clock_pending`. It performs the logical normal clock update first, then consumes explicit ordered records in `CMJCLOCKNMI1`:
+
+```text
+R PLAYER_BYTE SOUND_BYTE TAIL_BYTE CARRY
+T HELD SPEED_LOW SPEED_HIGH
+S
+E
+```
+
+`R` calculates one random step using captured memory bytes and carry; `T` applies one captured travel invocation; `S` marks the observed goal-area check and field-cycle update; `E` marks stamina processing. Exactly one `S` followed by one `E` is required. The original clock's normal update and each marked logical kernel are atomic in this comparison; arbitrary interruption inside those kernels is not modelled. Clock warning, added-time, period-end, and goal-area branches are rejected. The random index is explicitly supplied and returned separately, and no session snapshot format changed. Caller-supplied event order and speed are evidence, not a generated scheduler.
+
+`tools/verify_captured_control_chain.py` takes private `--trace-directory`, `--pack`, `--exe` and `--output` paths plus `--expected-polls` and `--expected-rounds`. It verifies individual input polls and then feeds each native result into the next poll, clock or field round. It compares all represented fields and random index at each boundary and names the first mismatch. It requires unambiguous observed schedule and stamina boundaries and currently stops at the supported E4BE encounter; it fails closed for unrecognized trace shapes.
+
+One original-emulator startup trace continuously matched 55 control polls, five normal clock intervals and five 22-player field rounds, reaching a two-defender encounter: 65 checked native boundaries, each against 322 original-derived bytes, canonical context and random index. The first interval has a random call between schedule and the stamina write; the remaining four have the stamina write before that call. Original-derived events remain supplied, and this single startup does not establish general AI, a frame scheduler, unobserved clock paths or a playable match. The existing separate phase317-to-pass-to-resumed-control replay remains a different sequence; the two have not been connected.

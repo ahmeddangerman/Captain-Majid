@@ -53,6 +53,21 @@ struct NmiControlPollResult {
     ControlPollResult poll;
     std::uint8_t random_index = 0;
 };
+enum class ObservedClockEventKind { random, travel, schedule, energy };
+struct ObservedClockEvent {
+    ObservedClockEventKind kind;
+    ReferenceRandomInputs random{};
+    std::uint8_t held = 0;
+    std::uint16_t speed = 0;
+};
+struct NmiClockResult {
+    ControlTickResult tick;
+    std::uint8_t random_index = 0;
+};
+std::vector<ObservedClockEvent> load_observed_clock_events(std::istream& input);
+NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input,
+    const FieldPlayerProfiles& field, const GoalkeeperProfiles& keepers, const WorldStepContent& content,
+    std::uint8_t initial_random_index, const std::vector<ObservedClockEvent>& events);
 ObservedNmiFieldPoll load_observed_nmi_poll(std::istream& input);
 NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement,

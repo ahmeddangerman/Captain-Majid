@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Captured control chain through encounter
+
+Split the existing normal control-clock continuation into logical clock, field-cycle and stamina milestones, and added an evidence-fed operation that applies explicitly ordered random/travel events between them. It rejects unverified clock and goal-area branches; it does not generate frames, sound, presentation or interrupt individual kernels. The new private-path verifier continuously feeds 55 polls, five clocks and five field rounds from one startup through the first two-defender encounter, checking 65 original boundaries, represented fields and random index without reseeding. This is not yet connected to the separately verified phase317 pass/reception sequence. All 62 registered Windows tests passed, 12 earlier clock outputs remained byte-identical, and phase317 replays matched 576/1,152 boundaries. Evidence stays in ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/control-chain-verifier-20261109. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Explicit NMI control poll and later field-round boundaries
 
 Composed supplied NMI random inputs, travel and control polling into a bounded reusable operation and added a private-path original trace verifier. Fifty-five independently seeded observed polls matched 322 original-derived bytes, canonical context and random index. Added one-based field-round selection and encounter-boundary comparison: five consecutive original rounds individually matched, with round five reaching an encounter. These are not a continuous replay. Captures show random and travel events occur during the clock and stamina routines, so correct interleaving is the next investigation. Windows build and 62/62 registered tests passed; phase317 possession replays matched 576/1,152 boundaries. Private evidence remains outside Git. Progress is unmeasured; suggested model Terra High.

@@ -119,8 +119,7 @@ std::uint16_t maximum_stamina(const FieldPhaseState& field, std::uint8_t id,
     const auto index = static_cast<std::uint8_t>(unsigned(base) + stats.level);
     return content.stamina_curve[std::min<unsigned>(index, 95)];
 }
-ControlTickResult after_clock(PhaseSessionState state, const FieldPlayerProfiles& profiles,
-    const GoalkeeperProfiles& keepers, const WorldStepContent& content) {
+bool begin_after_clock(PhaseSessionState& state) {
     auto& field = state.current.field;
     const auto forward_x = field.side == 0 ? field.ball_x : static_cast<std::uint8_t>(0u - field.ball_x);
     const auto& defending_keeper = field.keepers[field.side == 0 ? 1 : 0];
@@ -129,10 +128,16 @@ ControlTickResult after_clock(PhaseSessionState state, const FieldPlayerProfiles
             throw std::invalid_argument("Kickoff keeper positions are not yet supported at goal-area action");
         state.current.clock.ball_mode = 0; state.current.clock.script_flags = 0;
         state.phase = FieldSessionPhase::goal_area_action;
-        return {std::move(state)};
+        return false;
     }
     auto& schedule = *state.scheduling;
     ++schedule.field_cycle;
+    return true;
+}
+ControlTickResult finish_after_clock(PhaseSessionState state, const FieldPlayerProfiles& profiles,
+    const GoalkeeperProfiles& keepers, const WorldStepContent& content) {
+    auto& field = state.current.field;
+    auto& schedule = *state.scheduling;
     const auto energy_cycle = static_cast<std::uint8_t>(unsigned(schedule.energy_cycle) + 1u);
     schedule.energy_cycle = 0;
     if (energy_cycle != 0) {
@@ -156,10 +161,14 @@ ControlTickResult after_clock(PhaseSessionState state, const FieldPlayerProfiles
     validate_phase_session(result.state);
     return result;
 }
+ControlTickResult after_clock(PhaseSessionState state, const FieldPlayerProfiles& profiles,
+    const GoalkeeperProfiles& keepers, const WorldStepContent& content) {
+    if (!begin_after_clock(state)) return {std::move(state)};
+    return finish_after_clock(std::move(state), profiles, keepers, content);
+}
 }
 
-ControlTickResult advance_control_tick(const PhaseSessionState& input,
-    const FieldPlayerProfiles& field_profiles, const GoalkeeperProfiles& keepers, const WorldStepContent& content) {
+static ControlTickResult begin_control_clock(const PhaseSessionState& input) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::control_clock_pending || !input.scheduling)
         throw std::invalid_argument("Control tick requires clock-pending phase and captured scheduling context");
@@ -179,9 +188,91 @@ ControlTickResult advance_control_tick(const PhaseSessionState& input,
             ? FieldSessionPhase::period_end : FieldSessionPhase::control_added_time;
         return {std::move(state), clock};
     }
-    auto result = after_clock(std::move(state), field_profiles, keepers, content);
-    result.clock = clock;
+    return {std::move(state), clock};
+}
+
+ControlTickResult advance_control_tick(const PhaseSessionState& input,
+    const FieldPlayerProfiles& field_profiles, const GoalkeeperProfiles& keepers, const WorldStepContent& content) {
+    auto initial = begin_control_clock(input);
+    if (initial.state.phase != FieldSessionPhase::control_clock_pending) return initial;
+    auto result = after_clock(std::move(initial.state), field_profiles, keepers, content);
+    result.clock = initial.clock;
     return result;
+}
+
+NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input,
+    const FieldPlayerProfiles& field_profiles, const GoalkeeperProfiles& keepers, const WorldStepContent& content,
+    std::uint8_t initial_random_index, const std::vector<ObservedClockEvent>& events) {
+    if (input.current.clock.remaining <= 30)
+        throw std::invalid_argument("Observed clock events do not cover warning, added time or period end");
+    auto initial = begin_control_clock(input);
+    if (initial.state.phase != FieldSessionPhase::control_clock_pending)
+        throw std::invalid_argument("Observed clock events require a normal clock continuation");
+    auto state = std::move(initial.state);
+    auto index = initial_random_index;
+    unsigned stage = 0;
+    ControlTickResult final{};
+    for (const auto& event : events) {
+        switch (event.kind) {
+        case ObservedClockEventKind::random: {
+            const auto next = advance_reference_random(
+                {index, state.current.field.random_first, state.current.field.random_second}, event.random);
+            index = next.state.index;
+            state.current.field.random_first = next.state.first;
+            state.current.field.random_second = next.state.second;
+            break;
+        }
+        case ObservedClockEventKind::travel:
+            state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
+                event.speed, state.current.field.side, event.held, state.control->facing);
+            break;
+        case ObservedClockEventKind::schedule:
+            if (stage != 0 || !begin_after_clock(state))
+                throw std::invalid_argument("Unsupported or out-of-order observed clock schedule");
+            stage = 1;
+            break;
+        case ObservedClockEventKind::energy:
+            if (stage != 1) throw std::invalid_argument("Out-of-order observed clock energy");
+            final = finish_after_clock(std::move(state), field_profiles, keepers, content);
+            state = final.state;
+            stage = 2;
+            break;
+        default:
+            throw std::invalid_argument("Unknown observed clock event");
+        }
+    }
+    if (stage != 2) throw std::invalid_argument("Observed clock events require schedule and energy boundaries");
+    final.state = std::move(state);
+    final.clock = initial.clock;
+    validate_phase_session(final.state);
+    return {std::move(final), index};
+}
+
+std::vector<ObservedClockEvent> load_observed_clock_events(std::istream& input) {
+    std::string token;
+    if (!(input >> token) || token != "CMJCLOCKNMI1")
+        throw std::invalid_argument("Invalid observed clock event header");
+    std::vector<ObservedClockEvent> events;
+    while (input >> token) {
+        if (token == "R") {
+            unsigned player, sound, tail, carry;
+            if (!(input >> player >> sound >> tail >> carry) || player > 255 || sound > 255 || tail > 255 || carry > 1)
+                throw std::invalid_argument("Invalid observed clock random event");
+            events.push_back({ObservedClockEventKind::random,
+                {static_cast<std::uint8_t>(player), static_cast<std::uint8_t>(sound),
+                 static_cast<std::uint8_t>(tail), carry != 0}});
+        } else if (token == "T") {
+            unsigned held, low, high;
+            if (!(input >> held >> low >> high) || held > 255 || low > 255 || high > 255)
+                throw std::invalid_argument("Invalid observed clock travel event");
+            events.push_back({ObservedClockEventKind::travel, {}, static_cast<std::uint8_t>(held),
+                              static_cast<std::uint16_t>(low | (high << 8))});
+        } else if (token == "S") events.push_back({ObservedClockEventKind::schedule});
+        else if (token == "E") events.push_back({ObservedClockEventKind::energy});
+        else throw std::invalid_argument("Unknown observed clock event");
+    }
+    if (input.bad() || !input.eof()) throw std::invalid_argument("Unreadable observed clock events");
+    return events;
 }
 
 ControlTickResult resume_control_added_time(const PhaseSessionState& post_presentation,

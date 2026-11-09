@@ -45,6 +45,14 @@ int main() {
         try { std::istringstream bad("CMJPOLLNMI1\n1 0 5 6 7 1 1 1 160 3 4\n"); load_observed_nmi_poll(bad); }
         catch (const std::invalid_argument&) { bad_poll_rejected = true; }
         if (!bad_poll_rejected) return 1;
+        std::istringstream clock_stream("CMJCLOCKNMI1\nR 1 2 3 1\nT 1 160 3\nS\nE\n");
+        const auto parsed_clock = load_observed_clock_events(clock_stream);
+        if (parsed_clock.size() != 4 || parsed_clock[0].kind != ObservedClockEventKind::random ||
+            parsed_clock[1].speed != 928 || parsed_clock[3].kind != ObservedClockEventKind::energy) return 1;
+        bool bad_clock_rejected = false;
+        try { std::istringstream bad("CMJCLOCKNMI1\nR 1 2 3 2\nS\nE\n"); load_observed_clock_events(bad); }
+        catch (const std::invalid_argument&) { bad_clock_rejected = true; }
+        if (!bad_clock_rejected) return 1;
         const std::string good_nmi_record = "0 0 0 0 0 0 0 0 0 0";
         for (const std::string& bad_record : {"0 0 0 0 0 2 0 0 0 0", "0 0 0 0 0 0 0 1 0 0", "0 0 256 0 0 0 0 0 0 0"}) {
             auto invalid = nmi_records;
@@ -67,6 +75,40 @@ int main() {
         movement.profiles.ordinary[1].speed_profile = 0;
         movement.profiles.speeds.push_back({0, 0});
         ControlMovementContent control{}; WorldStepContent world{};
+        auto clock_input = state;
+        clock_input.phase = FieldSessionPhase::control_clock_pending;
+        clock_input.current.clock.remaining = 180;
+        FieldPlayerProfiles field_profiles{}; field_profiles.skills.resize(1);
+        GoalkeeperProfiles keeper_profiles{}; keeper_profiles.skills.resize(1);
+        world.stamina_curve.fill(1000);
+        const std::vector<ObservedClockEvent> clock_events = {
+            {ObservedClockEventKind::random, {0, 0, 0, false}},
+            {ObservedClockEventKind::travel, {}, 1, 928},
+            {ObservedClockEventKind::schedule},
+            {ObservedClockEventKind::energy}
+        };
+        const auto clock_result = advance_observed_nmi_control_clock(
+            clock_input, field_profiles, keeper_profiles, world, 255, clock_events);
+        if (clock_result.tick.state.phase != FieldSessionPhase::field_round_pending ||
+            clock_result.tick.state.current.clock.remaining != 179 || clock_result.random_index != 0 ||
+            clock_result.tick.state.control->travel_accumulator != 232 ||
+            clock_result.tick.state.current.field.random_first != 255 ||
+            clock_input.control->travel_accumulator != 0) return 1;
+        bool invalid_clock_rejected = false;
+        try { advance_observed_nmi_control_clock(clock_input, field_profiles, keeper_profiles, world, 0,
+                                                  {{ObservedClockEventKind::energy}}); }
+        catch (const std::invalid_argument&) { invalid_clock_rejected = true; }
+        if (!invalid_clock_rejected) return 1;
+        const auto plain_clock = advance_observed_nmi_control_clock(clock_input, field_profiles, keeper_profiles,
+            world, 7, {{ObservedClockEventKind::schedule}, {ObservedClockEventKind::energy}});
+        if (bytes(plain_clock.tick.state) != bytes(advance_control_tick(clock_input, field_profiles, keeper_profiles, world).state) ||
+            plain_clock.random_index != 7) return 1;
+        auto warning_clock = clock_input; warning_clock.current.clock.remaining = 30;
+        bool warning_rejected = false;
+        try { advance_observed_nmi_control_clock(warning_clock, field_profiles, keeper_profiles, world, 0,
+                {{ObservedClockEventKind::schedule}, {ObservedClockEventKind::energy}}); }
+        catch (const std::invalid_argument&) { warning_rejected = true; }
+        if (!warning_rejected) return 1;
         std::array<LogicalButtons, 22> buttons{};
         std::array<ObservedFieldPoll, 22> observed{};
         const auto legacy = advance_control_field_round(state, profiles, movement, control, world, buttons);
