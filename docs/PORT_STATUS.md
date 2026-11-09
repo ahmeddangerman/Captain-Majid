@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - shared recipient target (2026-11-09):** Original/native controlled execution matched67,792 target-cell resolver fixtures. Both existing phase317 replays and24 earlier no-recipient targets match using resolved cell and calculated distance. The recipient is supplied, not chosen by AI; all58 Windows CTest checks passed. Live initialization and a complete playable match remain unsupported; overall progress is unmeasured.
+
 **Latest - shared pass-distance kernel (2026-11-09):** All3,686,400 bounded coordinate/cell combinations match the controlled original routine, and the two existing phase317 replays match with calculated distance. Recipient/AI choice remains captured and live gameplay unsupported. Windows build/all56 CTest tests passed; the local Linux environment has independently reproducible compiler/linker/Python instability, so a complete Linux check is not claimed. Overall progress is unmeasured.
 
 **Latest - shared core original comparisons (2026-11-09):** Existing isolated routine harnesses passed broad controlled fixtures for attack strength/power, keeper and energy state, random byte stepping, shot/defender outcomes, field interruption, selection and recovery. These do not establish live gameplay. Phase317 replay remains constrained to observed routes; a complete playable match is unsupported and overall progress is unmeasured.

@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from verify_player7_pass_end_to_end import EvidenceMismatch, case_ids, compare_checkpoint, compare_contact_context, compare_flight_context, compare_represented, prepare_output
+from verify_player7_pass_end_to_end import EvidenceMismatch, case_ids, compare_checkpoint, compare_contact_context, compare_flight_context, compare_represented, prepare_output, target_command
 
 
 class ReplayChecks(unittest.TestCase):
@@ -75,6 +75,12 @@ class ReplayChecks(unittest.TestCase):
     def test_truncated_checkpoint_identifies_boundary(self):
         with self.assertRaisesRegex(EvidenceMismatch, r"case 7, boundary arrival: truncated"):
             compare_checkpoint(b"short", bytes(2048), 99, 19, "7", "arrival")
+
+    def test_resolving_recipient_requires_private_distance_table(self):
+        with self.assertRaisesRegex(ValueError, "requires --distance-table"):
+            target_command(None, True)
+        self.assertEqual(target_command(Path('private.cmjpdist'), True)[0], '--resolve-sampled-field-pass-target')
+        self.assertEqual(target_command(None, False)[0], '--capture-sampled-field-pass-target')
 
     def test_output_protects_checkout_and_existing_evidence(self):
         with tempfile.TemporaryDirectory() as temp:
