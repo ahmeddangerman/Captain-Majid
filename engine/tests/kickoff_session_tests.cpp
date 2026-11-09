@@ -1482,6 +1482,35 @@ int main(){try{using namespace captain;
        returned_shot_target.shot_flight->distance==63,"Returned shot calculates the shared approach target");
  const auto returned_shot_target_bytes=bytes(returned_shot_target);std::istringstream returned_shot_target_stream(returned_shot_target_bytes);
  check(bytes(load_phase_session(returned_shot_target_stream))==returned_shot_target_bytes,"Returned shot target snapshot roundtrip");
+ auto nonloose_shot_input=shot_movement.state;nonloose_shot_input.current.field.ball_x=149;
+ nonloose_shot_input.current.field.ball_y=132;nonloose_shot_input.current.field.ball_cell=150;
+ const auto nonloose_shot_target=prepare_session_shot_approach(nonloose_shot_input,returned_approach).state;
+ check(!nonloose_shot_target.shot_flight->loose_ball,"Returned flight fixture exercises the observed non-loose approach");
+ const auto returned_shot_flight=begin_prepared_session_ball_flight(nonloose_shot_target,0,0,pass_geometry,pass_velocity);
+ check(returned_shot_flight.current.field.selected_defenders==0 && !returned_shot_flight.saved_ball_flight_flag &&
+       returned_shot_flight.ball_trajectory && returned_shot_flight.ball_trajectory->x==(nonloose_shot_target.current.field.ball_x<<8) &&
+       returned_shot_flight.shot_flight->destination==nonloose_shot_target.shot_flight->destination,
+       "Returned shot initializes numeric flight and clears the previous defender prefix");
+ const auto returned_shot_flight_bytes=bytes(returned_shot_flight);std::istringstream returned_shot_flight_stream(returned_shot_flight_bytes);
+ check(bytes(load_phase_session(returned_shot_flight_stream))==returned_shot_flight_bytes,"Returned shot numeric flight snapshot roundtrip");
+ const auto flight_motion_sample=advance_observed_nmi_events(returned_shot_flight,0,{{ObservedClockEventKind::motion_sample,{},0}});
+ check(flight_motion_sample.state.control->motion_requested==0 && returned_shot_flight.control->motion_requested==2,
+       "A captured shot-flight motion update is applied without changing its source");
+ const auto returned_shot_step=advance_prepared_session_ball_cell(returned_shot_flight);
+ check(returned_shot_step.state.current.field.ball_cell!=returned_shot_flight.current.field.ball_cell,
+       "Returned shot flight advances to the next cell");
+ auto shot_candidate_state=returned_shot_step.state;
+ for(unsigned id=12;id<=21;++id)shot_candidate_state.current.field.motion[field_motion_index(id)].status=1;
+ auto& shot_candidate=shot_candidate_state.current.field.motion[field_motion_index(19)];
+ shot_candidate.status=0;shot_candidate.x=static_cast<std::uint16_t>(shot_candidate_state.current.field.ball_x<<8);
+ shot_candidate.y=static_cast<std::uint16_t>(shot_candidate_state.current.field.ball_y<<8);
+ shot_candidate_state.current.field.random_first=1;shot_candidate_state.current.field.random_second=0;
+ const auto shot_candidate_result=resolve_session_ball_cell(shot_candidate_state);
+ check(shot_candidate_result.current.field.selected_defenders==1 && shot_candidate_result.scheduling->selected_ids[0]==19,
+       "Returned shot cell callback accumulates an eligible opposing player");
+ const auto returned_shot_callback=resolve_session_ball_cell(returned_shot_step.state);
+ check(returned_shot_callback.current.field.ball_cell==returned_shot_step.state.current.field.ball_cell,
+       "Returned shot resolves its cell callback without moving the ball again");
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});

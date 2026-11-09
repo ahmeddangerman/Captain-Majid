@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Returned shot continuous numeric flight
+
+Connected the returned target to shared numeric flight, six cell steps and defender-selection callbacks, and E7CC arrival. One original startup matches every represented boundary through destination234 with candidates14/12 and random index88; timing and one motion sample are supplied evidence. A changed arrival coordinate reports the first differing field. All62 Windows tests passed and phase317 replays matched576/1152 boundaries. The result2 interruption and recovery remain original-only; full match and autonomous timing/AI are not established. Evidence: ../Captain-Majid-analysis/live-return-shot-flight-arrival-final-20261109. Overall progress unmeasured; next compare the selected-flight defender and recovery; suggested model Terra High.
+
+
 ## 2026-11-09 - Original blocked-shot recovery observation
 
 After original defender14 result2, bank26:$8BDF was reached at frame15327 with selected count0 and ball164/132. At frame15350 the original snapshot shows side0 owner8 at188/124. These original-only boundaries do not verify native recovery, a control handoff or a complete match; instrument and compare the intervening recovery/race. Evidence: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-shot-interruption. Overall progress unmeasured; suggested model Terra High.

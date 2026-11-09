@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - returned shot flight arrival (2026-11-09):** One captured startup now matches numeric shot setup, six steps and selection callbacks, and arrival with two queued defenders, using explicit event/presentation samples. The interruption and recovery remain original-only; autonomous AI/timing and a complete match remain unsupported. All62 Windows tests and phase317 replays passed; overall progress unmeasured.
+
+
 **Latest - returned shot flight components (2026-11-09):** Original/native direction and velocity, seven cell steps and six intermediate defender selections match in standalone comparisons. A continuous native shot-flight replay and the original result2 interruption remain unverified. All62 Windows tests passed at the prior integrated target checkpoint; overall progress is unmeasured.
 
 

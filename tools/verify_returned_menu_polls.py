@@ -31,6 +31,20 @@ def compare_menu(actual,raw,phase,boundary,score=0,strength=0,contact_raw=None):
     compare_checkpoint(normalized,raw,legacy,legacy,'startup',boundary,None,False,False)
 
 
+def compare_shot_flight(actual,raw,phase,boundary):
+    if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260],'little')!=phase:
+        raise ValueError(f'boundary {boundary}: invalid native session format or phase')
+    labels=('present','distance','destination','counter','loose_ball','trajectory_present',
+            'x.low','x.high','y.low','y.high','vx.low','vx.high','vy.low','vy.high','direction','flags')
+    expected=bytes((1,raw[0x62b],raw[0x638],raw[0x61a],0,1))+raw[0x634:0x638]+raw[0x639:0x63d]+bytes((raw[0x62c],raw[0x61b]))
+    for name,value,wanted in zip(labels,actual[340:356],expected):
+        if value!=wanted:raise ValueError(f'boundary {boundary}, flight.{name}: native {value}, original {wanted}')
+    for name,value,wanted in (('defenders.cursor',actual[413],raw[0x616]),('sequence.result',actual[414],raw[0x612])):
+        if value!=wanted:raise ValueError(f'boundary {boundary}, {name}: native {value}, original {wanted}')
+    normalized=bytearray(actual[:259]+actual[260:]);normalized[10]=133;normalized[258]=20
+    compare_checkpoint(normalized,raw,20,20,'startup',boundary,None,False,False)
+
+
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory','source','pack','exe','output'):
@@ -54,6 +68,11 @@ def main():
     parser.add_argument('--target-trace-directory',type=Path,help='private follow-up trace matching the movement handoff')
     parser.add_argument('--target-entry-index',type=int,help='follow-up original C618 handoff index')
     parser.add_argument('--target-index',type=int,help='follow-up original DD08 target index')
+    parser.add_argument('--flight-setup-index',type=int,help='follow-up original E773 numeric setup index')
+    parser.add_argument('--velocity',type=Path,help='private original-derived ball velocity content')
+    parser.add_argument('--flight-cell-indices',nargs='+',type=int,help='ordered original E773 boundaries after cell callbacks')
+    parser.add_argument('--flight-step-indices',nargs='+',type=int,help='matching original E7B4 boundaries before callbacks')
+    parser.add_argument('--flight-arrival-index',type=int,help='original boundary after numeric arrival')
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -66,6 +85,10 @@ def main():
     clocks=(args.contact_before_index,args.contact_index,args.contact_end_index,args.dispatch_index,args.dispatch_end_index)
     if any(value is not None for value in clocks) and (any(value is None for value in clocks) or args.comparison_index is None):
         raise ValueError('Shot contact and dispatch need all five boundaries and the comparison')
+    if args.flight_step_indices is not None and args.flight_cell_indices is None:
+        raise ValueError('Shot flight step boundaries require matching callback boundaries')
+    if args.flight_arrival_index is not None and args.flight_cell_indices is None:
+        raise ValueError('Shot flight arrival requires preceding callback boundaries')
     lines,pcs,ram=trace_data(args.trace_directory)
     if args.start_index>=len(pcs) or pcs[args.start_index]!='C9C5':
         raise ValueError('boundary menu.start: expected original random entry')
@@ -251,7 +274,84 @@ def main():
         compare_menu(actual,adjusted,362,'returned.shot.target',score,strength,ram(args.comparison_index))
         if index!=observed[0xe1]:raise ValueError(f'boundary returned.shot.target, random.index: native {index}, original {observed[0xe1]}')
         source=destination
-    print(f'Matched {count} returned menu polls through {"shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    if args.flight_setup_index is not None or args.velocity is not None:
+        if args.flight_setup_index is None or args.velocity is None or args.target_index is None:
+            raise ValueError('boundary returned.shot.flight_setup: target, setup and velocity are required')
+        setup=args.flight_setup_index
+        if not args.target_index<setup<len(target_pcs) or target_pcs[setup]!='E773' or any(target_pcs[i]=='C9C5' for i in range(args.target_index+1,setup)):
+            raise ValueError('boundary returned.shot.flight_setup: unsupported original ordering')
+        fractions=(target_ram(args.target_index)[0x634],target_ram(args.target_index)[0x636])
+        operation+=1;destination=output/f'{operation:03d}-flight-setup.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--begin-ball-flight',str(args.velocity.resolve()),*map(str,fractions),'--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.flight_setup: {run.stderr.strip()}')
+        compare_shot_flight(destination.read_bytes(),target_ram(setup),365,'returned.shot.flight_setup')
+        if index!=target_ram(setup)[0xe1]:raise ValueError(f'boundary returned.shot.flight_setup, random.index: native {index}, original {target_ram(setup)[0xe1]}')
+        source=destination
+    if args.flight_cell_indices is not None:
+        if args.flight_setup_index is None:raise ValueError('boundary returned.shot.flight: setup is required')
+        if args.flight_step_indices is not None and len(args.flight_step_indices)!=len(args.flight_cell_indices):
+            raise ValueError('boundary returned.shot.flight: step and callback counts differ')
+        previous=args.flight_setup_index
+        for slot,cell in enumerate(args.flight_cell_indices,1):
+            step=args.flight_step_indices[slot-1] if args.flight_step_indices is not None else cell
+            label=f'returned.shot.flight.cell[{slot}]'
+            if not previous<cell<len(target_pcs) or target_pcs[cell]!='E773':
+                raise ValueError(f'boundary {label}: unsupported original ordering')
+            if step!=cell and (not previous<step<cell or target_pcs[step]!='E7B4' or any(target_pcs[i]=='C9C5' for i in range(step+1,cell))):
+                raise ValueError(f'boundary {label}.step: unsupported original order')
+            rows,last=menu_wait_events(target_lines,target_pcs,target_ram,previous,step)
+            if rows:
+                points=[i for i in range(previous+1,step) if target_pcs[i] in ('C9C5','E3CA')]
+                if len(points)!=len(rows):raise ValueError(f'boundary {label}.wait: ambiguous motion sample ordering')
+                motion=source.read_bytes()[305];ordered=[]
+                for row,point in zip(rows,points):
+                    observed=target_ram(point)[0x532]
+                    if observed!=motion:motion=observed;ordered.append(f'M {motion}')
+                    ordered.append(row)
+                operation+=1;events=output/f'{operation:03d}-flight-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(ordered)+'\n')
+                waiting=output/f'{operation:03d}-flight-wait.cmjsession'
+                run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+                if run.returncode:raise RuntimeError(f'boundary {label}.wait: {run.stderr.strip()}')
+                indices=re.findall(r'final random index (\d+);',run.stdout)
+                if indices!=[str(target_ram(last)[0xe1])]:raise ValueError(f'boundary {label}.wait, random.index: native {indices}, original {target_ram(last)[0xe1]}')
+                source=waiting;index=int(indices[0])
+            operation+=1;stepped=output/f'{operation:03d}-flight-step.cmjsession'
+            run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-ball-cell','--capture',str(stepped)],capture_output=True,text=True,timeout=30)
+            if run.returncode:raise RuntimeError(f'boundary {label}.step: {run.stderr.strip()}')
+            if step!=cell:compare_shot_flight(stepped.read_bytes(),target_ram(step),366,label+'.step')
+            operation+=1;destination=output/f'{operation:03d}-flight-callback.cmjsession'
+            run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(stepped),'--resolve-ball-cell','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+            if run.returncode:raise RuntimeError(f'boundary {label}.callback: {run.stderr.strip()}')
+            compare_shot_flight(destination.read_bytes(),target_ram(cell),365,label)
+            if index!=target_ram(cell)[0xe1]:raise ValueError(f'boundary {label}, random.index: native {index}, original {target_ram(cell)[0xe1]}')
+            source=destination;previous=cell
+    if args.flight_arrival_index is not None:
+        arrival=args.flight_arrival_index
+        if args.flight_cell_indices is None or not previous<arrival<len(target_pcs) or target_pcs[arrival]!='E7CC':
+            raise ValueError('boundary returned.shot.flight.arrival: unsupported original ordering')
+        rows,last=menu_wait_events(target_lines,target_pcs,target_ram,previous,arrival)
+        points=[i for i in range(previous+1,arrival) if target_pcs[i] in ('C9C5','E3CA')]
+        if len(points)!=len(rows):raise ValueError('boundary returned.shot.flight.arrival: ambiguous motion ordering')
+        motion=source.read_bytes()[305];ordered=[]
+        for row,point in zip(rows,points):
+            observed=target_ram(point)[0x532]
+            if observed!=motion:motion=observed;ordered.append(f'M {motion}')
+            ordered.append(row)
+        if ordered:
+            operation+=1;events=output/f'{operation:03d}-arrival-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(ordered)+'\n')
+            waiting=output/f'{operation:03d}-arrival-wait.cmjsession'
+            run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+            if run.returncode:raise RuntimeError(f'boundary returned.shot.flight.arrival.wait: {run.stderr.strip()}')
+            indices=re.findall(r'final random index (\d+);',run.stdout)
+            if indices!=[str(target_ram(last)[0xe1])]:raise ValueError('boundary returned.shot.flight.arrival.wait, random.index: original and native differ')
+            source=waiting;index=int(indices[0])
+        operation+=1;destination=output/f'{operation:03d}-arrival.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-ball-cell','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.flight.arrival: {run.stderr.strip()}')
+        compare_shot_flight(destination.read_bytes(),target_ram(arrival),367,'returned.shot.flight.arrival')
+        if index!=target_ram(arrival)[0xe1]:raise ValueError('boundary returned.shot.flight.arrival, random.index: original and native differ')
+        source=destination
+    print(f'Matched {count} returned menu polls through {"shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

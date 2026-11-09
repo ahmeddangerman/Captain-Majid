@@ -298,7 +298,8 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
          input.phase != FieldSessionPhase::ordinary_free_pass_contest_winner && input.phase != FieldSessionPhase::ordinary_pass_control_entry &&
          input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::ordinary_return_contact_pending &&
          input.phase != FieldSessionPhase::ordinary_return_action_menu && input.phase != FieldSessionPhase::ordinary_return_shot_choice && input.phase != FieldSessionPhase::ordinary_return_shot_prepared &&
-         input.phase != FieldSessionPhase::ordinary_return_shot_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_contact && input.phase != FieldSessionPhase::ordinary_return_shot_dispatch) || !input.control)
+         input.phase != FieldSessionPhase::ordinary_return_shot_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_contact && input.phase != FieldSessionPhase::ordinary_return_shot_dispatch &&
+         input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival) || !input.control)
         throw std::invalid_argument("Observed NMI sequence requires a supported contact, menu or pass-target boundary");
     auto state = input;
     auto index = initial_random_index;
@@ -313,7 +314,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
         } else if (event.kind == ObservedClockEventKind::motion_sample &&
-                   (input.phase == FieldSessionPhase::ordinary_human_pass_target || input.phase == FieldSessionPhase::ordinary_pass_prepared || input.phase == FieldSessionPhase::ordinary_pass_control_entry || input.phase == FieldSessionPhase::ordinary_return_contact_pending || input.phase == FieldSessionPhase::ordinary_return_shot_prepared)) {
+                   (input.phase == FieldSessionPhase::ordinary_human_pass_target || input.phase == FieldSessionPhase::ordinary_pass_prepared || input.phase == FieldSessionPhase::ordinary_pass_control_entry || input.phase == FieldSessionPhase::ordinary_return_contact_pending || input.phase == FieldSessionPhase::ordinary_return_shot_prepared || input.phase == FieldSessionPhase::ordinary_return_shot_flight_ready || input.phase == FieldSessionPhase::ordinary_return_shot_flight_callback || input.phase == FieldSessionPhase::ordinary_return_shot_flight_arrival)) {
             state.control->motion_requested = event.held;
         } else if (event.kind == ObservedClockEventKind::facing_sample && (input.phase == FieldSessionPhase::ordinary_pass_prepared || input.phase == FieldSessionPhase::ordinary_return_contact_pending)) {
             state.control->facing = event.held;

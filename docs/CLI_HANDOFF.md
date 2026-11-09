@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: returned shot numeric flight arrival
+
+The captured startup replay now continues from the returned shot target through numeric setup, six E7B4 cell-step boundaries and six E773 defender-selection callbacks, then E7CC arrival. Shared direction, ball-step and flight-defender-selection kernels produce the state; the original explicitly supplied random/travel ordering and one presentation-motion sample. Original candidates14 and12 accumulate and remain queued at destination234. The last random index is88. Phases365-367 retain the original defender cursor and bound this new path to the observed non-loose side0 shot; other cases and interruption outcomes remain guarded. `tools/verify_returned_menu_polls.py` accepts private trace/content paths, joins only byte-identical handoffs, and reports first differing boundary/field; a deliberately changed arrival coordinate reported `returned.shot.flight.arrival, flight.x.high`.
+
+All62 registered Windows tests passed; the phase317 regressions matched576/1152 boundaries. Original-only defender14 result2 and later recovery are not yet connected. General: numeric flight and candidate selection reuse existing kernels. Scenario-specific: this initial observed shot, frame/event sequence and captured presentation. Autonomous AI/timing, presentation, goalkeeper outcomes and a complete playable match remain unverified. Private evidence: ../Captain-Majid-analysis/live-return-shot-flight-arrival-final-20261109 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-shot-cell-boundaries. Next compare the selected-flight defender result and recovery. Overall progress is unmeasured; suggested model Terra High.
+
+
 ## Original-only blocked-shot recovery observation - 2026-11-09
 
 After defender14's result2, the continued original reaches bank26:$8BDF at frame15327 with selected count0 and ball x164/y132, then frame15350 shows side0 owner8 at x188/y124. These are original-only snapshots, not a demonstrated native recovery or control handoff. Next instrument the recovery/race and compare its transition from the flight interruption; retain captured presentation/timing distinctions. Private trace: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-shot-interruption. Overall progress remains unmeasured; suggested model Terra High.

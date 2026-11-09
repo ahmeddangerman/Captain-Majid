@@ -1,5 +1,8 @@
 # Evidence-fed field-round comparison
 
+For the returned ordinary shot, phases365-367 compose shared numeric ball stepping and opposing-player selection with supplied random/travel events. Captured `M` motion samples are accepted during these flight phases; they do not generate presentation. The startup trace matches six step/callback pairs through arrival, while later interruption remains unverified. See CLI_HANDOFF.
+
+
 The same 22-slot, event-fed field-player kernel can now follow a supported returned-shot dispatch into phase363. The original live startup matches at $C618; captured event order is supplied rather than generated. `--advance-observed-field-movement` and the older pass-named command refer to the same operation. The following shot-flight interruption is not yet modeled by this phase.
 
 
