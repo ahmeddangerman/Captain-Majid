@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Ordinary pass first defender comparison
+
+Extended the general ordinary-pass state to first-defender preparation and observed nonterminal comparison with explicit original ball variant, presentation samples and direct comparison row. The startup original matched defender19 (power8, strength4, score192) and 24 earlier original cases matched defender17 (power18, strength0, score255). An initial use of the different $8D95 selector coincidentally matched startup but failed the earlier zero-power case; the $8D93 direct row corrected it. Both free-pass variants1 and2 were observed, so neither is inferred from recipient. Defender choices remain supplied; additional defenders, other outcomes and live scheduling remain unsupported. Full Windows build, 62 CTest tests and phase317 replays of 576/1,152 boundaries passed. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Ordinary pass choice recording and preparation
 
 Added score-independent phases333–335/version150 for ordered, explicitly supplied defender choices (currently action1/subtype0) and existing profile-based attacker preparation. The captured startup matched its two choices and preparation, owner9 stamina733→713 and power12; 24 earlier original cases with three defenders matched the same general operations. No defender AI is generated, and defender processing from the new phase remains pending. All 62 registered Windows tests and the 576/1,152-boundary phase317 regressions passed. Overall progress is unmeasured; suggested model Terra High.

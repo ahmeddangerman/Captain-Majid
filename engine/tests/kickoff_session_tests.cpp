@@ -1239,6 +1239,7 @@ int main(){try{using namespace captain;
  auto defended_pass=free_pass;
  defended_pass.current.field.selected_defenders=2;
  defended_pass.scheduling->selected_ids={19,20,0,0,0};
+ defended_pass.current.field.roster[19].type=1;
  defended_pass.recovery->ball_variant=0;
  const auto selection=begin_ordinary_pass_defense_selection(defended_pass);
  check(selection.phase==FieldSessionPhase::ordinary_pass_defense_selection && selection.ordinary_pass_defenses &&
@@ -1264,6 +1265,33 @@ int main(){try{using namespace captain;
        ordinary_prepared.ordinary_pass_defenses->count==2,"Ordinary pass preparation charges stamina and preserves captured choices");
  const auto ordinary_prepared_bytes=bytes(ordinary_prepared);std::istringstream ordinary_prepared_stream(ordinary_prepared_bytes);
  check(bytes(load_phase_session(ordinary_prepared_stream))==ordinary_prepared_bytes,"Prepared ordinary pass snapshot roundtrip");
+ const auto presentation_samples=advance_observed_nmi_events(ordinary_prepared,0,
+     {{ObservedClockEventKind::motion_sample,{},0}, {ObservedClockEventKind::facing_sample,{},64}});
+ check(presentation_samples.state.control->facing==64 && !presentation_samples.state.control->motion_requested,
+       "Explicit defender presentation samples update only captured control fields");
+ const auto general_defender=prepare_first_ordinary_pass_defender(presentation_samples.state,2,
+     sampled_attack_profiles,ordinary_pass_content);
+ check(general_defender.phase==FieldSessionPhase::ordinary_pass_defender_prepared && general_defender.area_contact &&
+       general_defender.recovery->opposing_player==19 && general_defender.recovery->ball_variant==2 &&
+       general_defender.control->last_carrier_cell==128 && general_defender.area_contact->defense_action==1,
+       "First ordinary pass defender is prepared from explicit variant and captured choice");
+ const auto defender_bytes=bytes(general_defender);std::istringstream defender_stream(defender_bytes);
+ check(bytes(load_phase_session(defender_stream))==defender_bytes,"Ordinary pass defender preparation snapshot roundtrip");
+ rejects([&]{prepare_first_ordinary_pass_defender(presentation_samples.state,0,sampled_attack_profiles,ordinary_pass_content);});
+ auto comparable=general_defender;
+ comparable.action->power=12;comparable.area_contact->defender_power=8;
+ comparable.current.field.random_first=87;comparable.current.field.random_second=219;
+ FieldComparisonSelection ordinary_comparison{5,153,0,false,{154,96,68,0}};
+ const auto ordinary_compared=compare_first_ordinary_pass_defender(comparable,ordinary_comparison);
+ auto wrong_pass_table=ordinary_comparison;wrong_pass_table.table_index=4;
+ rejects([&]{compare_first_ordinary_pass_defender(comparable,wrong_pass_table);});
+ auto terminal_pass_table=ordinary_comparison;terminal_pass_table.thresholds={255,255,255,255};
+ rejects([&]{compare_first_ordinary_pass_defender(comparable,terminal_pass_table);});
+ check(ordinary_compared.phase==FieldSessionPhase::ordinary_pass_defender_compared && ordinary_compared.area_contact->strength==4 &&
+       ordinary_compared.area_contact->loss==1 && ordinary_compared.area_contact->score==192 && ordinary_compared.area_sequence_result==0 &&
+       comparable.area_sequence_result==255,"First defender comparison preserves the incoming pass power and records the original result");
+ const auto compared_bytes=bytes(ordinary_compared);std::istringstream compared_stream(compared_bytes);
+ check(bytes(load_phase_session(compared_stream))==compared_bytes,"Ordinary defender comparison snapshot roundtrip");
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

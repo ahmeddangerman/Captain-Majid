@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - first ordinary-pass defender (2026-11-09):** Shared numeric preparation and nonterminal comparison matched one captured startup and 24 earlier original cases, with explicitly supplied defender choices, presentation samples, ball variant and direct table content. Later contacts, autonomous AI/scheduling and a complete match remain unsupported. All 62 Windows CTest tests and both phase317 replays passed. Overall progress is unmeasured.
+
 **Latest - general ordinary pass preparation (2026-11-09):** Explicitly supplied action1 defender choices and profile-based pass preparation match the captured startup and 24 earlier original cases. Defender AI and processing from the new phase remain unsupported. All 62 Windows CTest tests and both phase317 replays passed; a complete match remains unsupported and overall progress is unmeasured.
 
 **Latest - ordinary pass confirmation (2026-11-09):** Free/opponent-only and single-teammate targets can be explicitly confirmed and saved; six original checkpoints matched in two contexts, and multiple-teammate chooser cases reject. The captured startup also matched 25 polls through a free-pass confirmation. All 62 Windows tests and both phase317 replays passed. General defender continuation and a complete match remain unsupported; overall progress is unmeasured.

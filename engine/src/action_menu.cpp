@@ -544,6 +544,65 @@ PhaseSessionState prepare_ordinary_pass(const PhaseSessionState& input,
     validate_phase_session(state);
     return state;
 }
+PhaseSessionState prepare_first_ordinary_pass_defender(const PhaseSessionState& input,
+    std::uint8_t observed_ball_variant, const FieldPlayerProfiles& players, const FieldDefenseContent& defense) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::ordinary_pass_prepared || !input.scheduling || !input.control ||
+        !input.ordinary_pass_defenses || input.area_contact || (observed_ball_variant != 1 && observed_ball_variant != 2) ||
+        input.control->facing != 64 || input.control->motion_requested)
+        throw std::invalid_argument("First ordinary pass defender requires recorded presentation and variant");
+    const auto defender = input.scheduling->selected_ids[0];
+    const auto& player = input.current.field.roster[defender];
+    const auto prepared = prepare_profiled_field_defender({defender, player.type,
+        static_cast<std::uint8_t>(player.stamina), static_cast<std::uint8_t>(player.stamina >> 8), player.level},
+        players, 1, 0, 0, defense);
+    auto state = input;
+    state.recovery->opposing_player = defender;
+    state.recovery->ball_variant = observed_ball_variant;
+    state.control->last_carrier_cell = 128;
+    state.area_defender_cursor = 0;
+    state.area_contact = AreaContactContext{0,1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+    state.area_sequence_result = 255;
+    state.phase = FieldSessionPhase::ordinary_pass_defender_prepared;
+    validate_phase_session(state);
+    return state;
+}
+PhaseSessionState compare_first_ordinary_pass_defender(const PhaseSessionState& input,
+    const FieldComparisonSelection& comparison) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::ordinary_pass_defender_prepared || !input.area_contact || !input.recovery)
+        throw std::invalid_argument("First ordinary pass defender comparison requires preparation");
+    DefenderContactInput contact{};
+    contact.incoming_power = input.action->power;
+    contact.defender_power = input.area_contact->defender_power;
+    contact.random_first = input.current.field.random_first;
+    contact.random_second = input.current.field.random_second;
+    contact.weakened = false;
+    contact.context = 0;
+    contact.defender_slot = input.recovery->opposing_player;
+    contact.subtype = 0;
+    if (comparison.table_index != 5)
+        throw std::invalid_argument("Ordinary pass action-one defense requires direct comparison table index 5");
+    contact.range = comparison.range;
+    contact.offset = comparison.offset;
+    contact.eligible = comparison.eligible;
+    contact.thresholds = comparison.thresholds;
+    const auto result = compare_defender_contact(contact);
+    if (result.result_code != 0 || result.special || result.subtype != 0)
+        throw std::invalid_argument("Only observed ordinary nonterminal defender comparisons are supported: score=" +
+            std::to_string(result.score) + " result=" + std::to_string(result.result_code) +
+            " special=" + std::to_string(result.special) + " subtype=" + std::to_string(result.subtype) +
+            " range=" + std::to_string(contact.range) + " offset=" + std::to_string(contact.offset));
+    auto state = input;
+    state.area_contact->strength = result.strength;
+    state.area_contact->loss = result.loss;
+    state.area_contact->score = result.score;
+    state.area_contact->result = result.result_code;
+    state.area_sequence_result = result.result_code;
+    state.phase = FieldSessionPhase::ordinary_pass_defender_compared;
+    validate_phase_session(state);
+    return state;
+}
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input) {
     validate_phase_session(input);const auto& f=input.current.field;
     const bool score25=input.phase==FieldSessionPhase::attack_choice_pending && input.score && input.action && input.recovery && input.scheduling &&

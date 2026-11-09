@@ -91,7 +91,8 @@ enum class FieldSessionPhase : std::uint16_t {
     sampled_score25_third_contact_clock = 323, sampled_score25_dispatch_clock = 324, sampled_score25_pass_handoff = 325, sampled_score25_pass_target_captured = 326, sampled_score25_shot_target = 327,
     sampled_score25_shot_advance = 328, sampled_score25_shot_callback = 329, sampled_score25_shot_arrival = 330,
     ordinary_human_pass_target = 331, ordinary_human_pass_confirmed = 332,
-    ordinary_pass_defense_selection = 333, ordinary_pass_defenses_recorded = 334, ordinary_pass_prepared = 335
+    ordinary_pass_defense_selection = 333, ordinary_pass_defenses_recorded = 334, ordinary_pass_prepared = 335,
+    ordinary_pass_defender_prepared = 336, ordinary_pass_defender_compared = 337
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

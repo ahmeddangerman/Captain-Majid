@@ -1,5 +1,15 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: ordinary pass first defender comparison
+
+Phases336-337/version150 extend the score-independent ordinary-pass path through first-defender preparation and observed nonterminal action1/subtype0 comparison, reusing the existing profile preparation and defender comparison kernels. The caller supplies the original ball variant (1 or 2), the direct comparison table row, and recorded presentation motion/facing samples. Only the first defender and result0 are supported; other outcomes reject. These inputs are evidence, not generated AI or presentation.
+
+The original startup's defender19 matched preparation and comparison (power8, score192, strength4); 24 earlier original encounters matched preparation and comparison for defender17 (power18, score255, strength0). The startup had two explicitly supplied defender choices and the earlier cases three. An initial attempt incorrectly used the separate $8D95 selector: its live result happened to match, but the earlier zero-power case exposed the difference. The corrected operation takes the $80C2 caller's direct $8D93 table row explicitly, as the previously verified pass path does. A free recipient alone does not determine the ball variant: original captures show both variants1 and2.
+
+Private-path tools `tools/verify_captured_pass_defenses.py` and `tools/verify_ordinary_pass_defenses_sessions.py` compare represented boundaries and fields; their `--comparison-content RANGE OFFSET ELIGIBLE T0 T1 T2 T3` supplies the direct row. Private results: ../Captain-Majid-analysis/live-defender-direct-20261109 and ../Captain-Majid-analysis/earlier-defender-direct-20261109. Full Windows build and all 62 CTest checks passed; existing phase317 replays matched 576 boundaries across 24 cases and 1,152 across 48 cases.
+
+General: bounded first-defender numeric preparation/comparison with explicit original inputs. Scenario-specific: captured schedules, variant samples, choices and separately guarded phase317 routes. Unknown: contact aftermath and next-defender processing from this phase, live scheduler, AI, presentation and complete match progression. Next investigate original contact clock, status and experience updates through the next defender, comparing startup and earlier encounter. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: general ordinary pass preparation with recorded defenses
 
 Added phases333–335/version150 for a side-zero ordinary pass with a nonempty selected-defender prefix. The caller acknowledges the mode transition and records each defender choice in original order; only explicitly supplied action1/subtype0 is supported. The engine then prepares the attacker with the existing profile, energy and power kernels. These operations do not select defender AI, and they stop before defender processing. Saved candidates and recipient remain available.

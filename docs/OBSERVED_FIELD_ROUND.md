@@ -1,5 +1,7 @@
 # Evidence-fed field-round comparison
 
+The ordinary-pass defender trace can additionally feed explicit presentation samples `M VALUE` (motion request) and `F VALUE` (facing) at the guarded prepared-pass boundary. These copy observed bytes; they do not run presentation. First-defender preparation also requires an explicitly observed ball variant, and comparison requires the direct caller's supplied table row. See CLI_HANDOFF for coverage and limits.
+
 `--advance-observed-world-file PRIVATE_EVENTS` is a separate development operation for a saved field-round entry. It consumes 22 caller-supplied pre-poll observations. For each record it sets the represented random bytes to the supplied values, optionally applies one explicitly observed control-travel step, then runs the existing input and player-processing step. The existing `--advance-world` and `--advance-world-file` operations remain unchanged.
 
 The private text file begins with `CMJWORLDOBS1`, followed by exactly 22 records of eight decimal bytes:

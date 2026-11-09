@@ -267,10 +267,11 @@ static std::vector<ObservedClockEvent> read_observed_events(std::istream& input,
                 throw std::invalid_argument("Invalid observed clock travel event");
             events.push_back({ObservedClockEventKind::travel, {}, static_cast<std::uint8_t>(held),
                               static_cast<std::uint16_t>(low | (high << 8))});
-        } else if (token == "M" && !milestones) {
+        } else if ((token == "M" || token == "F") && !milestones) {
             unsigned value;
-            if (!(input >> value) || value > 255) throw std::invalid_argument("Invalid observed motion sample");
-            events.push_back({ObservedClockEventKind::motion_sample, {}, static_cast<std::uint8_t>(value)});
+            if (!(input >> value) || value > 255) throw std::invalid_argument("Invalid observed presentation sample");
+            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : ObservedClockEventKind::facing_sample,
+                              {}, static_cast<std::uint8_t>(value)});
         } else if (token == "S" && milestones) events.push_back({ObservedClockEventKind::schedule});
         else if (token == "E" && milestones) events.push_back({ObservedClockEventKind::energy});
         else throw std::invalid_argument("Unknown observed clock event");
@@ -290,7 +291,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
     if ((input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
-         input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded) || !input.control)
+         input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded && input.phase != FieldSessionPhase::ordinary_pass_prepared) || !input.control)
         throw std::invalid_argument("Observed NMI sequence requires a supported contact, menu or pass-target boundary");
     auto state = input;
     auto index = initial_random_index;
@@ -304,8 +305,11 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
-        } else if (event.kind == ObservedClockEventKind::motion_sample && input.phase == FieldSessionPhase::ordinary_human_pass_target) {
+        } else if (event.kind == ObservedClockEventKind::motion_sample &&
+                   (input.phase == FieldSessionPhase::ordinary_human_pass_target || input.phase == FieldSessionPhase::ordinary_pass_prepared)) {
             state.control->motion_requested = event.held;
+        } else if (event.kind == ObservedClockEventKind::facing_sample && input.phase == FieldSessionPhase::ordinary_pass_prepared) {
+            state.control->facing = event.held;
         } else throw std::invalid_argument("Observed NMI sequence contains an unsupported event for this phase");
     }
     validate_phase_session(state);

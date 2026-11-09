@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from verify_captured_pass_defenses import compare_defenses
+from verify_captured_pass_defenses import compare_defenses, compare_first_defender, compare_first_defender_result
 from verify_captured_pass_target import compare_confirmed_target
 from verify_observed_world_round import checkpoint
 from verify_player7_pass_end_to_end import case_ids, prepare_output
@@ -23,8 +23,21 @@ def main():
     parser.add_argument('--start-suffix', required=True)
     parser.add_argument('--preparation-suffix', required=True)
     parser.add_argument('--prepared-suffix', help='optional original attacker-prepared RAM suffix')
+    parser.add_argument('--first-defender-suffix', help='optional original first-defender-prepared RAM suffix')
+    parser.add_argument('--first-comparison-suffix', help='optional original first-defender-compared RAM suffix')
+    parser.add_argument('--comparison-score', type=int, help='original observed comparison score')
+    parser.add_argument('--comparison-result', type=int, help='original observed result code')
+    parser.add_argument('--comparison-strength', type=int, help='original observed defender strength')
+    parser.add_argument('--comparison-content', nargs=7, type=int, metavar=('RANGE', 'OFFSET', 'ELIGIBLE', 'T0', 'T1', 'T2', 'T3'))
     parser.add_argument('--expected-cases', type=int, required=True)
     args = parser.parse_args()
+    if args.first_defender_suffix and not args.prepared_suffix:
+        raise ValueError('First defender comparison requires attacker-prepared observations')
+    if args.first_comparison_suffix and (not args.first_defender_suffix or any(value is None or not 0 <= value <= 255 for value in
+            (args.comparison_score, args.comparison_result, args.comparison_strength))):
+        raise ValueError('Defender comparison requires preparation and byte-valued original score, result and strength')
+    if args.first_comparison_suffix and (args.comparison_content is None or any(not 0 <= value <= 255 for value in args.comparison_content) or args.comparison_content[2] > 1):
+        raise ValueError('Defender comparison requires byte-valued direct table content and boolean eligibility')
     cases = case_ids(args.starts, args.start_suffix, args.expected_cases)
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
 
@@ -67,10 +80,32 @@ def main():
                 invoke(current, prepared, '--prepare-ordinary-pass')
                 compare_defenses(prepared.read_bytes(), (args.preparations / f'{case}{args.prepared_suffix}').read_bytes(),
                                  original, 335, original[0x600])
+                if args.first_defender_suffix:
+                    defender_raw = (args.preparations / f'{case}{args.first_defender_suffix}').read_bytes()
+                    # These are explicit original presentation samples; this does not run presentation.
+                    current = prepared.read_bytes()
+                    presentation = output / f'{case}-presentation.txt'
+                    rows = []
+                    if current[305] != defender_raw[0x532]:
+                        rows.append(f'M {defender_raw[0x532]}')
+                    if current[299] != defender_raw[0x517]:
+                        rows.append(f'F {defender_raw[0x517]}')
+                    presentation.write_text('CMJNMISEQ1\n' + ''.join(row + '\n' for row in rows))
+                    waiting = output / f'{case}-presentation.cmjsession'
+                    invoke(prepared, waiting, '--advance-observed-nmi-sequence', presentation, 0)
+                    defender = output / f'{case}-defender.cmjsession'
+                    invoke(waiting, defender, '--prepare-first-ordinary-pass-defender', defender_raw[0x44e])
+                    compare_first_defender(defender.read_bytes(), defender_raw, original, original[0x600])
+                    if args.first_comparison_suffix:
+                        compared = output / f'{case}-compared.cmjsession'
+                        invoke(defender, compared, '--compare-first-ordinary-pass-defender', *args.comparison_content)
+                        comparison_raw = (args.preparations / f'{case}{args.first_comparison_suffix}').read_bytes()
+                        compare_first_defender_result(compared.read_bytes(), comparison_raw, original, original[0x600],
+                                                      args.comparison_score, args.comparison_result, args.comparison_strength)
         except (ValueError, RuntimeError) as error:
             raise ValueError(f'case {case}, {error}') from error
     print(f'Matched {len(cases)} original attacker-preparation entries'
-          f'{" and prepared states" if args.prepared_suffix else ""} with explicitly supplied defender choices.')
+          f'{" and first-defender comparison" if args.first_comparison_suffix else " and first-defender preparation" if args.first_defender_suffix else " and prepared states" if args.prepared_suffix else ""} with explicitly supplied defender choices.')
 
 
 if __name__ == '__main__':
