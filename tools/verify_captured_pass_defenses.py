@@ -13,7 +13,7 @@ from pathlib import Path
 
 from verify_captured_control_chain import menu_wait_events, trace_data
 from verify_captured_pass_target import compare_confirmed_target
-from verify_player7_pass_end_to_end import prepare_output
+from verify_player7_pass_end_to_end import prepare_output, compare_checkpoint
 
 
 def compare_defenses(actual, raw, original_target, phase, count):
@@ -127,6 +127,31 @@ def compare_movement(actual, raw, comparison_raw, original_target, count, score,
         raise ValueError(str(error).replace('boundary pass.dispatch_clock', 'boundary pass.movement')) from error
 
 
+def compare_flight_target(actual, raw, comparison_raw, original_target, count, score, result, strength, slot):
+    if len(actual)!=444 or actual[10]!=151 or int.from_bytes(actual[258:260], 'little')!=344:
+        raise ValueError('boundary pass.flight_target: invalid session format or phase')
+    for name, value, wanted in zip(('recipient', 'cell', 'counter', 'distance'), actual[419:423],
+                                   (raw[0x5fc], raw[0x638], raw[0x61a], raw[0x62b])):
+        if value!=wanted:
+            raise ValueError(f'boundary pass.flight_target, target.{name}: native {value}, original {wanted}')
+    prior=bytearray(actual[:419]+actual[423:])
+    prior[10]=150
+    prior[258:260]=(343).to_bytes(2,'little')
+    try:
+        compare_movement(prior, raw, comparison_raw, original_target, count, score, result, strength, slot)
+    except ValueError as error:
+        raise ValueError(str(error).replace('boundary pass.movement', 'boundary pass.flight_target')) from error
+
+
+def compare_flight_setup(actual, raw, case):
+    if len(actual)!=419 or actual[10]!=143 or int.from_bytes(actual[258:260], 'little')!=345:
+        raise ValueError(f'case {case}, boundary flight.setup: invalid native session format or phase')
+    prior=bytearray(actual[:259]+actual[260:])
+    prior[10]=133
+    prior[258]=96
+    compare_checkpoint(prior,raw,96,19,case,'flight.setup',None,True,False)
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):
@@ -151,6 +176,10 @@ def main():
     parser.add_argument('--dispatch-clock-index', type=int)
     parser.add_argument('--dispatch-end-index', type=int)
     parser.add_argument('--movement-end-index', type=int, help='original fixed-bank pass handoff boundary')
+    parser.add_argument('--flight-target-index', type=int, help='original pass target boundary')
+    parser.add_argument('--distance-table', type=Path, help='private original-derived pass distance table')
+    parser.add_argument('--flight-setup-index', type=int, help='original initial flight callback boundary')
+    parser.add_argument('--velocity', type=Path, help='private original-derived ball velocity content')
     args = parser.parse_args()
     if args.defender_boundary_index is not None and args.prepared_boundary_index is None:
         raise ValueError('First-defender comparison requires the attacker-prepared boundary')
@@ -169,6 +198,10 @@ def main():
         raise ValueError('Dispatch requires both boundaries and the second defender contact')
     if args.movement_end_index is not None and args.dispatch_end_index is None:
         raise ValueError('Movement comparison requires the final dispatch boundary')
+    if (args.flight_target_index is None) != (args.distance_table is None) or (args.flight_target_index is not None and args.movement_end_index is None):
+        raise ValueError('Pass target comparison requires the movement boundary and private distance table')
+    if (args.flight_setup_index is None) != (args.velocity is None) or (args.flight_setup_index is not None and args.flight_target_index is None):
+        raise ValueError('Flight setup requires target evidence and private velocity content')
     if not 0 <= args.initial_index <= 255:
         raise ValueError('Initial random index must be a byte')
     lines, pcs, ram = trace_data(args.trace_directory)
@@ -417,8 +450,33 @@ def main():
         compare_movement(destination.read_bytes(), ram(end), ram(args.next_comparison_index), original, count, score, result, strength, 1)
         index = int(indices[0])
         source = destination
+    if args.flight_target_index is not None:
+        target=args.flight_target_index
+        if not args.movement_end_index < target < len(pcs) or pcs[target]!='DE64' or any(pcs[i]=='C9C5' for i in range(args.movement_end_index+1,target)):
+            raise ValueError('boundary pass.flight_target: unsupported original ordering')
+        destination=output/'flight-target.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source), '--resolve-ordinary-pass-flight-target', str(args.distance_table.resolve()), '--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary pass.flight_target: {run.stderr.strip()}')
+        compare_flight_target(destination.read_bytes(),ram(target),ram(args.next_comparison_index),original,count,score,result,strength,1)
+        if index!=ram(target)[0xe1]:
+            raise ValueError(f'boundary pass.flight_target, random.index: native {index}, original {ram(target)[0xe1]}')
+        source=destination
+    if args.flight_setup_index is not None:
+        setup=args.flight_setup_index
+        if not args.flight_target_index<setup<len(pcs) or pcs[setup]!='E773' or any(pcs[i]=='C9C5' for i in range(args.flight_target_index+1,setup)):
+            raise ValueError('boundary flight.setup: unsupported original ordering')
+        fractions=(ram(args.flight_target_index)[0x634],ram(args.flight_target_index)[0x636])
+        destination=output/'flight-setup.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--begin-ordinary-pass-flight',str(args.velocity.resolve()),*map(str,fractions),'--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:
+            raise RuntimeError(f'boundary flight.setup: {run.stderr.strip()}')
+        compare_flight_setup(destination.read_bytes(),ram(setup),'startup')
+        if index!=ram(setup)[0xe1]:
+            raise ValueError(f'boundary flight.setup, random.index: native {index}, original {ram(setup)[0xe1]}')
+        source=destination
     print(f'Matched ordered mode change and {count} explicitly recorded defender choices'
-          f'{" through field movement and pass handoff" if args.movement_end_index is not None else " through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
+          f'{" through flight setup" if args.flight_setup_index is not None else " through pass flight target" if args.flight_target_index is not None else " through field movement and pass handoff" if args.movement_end_index is not None else " through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
           f'final random index {index}; checkpoint {source}.')
 
 

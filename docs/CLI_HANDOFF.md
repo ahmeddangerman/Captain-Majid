@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: ordinary pass target and flight setup
+
+Phase344/version151 resolves a saved ordinary-pass recipient to its current cell (or preserves the selected cursor for free recipient255), calculates distance from a supplied private table and saves the original counter255. Phase345 uses an explicit original ball-fraction sample and supplied velocity/geometry content to initialize the existing trajectory kernels, clear the selected defenders and retain the original defender cursor. Same-cell flight rejects. Phase345 is deliberately separate from older guarded flight routes; its next ball step is not yet connected.
+
+The startup free pass and 24 earlier teammate-pass encounters matched complete original represented target and initial flight states. Private evidence: ../Captain-Majid-analysis/live-pass-setup-general-20261109 and ../Captain-Majid-analysis/earlier-pass-setup-general-20261109. Target/flight verifier accepts private content paths and identifies a differing boundary/field. Existing original-backed target-cell and distance kernels remain shared. Version151 preserves target plus defender context; older snapshots remain readable.
+
+An attempted reuse of the old generic flight phase weakened a scenario guard, and the existing regression test caught it. A dedicated phase restored the guard. General: bounded resolved target and initial flight from the observed action1/result0 path. Scenario-specific: observed fractions, choices, event schedules and existing phase317 replay. Unknown: continuation of phase345 through flight, free-ball recovery or teammate reception, other defender outcomes, autonomous AI/scheduler/presentation, and a complete match. Full Windows build, all 62 CTest checks and phase317 replays (576/1,152 boundaries) passed. Next compare incremental flight callbacks, selection and arrival across the startup and earlier encounters. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: event-fed pass field movement
 
 Phase343/version150 follows the final ordinary-pass dispatch clock with an event-fed field phase. `--advance-observed-pass-movement FILE INITIAL_INDEX` reads `CMJNMISEQ1` records: `R` and `T` retain the documented captured random/travel meaning, and `P ID` advances the next required slot in order 0..21 (keepers and carrier skip field-player movement). The event sequence is validated atomically and does not generate frames. Existing `advance_field_phase` and this path share the extracted player movement kernel; individual kernel errors leave their input unchanged.

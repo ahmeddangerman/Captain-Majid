@@ -1348,6 +1348,25 @@ int main(){try{using namespace captain;
  rejects([&]{advance_observed_pass_field_movement(movement_dispatch,profile_mappings,pass_movement_content,0,missing_movement);});
  auto unordered_movement=pass_movement_events;std::swap(unordered_movement[1],unordered_movement[2]);
  rejects([&]{advance_observed_pass_field_movement(movement_dispatch,profile_mappings,pass_movement_content,0,unordered_movement);});
+ PassDistanceContent ordinary_distance{};ordinary_distance.values.fill(2);
+ auto ordinary_target_input=pass_movement.state;
+ ordinary_target_input.human_pass_cursor=static_cast<std::uint8_t>((ordinary_target_input.current.field.ball_cell+1)%240);
+ const auto resolved_ordinary_target=resolve_ordinary_pass_flight_target(ordinary_target_input,ordinary_distance);
+ check(resolved_ordinary_target.phase==FieldSessionPhase::ordinary_pass_flight_target && resolved_ordinary_target.sampled_field_pass &&
+       resolved_ordinary_target.sampled_field_pass->recipient==*pass_movement.state.ordinary_pass_recipient &&
+       resolved_ordinary_target.sampled_field_pass->counter==255 && resolved_ordinary_target.sampled_field_pass->distance==2,
+       "Ordinary pass resolves the saved recipient and distance at handoff");
+ const auto resolved_target_bytes=bytes(resolved_ordinary_target);std::istringstream resolved_target_stream(resolved_target_bytes);
+ check(bytes(load_phase_session(resolved_target_stream))==resolved_target_bytes,"Ordinary resolved pass target snapshot roundtrip");
+ auto forged_ordinary_target=resolved_ordinary_target;forged_ordinary_target.sampled_field_pass->destination^=1;
+ rejects([&]{validate_phase_session(forged_ordinary_target);});
+ const auto ordinary_flight=begin_ordinary_pass_flight(resolved_ordinary_target,0,0,pass_geometry,pass_velocity);
+ check(ordinary_flight.phase==FieldSessionPhase::ordinary_pass_flight_ready && ordinary_flight.ball_trajectory &&
+       ordinary_flight.area_ai_target->recipient==resolved_ordinary_target.sampled_field_pass->recipient &&
+       !ordinary_flight.current.field.selected_defenders && !ordinary_flight.ordinary_pass_defenses,
+       "Ordinary flight setup transfers the resolved target and clears defender state");
+ const auto ordinary_flight_bytes=bytes(ordinary_flight);std::istringstream ordinary_flight_stream(ordinary_flight_bytes);
+ check(bytes(load_phase_session(ordinary_flight_stream))==ordinary_flight_bytes,"Ordinary flight setup snapshot roundtrip");
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

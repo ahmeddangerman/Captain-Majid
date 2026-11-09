@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-from verify_captured_pass_defenses import compare_defenses, compare_first_defender, compare_first_defender_result, compare_first_contact, compare_dispatch_clock, compare_movement
+from verify_captured_pass_defenses import compare_defenses, compare_first_defender, compare_first_defender_result, compare_first_contact, compare_dispatch_clock, compare_movement, compare_flight_target, compare_flight_setup
 from verify_captured_pass_target import compare_confirmed_target
 from verify_observed_world_round import checkpoint
 from verify_player7_pass_end_to_end import case_ids, prepare_output
@@ -32,6 +32,10 @@ def main():
     parser.add_argument('--dispatch-suffix', help='original final dispatch clock suffix')
     parser.add_argument('--movement-original', type=Path, help='directory containing original pass-handoff RAM captures')
     parser.add_argument('--movement-suffix', help='original pass-handoff RAM suffix')
+    parser.add_argument('--flight-target-suffix', help='original pass flight target RAM suffix')
+    parser.add_argument('--distance-table', type=Path, help='private original-derived distance table')
+    parser.add_argument('--flight-setup-suffix', help='original initial flight callback suffix')
+    parser.add_argument('--velocity', type=Path, help='private original-derived ball velocity content')
     parser.add_argument('--comparison-score', type=int, help='original observed comparison score')
     parser.add_argument('--comparison-result', type=int, help='original observed result code')
     parser.add_argument('--comparison-strength', type=int, help='original observed defender strength')
@@ -49,6 +53,10 @@ def main():
         raise ValueError('Dispatch comparison requires the full defender sequence')
     if (args.movement_original is None) != (args.movement_suffix is None) or (args.movement_suffix and not args.dispatch_suffix):
         raise ValueError('Movement requires a private original directory, suffix and dispatch')
+    if (args.flight_target_suffix is None) != (args.distance_table is None) or (args.flight_target_suffix and not args.movement_suffix):
+        raise ValueError('Flight target requires handoff evidence and a private distance table')
+    if (args.flight_setup_suffix is None) != (args.velocity is None) or (args.flight_setup_suffix and not args.flight_target_suffix):
+        raise ValueError('Flight setup requires target evidence and private velocity content')
     if args.first_comparison_suffix and (not args.first_defender_suffix or any(value is None or not 0 <= value <= 255 for value in
             (args.comparison_score, args.comparison_result, args.comparison_strength))):
         raise ValueError('Defender comparison requires preparation and byte-valued original score, result and strength')
@@ -154,10 +162,21 @@ def main():
                                         movement_raw = (args.movement_original / f'{case}{args.movement_suffix}').read_bytes()
                                         compare_movement(moved.read_bytes(), movement_raw, comparison_raw, original, original[0x600],
                                                          args.comparison_score, args.comparison_result, args.comparison_strength, original[0x600] - 1)
+                                        if args.flight_target_suffix:
+                                            target=output / f'{case}-flight-target.cmjsession'
+                                            invoke(moved,target,'--resolve-ordinary-pass-flight-target',args.distance_table)
+                                            target_raw=(args.movement_original / f'{case}{args.flight_target_suffix}').read_bytes()
+                                            compare_flight_target(target.read_bytes(),target_raw,comparison_raw,original,original[0x600],
+                                                                  args.comparison_score,args.comparison_result,args.comparison_strength,original[0x600]-1)
+                                            if args.flight_setup_suffix:
+                                                flight=output / f'{case}-flight-setup.cmjsession'
+                                                invoke(target,flight,'--begin-ordinary-pass-flight',args.velocity,target_raw[0x634],target_raw[0x636])
+                                                flight_raw=(args.movement_original / f'{case}{args.flight_setup_suffix}').read_bytes()
+                                                compare_flight_setup(flight.read_bytes(),flight_raw,case)
         except (ValueError, RuntimeError) as error:
             raise ValueError(f'case {case}, {error}') from error
     print(f'Matched {len(cases)} original attacker-preparation entries'
-          f'{" through field movement and pass handoff" if args.movement_suffix else " through dispatch clock" if args.dispatch_suffix else " and all recorded defender contacts" if args.next_defender_pattern else " and first contact clock" if args.first_contact_suffix else " and first-defender comparison" if args.first_comparison_suffix else " and first-defender preparation" if args.first_defender_suffix else " and prepared states" if args.prepared_suffix else ""} with explicitly supplied defender choices.')
+          f'{" through flight setup" if args.flight_setup_suffix else " through pass flight target" if args.flight_target_suffix else " through field movement and pass handoff" if args.movement_suffix else " through dispatch clock" if args.dispatch_suffix else " and all recorded defender contacts" if args.next_defender_pattern else " and first contact clock" if args.first_contact_suffix else " and first-defender comparison" if args.first_comparison_suffix else " and first-defender preparation" if args.first_defender_suffix else " and prepared states" if args.prepared_suffix else ""} with explicitly supplied defender choices.')
 
 
 if __name__ == '__main__':

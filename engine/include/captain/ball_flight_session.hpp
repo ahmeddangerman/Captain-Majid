@@ -13,6 +13,7 @@ PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& inp
  const AreaFlightAcknowledgement& acknowledgement,const MovementGeometryContent& geometry,
  const BallVelocityContent& velocity,const ExperienceContent* experience);
 PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity);
+PhaseSessionState begin_ordinary_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity);
 PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& input,
  std::uint8_t x_fraction,std::uint8_t y_fraction,const MovementGeometryContent& geometry,
  const BallVelocityContent& velocity);

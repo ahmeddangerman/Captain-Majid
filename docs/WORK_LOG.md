@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Ordinary pass target and flight setup
+
+Added phase344/version151 for resolved recipient/cell/distance and phase345 for original-backed initial numeric flight with explicitly sampled ball fractions. The startup free pass and 24 earlier teammate-pass cases matched original target and flight setup. An initial reuse of the existing flight phase relaxed an older scenario guard; its regression caught the mistake, and a dedicated phase restored that guard. Same-cell flight and continuation of the new flight phase remain unsupported. Full Windows build, 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. AI, autonomous frame/presentation behavior and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Event-fed ordinary pass field movement
 
 Extracted the atomic per-player field movement kernel and added phase343 for ordered player/random/travel events after the ordinary-pass dispatch clock. The startup matched all represented fields and random index167 at $C612 using 22 interleaved captured event pairs; 24 earlier original encounters matched the handoff without NMI events. No frame schedule is inferred. Full Windows build, all 62 CTest checks and phase317 replays (576/1,152 boundaries) passed. Target/flight continuation from this new phase, AI and a complete match remain unsupported. Overall progress is unmeasured; suggested model Terra High.

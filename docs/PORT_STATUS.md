@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - ordinary pass flight setup (2026-11-09):** Shared recipient/distance and trajectory setup match one startup free pass and 24 earlier teammate-pass cases with supplied fractions and original-derived content. A separate phase preserves older scenario guards. Flight continuation, AI, autonomous scheduling/presentation and a complete match remain unsupported. All 62 Windows tests and both phase317 replays passed; overall progress is unmeasured.
+
 **Latest - event-fed pass field movement (2026-11-09):** One startup and 24 earlier original encounters match the field-movement handoff after the defender sequence. The startup uses 22 captured random/travel pairs in player order; frames are not generated. All 62 Windows CTest checks and both phase317 replays passed. Native autonomous scheduling/AI, flight from the new path and a complete match remain unsupported; overall progress is unmeasured.
 
 **Latest - ordinary pass dispatch clock (2026-11-09):** The bounded final clock and keeper recovery match one startup and 24 earlier encounters after the explicitly supplied defender sequence. The startup's subsequent field movement interleaves with frame events and is not yet connected. All 62 Windows CTest tests and both phase317 replays passed. Complete match, AI and autonomous presentation/scheduling remain unsupported; overall progress is unmeasured.

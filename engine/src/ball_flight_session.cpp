@@ -268,6 +268,27 @@ PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& inp
  }
  state.ball_trajectory=t;validate_phase_session(state);return state;
 }
+PhaseSessionState begin_ordinary_pass_flight(const PhaseSessionState& input,std::uint8_t x_fraction,std::uint8_t y_fraction,
+ const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_pass_flight_target || !input.sampled_field_pass || !input.scheduling || !input.recovery)
+  throw std::invalid_argument("Ordinary pass flight requires the resolved target");
+ const auto pass=*input.sampled_field_pass;const auto& field=input.current.field;
+ if(field.ball_cell==pass.destination)throw std::invalid_argument("Same-cell ordinary pass flight is unsupported");
+ auto state=input;
+ state.sampled_field_pass.reset();state.ordinary_pass_candidates.reset();state.ordinary_pass_recipient.reset();
+ state.ordinary_pass_defenses.reset();state.human_pass_cursor.reset();state.human_pass_steps=0;
+ state.area_contact.reset();state.area_defender_cursor=input.ordinary_pass_defenses->count;state.area_sequence_result=255;
+ state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);state.saved_ball_flight_flag=1;
+ state.area_ai_target=PhaseSessionState::AreaAiTarget{pass.recipient,pass.destination,0};
+ state.shot_flight=ShotFlightContext{pass.distance,pass.destination,pass.counter,false};
+ BallTrajectoryContext t{static_cast<std::uint16_t>((unsigned(field.ball_x)<<8)|x_fraction),
+  static_cast<std::uint16_t>((unsigned(field.ball_y)<<8)|y_fraction),0,0,input.recovery->x_jitter_control,1};
+ t.direction=calculate_player_direction({t.x,t.y,pass.destination,0},field.ball_cell,geometry);
+ const auto v=calculate_ball_velocity(t.direction,velocity);t.vx=v.x;t.vy=v.y;
+ state.recovery->x_jitter_control=t.direction;state.ball_trajectory=t;state.phase=FieldSessionPhase::ordinary_pass_flight_ready;
+ validate_phase_session(state);return state;
+}
 PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity) {
  validate_phase_session(input);
  const bool score35=input.phase==FieldSessionPhase::sampled_field_ai_pass_target && input.score &&

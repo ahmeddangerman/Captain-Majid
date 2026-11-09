@@ -676,6 +676,24 @@ PhaseSessionState advance_ordinary_pass_dispatch_clock(const PhaseSessionState& 
     validate_phase_session(state);
     return state;
 }
+PhaseSessionState resolve_ordinary_pass_flight_target(const PhaseSessionState& input,const PassDistanceContent& distance) {
+    validate_phase_session(input);
+    if (input.phase!=FieldSessionPhase::ordinary_pass_field_moved || !input.ordinary_pass_recipient || !input.human_pass_cursor)
+        throw std::invalid_argument("Ordinary pass target requires the completed field movement");
+    const auto recipient=*input.ordinary_pass_recipient;
+    std::uint8_t x=0,y=0;
+    if (recipient!=255) {
+        const auto& actor=input.current.field.motion[field_motion_index(recipient)];
+        x=static_cast<std::uint8_t>(actor.x>>8);y=static_cast<std::uint8_t>(actor.y>>8);
+    }
+    const auto destination=resolve_pass_target_cell(recipient,*input.human_pass_cursor,x,y);
+    const auto length=calculate_pass_distance(input.current.field.ball_x,input.current.field.ball_y,destination,distance);
+    auto state=input;
+    state.sampled_field_pass=SampledFieldPassContext{recipient,destination,255,length};
+    state.phase=FieldSessionPhase::ordinary_pass_flight_target;
+    validate_phase_session(state);
+    return state;
+}
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input) {
     validate_phase_session(input);const auto& f=input.current.field;
     const bool score25=input.phase==FieldSessionPhase::attack_choice_pending && input.score && input.action && input.recovery && input.scheduling &&

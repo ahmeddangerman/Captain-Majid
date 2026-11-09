@@ -1,6 +1,7 @@
 #pragma once
 #include "captain/control_session.hpp"
 #include "captain/prepared_attack.hpp"
+#include "captain/pass_distance.hpp"
 
 namespace captain {
 struct ActionMenuContent {
@@ -86,6 +87,7 @@ PhaseSessionState compare_next_ordinary_pass_defender(const PhaseSessionState& i
 PhaseSessionState advance_next_ordinary_pass_contact(const PhaseSessionState& input,
     const ContactPreludeContent& prelude, const ExperienceContent& experience);
 PhaseSessionState advance_ordinary_pass_dispatch_clock(const PhaseSessionState& input);
+PhaseSessionState resolve_ordinary_pass_flight_target(const PhaseSessionState& input,const PassDistanceContent& distance);
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState poll_sampled_human_pass_target(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed);
 // Explicit defender choices observed for the bounded player7 pass; no AI is inferred.
