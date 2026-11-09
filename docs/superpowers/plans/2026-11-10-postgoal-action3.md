@@ -54,3 +54,17 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Retain the existing target and preparation context while applying explicitly observed presentation changes.
 - [x] Replay the original event sequence through $C621 and compare the represented state.
 - [x] Verify and document the checkpoint before implementing flight.
+
+## Task 6: Compare the first numeric flight setup
+
+- [x] Add failing tests for target recalculation, supplied fractions and stale distance, validation and saved trajectory.
+- [x] Reuse the shared direction and velocity kernels for this guarded original route.
+- [x] Compare the saved native state and trajectory against the captured $E773 entry.
+- [x] Run the full build and registered checks and document coverage and limitations.
+
+## Task 7: Compare the first flight and defender callback
+
+- [x] Test the recorded random/travel waits, cell crossing, empty defender callback and arrival; reject unsupported decisions.
+- [x] Reuse shared numeric ball stepping and defender selection while retaining the saved action context.
+- [x] Compare each original flight boundary and snapshot roundtrip before handling the recipient exchange.
+- [x] Verify and document the completed scope.

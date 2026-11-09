@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - action3 first flight (2026-11-10):** One captured startup matches through opposing action3's first flight and arrival at player14's cell. The return flight and defender encounter remain original-only. Autonomous timing/AI, live presentation and a complete playable match remain unsupported. Windows build and all62 registered checks passed; overall progress unmeasured.
+
+
 **Latest - action3 flight handler (2026-11-10):** One captured startup matches through goal, opposing kickoff, action3 and 22 ordered field updates to the original flight-handler entry, using recorded timing and presentation samples. Numeric flight, autonomous timing/AI and a complete playable match remain unsupported. Windows build and all62 registered checks passed; overall progress unmeasured.
 
 

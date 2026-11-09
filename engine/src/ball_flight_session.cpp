@@ -3,6 +3,55 @@
 #include "captain/action_strength.hpp"
 #include <stdexcept>
 namespace captain {
+PhaseSessionState begin_postgoal_opponent_first_flight(const PhaseSessionState& input,
+ std::uint8_t x_fraction,std::uint8_t y_fraction,std::uint8_t captured_distance,
+ const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_flight_handoff || x_fraction || y_fraction || captured_distance!=18)
+  throw std::invalid_argument("Post-goal first flight requires its observed fractions and stale distance");
+ const auto& field=input.current.field;
+ const auto& recipient=field.motion[field_motion_index(input.area_ai_target->recipient)];
+ const auto destination=field_cell_at(static_cast<std::uint8_t>(recipient.x>>8),static_cast<std::uint8_t>(recipient.y>>8));
+ if(destination!=148 || field.ball_cell==destination)
+  throw std::invalid_argument("Unobserved post-goal first flight target");
+ auto state=input;state.area_ai_target->cell=destination;
+ state.shot_flight=ShotFlightContext{captured_distance,destination,255,false};
+ BallTrajectoryContext trajectory{static_cast<std::uint16_t>((unsigned(field.ball_x)<<8)|x_fraction),
+  static_cast<std::uint16_t>((unsigned(field.ball_y)<<8)|y_fraction),0,0,0,1};
+ trajectory.direction=calculate_player_direction({trajectory.x,trajectory.y,destination,0},field.ball_cell,geometry);
+ const auto projected=calculate_ball_velocity(trajectory.direction,velocity);trajectory.vx=projected.x;trajectory.vy=projected.y;
+ if(trajectory.direction!=34 || trajectory.vx!=162 || trajectory.vy!=185)
+  throw std::invalid_argument("Unverified post-goal first flight projection");
+ state.recovery->x_jitter_control=trajectory.direction;state.saved_ball_flight_flag=1;state.ball_trajectory=trajectory;
+ state.phase=FieldSessionPhase::postgoal_opponent_first_flight_ready;validate_phase_session(state);return state;
+}
+SessionBallStepResult advance_postgoal_opponent_first_flight(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_first_flight_ready || input.current.field.selected_defenders ||
+    !((input.current.field.ball_cell==135 && input.current.field.random_first==187 && input.current.field.random_second==39) ||
+      (input.current.field.ball_cell==147 && input.current.field.random_first==32 && input.current.field.random_second==141)))
+  throw std::invalid_argument("Post-goal first flight requires the observed frame boundary");
+ auto state=input;auto& t=*state.ball_trajectory;
+ const auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},state.current.field.ball_cell,state.shot_flight->destination});
+ if((input.current.field.ball_cell==135 && (step.cell!=147 || step.event!=BallStepEvent::cell_changed)) ||
+    (input.current.field.ball_cell==147 && (step.cell!=148 || step.event!=BallStepEvent::arrived)))
+  throw std::invalid_argument("Unobserved post-goal first flight step");
+ t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;state.current.field.ball_cell=step.cell;
+ state.phase=step.event==BallStepEvent::cell_changed ? FieldSessionPhase::postgoal_opponent_first_flight_callback : FieldSessionPhase::postgoal_opponent_first_flight_arrived;
+ validate_phase_session(state);return {std::move(state),step};
+}
+PhaseSessionState resolve_postgoal_opponent_first_flight_cell(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_first_flight_callback || input.current.field.selected_defenders)
+  throw std::invalid_argument("Post-goal first flight requires an empty defender callback");
+ const auto& field=input.current.field;FlightDefenderSelectionInput selection{};
+ selection.possession_side=field.side;selection.ball_cell=field.ball_cell;selection.random_first=field.random_first;
+ selection.random_second=field.random_second;selection.threshold=input.shot_flight->counter;
+ for(unsigned i=0;i<field.motion.size();++i) { const auto& m=field.motion[i];
+  selection.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0}; }
+ if(!select_flight_defenders(selection).empty())throw std::invalid_argument("Unobserved post-goal first flight defender");
+ auto state=input;state.phase=FieldSessionPhase::postgoal_opponent_first_flight_ready;validate_phase_session(state);return state;
+}
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {

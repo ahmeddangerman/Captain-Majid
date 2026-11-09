@@ -1839,6 +1839,9 @@ int main(){try{using namespace captain;
        !postgoal_flight_wait.state.control->display_parameter,"Observed action3 presentation samples are retained");
  auto postgoal_flight_handoff_input=postgoal_flight_wait.state;
  postgoal_flight_handoff_input.current.field.random_first=176;postgoal_flight_handoff_input.current.field.random_second=26;
+ for(unsigned id=1;id<=10;++id)postgoal_flight_handoff_input.current.field.motion[field_motion_index(id)].status=1;
+ postgoal_flight_handoff_input.current.field.motion[field_motion_index(14)].x=151u<<8;
+ postgoal_flight_handoff_input.current.field.motion[field_motion_index(14)].y=115u<<8;
  const auto postgoal_flight_handoff=handoff_postgoal_opponent_flight(postgoal_flight_handoff_input);
  check(postgoal_flight_handoff.phase==FieldSessionPhase::postgoal_opponent_flight_handoff &&
        postgoal_flight_handoff.control->last_carrier_cell==128 && postgoal_flight_handoff.recovery->ball_variant==1 &&
@@ -1847,6 +1850,40 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(postgoal_flight_handoff_stream))==postgoal_flight_handoff_bytes,"Post-goal flight handoff snapshot roundtrips");
  rejects([&]{handoff_postgoal_opponent_flight(postgoal_movement.state);});
  rejects([&]{handoff_postgoal_opponent_flight(postgoal_flight_handoff);});
+ auto postgoal_geometry=pass_movement_content.geometry;
+ postgoal_geometry.direction_thresholds.fill(65535);
+ for(unsigned i=0;i<34;++i)postgoal_geometry.direction_thresholds[i]=0;
+ BallVelocityContent postgoal_velocity{};postgoal_velocity.quarter_wave[29]=162;postgoal_velocity.quarter_wave[34]=185;
+ const auto postgoal_first_flight=begin_postgoal_opponent_first_flight(postgoal_flight_handoff,0,0,18,postgoal_geometry,postgoal_velocity);
+ check(postgoal_first_flight.phase==FieldSessionPhase::postgoal_opponent_first_flight_ready &&
+       postgoal_first_flight.area_ai_target->recipient==14 && postgoal_first_flight.area_ai_target->cell==148 &&
+       postgoal_first_flight.shot_flight->distance==18 && postgoal_first_flight.shot_flight->counter==255 &&
+       postgoal_first_flight.ball_trajectory->direction==34 && postgoal_first_flight.ball_trajectory->vx==162 &&
+       postgoal_first_flight.ball_trajectory->vy==185 && postgoal_first_flight.saved_ball_flight_flag==1,
+       "Post-goal first flight recalculates the recipient cell and projects its observed trajectory");
+ const auto postgoal_first_flight_bytes=bytes(postgoal_first_flight);std::istringstream postgoal_first_flight_stream(postgoal_first_flight_bytes);
+ check(bytes(load_phase_session(postgoal_first_flight_stream))==postgoal_first_flight_bytes,"Post-goal first flight snapshot roundtrips");
+ rejects([&]{begin_postgoal_opponent_first_flight(postgoal_flight_handoff,1,0,18,postgoal_geometry,postgoal_velocity);});
+ rejects([&]{begin_postgoal_opponent_first_flight(postgoal_flight_handoff,0,0,17,postgoal_geometry,postgoal_velocity);});
+ rejects([&]{begin_postgoal_opponent_first_flight(postgoal_first_flight,0,0,18,postgoal_geometry,postgoal_velocity);});
+ auto postgoal_first_wait=advance_observed_nmi_events(postgoal_first_flight,107,{}).state;
+ postgoal_first_wait.current.field.random_first=187;postgoal_first_wait.current.field.random_second=39;
+ const auto postgoal_first_step=advance_postgoal_opponent_first_flight(postgoal_first_wait);
+ check(postgoal_first_step.state.phase==FieldSessionPhase::postgoal_opponent_first_flight_callback &&
+       postgoal_first_step.state.current.field.ball_cell==147,"First flight reaches the observed intermediate cell");
+ const auto postgoal_first_resumed=resolve_postgoal_opponent_first_flight_cell(postgoal_first_step.state);
+ check(postgoal_first_resumed.phase==FieldSessionPhase::postgoal_opponent_first_flight_ready &&
+       !postgoal_first_resumed.current.field.selected_defenders,"Empty observed defender callback resumes the first flight");
+ auto postgoal_arrival_wait=advance_observed_nmi_events(postgoal_first_resumed,108,{}).state;
+ postgoal_arrival_wait.current.field.random_first=32;postgoal_arrival_wait.current.field.random_second=141;
+ const auto postgoal_first_arrival=advance_postgoal_opponent_first_flight(postgoal_arrival_wait);
+ check(postgoal_first_arrival.state.phase==FieldSessionPhase::postgoal_opponent_first_flight_arrived &&
+       postgoal_first_arrival.state.current.field.ball_cell==148,"First flight reaches the observed recipient cell");
+ const auto postgoal_arrival_bytes=bytes(postgoal_first_arrival.state);std::istringstream postgoal_arrival_stream(postgoal_arrival_bytes);
+ check(bytes(load_phase_session(postgoal_arrival_stream))==postgoal_arrival_bytes,"Post-goal first arrival snapshot roundtrips");
+ rejects([&]{advance_postgoal_opponent_first_flight(postgoal_first_flight);});
+ rejects([&]{resolve_postgoal_opponent_first_flight_cell(postgoal_first_flight);});
+ rejects([&]{advance_postgoal_opponent_first_flight(postgoal_first_arrival.state);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

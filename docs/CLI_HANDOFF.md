@@ -1,5 +1,10 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: action3 first flight arrived
+
+Captured startup now matches action3's first flight: moved player14 gives target148, direction34 and velocity162/185; preserved distance18 is explicitly supplied stale original scratch. Two recorded random/travel pairs lead through empty defender callback at147 and snapped arrival148, random index109. Phase402 retains the original action and target. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-firstflight-final-20261110 and ../Captain-Majid-analysis/post-kickoff-firstflight-steps-final-20261110. Original-only continuation moves player18, switches owner to14, sends a return flight to99 and later selects defender8; no native parity is claimed for it. Full Windows build/all62 checks passed. Timing/presentation and AI remain supplied; complete match unsupported and overall progress unmeasured. Next compare the inter-flight exchange. Suggested model GPT-6.1 Terra High.
+
+
 ## Current stopping point - 2026-11-10: action3 flight handler
 
 The captured 1-0 startup matches through action3's ordered 22-player field movement at $E0DE and the explicitly sampled presentation handoff at $C621/$DFD9. The first uses22 captured random/travel pairs; the next uses35 plus motion0/facing64/display0. Native phase399 matches represented state and retains selected player14, original selected cell161 and cost60; final random index107. Original DFD9 then recomputes target from the moved recipient and enters E773 numeric flight, not yet native-compared. The action's live presentation, autonomous timing/AI and a complete playable match remain unsupported. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-fieldmove-final-20261110 and ../Captain-Majid-analysis/post-kickoff-action3-flight-handoff-final-20261110. Fresh Windows build and all62 checks passed. Overall progress unmeasured; next compare target and numeric flight setup. Suggested model GPT-6.1 Terra High.

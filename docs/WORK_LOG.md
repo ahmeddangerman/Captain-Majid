@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-10 - Action3 first flight reaches player14
+
+The captured opponent action3 now matches original first-flight setup, intermediate callback and arrival. From saved player14, the shared cell calculation changes target161 to148 after field movement; shared direction and velocity calculations reproduce direction34, velocity162/185 and zero fractions. The preserved distance18 is explicitly supplied stale original scratch, not a new distance calculation. With two captured random/travel pairs, shared numeric stepping reaches cell147, an original-backed defender scan finds no defenders, and the next step reaches cell148; represented fields and trajectory bytes match the original at E773, E7B4, the resumed E773 and snapped E7CF. Final random index109. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-firstflight-final-20261110 and ../Captain-Majid-analysis/post-kickoff-firstflight-steps-final-20261110.
+
+Original-only continuation later moves player18, switches the ball owner to player14 and starts a return flight toward cell99; that second flight selects defender8. Those events are not yet native-compared. A fresh Windows build and all62 registered checks passed; original timing and presentation remain supplied, not simulated. Overall progress unmeasured; a complete playable match remains unsupported. Next compare the intervening presentation, original player movement and return-flight setup. Suggested model GPT-6.1 Terra High.
+
+
 ## 2026-11-10 - Action3 reaches the original flight handler
 
 After $C606, the captured original executes 22 ordered field-player updates with one random/travel pair per slot. Phase398 reuses the existing movement kernel and matches the original $E0DE state, elapsed0, region130 and random index72. The following presentation uses 35 recorded random/travel pairs and explicit motion0, facing64 and display0 samples. Phase399 retains the selected player14/cell161 and cost60, acknowledges the observed carrier marker128 and ball variant1, and matches the original $C621/$DFD9 flight-handler entry at random index107. Original/native represented fields and score/formation match at both boundaries. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-fieldmove-final-20261110, ../Captain-Majid-analysis/post-kickoff-action3-flight-handoff-final-20261110 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-post-kickoff-action3-route-20261110/trace.
