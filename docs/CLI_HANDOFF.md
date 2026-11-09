@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: live goalkeeper comparison verified
+
+The captured startup reaches the selected opposing goalkeeper and the original bank26:$856B comparison boundary. Native `prepare_goalkeeper`, evaluated independently from the replay checkpoint with the observed action0 and the same private content and random bytes206/74, matches the live original scratch/registers: cost20, base power11, strength6, score255 and threshold classification0. At $856B the original has not yet run the subsequent story override and result write ($856B..$8599); the native session has not been advanced through that comparison or its presentation. Private reproducible check: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/live_keeper_check.py. Sixteen controlled original CPU variations also matched cost, power, stamina and final result; they supply keeper actions and freeze timing.
+
+General: goalkeeper arithmetic, shot approach, field movement, clock and previously documented selection kernels. Guarded or observed: this captured startup, same-cell unstunned keeper entry, supplied input and presentation/random events. Unsupported: connecting this live comparison to a native result, story override and presentation sequencing, goal and restart for this continuation, autonomous AI, continuous playable match and faithful complete engine. All62 Windows tests passed at the last code checkpoint; the full captured replay matched through represented keeper timing, and the live comparison matched separately. Overall progress is unmeasured. Next trace the live $856B..$8599 result write and presentation, connect it only with verified event ordering, then compare scoring/restart. Suggested model Terra High.
+
+
+
 ## Current research - 2026-11-09: goalkeeper calculation independently checked
 
 Using the captured selected-keeper state, an isolated original CPU run from $852F to $8599 matches the existing native goalkeeper kernel for action0: cost20, base power11, unchanged zero stamina, subtype0 and result0 with random206/74. Sixteen constructed variations across four actions and four random pairs match cost, base power, stamina and result. A separate existing oracle matched69,632 skill, 7,456 action-power and 5,248 goalkeeper routine cases. The CPU run explicitly supplies the action and freezes timing; it does not establish the live decision, event order, presentation or score handoff. Private driver/check: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/keeper_check.py.

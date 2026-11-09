@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+**Latest - live goalkeeper comparison (2026-11-09):** At the captured live $856B boundary, native goalkeeper arithmetic matches original cost, base power, strength, score and classification. The session is not yet connected through the result write, goal or restart; a continuous playable match remains unsupported. Overall progress unmeasured.
+
+
+
 **Latest research - selected keeper arithmetic (2026-11-09):** Sixteen controlled original/native keeper preparations and results match for the captured input varied over four actions and random pairs; another5,248 goalkeeper routine cases pass. The live keeper choice/result and score/restart remain unsupported in this continuation. Overall progress unmeasured.
 
 

@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Live goalkeeper comparison arithmetic
+
+The observed live bank26:$856B boundary is after the goalkeeper comparison and before story override/result write. For the captured action0 input, original scratch/registers and the independent native goalkeeper kernel match cost20, base11, strength6, score255 and threshold classification0. This is a live-input arithmetic comparison, not an integrated native result or goal. Private reproducible check: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/live_keeper_check.py. Two intentional keeper-prefix/elapsed mutations were also reported with boundary and field. The prior full Windows build and all62 tests passed; overall progress remains unmeasured. Next verify live result write/presentation and scoring handoff; suggested model Terra High.
+
+
+
 ## 2026-11-09 - Controlled selected-keeper calculations
 
 At captured selected-keeper input, the existing native preparation/comparison matches isolated original $852F..$8599 for action0: cost20, base11, stamina0 and result0. Sixteen constructed cases across four actions and four random pairs match cost, base, stamina and result; the supplied actions and frozen timing do not establish autonomous live choice or a scored goal. Existing oracles independently matched69,632 skill-index, 7,456 action-power and 5,248 keeper cases. Private script: ../Captain-Majid-analysis/area-shot-prep-investigation-20261109/keeper_check.py. Overall progress unmeasured; next compare live keeper presentation and result handoff; suggested model Terra High.
