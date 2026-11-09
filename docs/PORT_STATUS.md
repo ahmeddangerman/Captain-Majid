@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - returned shot-flight defender (2026-11-09):** The directed startup now matches the first queued flight defender through result2 using shared profile/comparison arithmetic; an earlier guarded loose-shot defender set still matches12 original cases. Recovery/race, autonomous AI/timing and a complete match remain unsupported. All62 Windows tests and phase317 replays passed; overall progress unmeasured.
+
+
 **Latest - returned shot flight arrival (2026-11-09):** One captured startup now matches numeric shot setup, six steps and selection callbacks, and arrival with two queued defenders, using explicit event/presentation samples. The interruption and recovery remain original-only; autonomous AI/timing and a complete match remain unsupported. All62 Windows tests and phase317 replays passed; overall progress unmeasured.
 
 

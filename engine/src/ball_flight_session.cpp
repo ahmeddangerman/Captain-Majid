@@ -373,8 +373,36 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
  }
  state.ball_trajectory=t;validate_phase_session(state);return state;
 }
+PhaseSessionState prepare_ordinary_return_flight_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_shot_defenders_pending || input.recovery->ball_variant!=1 || !input.current.field.selected_defenders)
+  throw std::invalid_argument("Returned shot flight defender requires the observed selected prefix and ball variant");
+ const auto id=input.scheduling->selected_ids[0];const auto& player=input.current.field.roster[id];
+ const auto prep=prepare_profiled_field_defender({id,player.type,static_cast<std::uint8_t>(player.stamina),
+  static_cast<std::uint8_t>(player.stamina>>8),player.level},profiles,0,0,0,defense);
+ if(prep.move_effect)throw std::invalid_argument("Unsupported returned flight defender move effect");
+ auto state=input;state.recovery->opposing_player=id;state.recovery->ball_variant=0;state.action->move_effect=prep.move_effect;
+ state.area_contact=AreaContactContext{0,0,0,prep.move_effect,prep.base_strength,prep.stamina_cost,0,0,0,0,false};
+ state.phase=FieldSessionPhase::ordinary_return_shot_flight_defender_prepared;validate_phase_session(state);return state;
+}
+PhaseSessionState compare_ordinary_return_flight_defender(const PhaseSessionState& input,const FlightContactContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_shot_flight_defender_prepared || content.defense_actions[0]!=0)
+  throw std::invalid_argument("Returned shot flight comparison requires the prepared action0 defender");
+ const auto& c=*input.area_contact;const auto& variation=content.variation[0];
+ const auto result=compare_defender_contact({input.action->power,c.defender_power,input.current.field.random_first,input.current.field.random_second,
+  variation[0],variation[1],false,bool(content.eligibility[0]&128u),0,input.recovery->opposing_player,0,content.thresholds[0]});
+ if(result.result_code!=2 || result.subtype)throw std::invalid_argument("Only observed returned flight defender result2 is supported");
+ auto state=input;state.area_contact->strength=result.strength;state.area_contact->loss=result.loss;state.area_contact->score=result.score;
+ state.area_contact->result=result.result_code;state.area_sequence_result=result.result_code;state.recovery->ball_variant=1;
+ state.phase=FieldSessionPhase::ordinary_return_shot_flight_defender_compared;validate_phase_session(state);return state;
+}
 PhaseSessionState continue_session_unopposed_arrival(const PhaseSessionState& input) {
  validate_phase_session(input);
+ if(input.phase==FieldSessionPhase::ordinary_return_shot_flight_arrival && input.current.field.selected_defenders) {
+  auto state=input;state.area_defender_cursor=0;state.phase=FieldSessionPhase::ordinary_return_shot_defenders_pending;
+  validate_phase_session(state);return state;
+ }
  if(input.phase==FieldSessionPhase::sampled_score25_shot_arrival) {
   auto state=input;state.phase=FieldSessionPhase::shot_keeper_entry;validate_phase_session(state);return state;
  }

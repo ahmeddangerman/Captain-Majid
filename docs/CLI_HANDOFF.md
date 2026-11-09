@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: shot-flight defender result2
+
+The startup replay now continues from numeric shot arrival through the queued-defender cursor reset, one captured NMI/travel wait, profile-based preparation and the first action0 defender comparison. Original and native both identify player14 with power8/cost70; strength6, candidate loss1, score85 and result2 match at bank26:$88A8, final random index89. The comparison restores the observed ball variant1. Phases368-370 retain the existing flight/selection context and support only the observed variant1/action0/result2 continuation; unobserved effects, variant and outcomes reject. The arithmetic uses the shared profiled defender and defender-contact kernels. A distinct earlier guarded loose-shot path still matches12 original/native comparisons (strength9, loss2, score78, result2); it retains its own existing guard rather than being silently generalized.
+
+All62 Windows registered tests passed, and phase317 replays matched576/1152 boundaries. Private full replay: ../Captain-Majid-analysis/live-return-shot-flight-defender-final-20261109; earlier independent set: ../Captain-Majid-analysis/shot-interruption-investigation-20261109/earlier_loose_compare.py. The result2 handler, recovery/race and resumed possession are original-only for this startup. Captured timing/presentation, live AI, goalkeeper/scoring and complete match remain unverified. Next connect the result2 handler through original recovery boundaries. Overall progress unmeasured; suggested model Terra High.
+
+
 ## Current stopping point - 2026-11-09: returned shot numeric flight arrival
 
 The captured startup replay now continues from the returned shot target through numeric setup, six E7B4 cell-step boundaries and six E773 defender-selection callbacks, then E7CC arrival. Shared direction, ball-step and flight-defender-selection kernels produce the state; the original explicitly supplied random/travel ordering and one presentation-motion sample. Original candidates14 and12 accumulate and remain queued at destination234. The last random index is88. Phases365-367 retain the original defender cursor and bound this new path to the observed non-loose side0 shot; other cases and interruption outcomes remain guarded. `tools/verify_returned_menu_polls.py` accepts private trace/content paths, joins only byte-identical handoffs, and reports first differing boundary/field; a deliberately changed arrival coordinate reported `returned.shot.flight.arrival, flight.x.high`.

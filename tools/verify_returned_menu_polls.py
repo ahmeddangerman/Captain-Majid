@@ -73,6 +73,9 @@ def main():
     parser.add_argument('--flight-cell-indices',nargs='+',type=int,help='ordered original E773 boundaries after cell callbacks')
     parser.add_argument('--flight-step-indices',nargs='+',type=int,help='matching original E7B4 boundaries before callbacks')
     parser.add_argument('--flight-arrival-index',type=int,help='original boundary after numeric arrival')
+    parser.add_argument('--flight-defender-pending-index',type=int)
+    parser.add_argument('--flight-defender-index',type=int)
+    parser.add_argument('--flight-defender-result-index',type=int)
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -351,7 +354,50 @@ def main():
         compare_shot_flight(destination.read_bytes(),target_ram(arrival),367,'returned.shot.flight.arrival')
         if index!=target_ram(arrival)[0xe1]:raise ValueError('boundary returned.shot.flight.arrival, random.index: original and native differ')
         source=destination
-    print(f'Matched {count} returned menu polls through {"shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    defender_indices=(args.flight_defender_pending_index,args.flight_defender_index,args.flight_defender_result_index)
+    if any(value is not None for value in defender_indices):
+        if any(value is None for value in defender_indices) or args.flight_arrival_index is None:
+            raise ValueError('boundary returned.shot.flight.defender: arrival and all defender boundaries are required')
+        pending,defender,result=defender_indices
+        if not args.flight_arrival_index<pending<defender<result<len(target_pcs) or [target_pcs[i] for i in defender_indices]!=['80DC','888D','88A8'] or target_ram(defender)[0x24]!=26 or target_ram(result)[0x24]!=26:
+            raise ValueError('boundary returned.shot.flight.defender: unsupported original order or bank')
+        if any(target_pcs[i]=='C9C5' for i in range(args.flight_arrival_index+1,pending)) or any(target_pcs[i]=='C9C5' for i in range(defender+1,result)):
+            raise ValueError('boundary returned.shot.flight.defender: unexpected random event')
+        operation+=1;destination=output/f'{operation:03d}-flight-defenders-pending.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--continue-flight-arrival','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.flight.defenders: {run.stderr.strip()}')
+        compare_shot_flight(destination.read_bytes(),target_ram(pending),368,'returned.shot.flight.defenders')
+        source=destination
+        rows,last=menu_wait_events(target_lines,target_pcs,target_ram,pending,defender)
+        if rows:
+            operation+=1;events=output/f'{operation:03d}-defender-wait-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+            waiting=output/f'{operation:03d}-defender-wait.cmjsession'
+            run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+            if run.returncode:raise RuntimeError(f'boundary returned.shot.flight.defender_wait: {run.stderr.strip()}')
+            indices=re.findall(r'final random index (\d+);',run.stdout)
+            if indices!=[str(target_ram(last)[0xe1])]:raise ValueError('boundary returned.shot.flight.defender_wait, random.index: original and native differ')
+            compare_shot_flight(waiting.read_bytes(),target_ram(last),368,'returned.shot.flight.defender_wait')
+            source=waiting;index=int(indices[0])
+        operation+=1;prepared=output/f'{operation:03d}-flight-defender-prepared.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--prepare-ordinary-return-flight-defender','--capture',str(prepared)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.flight.defender_prepare: {run.stderr.strip()}')
+        observed=target_ram(defender)
+        def check_contact(actual,raw,phase,label):
+            scratch=target_ram(defender)
+            wanted=bytes((1,0,0,0,scratch[0x444],scratch[0x32],scratch[0x33],scratch[0x43f],scratch[0x440],
+                raw[0x71] if phase==370 else 0,raw[0x619] if phase==370 else 0,raw[0x6f] if phase==370 else 0,raw[0x612] if phase==370 else 0,0))
+            labels=('present','cursor','action','subtype','effect','power.low','power.high','cost.low','cost.high','strength','loss','score','result','weakened')
+            for name,value,expected in zip(labels,actual[399:413],wanted):
+                if value!=expected:raise ValueError(f'boundary {label}, contact.{name}: native {value}, original {expected}')
+            compare_shot_flight(actual,raw,phase,label)
+        check_contact(prepared.read_bytes(),observed,369,'returned.shot.flight.defender_prepare')
+        operation+=1;compared=output/f'{operation:03d}-flight-defender-compared.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(prepared),'--compare-ordinary-return-flight-defender','--capture',str(compared)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.shot.flight.defender_compare: {run.stderr.strip()}')
+        check_contact(compared.read_bytes(),target_ram(result),370,'returned.shot.flight.defender_compare')
+        if index!=target_ram(result)[0xe1]:raise ValueError('boundary returned.shot.flight.defender_compare, random.index: original and native differ')
+        source=compared
+    print(f'Matched {count} returned menu polls through {"shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

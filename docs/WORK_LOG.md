@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Returned shot-flight defender comparison
+
+The startup chain now matches the selected defender sequence through result2: cursor reset, captured wait, player14 profile power8/cost70, strength6/loss1/score85 and restored variant1. Shared numerical preparation/comparison are reused; only the observed first action0/result2/variant1 path is exposed. An earlier separately guarded loose-shot set still matches12 original cases. All62 registered Windows tests and phase317 replays (576/1152 boundaries) passed. Recovery remains original-only. Private replay: ../Captain-Majid-analysis/live-return-shot-flight-defender-final-20261109. Overall progress unmeasured; next compare result2 handler and recovery; suggested model Terra High.
+
+
 ## 2026-11-09 - Returned shot continuous numeric flight
 
 Connected the returned target to shared numeric flight, six cell steps and defender-selection callbacks, and E7CC arrival. One original startup matches every represented boundary through destination234 with candidates14/12 and random index88; timing and one motion sample are supplied evidence. A changed arrival coordinate reports the first differing field. All62 Windows tests passed and phase317 replays matched576/1152 boundaries. The result2 interruption and recovery remain original-only; full match and autonomous timing/AI are not established. Evidence: ../Captain-Majid-analysis/live-return-shot-flight-arrival-final-20261109. Overall progress unmeasured; next compare the selected-flight defender and recovery; suggested model Terra High.

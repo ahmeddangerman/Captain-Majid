@@ -1511,6 +1511,42 @@ int main(){try{using namespace captain;
  const auto returned_shot_callback=resolve_session_ball_cell(returned_shot_step.state);
  check(returned_shot_callback.current.field.ball_cell==returned_shot_step.state.current.field.ball_cell,
        "Returned shot resolves its cell callback without moving the ball again");
+ auto shot_arrival_fixture=shot_candidate_result;
+ const auto shot_arrival_cell=shot_arrival_fixture.shot_flight->destination;
+ shot_arrival_fixture.current.field.ball_x=static_cast<std::uint8_t>((shot_arrival_cell/12)*8+52);
+ shot_arrival_fixture.current.field.ball_y=static_cast<std::uint8_t>((shot_arrival_cell%12)*8+84);
+ shot_arrival_fixture.current.field.ball_cell=shot_arrival_cell;
+ shot_arrival_fixture.ball_trajectory->x=static_cast<std::uint16_t>(shot_arrival_fixture.current.field.ball_x<<8);
+ shot_arrival_fixture.ball_trajectory->y=static_cast<std::uint16_t>(shot_arrival_fixture.current.field.ball_y<<8);
+ shot_arrival_fixture.phase=FieldSessionPhase::ordinary_return_shot_flight_arrival;
+ const auto shot_defenders_pending=continue_session_unopposed_arrival(shot_arrival_fixture);
+ check(!shot_defenders_pending.area_defender_cursor && shot_defenders_pending.current.field.selected_defenders==1 &&
+       shot_defenders_pending.scheduling->selected_ids[0]==19,
+       "Shot arrival begins the selected defender sequence without losing its prefix");
+ auto flight_defense_content=ordinary_pass_content;flight_defense_content.skill_selectors[0][0]=1;
+ flight_defense_content.moves[0]={{0,0,70,0}};flight_defense_content.strength_curve.fill(8);
+ auto flight_defender_input=shot_defenders_pending;flight_defender_input.action->power=8;
+ flight_defender_input.current.field.random_first=232;flight_defender_input.current.field.random_second=64;
+ const auto flight_defender=prepare_ordinary_return_flight_defender(flight_defender_input,sampled_attack_profiles,flight_defense_content);
+ check(flight_defender.recovery->opposing_player==19 && !flight_defender.recovery->ball_variant &&
+       flight_defender.area_contact && flight_defender.area_contact->defender_power==8 && flight_defender.area_contact->cost==70,
+       "Shot flight prepares the first queued defender using its profile");
+ FlightContactContent flight_comparison{};flight_comparison.defense_actions={0,2};flight_comparison.eligibility[0]=128;
+ flight_comparison.variation[0]={192,64};flight_comparison.thresholds[0]={154,96,48,0};
+ const auto flight_defender_result=compare_ordinary_return_flight_defender(flight_defender,flight_comparison);
+ check(flight_defender_result.area_contact->strength==6 && flight_defender_result.area_contact->loss==1 &&
+       flight_defender_result.area_contact->score==85 && flight_defender_result.area_sequence_result==2 &&
+       flight_defender_result.recovery->ball_variant==1,
+       "Shot flight comparison reproduces the captured result2 and restores the ball variant");
+ const auto flight_defender_result_bytes=bytes(flight_defender_result);std::istringstream flight_defender_result_stream(flight_defender_result_bytes);
+ check(bytes(load_phase_session(flight_defender_result_stream))==flight_defender_result_bytes,
+       "Compared shot-flight defender snapshot roundtrip");
+ auto different_flight_result=flight_defender;different_flight_result.action->power=40;
+ const auto different_flight_result_bytes=bytes(different_flight_result);
+ rejects([&]{compare_ordinary_return_flight_defender(different_flight_result,flight_comparison);});
+ check(bytes(different_flight_result)==different_flight_result_bytes,"Unsupported shot-flight result leaves its source unchanged");
+ auto unsupported_flight_variant=flight_defender_input;unsupported_flight_variant.recovery->ball_variant=2;
+ rejects([&]{prepare_ordinary_return_flight_defender(unsupported_flight_variant,sampled_attack_profiles,flight_defense_content);});
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
