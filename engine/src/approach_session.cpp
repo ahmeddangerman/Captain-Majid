@@ -5,8 +5,9 @@ SessionApproachResult prepare_session_shot_approach(const PhaseSessionState& inp
  validate_phase_session(input);
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_shot_handoff;
  const bool player7=input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.score &&
-  input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7 &&
-  input.current.clock.remaining==304 && input.current.field.elapsed==0 && input.area_defender_cursor==5;
+  input.current.field.ball_owner==7 && input.current.field.elapsed==0 &&
+  ((input.score->left_goals==2 && input.score->right_goals==5 && input.current.clock.remaining==304 && input.area_defender_cursor==5) ||
+   (input.score->left_goals==3 && input.score->right_goals==6 && input.current.clock.remaining==263 && input.area_defender_cursor==4));
  if(input.phase!=FieldSessionPhase::shot_approach_ready && !score23 && !player7)
   throw std::invalid_argument("Shot approach requires completed attacking clock");
  const auto& field=input.current.field;

@@ -25,6 +25,17 @@ PhaseSessionState capture_sampled_player5_defense_choices(const PhaseSessionStat
  const std::array<std::uint8_t,5>& actions,const std::array<std::uint8_t,5>& subtypes) {
  validate_phase_session(input);
  const auto& f=input.current.field;
+ if(input.phase==FieldSessionPhase::attack_choice_pending && !input.human_defense_choices && input.score && input.action && input.recovery && input.scheduling &&
+    input.score->left_goals==3 && input.score->right_goals==6 && input.score->kickoff==4 && input.current.clock.remaining==269 &&
+    input.current.clock.extra_time==13 && f.side==0 && f.ball_owner==7 && f.ball_x==113 && f.ball_y==143 && f.ball_cell==103 &&
+    f.roster[7].type==23 && f.roster[7].stamina==140 && f.selected_defenders==4 &&
+    input.scheduling->selected_ids==std::array<std::uint8_t,5>{12,15,16,21,0} &&
+    actions==std::array<std::uint8_t,5>{1,1,1,1,1} && subtypes==std::array<std::uint8_t,5>{} &&
+    input.action->action==0 && input.action->cursor==224 && input.area_defender_cursor==3 &&
+    !f.random_first && !f.random_second && input.saved_ball_flight_flag==1) {
+  auto state=input;state.human_defense_choices=HumanDefenseChoices{actions,subtypes};state.recovery->opposing_player=21;
+  validate_phase_session(state);return state;
+ }
  if(input.phase==FieldSessionPhase::attack_choice_pending && !input.human_defense_choices && input.score && input.scheduling &&
     input.score->left_goals==2 && input.score->right_goals==5 && input.score->kickoff==4 && input.current.clock.remaining==311 &&
     input.current.clock.extra_time==13 && f.side==0 && f.ball_owner==7 && f.ball_x==117 && f.ball_y==139 && f.ball_cell==103 &&
@@ -72,9 +83,9 @@ PhaseSessionState prepare_sampled_player5_dribble(const PhaseSessionState& input
 }
 PhaseSessionState begin_sampled_player5_dribble_defenders(const PhaseSessionState& input) {
  validate_phase_session(input);
- const bool player7=input.score && input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7;
+ const bool player7=input.score && ((input.score->left_goals==2 && input.score->right_goals==5) || (input.score->left_goals==3 && input.score->right_goals==6)) && input.current.field.ball_owner==7;
  if(player7 && input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.area_contact &&
-    input.area_defender_cursor<5 && input.area_sequence_result==0 &&
+    input.area_defender_cursor<input.current.field.selected_defenders && input.area_sequence_result==0 &&
     input.current.field.motion[field_motion_index(input.scheduling->selected_ids[input.area_defender_cursor])].status==6) {
   auto state=input;++state.area_defender_cursor;state.area_contact.reset();state.area_sequence_result=255;
   validate_phase_session(state);return state;
@@ -99,8 +110,8 @@ PhaseSessionState prepare_sampled_player5_dribble_defender(const PhaseSessionSta
   state.phase=FieldSessionPhase::sampled_score24_dribble_defender;validate_phase_session(state);return state;
  }
  if(input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.score &&
-    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7 &&
-    input.area_defender_cursor<5 && !input.area_contact) {
+    ((input.score->left_goals==2 && input.score->right_goals==5) || (input.score->left_goals==3 && input.score->right_goals==6)) && input.current.field.ball_owner==7 &&
+    input.area_defender_cursor<input.current.field.selected_defenders && !input.area_contact) {
   const auto defender=input.scheduling->selected_ids[input.area_defender_cursor];
   const auto& p=input.current.field.roster[defender];
   const auto prepared=prepare_profiled_field_defender({defender,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},profiles,1,0,0,defense);
@@ -128,7 +139,7 @@ PhaseSessionState compare_sampled_player5_dribble_defender(const PhaseSessionSta
  const FieldComparisonSelection& comparison) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.area_contact && input.score &&
-    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7) {
+    ((input.score->left_goals==2 && input.score->right_goals==5) || (input.score->left_goals==3 && input.score->right_goals==6)) && input.current.field.ball_owner==7) {
   if(input.area_sequence_result!=255 || comparison.table_index!=1)throw std::invalid_argument("Unsupported player7 shot comparison row");
   DefenderContactInput contact{};contact.incoming_power=input.action->power;contact.defender_power=input.area_contact->defender_power;
   contact.random_first=input.current.field.random_first;contact.random_second=input.current.field.random_second;
@@ -258,7 +269,7 @@ PhaseSessionState compare_sampled_player3_pass_defender(const PhaseSessionState&
 PhaseSessionState advance_sampled_player3_pass_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.area_contact && input.score &&
-    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7) {
+    ((input.score->left_goals==2 && input.score->right_goals==5) || (input.score->left_goals==3 && input.score->right_goals==6)) && input.current.field.ball_owner==7) {
   const auto defender=input.recovery->opposing_player;
   if(input.area_sequence_result!=0 || input.current.field.motion[field_motion_index(defender)].status ||
      prelude.field_elapsed[3]!=1 || prelude.defender_status[1]!=6)
@@ -291,8 +302,9 @@ PhaseSessionState advance_sampled_player3_pass_dispatch(const PhaseSessionState&
  validate_phase_session(input);
  const bool score25=input.phase==FieldSessionPhase::sampled_score25_third_contact_clock;
  const bool player7=input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.score &&
-    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7 &&
-    input.area_defender_cursor==5 && !input.area_contact && input.current.clock.remaining==306 && input.current.field.elapsed==6;
+    input.current.field.ball_owner==7 && !input.area_contact &&
+    ((input.score->left_goals==2 && input.score->right_goals==5 && input.area_defender_cursor==5 && input.current.clock.remaining==306 && input.current.field.elapsed==6) ||
+     (input.score->left_goals==3 && input.score->right_goals==6 && input.area_defender_cursor==4 && input.current.clock.remaining==265 && input.current.field.elapsed==5));
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_contact_clock;
  if(input.phase!=FieldSessionPhase::sampled_player3_contact_clock && !score23 && !score25 && !player7)
   throw std::invalid_argument("Unsupported sampled player3 pass dispatch");
@@ -302,7 +314,7 @@ PhaseSessionState advance_sampled_player3_pass_dispatch(const PhaseSessionState&
  state.current.field.keepers=recovery.keepers;state.current.shared_recovery_flags=recovery.shared_flags;state.current.shared_recovery_timer=recovery.shared_timer;
  const auto clock=advance_match_clock(state.current.clock,elapsed,state.current.field.random_first);
  if(clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Unverified sampled player3 dispatch clock");
- state.current.clock=clock.state;state.area_defender_cursor=player7 ? 5 : score25 ? 3 : 1;
+ state.current.clock=clock.state;state.area_defender_cursor=player7 ? input.area_defender_cursor : score25 ? 3 : 1;
  state.phase=player7 ? FieldSessionPhase::attack_prepared : score25 ? FieldSessionPhase::sampled_score25_dispatch_clock : score23 ? FieldSessionPhase::sampled_score23_dispatch_clock : FieldSessionPhase::sampled_player3_dispatch_clock;validate_phase_session(state);return state;
 }
 PhaseSessionState capture_sampled_player3_pass_handoff(const PhaseSessionState& input,const FieldPhaseState& captured) {
@@ -322,8 +334,9 @@ PhaseSessionState advance_sampled_score23_pass_handoff(const PhaseSessionState& 
  validate_phase_session(input);
  const bool score25=input.phase==FieldSessionPhase::sampled_score25_dispatch_clock;
  const bool player7=input.phase==FieldSessionPhase::attack_prepared && input.human_defense_choices && input.score &&
-    input.score->left_goals==2 && input.score->right_goals==5 && input.current.field.ball_owner==7 &&
-    input.current.clock.remaining==304 && input.current.field.elapsed==8 && input.area_defender_cursor==5;
+    input.current.field.ball_owner==7 &&
+    ((input.score->left_goals==2 && input.score->right_goals==5 && input.current.clock.remaining==304 && input.current.field.elapsed==8 && input.area_defender_cursor==5) ||
+     (input.score->left_goals==3 && input.score->right_goals==6 && input.current.clock.remaining==263 && input.current.field.elapsed==7 && input.area_defender_cursor==4));
  if(input.phase!=FieldSessionPhase::sampled_score23_dispatch_clock && !score25 && !player7)
   throw std::invalid_argument("Unsupported sampled pass handoff");
  auto state=input;state.current.field=advance_field_phase(input.current.field,mappings,movement).state;

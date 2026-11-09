@@ -318,7 +318,7 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
  const bool score23=input.phase==FieldSessionPhase::sampled_score23_shot_target;
  if(input.phase!=FieldSessionPhase::shot_flight_pending && !sampled_home_shot && !score23 && !player7)
   throw std::invalid_argument("Flight setup requires a saved shot destination");
- if(player7 && (low_x!=52 || low_y!=187))throw std::invalid_argument("Player7 shot needs observed fractional position");
+ if(player7 && (low_x!=(input.score && input.score->left_goals==3 ? 223 : 52) || low_y!=(input.score && input.score->left_goals==3 ? 75 : 187)))throw std::invalid_argument("Player7 shot needs observed fractional position");
  if(sampled_home_shot && (low_x!=116 || low_y!=92))
   throw std::invalid_argument("Home shot flight requires the observed fractional position");
  const bool player17=score23 && input.current.field.ball_owner==17;

@@ -2008,6 +2008,29 @@ int main(){try{using namespace captain;
  check(player25_p7_shot_confirm.phase==FieldSessionPhase::attack_choice_pending && player25_p7_shot_confirm.area_defender_cursor==3 && player25_p7_shot_confirm.action->action==0 && !bytes(player25_p7_shot_confirm).empty(),"Player7 shot choice retains the original cursor");
  auto player25_p7_shot_observed=player25_p7_shot_confirm;
  player25_p7_shot_observed.current.field.roster[7].type=23;player25_p7_shot_observed.current.field.roster[7].stamina=210;
+ auto score36_p7_shot_observed=player25_p7_shot_observed;
+ score36_p7_shot_observed.score=MatchScoreContext{3,6,4};score36_p7_shot_observed.current.clock.remaining=269;
+ score36_p7_shot_observed.current.field.ball_x=113;score36_p7_shot_observed.current.field.ball_y=143;
+ score36_p7_shot_observed.current.field.roster[7].stamina=140;score36_p7_shot_observed.current.field.selected_defenders=4;
+ score36_p7_shot_observed.scheduling->selected_ids={12,15,16,21,0};
+ auto score36_p7_defenses=capture_sampled_player5_defense_choices(score36_p7_shot_observed,{1,1,1,1,1},{0,0,0,0,0});
+ auto score36_p7_prepared=prepare_session_basic_shot(score36_p7_defenses,sampled_attack_profiles,next_shot_content).state;
+ check(score36_p7_prepared.current.field.roster[7].stamina==60 && score36_p7_prepared.action->power==22 && score36_p7_prepared.recovery->opposing_player==21,
+       "The 3-6 player7 shot prepares against four observed defenders");
+ for(auto id:{12,15,16,21}) {score36_p7_prepared.current.field.roster[id].type=23;score36_p7_prepared.current.field.roster[id].stamina=100;score36_p7_prepared.current.field.motion[field_motion_index(id)].status=0;}
+ auto score36_p7_prefix=begin_sampled_player5_dribble_defenders(score36_p7_prepared);
+ for(unsigned defender=0;defender<4;++defender) {
+  score36_p7_prefix=prepare_sampled_player5_dribble_defender(score36_p7_prefix,sampled_attack_profiles,player3_defense_content);
+  score36_p7_prefix=compare_sampled_player5_dribble_defender(score36_p7_prefix,{1,153,0,false,{154,96,68,0}});
+  score36_p7_prefix=advance_sampled_player3_pass_contact(score36_p7_prefix,player3_prelude,home_experience);
+  score36_p7_prefix=begin_sampled_player5_dribble_defenders(score36_p7_prefix);
+ }
+ auto score36_p7_dispatch=advance_sampled_player3_pass_dispatch(score36_p7_prefix);
+ check(score36_p7_dispatch.area_defender_cursor==4 && score36_p7_dispatch.current.clock.remaining==263,
+       "The 3-6 player7 shot crosses four defender contacts and dispatch");
+ auto score36_p7_field=advance_sampled_score23_pass_handoff(score36_p7_dispatch,player3_race_mappings,player3_race_movement);
+ check(score36_p7_field.current.field.elapsed==0 && score36_p7_field.current.clock.remaining==263 && score36_p7_field.area_defender_cursor==4,
+       "The 3-6 player7 shot calculates its field handoff");
  auto player25_p7_defenses=capture_sampled_player5_defense_choices(player25_p7_shot_observed,{1,1,1,1,1},{0,0,0,0,0});
  check(player25_p7_defenses.human_defense_choices && player25_p7_defenses.recovery->opposing_player==18,"Player7 shot preserves five observed defense choices");
  auto player25_p7_defenses_bytes=bytes(player25_p7_defenses);std::istringstream player25_p7_defenses_stream(player25_p7_defenses_bytes);
@@ -2055,6 +2078,20 @@ int main(){try{using namespace captain;
  check(player25_p7_shot_field.phase==FieldSessionPhase::attack_prepared && player25_p7_shot_field.current.clock.remaining==304 && !player25_p7_shot_field.current.field.elapsed,"Player7 shot advances field movement after dispatch");
  rejects([&]{advance_sampled_score23_pass_handoff(player25_p7_shot_field,player3_race_mappings,player3_race_movement);});
  ShotApproachContent player25_shot_content{};player25_shot_content.outer_distance.fill(11);player25_shot_content.inner_distance.fill(11);
+ auto score36_p7_shot_target=prepare_session_shot_approach(score36_p7_field,player25_shot_content).state;
+ auto score36_p7_shot_flight=begin_prepared_session_ball_flight(score36_p7_shot_target,223,75,pass_geometry,pass_velocity);
+ check(score36_p7_shot_target.shot_flight->distance==99 && score36_p7_shot_target.shot_flight->destination==233 && score36_p7_shot_flight.phase==FieldSessionPhase::sampled_score25_shot_advance,
+       "The 3-6 player7 shot calculates its target and numeric flight");
+ rejects([&]{begin_prepared_session_ball_flight(score36_p7_shot_target,222,75,pass_geometry,pass_velocity);});
+ auto score36_p7_shot_arrival=score36_p7_shot_flight;score36_p7_shot_arrival.phase=FieldSessionPhase::sampled_score25_shot_arrival;
+ score36_p7_shot_arrival.current.field.ball_x=204;score36_p7_shot_arrival.current.field.ball_y=124;score36_p7_shot_arrival.current.field.ball_cell=233;
+ score36_p7_shot_arrival.ball_trajectory->x=204<<8;score36_p7_shot_arrival.ball_trajectory->y=124<<8;score36_p7_shot_arrival.current.field.keepers[1].stun=0;
+ auto score36_p7_keeper_entry=continue_session_unopposed_arrival(score36_p7_shot_arrival);
+ auto score36_p7_keeper_prepared=prepare_session_keeper_entry(score36_p7_keeper_entry);
+ check(score36_p7_keeper_prepared.recovery->opposing_player==11 && score36_p7_keeper_prepared.area_defender_cursor==4,
+       "The 3-6 player7 shot prepares the opposing keeper");
+ auto score36_p7_keeper_decision=resolve_prepared_session_keeper(score36_p7_keeper_prepared,0,0,3,home_keeper_content);
+ check(score36_p7_keeper_decision.area_defender_cursor==0,"The 3-6 keeper comparison clears the observed defender cursor");
  auto player25_p7_shot_target=prepare_session_shot_approach(player25_p7_shot_field,player25_shot_content).state;
  check(player25_p7_shot_target.phase==FieldSessionPhase::sampled_score25_shot_target && player25_p7_shot_target.shot_flight->distance==99 && player25_p7_shot_target.shot_flight->destination==233,"Player7 calculates the shot target");
  auto player25_p7_shot_flight=begin_prepared_session_ball_flight(player25_p7_shot_target,52,187,pass_geometry,pass_velocity);
