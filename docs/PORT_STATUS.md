@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - recovered goal-area menu (2026-11-09):** One captured startup now matches through blocked-shot recovery, both opponent-area defender scans and the route1 menu. Keeper entry arithmetic matched12,320 controlled original cases, but a selected keeper and menu input remain unsupported. All62 Windows tests and both phase317 replay sets passed; overall progress unmeasured.
+
+
 **Latest - blocked-shot recovered owner (2026-11-09):** One captured startup now matches jitter,22 ordered player updates and nearest-player selection through side0 player8. Later goal-area entry, autonomous timing/AI and a complete match remain unsupported. All62 Windows tests and both phase317 replay sets passed; overall progress unmeasured.
 
 

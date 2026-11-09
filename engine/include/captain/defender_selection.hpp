@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstdint>
+#include <istream>
 #include <vector>
 
 namespace captain {
@@ -22,6 +23,15 @@ struct DefenderSelectionInput {
 // Mirrors the ROM selector at $E4D7. Returns opposing field-player IDs in
 // scan order when both coordinate deltas are strictly smaller than radius.
 std::vector<std::uint8_t> select_field_defenders(const DefenderSelectionInput& input);
+
+struct GoalAreaKeeperSelectionInput {
+    std::uint8_t possession_side, ball_x, ball_y, random_first, selected_count;
+    bool keeper_unavailable;
+};
+std::array<std::uint8_t,9> load_goal_area_keeper_cells(std::istream& input);
+// The nine cell IDs are caller-supplied content; this does not mutate a defender prefix.
+bool select_goal_area_keeper(const GoalAreaKeeperSelectionInput& input,
+                             const std::array<std::uint8_t,9>& cells);
 
 // Original CDE2 field cell, or255 for coordinates outside the field.
 std::uint8_t field_cell_at(std::uint8_t x, std::uint8_t y);

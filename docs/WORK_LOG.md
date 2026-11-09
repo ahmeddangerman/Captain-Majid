@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Recovered opponent goal-area menu
+
+The startup replay now matches both goal-area defender scans, the no-keeper branch and route1 menu after152 captured NMI/travel pairs; player8 owns the ball and final random index is203. The original keeper entry rule was checked against12,320 controlled original cases using private extracted content. Goalkeeper-selected continuations and menu input remain guarded. Full Windows build, all62 tests and phase317 replay sets (576/1152 boundaries) passed. Private evidence: ../Captain-Majid-analysis/live-return-shot-area-menu-final-20261109 and ../Captain-Majid-analysis/goal-area-keeper-original-check-final-20261109. Overall progress unmeasured; next trace goal-area menu input and keeper-selected routing; suggested model Terra High.
+
+
 ## 2026-11-09 - Returned blocked-shot recovered owner
 
 Connected result2 recovery through original-backed jitter,22 ordered field-player updates and nearest eligible player. The single captured startup matches represented state at $8BE5, $8C10 and $8C31: side0 player8 at188/124, stale cell234 and random index51. Opposing winner and boundary jitter reject; timing and earlier facing are supplied observations. Original later enters the opponent goal area, not yet native-compared. All62 Windows tests and phase317 replays (576/1152 boundaries) passed. Private evidence: ../Captain-Majid-analysis/live-return-shot-recovered-owner-final-20261109. Overall progress unmeasured; next compare area detection and menu; suggested model Terra High.

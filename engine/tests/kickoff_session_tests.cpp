@@ -1591,6 +1591,24 @@ int main(){try{using namespace captain;
  rejects([&]{jitter_ordinary_return_blocked_recovery(blocked_outside);});
  auto opposing_recovery=blocked_owner_fixture;opposing_recovery.current.field.motion[field_motion_index(8)].status=1;
  rejects([&]{choose_ordinary_return_blocked_recovery_owner(opposing_recovery);});
+ auto recovered_area_fixture=blocked_owner;
+ auto& area_candidate=recovered_area_fixture.current.field.motion[field_motion_index(15)];
+ area_candidate.status=0;area_candidate.x=static_cast<std::uint16_t>(((shot_arrival_cell/12)*8+52)<<8);
+ area_candidate.y=static_cast<std::uint16_t>(((shot_arrival_cell%12)*8+84)<<8);
+ recovered_area_fixture.current.field.random_first=57;recovered_area_fixture.current.field.random_second=165;
+ const auto recovered_area=prepare_ordinary_return_goal_area(recovered_area_fixture);
+ check(recovered_area.action->menu_route==1 && recovered_area.current.field.selected_defenders==1 &&
+       recovered_area.scheduling->selected_ids[0]==15,
+       "Recovered possession scans the saved ball cell for the opponent goal-area encounter");
+ std::array<std::uint8_t,9> recovered_keeper_cells{29,0,1,2,3,4,5,6,7};
+ const auto recovered_area_resolved=resolve_ordinary_return_goal_area(recovered_area,recovered_keeper_cells);
+ check(recovered_area_resolved.current.field.selected_defenders==0 && recovered_area_resolved.action->menu_route==1,
+       "Goal-area resolution replaces the cell prefix with nearby defenders and applies the keeper check");
+ auto selected_keeper_fixture=recovered_area;selected_keeper_fixture.current.field.random_first=0;
+ rejects([&]{resolve_ordinary_return_goal_area(selected_keeper_fixture,recovered_keeper_cells);});
+ const auto recovered_area_menu=open_ordinary_return_goal_area_menu(recovered_area_resolved);
+ check(recovered_area_menu.action->cursor==0 && recovered_area_menu.action->menu_route==1 &&
+       recovered_area_menu.current.field.ball_owner==8,"Recovered opponent goal-area menu preserves route and owner while resetting the cursor");
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});

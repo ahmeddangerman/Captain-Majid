@@ -3,6 +3,7 @@
 #include <cassert>
 #include <iostream>
 #include <stdexcept>
+#include <sstream>
 
 namespace {
 captain::DefenderSelectionInput empty_field() {
@@ -65,6 +66,32 @@ int main() {
             rejected = true;
         }
         assert(rejected);
+    }
+
+    {
+        std::array<std::uint8_t,9> cells{29,0,1,2,3,4,5,6,7};
+        captain::GoalAreaKeeperSelectionInput input{0,188,124,51,0,false};
+        assert(captain::select_goal_area_keeper(input,cells));
+        input.random_first=52;assert(!captain::select_goal_area_keeper(input,cells));
+        cells[0]=0;cells[7]=29;input.random_first=85;assert(captain::select_goal_area_keeper(input,cells));
+        input.random_first=86;assert(!captain::select_goal_area_keeper(input,cells));
+        input.random_first=0;input.keeper_unavailable=true;assert(!captain::select_goal_area_keeper(input,cells));
+        input.keeper_unavailable=false;input.selected_count=5;assert(!captain::select_goal_area_keeper(input,cells));
+        input.possession_side=11;input.selected_count=4;assert(!captain::select_goal_area_keeper(input,cells));
+        input.selected_count=0;input.ball_y=40;assert(!captain::select_goal_area_keeper(input,cells));
+        input.possession_side=1;bool rejected=false;
+        try{(void)captain::select_goal_area_keeper(input,cells);}catch(const std::invalid_argument&){rejected=true;}
+        assert(rejected);
+    }
+
+    {
+        std::istringstream valid("CMJGKAREA1 1 2 3 4 5 6 7 8 9");
+        assert((captain::load_goal_area_keeper_cells(valid)==std::array<std::uint8_t,9>{1,2,3,4,5,6,7,8,9}));
+        for(const char* text:{"CMJGKAREA1 1 2 3", "CMJGKAREA1 1 2 3 4 5 6 7 8 -1", "CMJGKAREA1 1 2 3 4 5 6 7 8 240", "CMJGKAREA1 1 2 3 4 5 6 7 8 9 extra"}) {
+            std::istringstream bad(text);bool rejected=false;
+            try{(void)captain::load_goal_area_keeper_cells(bad);}catch(const std::invalid_argument&){rejected=true;}
+            assert(rejected);
+        }
     }
 
     std::cout << "defender selection checks passed\n";

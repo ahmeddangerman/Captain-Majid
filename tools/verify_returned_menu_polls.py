@@ -88,6 +88,12 @@ def main():
     parser.add_argument('--owner-jitter-index',type=int)
     parser.add_argument('--owner-movement-index',type=int)
     parser.add_argument('--owner-positioned-index',type=int)
+    parser.add_argument('--area-trace-directory',type=Path)
+    parser.add_argument('--area-entry-index',type=int)
+    parser.add_argument('--area-selection-index',type=int)
+    parser.add_argument('--area-defense-index',type=int)
+    parser.add_argument('--area-menu-index',type=int)
+    parser.add_argument('--keeper-cells',type=Path)
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -501,7 +507,42 @@ def main():
         compare_shot_flight(destination.read_bytes(),owner_ram(positioned),376,'returned.shot.recovery.owner')
         if index!=owner_ram(positioned)[0xe1]:raise ValueError('boundary returned.shot.recovery.owner, random.index: original and native differ')
         source=destination
-    print(f'Matched {count} returned menu polls through {"blocked-shot recovered owner" if args.owner_positioned_index is not None else "blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    area_args=(args.area_trace_directory,args.area_entry_index,args.area_selection_index,args.area_defense_index,args.area_menu_index,args.keeper_cells)
+    if any(value is not None for value in area_args):
+        if any(value is None for value in area_args) or args.owner_positioned_index is None:
+            raise ValueError('boundary returned.goal_area: owner and all area trace inputs are required')
+        area_lines,area_pcs,area_ram=trace_data(args.area_trace_directory)
+        entry,selection,defense,menu=area_args[1:5]
+        if not 0<=entry<selection<defense<menu<len(area_pcs) or [area_pcs[i] for i in (entry,selection,defense,menu)]!=['8C31','8B6D','8B86','D5E5'] or any(area_ram(i)[0x24]!=26 for i in (entry,selection,defense,menu)):
+            raise ValueError('boundary returned.goal_area: unsupported original ordering or bank')
+        original=owner_ram(args.owner_positioned_index);followup=area_ram(entry)
+        for address,(value,wanted) in enumerate(zip(followup,original)):
+            if value!=wanted:raise ValueError(f'boundary returned.goal_area.handoff, RAM[0x{address:03x}]: follow-up {value}, owner {wanted}')
+        if any(area_pcs[i]=='C9C5' for i in range(entry+1,defense)):
+            raise ValueError('boundary returned.goal_area: unexpected interleaved random event')
+        operation+=1;selected=output/f'{operation:03d}-goal-area-selection.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--prepare-ordinary-return-goal-area','--capture',str(selected)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.selection: {run.stderr.strip()}')
+        compare_shot_flight(selected.read_bytes(),area_ram(selection),377,'returned.goal_area.selection')
+        operation+=1;defended=output/f'{operation:03d}-goal-area-defenders.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(selected),'--resolve-ordinary-return-goal-area',str(args.keeper_cells.resolve()),'--capture',str(defended)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.defenders: {run.stderr.strip()}')
+        compare_shot_flight(defended.read_bytes(),area_ram(defense),378,'returned.goal_area.defenders')
+        rows,last=menu_wait_events(area_lines,area_pcs,area_ram,defense,menu)
+        operation+=1;events=output/f'{operation:03d}-goal-area-wait-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+        waiting=output/f'{operation:03d}-goal-area-wait.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(defended),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.wait: {run.stderr.strip()}')
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(area_ram(last)[0xe1])]:raise ValueError('boundary returned.goal_area.wait, random.index: original and native differ')
+        index=int(indices[0]);compare_shot_flight(waiting.read_bytes(),area_ram(last),378,'returned.goal_area.wait')
+        operation+=1;destination=output/f'{operation:03d}-goal-area-menu.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--open-ordinary-return-goal-area-menu','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.menu: {run.stderr.strip()}')
+        compare_shot_flight(destination.read_bytes(),area_ram(menu),379,'returned.goal_area.menu')
+        if index!=area_ram(menu)[0xe1]:raise ValueError('boundary returned.goal_area.menu, random.index: original and native differ')
+        source=destination
+    print(f'Matched {count} returned menu polls through {"opponent goal-area menu" if args.area_menu_index is not None else "blocked-shot recovered owner" if args.owner_positioned_index is not None else "blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

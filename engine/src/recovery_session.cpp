@@ -5,6 +5,46 @@
 #include <utility>
 
 namespace captain {
+namespace {
+void select_goal_area_cell_defenders(PhaseSessionState& state) {
+ auto& field=state.current.field;field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
+ FlightDefenderSelectionInput selection{};selection.possession_side=field.side;selection.ball_cell=field.ball_cell;
+ selection.random_first=field.random_first;selection.random_second=field.random_second;selection.threshold=255;
+ for(unsigned i=0;i<field.motion.size();++i){const auto& player=field.motion[i];
+  selection.players[i]={static_cast<std::uint8_t>(player.x>>8),static_cast<std::uint8_t>(player.y>>8),player.status!=0};}
+ const auto selected=select_flight_defenders(selection);field.selected_defenders=static_cast<std::uint8_t>(selected.size());
+ for(unsigned i=0;i<selected.size();++i)state.scheduling->selected_ids[i]=selected[i];
+}
+}
+PhaseSessionState open_ordinary_return_goal_area_menu(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_goal_area_defenders || input.current.field.selected_defenders)
+  throw std::invalid_argument("Goal-area menu requires no pending defenders");
+ auto state=input;state.action->cursor=0;state.phase=FieldSessionPhase::ordinary_return_goal_area_menu;
+ validate_phase_session(state);return state;
+}
+PhaseSessionState resolve_ordinary_return_goal_area(const PhaseSessionState& input,const std::array<std::uint8_t,9>& keeper_cells) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_recovered_goal_area)
+  throw std::invalid_argument("Goal-area defense selection requires the recovered area boundary");
+ auto state=input;auto& field=state.current.field;
+ DefenderSelectionInput selection{};selection.possession_side=field.side;selection.ball_x=field.ball_x;selection.ball_y=field.ball_y;selection.radius=10;
+ for(unsigned i=0;i<field.motion.size();++i){const auto& player=field.motion[i];
+  selection.players[i]={static_cast<std::uint8_t>(player.x>>8),static_cast<std::uint8_t>(player.y>>8),player.status!=0};}
+ const auto selected=select_field_defenders(selection);
+ if(select_goal_area_keeper({field.side,field.ball_x,field.ball_y,field.random_first,static_cast<std::uint8_t>(selected.size()),field.keepers[1].stun!=0},keeper_cells))
+  throw std::invalid_argument("Selected goalkeeper goal-area continuation is unsupported");
+ field.selected_defenders=static_cast<std::uint8_t>(selected.size());state.scheduling->selected_ids.fill(0);
+ for(unsigned i=0;i<selected.size();++i)state.scheduling->selected_ids[i]=selected[i];
+ state.phase=FieldSessionPhase::ordinary_return_goal_area_defenders;validate_phase_session(state);return state;
+}
+PhaseSessionState prepare_ordinary_return_goal_area(const PhaseSessionState& input) {
+ validate_phase_session(input);const auto& f=input.current.field;
+ if(input.phase!=FieldSessionPhase::ordinary_return_shot_recovered_owner || f.side!=0 || f.ball_x<176 || f.ball_y<96 || f.ball_y>=160)
+  throw std::invalid_argument("Recovered goal-area setup requires the observed opposing area");
+ auto state=input;state.action->menu_route=1;select_goal_area_cell_defenders(state);
+ state.phase=FieldSessionPhase::ordinary_return_recovered_goal_area;validate_phase_session(state);return state;
+}
 PhaseSessionState choose_ordinary_return_blocked_recovery_owner(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::ordinary_return_shot_recovery_field_moved)
@@ -115,12 +155,7 @@ PhaseSessionState prepare_area_pass_keeper(const PhaseSessionState& input) {
  auto state=input;auto& field=state.current.field;
  if(!state.recovery->ball_variant)state.recovery->ball_variant=(field.random_first&1u)+1;
  state.action->menu_route=(field.ball_x<80 ? 0 : 11)==field.side ? 2 : 1;
- field.selected_defenders=0;state.scheduling->selected_ids.fill(0);state.shot_flight->counter=255;
- FlightDefenderSelectionInput selection{};selection.possession_side=field.side;selection.ball_cell=field.ball_cell;
- selection.random_first=field.random_first;selection.random_second=field.random_second;selection.threshold=255;
- for(unsigned i=0;i<field.motion.size();++i){const auto& p=field.motion[i];selection.players[i]={static_cast<std::uint8_t>(p.x>>8),static_cast<std::uint8_t>(p.y>>8),p.status!=0};}
- const auto selected=select_flight_defenders(selection);field.selected_defenders=static_cast<std::uint8_t>(selected.size());
- for(unsigned i=0;i<selected.size();++i)state.scheduling->selected_ids[i]=selected[i];
+ state.shot_flight->counter=255;select_goal_area_cell_defenders(state);
  state.keeper_area=KeeperAreaContext{};state.phase=FieldSessionPhase::area_pass_keeper_prepared;
  validate_phase_session(state);return state;
 }
@@ -133,16 +168,7 @@ PhaseSessionState prepare_session_keeper_area(const PhaseSessionState& input) {
  auto state=input;auto& field=state.current.field;
  if(!state.recovery->ball_variant)state.recovery->ball_variant=(field.random_first&1u)+1;
  state.action->menu_route=(field.ball_x<80 ? 0 : 11)==field.side ? 2 : 1;
- field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
- FlightDefenderSelectionInput selection{};
- selection.possession_side=field.side;selection.ball_cell=field.ball_cell;
- selection.random_first=field.random_first;selection.random_second=field.random_second;selection.threshold=255;
- for(unsigned i=0;i<field.motion.size();++i) {
-  const auto& m=field.motion[i];selection.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};
- }
- const auto selected=select_flight_defenders(selection);
- field.selected_defenders=static_cast<std::uint8_t>(selected.size());
- for(unsigned i=0;i<selected.size();++i)state.scheduling->selected_ids[i]=selected[i];
+ select_goal_area_cell_defenders(state);
  state.keeper_area=KeeperAreaContext{};state.phase=FieldSessionPhase::keeper_area_prepared;
  validate_phase_session(state);return state;
 }

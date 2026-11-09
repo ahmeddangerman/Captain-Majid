@@ -23,6 +23,9 @@ RecoverySessionResult advance_session_shot_loose_recovery(const PhaseSessionStat
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement);
 PhaseSessionState jitter_ordinary_return_blocked_recovery(const PhaseSessionState& input);
 PhaseSessionState choose_ordinary_return_blocked_recovery_owner(const PhaseSessionState& input);
+PhaseSessionState prepare_ordinary_return_goal_area(const PhaseSessionState& input);
+PhaseSessionState resolve_ordinary_return_goal_area(const PhaseSessionState& input,const std::array<std::uint8_t,9>& keeper_cells);
+PhaseSessionState open_ordinary_return_goal_area_menu(const PhaseSessionState& input);
 RecoverySessionResult advance_session_recovery(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement);
 RecoverySessionResult advance_session_selected_recovery(const PhaseSessionState& input,
