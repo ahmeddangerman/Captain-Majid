@@ -13,6 +13,15 @@ int main() {try {
        initial.ball_mode==129 && initial.attack_subtype==0,
        "Ordinary pass target starts at the carrier's field cell with the ordinary pass mode");
  rejects([&]{initialize_ordinary_pass_target(0x2fff,0x5000);});
+ using captain::advance_ordinary_pass_cursor;
+ check(advance_ordinary_pass_cursor(11,4)==12 && advance_ordinary_pass_cursor(12,8)==11,
+       "Single-cell movement crosses row boundaries");
+ check(advance_ordinary_pass_cursor(228,1)==228 && advance_ordinary_pass_cursor(0,2)==0 &&
+       advance_ordinary_pass_cursor(239,4)==239 && advance_ordinary_pass_cursor(0,8)==0,
+       "Movement remains inside the original linear field range");
+ check(advance_ordinary_pass_cursor(87,15)==99 && advance_ordinary_pass_cursor(87,0xf4)==88,
+       "Lowest direction bit wins and non-direction held bits do not move the cursor");
+ rejects([&]{advance_ordinary_pass_cursor(240,0);});
  check(resolve_pass_target_cell(7,42,52,84)==0,"First field cell");
  check(resolve_pass_target_cell(21,42,204,172)==239,"Last field cell");
  check(resolve_pass_target_cell(1,42,47,84)==255,"Out-of-field recipient");

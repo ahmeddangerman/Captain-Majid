@@ -65,6 +65,8 @@ PhaseSessionState acknowledge_sampled_unaffordable_shot(const PhaseSessionState&
     const FieldPlayerProfiles& players, const FieldDefenseContent& attack);
 // Acknowledges an explicitly selected ordinary pass type; does not run the submenu.
 PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& input);
+struct OrdinaryPassCursorResult { PhaseSessionState state; bool cursor_changed = false; };
+OrdinaryPassCursorResult poll_ordinary_human_pass_cursor(const PhaseSessionState& input, std::uint8_t held, std::uint8_t pressed);
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState poll_sampled_human_pass_target(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed);
 // Explicit defender choices observed for the bounded player7 pass; no AI is inferred.

@@ -56,6 +56,9 @@ int main() {
         std::istringstream sequence_stream("CMJNMISEQ1\nR 1 2 3 1\nT 1 160 3\n");
         const auto parsed_sequence = load_observed_nmi_events(sequence_stream);
         if (parsed_sequence.size() != 2 || parsed_sequence[1].speed != 928) return 1;
+        std::istringstream motion_stream("CMJNMISEQ1\nM 1\n");
+        const auto parsed_motion = load_observed_nmi_events(motion_stream);
+        if (parsed_motion.size() != 1 || parsed_motion[0].kind != ObservedClockEventKind::motion_sample || parsed_motion[0].held != 1) return 1;
         const std::string good_nmi_record = "0 0 0 0 0 0 0 0 0 0";
         for (const std::string& bad_record : {"0 0 0 0 0 2 0 0 0 0", "0 0 0 0 0 0 0 1 0 0", "0 0 256 0 0 0 0 0 0 0"}) {
             auto invalid = nmi_records;

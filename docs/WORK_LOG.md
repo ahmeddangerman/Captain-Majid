@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - General ordinary-pass target movement
+
+Added score-independent phase331 cursor movement, leaving confirmation/cancel guarded. Original D80F arithmetic matched 122,880 cases across two seeds/all cells/all held bytes; 160 full original/native cursor checkpoints matched. The captured startup replay matched 55 consecutive target polls including one move, using recorded NMI/travel and one explicit presentation motion-request sample. The sample is not an emulated presentation engine. All 62 registered Windows tests and the 576/1,152-boundary phase317 regressions passed. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - General ordinary-pass target initialization boundary
 
 Added score-independent phase331 for an explicitly acknowledged ordinary pass type, using the carrier-position target kernel and existing extended snapshot format. The startup replay continued through 571 captured NMI/travel pairs and acknowledged submenu to the original initial target; 16 full saved-session comparisons over eight positions in this and an earlier encounter matched. Cursor movement and confirmation in the new phase remain unsupported, as do live presentation, frame scheduling and a complete match. All 62 Windows CTest tests and both phase317 regressions (576/1,152 boundaries) passed. Evidence remains private. Overall progress is unmeasured; suggested model Terra High.

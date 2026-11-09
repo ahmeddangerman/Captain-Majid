@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: general ordinary-pass cursor movement
+
+`--poll-ordinary-human-pass-cursor HELD PRESSED` advances phase331 using the original linear cell arithmetic: lowest direction bit selects +12/-12/+1/-1 and moves outside 0–239 retain the cursor. A/B confirmation or cancellation reject; a changed cursor reports an acknowledged visual update. The existing CMJNMISEQ1 evidence feed now accepts an explicitly observed motion-request byte `M VALUE` only in this target phase; it does not simulate the presentation task that produced it.
+
+The arithmetic matched 122,880 original CPU cases across two independent target seeds, all 240 cells and 256 held bytes. Another 160 controlled original/native complete cursor checkpoints matched across both encounter contexts, representative edge cells and direction combinations. One original-emulator startup trace continuously matched 55 target polls after the previously captured target initialization, moving cursor 114 to126 with captured NMI/travel inputs and one explicit motion-request sample. Tools accept private evidence paths and name the first differing boundary/field: tools/verify_ordinary_pass_cursor_original.py, tools/verify_ordinary_pass_cursor_sessions.py and tools/verify_captured_target_polls.py. Evidence: ../Captain-Majid-analysis/ordinary-cursor-native-controlled2-20261109 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/target-move-verifier2-20261109.
+
+General: bounded cursor movement and its saved state under supplied input. Scenario-specific: startup event schedule, motion sample and prior guarded phase317 pass flow. Unknown: original motion/presentation scheduler, target confirmation and recipient selection, generalized defender/pass continuation, AI and complete match progression. All 62 Windows registered CTest tests passed; phase317 possession regressions matched 576/1,152 boundaries. Next investigate original target confirmation, including empty/occupied cells, button precedence and recipient selection. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: general saved ordinary-pass target boundary
 
 `--begin-ordinary-human-pass-target` now saves phase331 after a confirmed side-zero pass and an explicitly acknowledged ordinary pass-type choice. It uses the original-backed carrier-position target initializer, preserves unrelated context and supports score-independent field positions and opposing prefixes; the existing extended snapshot format is reused. The target cursor is initialized but cannot yet be moved or confirmed in this general phase. The pass-type submenu is acknowledged, not simulated.

@@ -10,6 +10,16 @@ OrdinaryPassTargetInitialization initialize_ordinary_pass_target(std::uint16_t c
  if(cell==255)throw std::invalid_argument("Ordinary pass target requires an interior carrier");
  return {x,y,cell,cell,129,0};
 }
+std::uint8_t advance_ordinary_pass_cursor(std::uint8_t cursor, std::uint8_t held) {
+ if (cursor >= 240) throw std::invalid_argument("Ordinary pass cursor requires field cell 0..239");
+ const auto directions = static_cast<std::uint8_t>(held & 15u);
+ if (!directions) return cursor;
+ unsigned direction = 0;
+ while (!(directions & (1u << direction))) ++direction;
+ constexpr int deltas[] = {12, -12, 1, -1};
+ const int target = static_cast<int>(cursor) + deltas[direction];
+ return target < 0 || target >= 240 ? cursor : static_cast<std::uint8_t>(target);
+}
 std::uint8_t resolve_pass_target_cell(std::uint8_t recipient,std::uint8_t previous_cell,
                                       std::uint8_t recipient_x,std::uint8_t recipient_y) {
  if(recipient==255)return previous_cell;

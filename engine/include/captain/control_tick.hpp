@@ -53,7 +53,7 @@ struct NmiControlPollResult {
     ControlPollResult poll;
     std::uint8_t random_index = 0;
 };
-enum class ObservedClockEventKind { random, travel, schedule, energy };
+enum class ObservedClockEventKind { random, travel, schedule, energy, motion_sample };
 struct ObservedClockEvent {
     ObservedClockEventKind kind;
     ReferenceRandomInputs random{};

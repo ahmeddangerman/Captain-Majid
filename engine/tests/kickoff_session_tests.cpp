@@ -1192,6 +1192,20 @@ int main(){try{using namespace captain;
        general_pass_input.current.field.ball_x==108,"Ordinary pass target refreshes from carrier and preserves input");
  const auto general_bytes=bytes(general_pass);std::istringstream general_stream(general_bytes);
  check(bytes(load_phase_session(general_stream))==general_bytes,"Ordinary pass target snapshot roundtrip");
+ const auto general_move=poll_ordinary_human_pass_cursor(general_pass,1,0);
+ check(general_move.cursor_changed && general_move.state.human_pass_cursor==126 && general_pass.human_pass_cursor==114 &&
+       general_move.state.current.field.ball_cell==114,"Ordinary cursor move preserves ball and source");
+ const auto general_idle=poll_ordinary_human_pass_cursor(general_move.state,0,0);
+ check(!general_idle.cursor_changed && bytes(general_idle.state)==bytes(general_move.state),"Neutral target input preserves cursor");
+ const auto general_edge=poll_ordinary_human_pass_cursor(general_pass,1,1);
+ check(general_edge.state.human_pass_cursor==126,"Directional press edge does not suppress held movement");
+ const auto target_nmi=advance_observed_nmi_events(general_pass,255,{{ObservedClockEventKind::random,{0,0,0,false}}});
+ check(target_nmi.random_index==0 && target_nmi.state.phase==FieldSessionPhase::ordinary_human_pass_target,
+       "Captured NMI sequence retains ordinary target phase");
+ const auto sampled_motion=advance_observed_nmi_events(general_pass,0,{{ObservedClockEventKind::motion_sample,{},1}});
+ check(sampled_motion.state.control->motion_requested==1 && !general_pass.control->motion_requested,
+       "Explicit captured target-wait motion sample preserves its input");
+ rejects([&]{poll_ordinary_human_pass_cursor(general_pass,1,128);});
  auto wrong_action=general_pass_input;wrong_action.action->action=3;
  rejects([&]{begin_ordinary_human_pass_target(wrong_action);});
  auto stale_flight_pass=pass_confirmed;stale_flight_pass.saved_ball_flight_flag=1;

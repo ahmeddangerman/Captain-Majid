@@ -458,6 +458,17 @@ PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& inpu
     validate_phase_session(state);
     return state;
 }
+OrdinaryPassCursorResult poll_ordinary_human_pass_cursor(const PhaseSessionState& input, std::uint8_t held, std::uint8_t pressed) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::ordinary_human_pass_target || !input.human_pass_cursor || (pressed & 192u))
+        throw std::invalid_argument("Ordinary pass cursor supports movement only; confirmation and cancellation remain pending");
+    auto state = input;
+    const auto next = advance_ordinary_pass_cursor(*state.human_pass_cursor, held);
+    const bool changed = next != *state.human_pass_cursor;
+    state.human_pass_cursor = next;
+    validate_phase_session(state);
+    return {std::move(state), changed};
+}
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input) {
     validate_phase_session(input);const auto& f=input.current.field;
     const bool score25=input.phase==FieldSessionPhase::attack_choice_pending && input.score && input.action && input.recovery && input.scheduling &&

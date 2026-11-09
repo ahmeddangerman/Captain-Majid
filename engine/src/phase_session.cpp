@@ -68,7 +68,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         if (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling ||
             !state.human_pass_cursor || state.human_pass_steps || field.side != 0 || field.ball_owner < 1 || field.ball_owner > 10 || field.selected_defenders > 5 ||
             state.action->action != 1 || state.action->menu_route != 0 || state.current.clock.ball_mode != 129 ||
-            state.recovery->attack_subtype != 0 || *state.human_pass_cursor != field.ball_cell ||
+            state.recovery->attack_subtype != 0 || *state.human_pass_cursor >= 240 ||
             field_cell_at(field.ball_x, field.ball_y) != field.ball_cell ||
             (field.motion[field_motion_index(field.ball_owner)].x >> 8) != field.ball_x ||
             (field.motion[field_motion_index(field.ball_owner)].y >> 8) != field.ball_y)
