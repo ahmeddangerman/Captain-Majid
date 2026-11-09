@@ -80,7 +80,30 @@ def check_value(case, boundary, name, actual, expected):
         mismatch(case, boundary, name, actual, expected)
 
 
-def compare_checkpoint(actual, raw, phase, export_phase, case, boundary, contact=None, trajectory=False, target=False):
+def compare_contact_context(actual, source, cursor, score, case, boundary):
+    wanted = (1, cursor, source[0x43d], 0, 0, source[0x32], 0, source[0x43f], 0, 0, 0, score, 0, 0)
+    labels = ('present', 'cursor', 'action', 'subtype', 'effect', 'power.low', 'power.high', 'cost.low', 'cost.high',
+              'strength.low', 'strength.high', 'score', 'result', 'weakened')
+    for name, actual_value, expected_value in zip(labels, actual[399:413], wanted):
+        check_value(case, boundary, 'contact.' + name, actual_value, expected_value)
+
+
+def compare_flight_context(actual, raw, case, boundary):
+    values = (1, raw[0x62b], raw[0x638], raw[0x61a], 0, 1)
+    names = ('present', 'distance', 'destination', 'counter', 'loose_ball', 'trajectory_present')
+    for name, actual_value, expected_value in zip(names, actual[339:345], values):
+        check_value(case, boundary, 'flight.' + name, actual_value, expected_value)
+    target_values = (1, raw[0x5fc], raw[0x638], 0, 0)
+    target_names = ('present', 'recipient', 'cell', 'cost.low', 'cost.high')
+    for name, actual_value, expected_value in zip(target_names, actual[393:398], target_values):
+        check_value(case, boundary, 'flight_target.' + name, actual_value, expected_value)
+    wanted = raw[0x634:0x638] + raw[0x639:0x63d] + bytes((raw[0x62c], raw[0x61b]))
+    labels = ('x.low', 'x.high', 'y.low', 'y.high', 'vx.low', 'vx.high', 'vy.low', 'vy.high', 'direction', 'flags')
+    for name, actual_value, expected_value in zip(labels, actual[345:355], wanted):
+        check_value(case, boundary, 'trajectory.' + name, actual_value, expected_value)
+
+
+def compare_checkpoint(actual, raw, phase, export_phase, case, boundary, contact=None, trajectory=False, target=False, contact_source=None):
     extended = phase > 255
     minimum = 425 if target else 421 if extended else 413
     if len(actual) < minimum:
@@ -111,18 +134,15 @@ def compare_checkpoint(actual, raw, phase, export_phase, case, boundary, contact
             check_value(case, boundary, name, actual_value, expected_value)
     if contact is not None:
         cursor, score = contact
-        # The scratch bytes are reused by the original field update; after dispatch,
-        # the serialized contact retains values verified at the defender boundary.
-        wanted = (1, cursor, raw[0x43d], 0, 0, raw[0x32] if phase <= 324 else 18, 0, raw[0x43f] if phase <= 324 else 60, 0, 0, 0, score, 0, 0)
-        labels = ('present', 'cursor', 'action', 'subtype', 'effect', 'power.low', 'power.high', 'cost.low', 'cost.high',
-                  'strength.low', 'strength.high', 'score', 'result', 'weakened')
-        for name, actual_value, expected_value in zip(labels, actual[399:413], wanted):
-            check_value(case, boundary, 'contact.' + name, actual_value, expected_value)
+        # Original scratch bytes are reused during the field update; retain the
+        # third defender's independently recorded preparation as the source.
+        compare_contact_context(actual, contact_source if contact_source is not None else raw, cursor, score, case, boundary)
     if trajectory:
-        wanted = raw[0x634:0x638] + raw[0x639:0x63d] + bytes((raw[0x62c], raw[0x61b]))
-        labels = ('x.low', 'x.high', 'y.low', 'y.high', 'vx.low', 'vx.high', 'vy.low', 'vy.high', 'direction', 'flags')
-        for name, actual_value, expected_value in zip(labels, actual[345:355], wanted):
-            check_value(case, boundary, 'trajectory.' + name, actual_value, expected_value)
+        compare_flight_context(actual, raw, case, boundary)
+    if phase in (1, 9):
+        check_value(case, boundary, 'flight.present', actual[339], 0)
+        check_value(case, boundary, 'flight.trajectory_present', actual[344], 0)
+        check_value(case, boundary, 'flight_target.present', actual[393], 0)
 
 
 def main():
@@ -161,8 +181,8 @@ def main():
             steps.extend([(f'flight.step{step}', ['--advance-area-ball-cell'], original, 98, 19, None, True, False),
                           (f'flight.callback{step}', ['--resolve-area-ball-cell'], original, 96, 19, None, True, False)])
         steps.extend([('flight.arrival', ['--advance-area-ball-cell'], args.flight_original / f'{case}-e7cf-1.bin', 99, 19, None, True, False),
-                      ('reception.owner', ['--continue-area-already-arrived'], args.receive_original / f'{case}-write-0441-1.bin', 100, 19, None, False, False),
-                      ('reception.position', ['--continue-area-pass-received'], args.receive_original / f'{case}-write-0637-1.bin', 101, 19, None, False, False),
+                      ('reception.owner', ['--continue-area-already-arrived'], args.receive_original / f'{case}-write-0441-1.bin', 100, 19, None, True, False),
+                      ('reception.position', ['--continue-area-pass-received'], args.receive_original / f'{case}-write-0637-1.bin', 101, 19, None, True, False),
                       ('control.entry', ['--continue-sampled-field-pass-control'], args.receive_original / f'{case}-e0df-1.bin', 1, 19, None, False, False),
                       ('control.ready', ['--setup-control'], args.control_original / f'{case}-ready.bin', 9, 9, None, False, False)])
         for boundary, operation, original, phase, export_phase, contact, trajectory, target in steps:
@@ -174,7 +194,9 @@ def main():
                     if result.returncode:
                         raise EvidenceMismatch(f'case {case}, boundary {boundary}: native operation failed: {result.stderr.strip()}')
                     before = destination
-                compare_checkpoint(before.read_bytes(), raw, phase, export_phase, case, boundary, contact, trajectory, target)
+                contact_source = ((args.encounter_original / f'{case}-80b6-3.bin').read_bytes()
+                                  if contact is not None and phase >= 325 else None)
+                compare_checkpoint(before.read_bytes(), raw, phase, export_phase, case, boundary, contact, trajectory, target, contact_source)
                 count += 1
             except (OSError, ValueError) as exc:
                 raise EvidenceMismatch(f'case {case}, boundary {boundary}: {exc}') from exc

@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - replay metadata audit (2026-11-09):** The existing phase317 replay now checks flight context and reception trajectories and compares retained contact values to original defender preparation. It still matches1,728 boundaries across the two existing encounters; all53 Windows CTest checks passed. Scenario limits and unverified playable match remain unchanged; overall progress is unmeasured.
+
 **Latest - phase 317 end-to-end replay (2026-11-09):** A private-evidence replay matches1,728 boundaries across the existing24-case 2-5 and48-case 3-6 pass encounters through resumed control. Shared defender preparation also matches an earlier24-case encounter. All53 registered Windows CTest tests passed. Inputs, choices and allowed transitions remain scenario-specific; live initialization, presentation and a complete playable match remain unsupported. Overall progress is unmeasured.
 
 **Latest - player7 goal 4-6 (2026-11-09):** The 3-6 four-defender shot matches48 constructed cases through dispatch, numerical flight and keeper entry. With explicitly supplied keeper choices0/1 and controlled team3, 96 comparisons and goal registrations match. Full Windows build and all45 tests passed. Authentic startup, live AI/timing and a complete playable match remain unverified; overall progress is unmeasured.
