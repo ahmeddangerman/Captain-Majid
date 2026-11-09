@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Replay integrity safeguards
+
+Hardened the existing phase317 replay to reject truncated, invalid-magic and unsupported-layout snapshots before reading fields; improved pending-contact field names; tested that output cannot be created inside the checkout or overwrite a nonempty evidence directory. An optional `--expected-cases` rejects an incomplete input set before any output is created. Focused tests cover these safeguards and replay diagnostics. Both established replays remain unchanged at576 matching boundaries for24 cases and1,152 for48; private outputs: ../Captain-Majid-analysis/e2e-phase317-25-complete and ../Captain-Majid-analysis/e2e-phase317-36-complete. Two separate earlier runs generated exactly matching SHA-256 hashes for all552 and1,104 native checkpoints respectively. All53 Windows CTest checks passed.
+
+The verifier remains bounded to the two controlled encounter shapes and does not claim live AI, timing/audio/video, authentic match initialization or a complete playable match. Overall progress is unmeasured. Next continue verification and evidence-supported shared work without expanding to new score-specific scenarios. Suggested model: Terra High.
+
 ## 2026-11-09 - Replay metadata and reception audit
 
 Extended the phase317 replay to compare saved flight distance, destination, counter, loose-ball flag, target recipient/cell and full trajectory during both owner transfer and recipient placement, and to check consumed flight contexts are cleared at resumed control. The original reuses its scratch bytes after field movement, so the retained defender contact at handoff and target is now compared against the corresponding original third-defender preparation snapshot, not a hardcoded value. Added focused diagnostics tests for a changed flight counter and retained contact cost. The stronger replay still matched576 boundaries in24 existing 2-5 cases and1,152 in48 existing 3-6 cases: ../Captain-Majid-analysis/e2e-phase317-25-evidencebased and ../Captain-Majid-analysis/e2e-phase317-36-evidencebased. All53 registered Windows CTest checks passed.

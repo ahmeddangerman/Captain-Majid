@@ -2,7 +2,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from verify_player7_pass_end_to_end import EvidenceMismatch, case_ids, compare_checkpoint, compare_contact_context, compare_flight_context, compare_represented
+from verify_player7_pass_end_to_end import EvidenceMismatch, case_ids, compare_checkpoint, compare_contact_context, compare_flight_context, compare_represented, prepare_output
 
 
 class ReplayChecks(unittest.TestCase):
@@ -20,6 +20,13 @@ class ReplayChecks(unittest.TestCase):
         actual[250] = 1
         with self.assertRaisesRegex(EvidenceMismatch, r"clock\.remaining\.low"):
             compare_represented(actual, expected, True, "0", "dispatch")
+
+    def test_pending_contact_field_has_a_name(self):
+        expected = bytes(324)
+        actual = bytearray(325)
+        actual[261] = 2
+        with self.assertRaisesRegex(EvidenceMismatch, r"pending.result_code"):
+            compare_represented(actual, expected, True, "0", "defender")
 
     def test_extended_phase_byte_shifts_subsequent_fields(self):
         expected = bytes(324)
@@ -45,9 +52,39 @@ class ReplayChecks(unittest.TestCase):
         with self.assertRaisesRegex(EvidenceMismatch, r"boundary flight.setup, flight.counter: native 254, original 255"):
             compare_flight_context(actual, raw, "0", "flight.setup")
 
+    def test_bad_session_magic_is_rejected_before_comparison(self):
+        actual = bytearray(418)
+        actual[10] = 133
+        with self.assertRaisesRegex(EvidenceMismatch, r"boundary arrival, session.magic"):
+            compare_checkpoint(actual, bytes(2048), 99, 19, "7", "arrival")
+
+    def test_unknown_normal_snapshot_layout_is_rejected(self):
+        actual = bytearray(418)
+        actual[:10] = b"CMJSESSION"
+        actual[10] = 134
+        with self.assertRaisesRegex(EvidenceMismatch, r"boundary arrival, session.version"):
+            compare_checkpoint(actual, bytes(2048), 99, 19, "7", "arrival")
+
     def test_truncated_checkpoint_identifies_boundary(self):
         with self.assertRaisesRegex(EvidenceMismatch, r"case 7, boundary arrival: truncated"):
             compare_checkpoint(b"short", bytes(2048), 99, 19, "7", "arrival")
+
+    def test_output_protects_checkout_and_existing_evidence(self):
+        with tempfile.TemporaryDirectory() as temp:
+            base = Path(temp)
+            checkout = base / "checkout"
+            checkout.mkdir()
+            with self.assertRaisesRegex(ValueError, "outside the Git checkout"):
+                prepare_output(checkout / "private-output", checkout)
+            self.assertFalse((checkout / "private-output").exists())
+            existing = base / "evidence"
+            existing.mkdir()
+            marker = existing / "original.bin"
+            marker.write_bytes(b"original")
+            with self.assertRaisesRegex(ValueError, "must be empty"):
+                prepare_output(existing, checkout)
+            self.assertEqual(marker.read_bytes(), b"original")
+            self.assertEqual(prepare_output(base / "fresh", checkout), (base / "fresh").resolve())
 
     def test_case_discovery_requires_unambiguous_nonempty_names(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -55,6 +92,9 @@ class ReplayChecks(unittest.TestCase):
             (directory / "0-clock.cmjsession").touch()
             (directory / "12-choice1-clock.cmjsession").touch()
             self.assertEqual(case_ids(directory, "-clock.cmjsession"), ["0", "12-choice1"])
+            self.assertEqual(case_ids(directory, "-clock.cmjsession", expected_count=2), ["0", "12-choice1"])
+            with self.assertRaisesRegex(ValueError, "Expected 3 starting checkpoints, found 2"):
+                case_ids(directory, "-clock.cmjsession", expected_count=3)
             with self.assertRaisesRegex(ValueError, "No starting checkpoints"):
                 case_ids(directory, "-absent.cmjsession")
 

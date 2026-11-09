@@ -35,10 +35,13 @@ def field_name(offset):
         return f"keeper[{keeper}]." + ("timer", "penalty_duration", "penalty", "stun")[part]
     if 250 <= offset < 258:
         return "clock." + ("remaining.low", "remaining.high", "extra_time", "flags", "script_flags", "ball_mode", "shared_recovery_flags", "shared_recovery_timer")[offset - 250]
+    if 11 <= offset < 20:
+        return f"field.magic[{offset - 11}]"
     if 267 <= offset < 289:
         slot, part = divmod(offset - 267, 2)
         return f"experience[{slot}]." + ("low" if part == 0 else "high")
-    names = {264: "experience.present", 265: "experience.campaign", 266: "experience.stage",
+    names = {259: "pending.present", 260: "pending.result_code", 261: "pending.defender_id", 262: "pending.action", 263: "pending.subtype",
+             264: "experience.present", 265: "experience.campaign", 266: "experience.stage",
              289: "recovery.present", 290: "recovery.opposing_player", 291: "recovery.attack_subtype",
              292: "recovery.special_owner_flags", 293: "recovery.ball_variant", 294: "recovery.game_mode", 295: "recovery.x_jitter_control",
              296: "control.present", 297: "control.decision_timer", 298: "control.facing", 299: "control.controlled_player",
@@ -66,13 +69,28 @@ def compare_represented(actual, expected, extended, case, boundary):
             mismatch(case, boundary, field_name(offset), actual[actual_offset], expected[offset])
 
 
-def case_ids(directory, suffix):
+def case_ids(directory, suffix, expected_count=None):
     if not suffix or '/' in suffix or '\\' in suffix:
         raise ValueError("Start suffix must be a nonempty filename suffix")
     cases = sorted(path.name[:-len(suffix)] for path in directory.glob('*' + suffix) if path.is_file())
     if not cases or any(not case for case in cases):
         raise ValueError("No starting checkpoints with nonempty case names")
+    if expected_count is not None and expected_count <= 0:
+        raise ValueError("Expected case count must be positive")
+    if expected_count is not None and len(cases) != expected_count:
+        raise ValueError(f"Expected {expected_count} starting checkpoints, found {len(cases)}")
     return cases
+
+
+def prepare_output(directory, checkout):
+    output = directory.resolve()
+    root = checkout.resolve()
+    if output == root or root in output.parents:
+        raise ValueError('Private replay output must be outside the Git checkout')
+    output.mkdir(parents=True, exist_ok=True)
+    if any(output.iterdir()):
+        raise ValueError('Output directory must be empty to protect existing evidence')
+    return output
 
 
 def check_value(case, boundary, name, actual, expected):
@@ -105,11 +123,11 @@ def compare_flight_context(actual, raw, case, boundary):
 
 def compare_checkpoint(actual, raw, phase, export_phase, case, boundary, contact=None, trajectory=False, target=False, contact_source=None):
     extended = phase > 255
-    minimum = 425 if target else 421 if extended else 413
+    minimum = 425 if target else 421 if extended else 418
     if len(actual) < minimum:
         raise EvidenceMismatch(f"case {case}, boundary {boundary}: truncated native checkpoint")
-    if extended:
-        check_value(case, boundary, 'session.version', actual[10], 147 if target else 146)
+    check_value(case, boundary, 'session.magic', actual[:10], b'CMJSESSION')
+    check_value(case, boundary, 'session.version', actual[10], 147 if target else 146 if extended else 133)
     expected = export_session(raw, export_phase)
     compare_represented(actual, expected, extended, case, boundary)
     check_value(case, boundary, 'session.phase', actual[258] + (256 * actual[259] if extended else 0), phase)
@@ -150,18 +168,13 @@ def main():
     for name in ('exe', 'pack', 'velocity', 'starts', 'encounter-original', 'handoff-original', 'flight-original', 'receive-original', 'control-original', 'output'):
         parser.add_argument('--' + name, required=True, type=Path)
     parser.add_argument('--start-suffix', default='-clock.cmjsession')
+    parser.add_argument('--expected-cases', type=int, help='fail if the starting directory has a different case count')
     parser.add_argument('--flight-fractions', required=True, type=int, nargs=2, metavar=('X', 'Y'))
     args = parser.parse_args()
     if any(value < 0 or value > 255 for value in args.flight_fractions):
         raise ValueError('Flight fractions must be bytes')
-    root = Path(__file__).resolve().parents[1]
-    output = args.output.resolve()
-    if output == root or root in output.parents:
-        raise ValueError('Private replay output must be outside the Git checkout')
-    cases = case_ids(args.starts, args.start_suffix)
-    output.mkdir(parents=True, exist_ok=True)
-    if any(output.iterdir()):
-        raise ValueError('Output directory must be empty to protect existing evidence')
+    cases = case_ids(args.starts, args.start_suffix, args.expected_cases)
+    output = prepare_output(args.output, Path(__file__).resolve().parents[1])
     count = 0
     for case in cases:
         before = args.starts / (case + args.start_suffix)

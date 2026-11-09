@@ -1,6 +1,6 @@
 # Player 7 pass replay from phase 317
 
-`tools/verify_player7_pass_end_to_end.py` checks one continuous sampled route, beginning with the saved first-defender contact at phase 317 and ending after player 7 receives the pass and control is set up. It advances the second and third defenders, pass dispatch and field update, target, numeric flight, reception and control. It checks the starting boundary as well as every generated boundary against the supplied original RAM snapshots. A mismatch stops the replay at the first case, boundary and named field, with native and original values.
+`tools/verify_player7_pass_end_to_end.py` checks one continuous sampled route, beginning with the saved first-defender contact at phase 317 and ending after player 7 receives the pass and control is set up. It advances the second and third defenders, pass dispatch and field update, target, numeric flight, reception and control. It checks the starting boundary as well as every generated boundary against the supplied original RAM snapshots, including flight metadata and reception trajectories. A mismatch stops the replay at the first case, boundary and named field, with native and original values.
 
 The session, RAM, content pack, velocity data and generated outputs are private. Supply their paths on the command line; the output directory must be empty and outside the Git checkout. No ROM or private evidence is included in this repository. Requires Python 3 and a built `captain-phase-session` binary.
 
@@ -14,6 +14,6 @@ python tools/verify_player7_pass_end_to_end.py \
   --output EMPTY_PRIVATE_OUTPUT_DIRECTORY
 ```
 
-Each starting filename must end in the supplied suffix; its preceding text is the case ID. Matching original filenames use that ID followed by the observed boundary suffixes, such as `-80dc-1.bin`, `-c612-1.bin`, `-e773-1.bin` and `-ready.bin`. See the replay steps in the script for the complete naming contract. The recorded 2-5 route uses fractions `167 221`; the recorded 3-6 route uses `82 109` and a starting suffix of `-clock1.cmjsession`. These are captured values, not generated random or animation timing.
+Each starting filename must end in the supplied suffix; its preceding text is the case ID. Pass `--expected-cases N` to reject an incomplete starting set before writing any output. Matching original filenames use that ID followed by the observed boundary suffixes, such as `-80dc-1.bin`, `-c612-1.bin`, `-e773-1.bin` and `-ready.bin`. See the replay steps in the script for the complete naming contract. The recorded 2-5 route uses fractions `167 221`; the recorded 3-6 route uses `82 109` and a starting suffix of `-clock1.cmjsession`. These are captured values, not generated random or animation timing.
 
 The defender preparation and numerical flight functions are shared implementation. The route's participants, selected actions, comparison inputs, target and accepted phase transitions remain guarded to the observed encounters. This replay does not implement general opponent choice, arbitrary passing, live presentation, hardware timing, authentic match initialization or a complete playable match.
