@@ -399,6 +399,19 @@ ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uin
     result.presentation.push_back({ControlPresentationKind::sprite, icon});
     return result;
 }
+ActionMenuResult poll_ordinary_return_action_menu(const PhaseSessionState& input,std::uint8_t pressed,const ActionMenuContent& content) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_action_menu)
+        throw std::invalid_argument("Returned menu poll requires its saved menu");
+    auto normalized=input;normalized.phase=FieldSessionPhase::human_action_menu;normalized.area_defender_cursor=0;
+    auto result=poll_human_action_menu(normalized,pressed,content);
+    if(result.confirmed) {
+        if(result.state.action->action!=0)throw std::invalid_argument("Only ordinary shot confirmation is supported in returned menu");
+        result.state.phase=FieldSessionPhase::ordinary_return_shot_choice;
+    } else result.state.phase=FieldSessionPhase::ordinary_return_action_menu;
+    result.state.area_defender_cursor=input.area_defender_cursor;
+    validate_phase_session(result.state);return result;
+}
 
 SessionAttackResult prepare_session_basic_shot(const PhaseSessionState& input,
     const FieldPlayerProfiles& players, const FieldDefenseContent& attack) {
@@ -424,6 +437,79 @@ SessionAttackResult prepare_session_basic_shot(const PhaseSessionState& input,
     state.phase = FieldSessionPhase::attack_prepared;
     validate_phase_session(state);
     return {state, prepared};
+}
+PhaseSessionState record_ordinary_return_shot_defense(const PhaseSessionState& input,std::uint8_t defender,std::uint8_t action,std::uint8_t subtype) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_shot_choice || input.current.field.selected_defenders!=1 ||
+       !input.scheduling || defender!=input.scheduling->selected_ids[0] || action!=1 || subtype!=0 || input.area_contact)
+        throw std::invalid_argument("Returned shot requires one explicitly observed action-one defense");
+    auto state=input;state.recovery->opposing_player=defender;
+    state.area_contact=AreaContactContext{0,action,subtype,0,0,0,0,0,0,0,false};
+    state.phase=FieldSessionPhase::ordinary_return_shot_defense;validate_phase_session(state);return state;
+}
+SessionAttackResult prepare_ordinary_return_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_shot_defense || !input.area_contact)
+        throw std::invalid_argument("Returned shot preparation requires a recorded defender");
+    auto normalized=input;normalized.phase=FieldSessionPhase::attack_choice_pending;
+    normalized.area_defender_cursor=0;normalized.area_contact.reset();
+    auto result=prepare_session_basic_shot(normalized,players,attack);
+    result.state.area_defender_cursor=input.area_defender_cursor;result.state.area_contact=input.area_contact;
+    result.state.phase=FieldSessionPhase::ordinary_return_shot_prepared;
+    validate_phase_session(result.state);return result;
+}
+PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
+    const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_shot_prepared || !input.area_contact || !input.control ||
+       (observed_variant!=1 && observed_variant!=2) || input.area_defender_cursor || input.control->motion_requested!=2 ||
+       (input.control->facing!=0 && input.control->facing!=64))
+        throw std::invalid_argument("Returned shot defender needs observed presentation and ball variant");
+    const auto defender=input.recovery->opposing_player;const auto& player=input.current.field.roster[defender];
+    const auto prepared=prepare_profiled_field_defender({defender,player.type,static_cast<std::uint8_t>(player.stamina),
+        static_cast<std::uint8_t>(player.stamina>>8),player.level},players,1,0,0,defense);
+    auto state=input;state.recovery->ball_variant=observed_variant;state.control->last_carrier_cell=128;
+    state.area_contact=AreaContactContext{0,1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+    state.phase=FieldSessionPhase::ordinary_return_shot_defender_prepared;validate_phase_session(state);return state;
+}
+PhaseSessionState compare_ordinary_return_shot_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_shot_defender_prepared || !input.area_contact || comparison.table_index!=1)
+        throw std::invalid_argument("Returned shot defender needs the direct shot table");
+    DefenderContactInput contact{};contact.incoming_power=input.action->power;contact.defender_power=input.area_contact->defender_power;
+    contact.random_first=input.current.field.random_first;contact.random_second=input.current.field.random_second;
+    contact.weakened=false;contact.context=0;contact.defender_slot=input.recovery->opposing_player;contact.subtype=0;
+    contact.range=comparison.range;contact.offset=comparison.offset;contact.eligible=comparison.eligible;contact.thresholds=comparison.thresholds;
+    const auto result=compare_defender_contact(contact);
+    if(result.result_code!=0 || result.special || result.subtype!=0)
+        throw std::invalid_argument("Only observed nonterminal ordinary shot comparisons are supported");
+    auto state=input;state.area_contact->strength=result.strength;state.area_contact->loss=result.loss;
+    state.area_contact->score=result.score;state.area_contact->result=result.result_code;state.area_sequence_result=result.result_code;
+    state.phase=FieldSessionPhase::ordinary_return_shot_defender_compared;validate_phase_session(state);return state;
+}
+PhaseSessionState advance_ordinary_return_shot_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_shot_defender_compared || !input.experience ||
+       input.current.field.motion[field_motion_index(input.recovery->opposing_player)].status ||
+       prelude.field_elapsed[3]!=1 || prelude.defender_status[1]!=6)
+        throw std::invalid_argument("Returned shot contact requires the observed nonterminal defense");
+    const auto reward=award_player_experience(*input.experience,input.current.field.roster[input.current.field.ball_owner].type,1,experience);
+    const auto applied=apply_contact_prelude({input.current,input.recovery->opposing_player,1,true},prelude);
+    if(applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready)
+        throw std::invalid_argument("Returned shot contact requires a ready clock");
+    auto state=input;state.current=applied.state;state.experience=reward.state;
+    state.phase=FieldSessionPhase::ordinary_return_shot_contact;validate_phase_session(state);return state;
+}
+PhaseSessionState advance_ordinary_return_shot_dispatch(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_shot_contact)throw std::invalid_argument("Returned shot dispatch requires contact");
+    auto state=input;state.current.field.elapsed=static_cast<std::uint8_t>(unsigned(state.current.field.elapsed)+2);
+    const auto recovery=advance_keeper_recovery({state.current.field.keepers,state.current.shared_recovery_flags,state.current.shared_recovery_timer},2);
+    state.current.field.keepers=recovery.keepers;state.current.shared_recovery_flags=recovery.shared_flags;state.current.shared_recovery_timer=recovery.shared_timer;
+    const auto clock=advance_match_clock(state.current.clock,2,state.current.field.random_first);
+    if(clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Returned shot dispatch requires a ready clock");
+    state.current.clock=clock.state;state.area_defender_cursor=1;
+    state.phase=FieldSessionPhase::ordinary_return_shot_dispatch;validate_phase_session(state);return state;
 }
 PhaseSessionState acknowledge_sampled_unaffordable_shot(const PhaseSessionState& input,
     const FieldPlayerProfiles& players,const FieldDefenseContent& attack) {

@@ -35,6 +35,7 @@ struct ActionMenuResult {
 };
 ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
 ActionMenuResult open_ordinary_return_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
+ActionMenuResult poll_ordinary_return_action_menu(const PhaseSessionState& input, std::uint8_t pressed,const ActionMenuContent& content);
 ActionMenuResult open_area_pass_human_action_menu(const PhaseSessionState& input,const ActionMenuContent& content);
 // Route2 only, after acknowledged area presentation; facing is captured explicitly.
 ActionMenuResult open_prepared_keeper_area_menu(const PhaseSessionState& input,
@@ -59,6 +60,12 @@ ActionMenuResult acknowledge_sampled_goalkeeper_overlay(const PhaseSessionState&
 ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uint8_t pressed,
                                       const ActionMenuContent& content);
 struct SessionAttackResult { PhaseSessionState state; PreparedAttackResult preparation; };
+PhaseSessionState record_ordinary_return_shot_defense(const PhaseSessionState& input,std::uint8_t defender,std::uint8_t action,std::uint8_t subtype);
+SessionAttackResult prepare_ordinary_return_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
+PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,const FieldPlayerProfiles& players,const FieldDefenseContent& defense);
+PhaseSessionState compare_ordinary_return_shot_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison);
+PhaseSessionState advance_ordinary_return_shot_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience);
+PhaseSessionState advance_ordinary_return_shot_dispatch(const PhaseSessionState& input);
 // Explicit prepared ordinary UI choice; special moves and other actions stay pending.
 SessionAttackResult prepare_session_basic_shot(const PhaseSessionState& input,
     const FieldPlayerProfiles& players, const FieldDefenseContent& attack);

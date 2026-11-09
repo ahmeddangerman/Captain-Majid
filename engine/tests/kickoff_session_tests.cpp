@@ -1433,6 +1433,41 @@ int main(){try{using namespace captain;
        "Returned encounter opens the shared action menu while preserving cursor residue");
  const auto returned_menu_bytes=bytes(returned_action_menu.state);std::istringstream returned_menu_stream(returned_menu_bytes);
  check(bytes(load_phase_session(returned_menu_stream))==returned_menu_bytes,"Returned encounter menu snapshot roundtrip");
+ const auto returned_shot_selection=poll_ordinary_return_action_menu(returned_action_menu.state,1,pass_menu_content);
+ const auto returned_shot_confirmation=poll_ordinary_return_action_menu(returned_shot_selection.state,128,pass_menu_content);
+ check(returned_shot_confirmation.state.phase==FieldSessionPhase::ordinary_return_shot_choice &&
+       returned_shot_confirmation.state.action->action==0 && returned_shot_confirmation.state.area_defender_cursor==2,
+       "Returned menu confirms the ordinary shot while retaining original cursor residue");
+ const auto returned_shot_choice_bytes=bytes(returned_shot_confirmation.state);std::istringstream returned_shot_choice_stream(returned_shot_choice_bytes);
+ check(bytes(load_phase_session(returned_shot_choice_stream))==returned_shot_choice_bytes,"Returned shot choice snapshot roundtrip");
+ auto shot_choice_input=returned_shot_confirmation.state;shot_choice_input.current.field.roster[7].stamina=1000;
+ const auto returned_defense_choice=record_ordinary_return_shot_defense(shot_choice_input,19,1,0);
+ rejects([&]{record_ordinary_return_shot_defense(shot_choice_input,19,2,0);});
+ const auto returned_shot_prepared=prepare_ordinary_return_shot(returned_defense_choice,sampled_attack_profiles,rejected_content);
+ check(returned_shot_prepared.state.phase==FieldSessionPhase::ordinary_return_shot_prepared &&
+       returned_shot_prepared.state.recovery->opposing_player==19 && returned_shot_prepared.state.area_contact->defense_action==1 &&
+       returned_shot_prepared.state.current.field.roster[7].stamina<1000,
+       "Recorded single defender and shared shot preparation preserve the returned encounter");
+ const auto returned_shot_prepared_bytes=bytes(returned_shot_prepared.state);std::istringstream returned_shot_prepared_stream(returned_shot_prepared_bytes);
+ check(bytes(load_phase_session(returned_shot_prepared_stream))==returned_shot_prepared_bytes,"Returned shot preparation snapshot roundtrip");
+ const auto returned_shot_wait=advance_observed_nmi_events(returned_shot_prepared.state,0,
+     {{ObservedClockEventKind::motion_sample,{},2},{ObservedClockEventKind::carrier_cell_sample,{},0},
+      {ObservedClockEventKind::defender_cursor_sample,{},0}});
+ const auto returned_shot_defender=prepare_ordinary_return_shot_defender(returned_shot_wait.state,1,sampled_attack_profiles,ordinary_pass_content);
+ auto returned_shot_comparable=returned_shot_defender;returned_shot_comparable.action->power=12;
+ returned_shot_comparable.area_contact->defender_power=8;returned_shot_comparable.current.field.random_first=87;
+ returned_shot_comparable.current.field.random_second=219;
+ returned_shot_comparable.current.field.motion[field_motion_index(19)].status=0;
+ const auto returned_shot_compared=compare_ordinary_return_shot_defender(returned_shot_comparable,{1,153,0,false,{154,96,68,0}});
+ check(returned_shot_compared.phase==FieldSessionPhase::ordinary_return_shot_defender_compared &&
+       returned_shot_compared.area_contact->strength==4 && returned_shot_compared.area_contact->score==192,
+       "Returned ordinary shot uses the direct shot comparison row");
+ const auto returned_shot_contact=advance_ordinary_return_shot_contact(returned_shot_compared,ordinary_prelude,home_experience);
+ const auto returned_shot_dispatch=advance_ordinary_return_shot_dispatch(returned_shot_contact);
+ check(returned_shot_contact.current.field.motion[field_motion_index(19)].status==6 &&
+       returned_shot_dispatch.phase==FieldSessionPhase::ordinary_return_shot_dispatch &&
+       returned_shot_dispatch.current.field.elapsed==returned_shot_contact.current.field.elapsed+2,
+       "Returned ordinary shot applies the nonterminal contact and dispatch clocks");
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

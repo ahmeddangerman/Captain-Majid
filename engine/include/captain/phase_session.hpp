@@ -98,7 +98,10 @@ enum class FieldSessionPhase : std::uint16_t {
     ordinary_pass_flight_ready = 345, ordinary_pass_flight_callback = 346, ordinary_pass_flight_arrival = 347,
     ordinary_pass_received = 348, ordinary_pass_recipient_positioned = 349, ordinary_pass_control_entry = 350,
     ordinary_free_pass_contest_winner = 351, ordinary_return_clock_pending = 352, ordinary_return_field_round = 353,
-    ordinary_return_contact_pending = 354, ordinary_return_action_menu = 355
+    ordinary_return_contact_pending = 354, ordinary_return_action_menu = 355, ordinary_return_shot_choice = 356,
+    ordinary_return_shot_defense = 357, ordinary_return_shot_prepared = 358,
+    ordinary_return_shot_defender_prepared = 359, ordinary_return_shot_defender_compared = 360,
+    ordinary_return_shot_contact = 361, ordinary_return_shot_dispatch = 362
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

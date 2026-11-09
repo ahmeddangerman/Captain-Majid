@@ -1,5 +1,7 @@
 # Evidence-fed field-round comparison
 
+At the guarded returned-shot preparation boundary, `M`, `L` and `C` samples respectively supply observed motion, last-carrier-cell and defender-cursor reset bytes. `C` currently accepts only the observed reset to zero. These preserve captured order and do not emulate presentation. See CLI_HANDOFF for the evidence and bounds.
+
 At a guarded returned-encounter boundary, explicit `M`, `F` and `D` records can supply observed motion, facing and display-parameter bytes before opening the shared action menu. `D` is an observed presentation sample, not a renderer. The original cursor residue remains preserved. See CLI_HANDOFF for coverage.
 
 For returned possession with a retained pass-defender cursor, `tools/verify_returned_control_chain.py` accepts private source, trace, pack and executable paths and compares captured poll, clock and world boundaries. The `--advance-observed-ordinary-return KIND FILE INDEX` development operation uses `poll`, `clock` or `world`; it preserves the cursor in separate phases rather than broadening older guarded states. It takes captured NMI/travel ordering and does not generate a scheduler. See CLI_HANDOFF for coverage and limits.

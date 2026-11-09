@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Returned encounter shot through defender dispatch
+
+The controlled startup continuation matched 75 action-menu polls through ordinary shot confirmation, explicitly supplied action1 defender choice, profile-based attacker/defender preparation, direct-table nonterminal comparison and contact/dispatch clocks. Player3 stamina385 to305, shot power8, defender16 strength1 and score255 matched; final random index59. The original resets its retained defender cursor before comparison and increments it at dispatch, so captured samples preserve that order. The separate earlier home-shot defender17 original set still matches24/24. A changed source identified the first differing boundary/field. Full Windows build, 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. Only one defender/action1/result0 is supported; goalkeeper, scoring, live AI/presentation and a complete match remain unsupported. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Returned encounter action menu
 
 Connected the directed startup's second encounter to the shared action-menu opening via phase355, preserving original cursor residue. The original/native chain matched 58 boundaries through the menu and held-input wait; its lead-in uses 136 recorded random/travel pairs and explicit motion/facing/display samples. No defender choice or frame scheduler is inferred. Full Windows build, 62 CTest tests and phase317 replays (576/1,152 boundaries) passed. Menu choice and a complete match remain unsupported; overall progress is unmeasured; suggested model Terra High.

@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - returned encounter shot through dispatch (2026-11-09):** One captured startup matches 75 action-menu polls, ordinary shot preparation, a supplied single defender choice, nonterminal comparison and contact/dispatch clocks. An earlier independent home-shot defender set still matches24 cases. Other defender outcomes, the new shot's keeper/scoring path, autonomous AI/presentation and a complete match remain unsupported. All 62 Windows tests and both phase317 replays passed; overall progress is unmeasured.
+
 **Latest - returned encounter action menu (2026-11-09):** The directed startup continuation matches through a second encounter and action menu with captured event and presentation inputs. Menu choice, defender AI, autonomous timing and a complete match remain unsupported. All 62 Windows tests and both phase317 replays passed; overall progress is unmeasured.
 
 **Latest - directed return reaches an encounter (2026-11-09):** A captured rightward input after the startup free pass matches 45 polls and five clock/field rounds through a second encounter, with supplied event ordering. The native path stops at the new encounter. All 62 Windows tests and both phase317 replays passed; AI, autonomous presentation and a complete match remain unsupported. Overall progress is unmeasured.
