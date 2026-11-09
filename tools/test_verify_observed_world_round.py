@@ -1,6 +1,7 @@
 import unittest
 
 from verify_observed_world_round import collect_samples, compare_checkpoints
+from verify_observed_nmi_world_round import collect_nmi_samples
 
 
 def trace_events():
@@ -50,6 +51,39 @@ class ObservedWorldVerificationTest(unittest.TestCase):
         native[0] = 0
         with self.assertRaisesRegex(ValueError, 'magic'):
             compare_checkpoints(native, original)
+
+    def test_nmi_inputs_follow_recorded_random_state(self):
+        events = []
+        entry = bytearray(2048)
+        entry[0xe1:0xe4] = bytes((250, 3, 4))
+        previous = bytes(entry)
+        rows = []
+        for frame in range(22):
+            before = bytearray(previous)
+            index = before[0xe1]
+            before[0x300 + index], before[0x700 + index] = 5, 6
+            before[(0x780 + index) & 2047] = 7
+            after = bytearray(before)
+            after[0xe1:0xe4] = bytes(((index + 1) & 255, frame, frame + 1))
+            tail = bytearray(after)
+            tail[0xe2] >>= 1
+            for offset, (pc, ram) in enumerate((('C9C5', before), ('C9E8', after), ('E3CA', after),
+                                                 ('E412', after), ('E48F', tail))):
+                events.append((frame * 5 + offset, pc, frame, bytes(ram), 1))
+            rows.append((1, 0, 0, 0, 1, 1, 160, 3))
+            previous = bytes(tail)
+        result = collect_nmi_samples(events, entry, previous, rows)
+        self.assertEqual(len(result), 22)
+        self.assertEqual(result[0], (1, 0, 5, 6, 7, 1, 1, 1, 160, 3))
+        with self.assertRaisesRegex(ValueError, 'missing NMI'):
+            collect_nmi_samples([event for event in events if not (event[1] == 'C9E8' and event[2] == 3)], entry, previous, rows)
+        broken = list(events)
+        i, pc, frame, ram, carry = broken[5]
+        modified = bytearray(ram)
+        modified[0xe1] ^= 1
+        broken[5] = (i, pc, frame, bytes(modified), carry)
+        with self.assertRaisesRegex(ValueError, 'random state'):
+            collect_nmi_samples(broken, entry, previous, rows)
 
 
 if __name__ == '__main__':

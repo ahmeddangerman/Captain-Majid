@@ -1,6 +1,7 @@
 #pragma once
 #include "captain/control_input.hpp"
 #include "captain/prepared_keeper.hpp"
+#include "captain/reference_random.hpp"
 #include <istream>
 
 namespace captain {
@@ -37,6 +38,22 @@ struct FieldRoundResult {
     std::vector<ControlPresentationRequest> presentation{};
     unsigned consumed_polls = 0, moved_players = 0, decayed_statuses = 0;
 };
+struct ObservedNmiFieldPoll {
+    LogicalButtons buttons{};
+    ReferenceRandomInputs random{};
+    bool travel_observed = false;
+    std::uint8_t travel_held = 0;
+    std::uint16_t travel_speed = 0;
+};
+struct NmiFieldRoundResult {
+    FieldRoundResult round;
+    std::uint8_t random_index = 0;
+};
+std::array<ObservedNmiFieldPoll, 22> load_observed_nmi_field_polls(std::istream& input);
+NmiFieldRoundResult advance_observed_nmi_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
+    const ControlMovementContent& control, const WorldStepContent& world,
+    std::uint8_t initial_random_index, const std::array<ObservedNmiFieldPoll, 22>& inputs);
 FieldRoundResult advance_control_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
     const ControlMovementContent& control, const WorldStepContent& world,

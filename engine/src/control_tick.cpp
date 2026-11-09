@@ -212,7 +212,8 @@ static FieldRoundResult run_control_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
     const ControlMovementContent& control_content, const WorldStepContent& world,
     const std::array<LogicalButtons, 22>& inputs,
-    const std::array<ObservedFieldPoll, 22>* observed) {
+    const std::array<ObservedFieldPoll, 22>* observed,
+    const std::array<ObservedNmiFieldPoll, 22>* nmi, std::uint8_t* random_index) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::field_round_pending)
         throw std::invalid_argument("Field round requires a completed control clock/energy step");
@@ -223,6 +224,19 @@ static FieldRoundResult run_control_field_round(const PhaseSessionState& input,
     old_region &= 127u;
     if (region != old_region) old_region = static_cast<std::uint8_t>(region | 128u);
     for (unsigned slot = 0; slot < 22; ++slot) {
+        if (nmi) {
+            const auto& sample = (*nmi)[slot];
+            const auto result = advance_reference_random(
+                {*random_index, state.current.field.random_first, state.current.field.random_second}, sample.random);
+            *random_index = result.state.index;
+            state.current.field.random_first = result.state.first;
+            state.current.field.random_second = result.state.second;
+            if (sample.travel_observed) {
+                state.control->travel_accumulator = advance_control_travel(
+                    state.control->travel_accumulator, sample.travel_speed, state.current.field.side,
+                    sample.travel_held, state.control->facing);
+            }
+        }
         if (observed) {
             const auto& sample = (*observed)[slot];
             state.current.field.random_first = sample.random_first;
@@ -290,7 +304,7 @@ FieldRoundResult advance_control_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
     const ControlMovementContent& control, const WorldStepContent& world,
     const std::array<LogicalButtons, 22>& inputs) {
-    return run_control_field_round(input, primary, movement, control, world, inputs, nullptr);
+    return run_control_field_round(input, primary, movement, control, world, inputs, nullptr, nullptr, nullptr);
 }
 
 std::array<ObservedFieldPoll, 22> load_observed_field_polls(std::istream& input) {
@@ -324,6 +338,42 @@ FieldRoundResult advance_observed_control_field_round(const PhaseSessionState& i
             throw std::invalid_argument("Unobserved travel event must have zero inputs");
         buttons[i] = inputs[i].buttons;
     }
-    return run_control_field_round(input, primary, movement, control, world, buttons, &inputs);
+    return run_control_field_round(input, primary, movement, control, world, buttons, &inputs, nullptr, nullptr);
+}
+
+std::array<ObservedNmiFieldPoll, 22> load_observed_nmi_field_polls(std::istream& input) {
+    std::string magic;
+    if (!(input >> magic) || magic != "CMJWORLDNMI1")
+        throw std::invalid_argument("Invalid observed NMI world file header");
+    std::array<ObservedNmiFieldPoll, 22> samples{};
+    for (auto& sample : samples) {
+        unsigned held, pressed, player, sound, tail, carry, present, travel_held, low, high;
+        if (!(input >> held >> pressed >> player >> sound >> tail >> carry >> present >> travel_held >> low >> high) ||
+            held > 255 || pressed > 255 || player > 255 || sound > 255 || tail > 255 || carry > 1 ||
+            present > 1 || travel_held > 255 || low > 255 || high > 255 || (!present && (travel_held || low || high)))
+            throw std::invalid_argument("Observed NMI world file requires 22 valid records");
+        sample = {{static_cast<std::uint8_t>(held), static_cast<std::uint8_t>(pressed)},
+                  {static_cast<std::uint8_t>(player), static_cast<std::uint8_t>(sound), static_cast<std::uint8_t>(tail), carry != 0},
+                  present != 0, static_cast<std::uint8_t>(travel_held), static_cast<std::uint16_t>(low | (high << 8))};
+    }
+    input >> std::ws;
+    if (input.peek() != std::char_traits<char>::eof() || input.bad())
+        throw std::invalid_argument("Trailing or unreadable observed NMI world data");
+    return samples;
+}
+
+NmiFieldRoundResult advance_observed_nmi_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary, const FieldPhaseContent& movement,
+    const ControlMovementContent& control, const WorldStepContent& world,
+    std::uint8_t initial_random_index, const std::array<ObservedNmiFieldPoll, 22>& inputs) {
+    std::array<LogicalButtons, 22> buttons{};
+    for (std::size_t i = 0; i < inputs.size(); ++i) {
+        if (!inputs[i].travel_observed && (inputs[i].travel_held || inputs[i].travel_speed))
+            throw std::invalid_argument("Unobserved travel event must have zero inputs");
+        buttons[i] = inputs[i].buttons;
+    }
+    auto index = initial_random_index;
+    auto result = run_control_field_round(input, primary, movement, control, world, buttons, nullptr, &inputs, &index);
+    return {std::move(result), index};
 }
 }

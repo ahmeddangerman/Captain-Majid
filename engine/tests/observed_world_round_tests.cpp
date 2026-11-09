@@ -33,6 +33,20 @@ int main() {
             catch (const std::invalid_argument&) { rejected = true; }
             if (!rejected) return 1;
         }
+        std::string nmi_records = "CMJWORLDNMI1\n";
+        for (unsigned i = 0; i < 22; ++i) nmi_records += "0 0 0 0 0 0 0 0 0 0\n";
+        std::istringstream nmi_stream(nmi_records);
+        const auto parsed_nmi = load_observed_nmi_field_polls(nmi_stream);
+        if (parsed_nmi[0].random.carry || parsed_nmi[0].travel_observed) return 1;
+        const std::string good_nmi_record = "0 0 0 0 0 0 0 0 0 0";
+        for (const std::string& bad_record : {"0 0 0 0 0 2 0 0 0 0", "0 0 0 0 0 0 0 1 0 0", "0 0 256 0 0 0 0 0 0 0"}) {
+            auto invalid = nmi_records;
+            invalid.replace(invalid.find(good_nmi_record), good_nmi_record.size(), bad_record);
+            bool rejected = false;
+            try { std::istringstream input(invalid); load_observed_nmi_field_polls(input); }
+            catch (const std::invalid_argument&) { rejected = true; }
+            if (!rejected) return 1;
+        }
         PhaseSessionState state{}; state.phase = FieldSessionPhase::field_round_pending;
         state.experience = ExperienceState{}; state.recovery = RecoveryContext{};
         state.control = ControlContext{}; state.scheduling = SchedulingContext{};
@@ -69,6 +83,29 @@ int main() {
         try { advance_observed_control_field_round(state, profiles, movement, control, world, observed); }
         catch (const std::invalid_argument&) { rejected = true; }
         if (!rejected || bytes(state) != original) return 1;
+        std::array<ObservedNmiFieldPoll, 22> nmi{};
+        auto nmi_result = advance_observed_nmi_field_round(state, profiles, movement, control, world, 250, nmi);
+        ReferenceRandomState expected_random{250, 0, 0};
+        for (unsigned i = 0; i < 22; ++i) expected_random = advance_reference_random(expected_random, {}).state;
+        if (nmi_result.round.consumed_polls != 22 || nmi_result.random_index != 16 ||
+            nmi_result.round.state.current.field.random_first != expected_random.first ||
+            nmi_result.round.state.current.field.random_second != expected_random.second) return 1;
+        auto changed_region = state; changed_region.current.field.movement_region = 0;
+        movement.geometry.direction_thresholds.fill(65535);
+        auto interleaved = advance_observed_nmi_field_round(changed_region, profiles, movement, control, world, 250, nmi);
+        expected_random = {250, 0, 0};
+        for (unsigned slot = 0; slot < 22; ++slot) {
+            expected_random = advance_reference_random(expected_random, {}).state;
+            if (slot != 0 && slot != 1 && slot != 11) expected_random.first >>= 1;
+        }
+        if (interleaved.random_index != expected_random.index ||
+            interleaved.round.state.current.field.random_first != expected_random.first ||
+            interleaved.round.state.current.field.random_second != expected_random.second) return 1;
+        nmi[0].buttons.held = 64;
+        const auto early = advance_observed_nmi_field_round(state, profiles, movement, control, world, 255, nmi);
+        if (early.round.consumed_polls != 1 || early.random_index != 0 ||
+            early.round.state.phase != FieldSessionPhase::action_menu_pending ||
+            early.round.state.current.field.random_first != 255) return 1;
         return 0;
     } catch (const std::exception& error) { std::cerr << error.what() << '\n'; return 1; }
 }
