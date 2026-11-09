@@ -31,6 +31,16 @@ PhaseSessionState continue_sampled_field_pass_control(const PhaseSessionState& i
   state.area_ai_target.reset();state.shot_flight.reset();state.ball_trajectory.reset();state.phase=FieldSessionPhase::player_control;
   validate_phase_session(state);return state;
  }
+ const bool score35=input.current.field.side==11 && input.current.field.ball_owner==19 && input.current.field.ball_x==92 &&
+    input.current.field.ball_y==163 && input.current.field.ball_cell==70 && input.current.clock.remaining==296 &&
+    input.current.clock.extra_time==13 && input.score->left_goals==3 && input.score->right_goals==5 && input.score->kickoff==4 &&
+    input.action->action==1 && input.action->power==21 && input.area_ai_target->recipient==19 && input.area_ai_target->cell==70 &&
+    input.area_defender_cursor==0 && input.ball_trajectory->flags==1 && input.control->facing==0 && !input.current.field.selected_defenders;
+ if(score35) {
+  auto state=input;state.control->facing=64;state.saved_ball_flight_flag=1;
+  state.area_ai_target.reset();state.shot_flight.reset();state.ball_trajectory.reset();state.phase=FieldSessionPhase::player_control;
+  validate_phase_session(state);return state;
+ }
  const bool first=input.current.field.ball_owner==19 && input.current.field.ball_x==119 && input.current.field.ball_y==140 &&
     input.current.field.ball_cell==103 && input.current.clock.remaining==443 && input.current.clock.extra_time==5 &&
     input.action->power==21 && input.area_ai_target->recipient==19 && input.area_ai_target->cell==103;

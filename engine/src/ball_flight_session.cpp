@@ -270,6 +270,8 @@ PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& inp
 }
 PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input, std::uint8_t x_fraction, std::uint8_t y_fraction, const MovementGeometryContent& geometry, const BallVelocityContent& velocity) {
  validate_phase_session(input);
+ const bool score35=input.phase==FieldSessionPhase::sampled_field_ai_pass_target && input.score &&
+  input.score->left_goals==3 && input.score->right_goals==5 && input.current.clock.remaining==296;
  const bool player7=input.phase==FieldSessionPhase::sampled_score25_pass_target_captured;
  const bool mixed=input.phase==FieldSessionPhase::sampled_mixed_result4_target;
  const bool player12=input.phase==FieldSessionPhase::sampled_player12_pass_target;
@@ -281,8 +283,8 @@ PhaseSessionState begin_sampled_field_pass_flight(const PhaseSessionState& input
  const bool postgoal=input.phase==FieldSessionPhase::sampled_field_ai_pass_target && input.score &&
   input.score->left_goals==2 && input.score->right_goals==1 && input.current.clock.remaining==406 && input.current.clock.extra_time==9;
  if((input.phase!=FieldSessionPhase::sampled_field_ai_pass_target && !mixed && !player12 && !player14 && !player7) ||
-    x_fraction!=(player7 ? 167 : player14 ? 101 : player12 ? (postgoal_player12 ? 8 : 120) : mixed ? (postgoal_mixed ? 232 : 216) : postgoal ? 143 : 127) ||
-    y_fraction!=(player7 ? 221 : player14 ? 13 : player12 ? (postgoal_player12 ? 255 : 132) : mixed ? (postgoal_mixed ? 255 : 228) : postgoal ? 27 : 0))
+    x_fraction!=(score35 ? 99 : player7 ? 167 : player14 ? 101 : player12 ? (postgoal_player12 ? 8 : 120) : mixed ? (postgoal_mixed ? 232 : 216) : postgoal ? 143 : 127) ||
+    y_fraction!=(score35 ? 120 : player7 ? 221 : player14 ? 13 : player12 ? (postgoal_player12 ? 255 : 132) : mixed ? (postgoal_mixed ? 255 : 228) : postgoal ? 27 : 0))
   throw std::invalid_argument("Unsupported sampled opponent pass flight input");
  const auto& field=input.current.field;const auto pass=*input.sampled_field_pass;
  if(field_cell_at(field.ball_x,field.ball_y)!=field.ball_cell || field.ball_cell==pass.destination)

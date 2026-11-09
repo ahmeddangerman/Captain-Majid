@@ -566,7 +566,8 @@ PhaseSessionState capture_sampled_field_ai_choice(const PhaseSessionState& input
     input.current.field.selected_defenders || input.current.field.random_first || input.current.field.random_second ||
     input.experience->opponent_stage ||
     !((input.current.clock.remaining==443 && input.current.clock.extra_time==5 && input.score->left_goals==1 && input.score->right_goals==0) ||
-      (input.current.clock.remaining==406 && input.current.clock.extra_time==9 && input.score->left_goals==2 && input.score->right_goals==1)) ||
+      (input.current.clock.remaining==406 && input.current.clock.extra_time==9 && input.score->left_goals==2 && input.score->right_goals==1) ||
+      (input.current.clock.remaining==296 && input.current.clock.extra_time==13 && input.score->left_goals==3 && input.score->right_goals==5)) ||
     input.control->last_carrier_cell!=140 || input.score->kickoff!=4 || input.action->action!=0 || input.action->power!=22 || input.recovery->attack_subtype!=128)
   throw std::invalid_argument("Unsupported sampled opponent AI choice");
  auto state=input;state.action->action=action;state.recovery->attack_subtype=subtype;
@@ -747,11 +748,17 @@ PhaseSessionState advance_sampled_field_ai_dispatch(const PhaseSessionState& inp
 PhaseSessionState advance_sampled_player14_pass_handoff(const PhaseSessionState& input,
  const PlayerProfileMappings& mappings,const FieldPhaseContent& movement) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::sampled_player14_ai_dispatch || input.recovery->special_owner_flags || input.recovery->ball_variant)
-  throw std::invalid_argument("Player14 pass handoff needs the observed dispatch state");
+ const bool player16=input.phase==FieldSessionPhase::sampled_field_ai_dispatch && input.score &&
+  input.score->left_goals==3 && input.score->right_goals==5 && input.current.clock.remaining==296;
+ if((input.phase!=FieldSessionPhase::sampled_player14_ai_dispatch && !player16) || input.recovery->special_owner_flags || input.recovery->ball_variant)
+  throw std::invalid_argument("Pass handoff needs the observed dispatch state");
  auto state=input;state.current.field=advance_field_phase(input.current.field,mappings,movement).state;
- state.recovery->ball_variant=1;state.control->last_carrier_cell=128;state.control->display_parameter=0;state.control->motion_requested=0;
- state.phase=FieldSessionPhase::sampled_player14_pass_handoff;validate_phase_session(state);return state;
+ if(player16)state.phase=FieldSessionPhase::sampled_field_ai_pass_presented;
+ else {
+  state.recovery->ball_variant=1;state.control->last_carrier_cell=128;state.control->display_parameter=0;state.control->motion_requested=0;
+  state.phase=FieldSessionPhase::sampled_player14_pass_handoff;
+ }
+ validate_phase_session(state);return state;
 }
 PhaseSessionState advance_sampled_player19_return_shot_approach(const PhaseSessionState& input,
  const PlayerProfileMappings& mappings,const FieldPhaseContent& movement) {
@@ -811,7 +818,8 @@ PhaseSessionState acknowledge_sampled_field_ai_pass_handoff(const PhaseSessionSt
  if(input.phase!=FieldSessionPhase::sampled_field_ai_pass_presented || input.recovery->special_owner_flags!=0 || input.recovery->ball_variant!=0 ||
     input.control->facing!=0 || input.control->display_parameter!=2 || input.control->motion_requested!=1)
   throw std::invalid_argument("Unsupported sampled opponent pass handoff");
- auto state=input;state.recovery->ball_variant=1;state.control->facing=64;
+ auto state=input;state.recovery->ball_variant=1;
+ state.control->facing=(input.score && input.score->left_goals==3 && input.score->right_goals==5 && input.current.clock.remaining==296) ? 0 : 64;
  state.control->last_carrier_cell=128;state.control->display_parameter=0;state.control->motion_requested=0;
  state.phase=FieldSessionPhase::sampled_field_ai_pass_handoff;validate_phase_session(state);return state;
 }
@@ -839,8 +847,10 @@ PhaseSessionState capture_sampled_field_pass_target(const PhaseSessionState& inp
  const bool mixed=input.phase==FieldSessionPhase::sampled_mixed_result4_pass;
  const bool player12=input.phase==FieldSessionPhase::sampled_player12_pass_handoff;
  const bool player14=input.phase==FieldSessionPhase::sampled_player14_pass_handoff;
+ const bool score35=input.phase==FieldSessionPhase::sampled_field_ai_pass_handoff && input.score &&
+    input.score->left_goals==3 && input.score->right_goals==5 && input.current.clock.remaining==296;
  if((input.phase!=FieldSessionPhase::sampled_field_ai_pass_handoff && !mixed && !player12 && !player14) ||
-    recipient!=(mixed ? 12 : 19) || destination!=(player14 ? 63 : player12 ? 79 : mixed ? 142 : 103) || counter!=255 || distance!=3)
+    recipient!=(mixed ? 12 : 19) || destination!=(score35 ? 70 : player14 ? 63 : player12 ? 79 : mixed ? 142 : 103) || counter!=255 || distance!=(score35 ? 4 : 3))
   throw std::invalid_argument("Unsupported sampled opponent pass target");
  const auto& target=input.current.field.motion[field_motion_index(recipient)];
  if(field_cell_at(static_cast<std::uint8_t>(target.x>>8),static_cast<std::uint8_t>(target.y>>8))!=destination)

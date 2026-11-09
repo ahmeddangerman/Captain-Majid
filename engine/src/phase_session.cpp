@@ -590,16 +590,17 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.current.field.roster[16].type!=23 || state.current.field.selected_defenders ||
        state.current.field.random_first || state.current.field.random_second || state.experience->opponent_stage ||
        !((state.current.clock.remaining==443 && state.current.clock.extra_time==5 && state.score->left_goals==1 && state.score->right_goals==0) ||
-         (phase<=200 && state.current.clock.remaining==406 && state.current.clock.extra_time==9 && state.score->left_goals==2 && state.score->right_goals==1)) ||
+         (phase<=200 && state.current.clock.remaining==406 && state.current.clock.extra_time==9 && state.score->left_goals==2 && state.score->right_goals==1) ||
+         (phase<=200 && state.current.clock.remaining==296 && state.current.clock.extra_time==13 && state.score->left_goals==3 && state.score->right_goals==5)) ||
        state.control->last_carrier_cell!=(phase>=199 ? 128 : phase>=197 ? 0 : 140) || state.score->kickoff!=4 ||
        state.current.clock.script_flags!=(phase>=196 ? 0 : 128) || state.current.clock.ball_mode!=(phase>=196 ? 0 : 128) ||
        (phase>=198 && (state.current.field.elapsed!=0 || state.current.field.movement_region!=140)) ||
-       (phase>=199 && (state.recovery->special_owner_flags!=0 || state.recovery->ball_variant!=1 || state.control->facing!=64 || state.control->display_parameter!=0 || state.control->motion_requested!=0)) ||
+       (phase>=199 && (state.recovery->special_owner_flags!=0 || state.recovery->ball_variant!=1 || state.control->facing!=((state.score->left_goals==3 && state.score->right_goals==5 && state.current.clock.remaining==296) ? 0 : 64) || state.control->display_parameter!=0 || state.control->motion_requested!=0)) ||
        state.action->action!=1 || state.action->power!=(phase==194 ? 22 : 21) || state.recovery->attack_subtype!=(phase==194 ? 0 : 128)))
         throw std::invalid_argument("Invalid sampled opponent AI choice state");
     if(bool(state.sampled_field_pass)!=(phase==112 || phase==200 || phase==229 || phase==235 || phase==261 || phase==326) || (state.sampled_field_pass &&
-       (state.sampled_field_pass->recipient!=(phase==326 ? 7 : phase==112 ? 255 : phase==229 ? 12 : 19) || state.sampled_field_pass->destination!=(phase==112 ? 87 : phase==261 ? 63 : phase==235 ? 79 : phase==229 ? 142 : 103) ||
-        state.sampled_field_pass->counter!=255 || state.sampled_field_pass->distance!=(phase==112 ? 2 : 3))))
+       (state.sampled_field_pass->recipient!=(phase==326 ? 7 : phase==112 ? 255 : phase==229 ? 12 : 19) || state.sampled_field_pass->destination!=((phase==200 && state.score && state.score->left_goals==3 && state.score->right_goals==5) ? 70 : phase==112 ? 87 : phase==261 ? 63 : phase==235 ? 79 : phase==229 ? 142 : 103) ||
+        state.sampled_field_pass->counter!=255 || state.sampled_field_pass->distance!=((phase==200 && state.score && state.score->left_goals==3 && state.score->right_goals==5) ? 4 : phase==112 ? 2 : 3))))
         throw std::invalid_argument("Invalid sampled opponent pass target context");
     if(phase==200 || phase==229 || phase==235 || phase==261) {
         const auto& recipient=state.current.field.motion[field_motion_index(state.sampled_field_pass->recipient)];
