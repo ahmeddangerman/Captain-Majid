@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - shared core original comparisons (2026-11-09):** Existing isolated routine harnesses passed broad controlled fixtures for attack strength/power, keeper and energy state, random byte stepping, shot/defender outcomes, field interruption, selection and recovery. These do not establish live gameplay. Phase317 replay remains constrained to observed routes; a complete playable match is unsupported and overall progress is unmeasured.
+
 **Latest - shared defender original comparisons (2026-11-09):** Existing isolated routine harnesses matched16,064 defender-preparation cases,91,392 profile/preparation fixtures,550 comparison-selection fixtures and19,200 contact cases. These are constructed inputs, not live match coverage. The phase317 replay remains bounded to observed routes; live initialization and a complete playable match remain unsupported. Overall progress is unmeasured.
 
 **Latest - replay metadata audit (2026-11-09):** The existing phase317 replay now checks flight context and reception trajectories and compares retained contact values to original defender preparation. It still matches1,728 boundaries across the two existing encounters; all53 Windows CTest checks passed. Scenario limits and unverified playable match remain unchanged; overall progress is unmeasured.
