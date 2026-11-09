@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: volley clock and shot handoff
+
+The captured startup now continues from the recovered goal-area volley through the first clock, 22 ordered field-player updates, a second clock and the original shot handoff at $C618. The first clock goes 162 to 161 and the second 161 to 160; the second applies the observed opposing-player status6. Original/native represented fields match at the intermediate clock and handoff boundaries, final random index148. The replay uses captured presentation-facing/motion and random/travel samples, including 90 pairs during the second wait. Private evidence: ../Captain-Majid-analysis/live-return-area-volley-handoff-v5-20261109.
+
+General: shared clock, keeper recovery, contact prelude and player-movement arithmetic. Scenario-specific: this guarded unopposed goal-area volley, stale opposing-player reference and supplied timing/presentation samples. Unknown: goalkeeper approach and outcome in this continuation, autonomous timing/AI and a complete playable match. All62 Windows tests passed. The original subsequently enters a same-cell goalkeeper route; investigate that path without assuming numeric flight. Overall progress unmeasured; suggested model Terra High.
+
+
+
 ## Current stopping point - 2026-11-09: goal-area volley prepared
 
 The captured startup now replays48 opponent goal-area menu polls and confirms a shot. The original changes its attack subtype from0 to1 during the subsequent wait; an explicit `U 1` observation records this volley rather than deriving an unverified input/presentation rule. The shared profiled attack preparation with situation1/subtype1 then matches $82A0: player8 stamina416 to326, cost90, power11 and random index7. Route1 is retained. Other goal-area actions, subtypes and special outcomes remain guarded. The original later reaches goalkeeper comparison and a goal, but those later states are not yet connected or native-compared here.

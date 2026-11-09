@@ -101,6 +101,16 @@ def main():
     parser.add_argument('--volley-entry-index',type=int)
     parser.add_argument('--volley-prepare-index',type=int)
     parser.add_argument('--volley-prepared-index',type=int)
+    parser.add_argument('--volley-wait-index',type=int)
+    parser.add_argument('--volley-clock-entry-index',type=int)
+    parser.add_argument('--volley-clock-index',type=int)
+    parser.add_argument('--volley-clock-end-index',type=int)
+    parser.add_argument('--volley-movement-index',type=int)
+    parser.add_argument('--volley-dispatch-clock-before-index',type=int)
+    parser.add_argument('--volley-dispatch-clock-index',type=int)
+    parser.add_argument('--volley-dispatch-before-index',type=int)
+    parser.add_argument('--volley-dispatch-index',type=int)
+    parser.add_argument('--volley-handoff-index',type=int)
     args=parser.parse_args()
     if args.start_index<0 or not 0<=args.initial_index<=255 or args.expected_polls<1:
         raise ValueError('Start, random index or expected poll count is invalid')
@@ -628,7 +638,99 @@ def main():
         compare_shot_flight(destination.read_bytes(),volley_ram(prepared),381,'returned.goal_area.volley_prepare')
         if index!=volley_ram(prepared)[0xe1]:raise ValueError('boundary returned.goal_area.volley_prepare, random.index: original and native differ')
         source=destination
-    print(f'Matched {count} returned menu polls through {"opponent goal-area volley preparation" if args.volley_prepared_index is not None else "opponent goal-area shot confirmation" if args.expected_area_polls is not None else "opponent goal-area menu" if args.area_menu_index is not None else "blocked-shot recovered owner" if args.owner_positioned_index is not None else "blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
+    volley_clock_args=(args.volley_wait_index,args.volley_clock_entry_index,args.volley_clock_index,args.volley_clock_end_index)
+    if any(value is not None for value in volley_clock_args):
+        if any(value is None for value in volley_clock_args) or args.volley_prepared_index is None:
+            raise ValueError('boundary returned.goal_area.volley_clock: prepared shot and all clock boundaries are required')
+        wait_end,entry,clock,clock_end=volley_clock_args
+        if not args.volley_prepared_index<wait_end<entry<clock<clock_end<len(volley_pcs) or [volley_pcs[i] for i in volley_clock_args]!=['82AA','90DD','C9C5','83F5'] or any(volley_ram(i)[0x24]!=26 for i in (wait_end,entry,clock_end)):
+            raise ValueError('boundary returned.goal_area.volley_clock: unsupported original ordering or bank')
+        rows,last=menu_wait_events(volley_lines,volley_pcs,volley_ram,args.volley_prepared_index,wait_end)
+        points=[i for i in range(args.volley_prepared_index+1,wait_end) if volley_pcs[i] in ('C9C5','E3CA')]
+        if len(points)!=len(rows):raise ValueError('boundary returned.goal_area.volley_wait: ambiguous presentation sample ordering')
+        values=[source.read_bytes()[299],source.read_bytes()[305]];ordered=[]
+        for row,point in zip(rows,points):
+            raw=volley_ram(point)
+            for slot,(address,token) in enumerate(((0x517,'F'),(0x532,'M'))):
+                if raw[address]!=values[slot]:values[slot]=raw[address];ordered.append(f'{token} {values[slot]}')
+            ordered.append(row)
+        operation+=1;events=output/f'{operation:03d}-volley-presentation-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(ordered)+'\n')
+        waiting=output/f'{operation:03d}-volley-presentation-wait.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_wait: {run.stderr.strip()}')
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(volley_ram(wait_end)[0xe1])]:raise ValueError('boundary returned.goal_area.volley_wait, random.index: original and native differ')
+        index=int(indices[0]);compare_shot_flight(waiting.read_bytes(),volley_ram(wait_end),381,'returned.goal_area.volley_wait')
+        operation+=1;entered=output/f'{operation:03d}-volley-clock-entry.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--begin-ordinary-return-goal-shot-clock','--capture',str(entered)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_clock_entry: {run.stderr.strip()}')
+        compare_shot_flight(entered.read_bytes(),volley_ram(entry),382,'returned.goal_area.volley_clock_entry')
+        operation+=1;clocked=output/f'{operation:03d}-volley-first-clock.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(entered),'--advance-ordinary-return-goal-shot-clock','--capture',str(clocked)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_clock: {run.stderr.strip()}')
+        compare_shot_flight(clocked.read_bytes(),volley_ram(clock),383,'returned.goal_area.volley_clock')
+        rows,last=menu_wait_events(volley_lines,volley_pcs,volley_ram,clock-1,clock_end)
+        operation+=1;events=output/f'{operation:03d}-volley-clock-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+        waiting=output/f'{operation:03d}-volley-clock-wait.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(clocked),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_clock_wait: {run.stderr.strip()}')
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(volley_ram(clock_end)[0xe1])]:raise ValueError('boundary returned.goal_area.volley_clock_wait, random.index: original and native differ')
+        index=int(indices[0]);compare_shot_flight(waiting.read_bytes(),volley_ram(clock_end),383,'returned.goal_area.volley_clock_wait');source=waiting
+    if args.volley_movement_index is not None:
+        movement=args.volley_movement_index
+        if args.volley_clock_end_index is None or not args.volley_clock_end_index<movement<len(volley_pcs) or volley_pcs[movement]!='8408' or volley_ram(movement)[0x24]!=26:
+            raise ValueError('boundary returned.goal_area.volley_movement: unsupported original ordering or bank')
+        rows,last=menu_wait_events(volley_lines,volley_pcs,volley_ram,args.volley_clock_end_index,movement)
+        if len(rows)!=44:raise ValueError(f'boundary returned.goal_area.volley_movement: expected 22 random/travel pairs, got {len(rows)//2}')
+        operation+=1;events=output/f'{operation:03d}-volley-field-events.txt'
+        events.write_text('CMJNMISEQ1\n'+''.join(rows[2*slot]+'\n'+rows[2*slot+1]+'\nP '+str(slot)+'\n' for slot in range(22)))
+        moved=output/f'{operation:03d}-volley-field-moved.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-field-movement',str(events),str(index),'--capture',str(moved)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_movement: {run.stderr.strip()}')
+        indices=re.findall(r'final random index (\d+);',run.stdout)
+        if indices!=[str(volley_ram(movement)[0xe1])]:raise ValueError('boundary returned.goal_area.volley_movement, random.index: original and native differ')
+        index=int(indices[0]);compare_shot_flight(moved.read_bytes(),volley_ram(movement),384,'returned.goal_area.volley_movement');source=moved
+    dispatch_args=(args.volley_dispatch_clock_before_index,args.volley_dispatch_clock_index,args.volley_dispatch_before_index,args.volley_dispatch_index,args.volley_handoff_index)
+    if any(value is not None for value in dispatch_args):
+        if any(value is None for value in dispatch_args) or args.volley_movement_index is None:
+            raise ValueError('boundary returned.goal_area.volley_dispatch: movement and all dispatch boundaries are required')
+        clock_before,clock, before,dispatch,handoff=dispatch_args
+        if not args.volley_movement_index<clock_before<clock<before<dispatch<handoff<len(volley_pcs) or [volley_pcs[i] for i in dispatch_args]!=['E406','800C','E406','847F','C618'] or volley_ram(dispatch)[0x24]!=26:
+            raise ValueError('boundary returned.goal_area.volley_dispatch: unsupported original ordering or bank')
+        def replay_dispatch_wait(source,start,end,phase,label):
+            nonlocal operation,index
+            rows,last=menu_wait_events(volley_lines,volley_pcs,volley_ram,start,end+1)
+            points=[i for i in range(start+1,end+1) if volley_pcs[i] in ('C9C5','E3CA')]
+            if len(points)!=len(rows):raise ValueError(f'boundary {label}: ambiguous presentation sample ordering')
+            values=[source.read_bytes()[299],source.read_bytes()[305]];ordered=[]
+            for row,point in zip(rows,points):
+                raw=volley_ram(point)
+                for slot,(address,token) in enumerate(((0x517,'F'),(0x532,'M'))):
+                    if raw[address]!=values[slot]:values[slot]=raw[address];ordered.append(f'{token} {values[slot]}')
+                ordered.append(row)
+            operation+=1;events=output/f'{operation:03d}-volley-dispatch-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(ordered)+'\n')
+            waiting=output/f'{operation:03d}-volley-dispatch-wait.cmjsession'
+            run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-sequence',str(events),str(index),'--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+            if run.returncode:raise RuntimeError(f'boundary {label}: {run.stderr.strip()}')
+            indices=re.findall(r'final random index (\d+);',run.stdout)
+            if indices!=[str(volley_ram(end)[0xe1])]:raise ValueError(f'boundary {label}, random.index: original and native differ')
+            index=int(indices[0]);compare_shot_flight(waiting.read_bytes(),volley_ram(end),phase,label)
+            return waiting
+        waiting=replay_dispatch_wait(source,args.volley_movement_index,clock_before,384,'returned.goal_area.volley_before_dispatch_clock')
+        operation+=1;dispatched=output/f'{operation:03d}-volley-dispatched.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--advance-ordinary-return-goal-shot-dispatch','--capture',str(dispatched)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_dispatch: {run.stderr.strip()}')
+        compare_shot_flight(dispatched.read_bytes(),volley_ram(clock),385,'returned.goal_area.volley_dispatch_clock')
+        waiting=replay_dispatch_wait(dispatched,clock,before,385,'returned.goal_area.volley_dispatch_wait')
+        compare_shot_flight(waiting.read_bytes(),volley_ram(dispatch),385,'returned.goal_area.volley_dispatch_ready')
+        if any(volley_pcs[i]=='C9C5' for i in range(before+1,handoff)):
+            raise ValueError('boundary returned.goal_area.volley_dispatch: unexpected random event after wait')
+        operation+=1;destination=output/f'{operation:03d}-volley-handoff.cmjsession'
+        run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--handoff-ordinary-return-goal-shot','--capture',str(destination)],capture_output=True,text=True,timeout=30)
+        if run.returncode:raise RuntimeError(f'boundary returned.goal_area.volley_handoff: {run.stderr.strip()}')
+        compare_shot_flight(destination.read_bytes(),volley_ram(handoff),386,'returned.goal_area.volley_handoff');source=destination
+    print(f'Matched {count} returned menu polls through {"opponent goal-area shot handoff" if args.volley_handoff_index is not None else "opponent goal-area field movement" if args.volley_movement_index is not None else "opponent goal-area first attack clock" if args.volley_clock_end_index is not None else "opponent goal-area volley preparation" if args.volley_prepared_index is not None else "opponent goal-area shot confirmation" if args.expected_area_polls is not None else "opponent goal-area menu" if args.area_menu_index is not None else "blocked-shot recovered owner" if args.owner_positioned_index is not None else "blocked-shot recovery handoff" if args.recovery_handoff_index is not None else "blocked-shot handler entry" if args.recovery_handler_index is not None else "shot flight defender comparison" if args.flight_defender_result_index is not None else "shot flight arrival" if args.flight_arrival_index is not None else "shot flight cells" if args.flight_cell_indices is not None else "shot flight setup" if args.flight_setup_index is not None else "shot target" if args.target_index is not None else "shot field movement" if args.movement_end_index is not None else "shot contact and dispatch" if args.contact_index is not None else "shot defender comparison" if args.defender_index is not None else "recorded defense and shot preparation" if args.defense_index is not None else "ordinary shot confirmation"}; final random index {index}; checkpoint {source}.')
 
 
 if __name__=='__main__':

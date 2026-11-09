@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+**Latest - recovered volley handoff (2026-11-09):** One captured startup matches the two volley clock updates, 22 field movements and shot handoff with supplied timing and presentation samples. The same-cell goalkeeper entry and outcome remain unverified in this continuation; autonomous match play remains unsupported. All62 Windows tests passed; overall progress unmeasured.
+
+
+
 **Latest - goal-area volley preparation (2026-11-09):** One captured startup now matches48 area-menu polls through an explicitly sampled volley subtype and profile-based attack preparation. Later clocks, goalkeeper outcome and goal remain original-only for this continuation. All62 Windows tests and both phase317 replay sets passed; overall progress unmeasured.
 
 

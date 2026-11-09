@@ -425,6 +425,38 @@ ActionMenuResult poll_ordinary_return_action_menu(const PhaseSessionState& input
     validate_phase_session(result.state);return result;
 }
 
+PhaseSessionState advance_ordinary_return_goal_area_shot_dispatch(const PhaseSessionState& input,const ContactPreludeContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_goal_area_field_moved || content.field_elapsed[1]!=1 || content.defender_status[0]!=6)
+  throw std::invalid_argument("Goal-area shot dispatch requires the observed contact timing");
+ auto state=input;const auto applied=apply_contact_prelude({state.current,state.recovery->opposing_player,0,true},content);
+ if(applied.clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Goal-area dispatch clock continuation is unsupported");
+ state.current=applied.state;state.phase=FieldSessionPhase::ordinary_return_goal_area_dispatch;validate_phase_session(state);return state;
+}
+PhaseSessionState handoff_ordinary_return_goal_area_shot(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_goal_area_dispatch)
+  throw std::invalid_argument("Goal-area shot handoff requires its dispatch clock");
+ auto state=input;state.action->menu_route=0;state.phase=FieldSessionPhase::ordinary_return_goal_area_handoff;validate_phase_session(state);return state;
+}
+PhaseSessionState begin_ordinary_return_goal_area_shot_clock(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_goal_area_shot_prepared || input.current.field.selected_defenders)
+  throw std::invalid_argument("Unopposed goal-area clock requires the prepared shot");
+ auto state=input;state.area_sequence_result=0;state.control->last_carrier_cell=0;
+ state.phase=FieldSessionPhase::ordinary_return_goal_area_clock_entry;validate_phase_session(state);return state;
+}
+PhaseSessionState advance_ordinary_return_goal_area_shot_clock(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_goal_area_clock_entry)
+  throw std::invalid_argument("Goal-area first clock requires its unopposed entry");
+ auto state=input;state.current.field.elapsed=static_cast<std::uint8_t>(unsigned(state.current.field.elapsed)+1);
+ const auto recovery=advance_keeper_recovery({state.current.field.keepers,state.current.shared_recovery_flags,state.current.shared_recovery_timer},1);
+ state.current.field.keepers=recovery.keepers;state.current.shared_recovery_flags=recovery.shared_flags;state.current.shared_recovery_timer=recovery.shared_timer;
+ const auto clock=advance_match_clock(state.current.clock,1,state.current.field.random_first);
+ if(clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Goal-area first clock continuation is unsupported");
+ state.current.clock=clock.state;state.phase=FieldSessionPhase::ordinary_return_goal_area_first_clock;validate_phase_session(state);return state;
+}
 SessionAttackResult prepare_ordinary_return_goal_area_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::ordinary_return_goal_area_shot_choice || input.recovery->attack_subtype!=1 || input.recovery->ball_variant!=1)

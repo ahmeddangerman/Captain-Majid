@@ -1626,6 +1626,24 @@ int main(){try{using namespace captain;
  const auto area_shot_prepared=prepare_ordinary_return_goal_area_shot(volley_fixture,sampled_attack_profiles,volley_content);
  check(area_shot_prepared.state.current.field.roster[8].stamina==410 && area_shot_prepared.state.recovery->attack_subtype==1 &&
        area_shot_prepared.state.action->menu_route==1,"Goal-area shot uses the captured volley and variant-specific preparation");
+ const auto area_shot_entry=begin_ordinary_return_goal_area_shot_clock(area_shot_prepared.state);
+ check(!area_shot_entry.control->last_carrier_cell && !area_shot_entry.area_sequence_result,
+       "Unopposed goal-area shot resets the prior contact result and carrier marker");
+ const auto area_shot_clock=advance_ordinary_return_goal_area_shot_clock(area_shot_entry);
+ check(area_shot_clock.current.clock.remaining+1==area_shot_entry.current.clock.remaining && area_shot_clock.current.field.elapsed==1,
+       "Unopposed goal-area shot advances its first observed clock step");
+ const auto area_shot_field=advance_observed_pass_field_movement(area_shot_clock,profile_mappings,pass_movement_content,0,pass_movement_events);
+ check(!area_shot_field.state.current.field.elapsed && area_shot_field.state.current.clock.remaining==area_shot_clock.current.clock.remaining,
+       "Goal-area shot runs ordered field movement after its first clock");
+ ContactPreludeContent area_dispatch_content{};area_dispatch_content.field_elapsed[1]=1;area_dispatch_content.defender_status[0]=6;
+ const auto area_shot_dispatch=advance_ordinary_return_goal_area_shot_dispatch(area_shot_field.state,area_dispatch_content);
+ check(area_shot_dispatch.current.clock.remaining+1==area_shot_field.state.current.clock.remaining &&
+       area_shot_dispatch.current.field.motion[field_motion_index(area_shot_dispatch.recovery->opposing_player)].status==6,
+       "Goal-area shot dispatch applies the original opposing-player status and clock");
+ const auto area_shot_handoff=handoff_ordinary_return_goal_area_shot(area_shot_dispatch);
+ check(!area_shot_handoff.action->menu_route && area_shot_handoff.current.field.elapsed==1 &&
+       area_shot_handoff.current.field.motion[field_motion_index(area_shot_handoff.recovery->opposing_player)].status==6,
+       "Goal-area shot handoff clears the menu route and retains elapsed time");
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});

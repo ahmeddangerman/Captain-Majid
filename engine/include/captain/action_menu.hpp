@@ -62,6 +62,10 @@ ActionMenuResult poll_human_action_menu(const PhaseSessionState& input, std::uin
                                       const ActionMenuContent& content);
 struct SessionAttackResult { PhaseSessionState state; PreparedAttackResult preparation; };
 SessionAttackResult prepare_ordinary_return_goal_area_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
+PhaseSessionState begin_ordinary_return_goal_area_shot_clock(const PhaseSessionState& input);
+PhaseSessionState advance_ordinary_return_goal_area_shot_clock(const PhaseSessionState& input);
+PhaseSessionState advance_ordinary_return_goal_area_shot_dispatch(const PhaseSessionState& input,const ContactPreludeContent& content);
+PhaseSessionState handoff_ordinary_return_goal_area_shot(const PhaseSessionState& input);
 PhaseSessionState record_ordinary_return_shot_defense(const PhaseSessionState& input,std::uint8_t defender,std::uint8_t action,std::uint8_t subtype);
 SessionAttackResult prepare_ordinary_return_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,const FieldPlayerProfiles& players,const FieldDefenseContent& defense);

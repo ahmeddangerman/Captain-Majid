@@ -299,7 +299,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
          input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::ordinary_return_contact_pending &&
          input.phase != FieldSessionPhase::ordinary_return_action_menu && input.phase != FieldSessionPhase::ordinary_return_shot_choice && input.phase != FieldSessionPhase::ordinary_return_shot_prepared &&
          input.phase != FieldSessionPhase::ordinary_return_shot_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_contact && input.phase != FieldSessionPhase::ordinary_return_shot_dispatch &&
-         input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival && input.phase != FieldSessionPhase::ordinary_return_shot_defenders_pending && input.phase != FieldSessionPhase::ordinary_return_shot_flight_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_blocked_clocked && input.phase != FieldSessionPhase::ordinary_return_goal_area_defenders && input.phase != FieldSessionPhase::ordinary_return_goal_area_menu && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_choice) || !input.control)
+         input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival && input.phase != FieldSessionPhase::ordinary_return_shot_defenders_pending && input.phase != FieldSessionPhase::ordinary_return_shot_flight_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_blocked_clocked && input.phase != FieldSessionPhase::ordinary_return_goal_area_defenders && input.phase != FieldSessionPhase::ordinary_return_goal_area_menu && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_choice && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_prepared && input.phase != FieldSessionPhase::ordinary_return_goal_area_first_clock && input.phase != FieldSessionPhase::ordinary_return_goal_area_field_moved && input.phase != FieldSessionPhase::ordinary_return_goal_area_dispatch) || !input.control)
         throw std::invalid_argument("Observed NMI sequence requires a supported contact, menu or pass-target boundary");
     auto state = input;
     auto index = initial_random_index;
@@ -314,9 +314,9 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
         } else if (event.kind == ObservedClockEventKind::motion_sample &&
-                   (input.phase == FieldSessionPhase::ordinary_human_pass_target || input.phase == FieldSessionPhase::ordinary_pass_prepared || input.phase == FieldSessionPhase::ordinary_pass_control_entry || input.phase == FieldSessionPhase::ordinary_return_contact_pending || input.phase == FieldSessionPhase::ordinary_return_shot_prepared || input.phase == FieldSessionPhase::ordinary_return_shot_flight_ready || input.phase == FieldSessionPhase::ordinary_return_shot_flight_callback || input.phase == FieldSessionPhase::ordinary_return_shot_flight_arrival || input.phase == FieldSessionPhase::ordinary_return_shot_defenders_pending)) {
+                   (input.phase == FieldSessionPhase::ordinary_human_pass_target || input.phase == FieldSessionPhase::ordinary_pass_prepared || input.phase == FieldSessionPhase::ordinary_pass_control_entry || input.phase == FieldSessionPhase::ordinary_return_contact_pending || input.phase == FieldSessionPhase::ordinary_return_shot_prepared || input.phase == FieldSessionPhase::ordinary_return_shot_flight_ready || input.phase == FieldSessionPhase::ordinary_return_shot_flight_callback || input.phase == FieldSessionPhase::ordinary_return_shot_flight_arrival || input.phase == FieldSessionPhase::ordinary_return_shot_defenders_pending || input.phase == FieldSessionPhase::ordinary_return_goal_area_shot_prepared || input.phase == FieldSessionPhase::ordinary_return_goal_area_field_moved || input.phase == FieldSessionPhase::ordinary_return_goal_area_dispatch)) {
             state.control->motion_requested = event.held;
-        } else if (event.kind == ObservedClockEventKind::facing_sample && (input.phase == FieldSessionPhase::ordinary_pass_prepared || input.phase == FieldSessionPhase::ordinary_return_contact_pending || input.phase == FieldSessionPhase::ordinary_return_shot_flight_defender_compared)) {
+        } else if (event.kind == ObservedClockEventKind::facing_sample && (input.phase == FieldSessionPhase::ordinary_pass_prepared || input.phase == FieldSessionPhase::ordinary_return_contact_pending || input.phase == FieldSessionPhase::ordinary_return_shot_flight_defender_compared || input.phase == FieldSessionPhase::ordinary_return_goal_area_shot_prepared || input.phase == FieldSessionPhase::ordinary_return_goal_area_field_moved || input.phase == FieldSessionPhase::ordinary_return_goal_area_dispatch)) {
             state.control->facing = event.held;
         } else if (event.kind == ObservedClockEventKind::display_sample && input.phase == FieldSessionPhase::ordinary_return_contact_pending) {
             state.control->display_parameter = event.held;
@@ -339,7 +339,8 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     validate_phase_session(input);
     const bool shot=input.phase==FieldSessionPhase::ordinary_return_shot_dispatch;
     const bool recovery=input.phase==FieldSessionPhase::ordinary_return_shot_recovery_jittered;
-    if ((!shot && !recovery && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
+    const bool goal_shot=input.phase==FieldSessionPhase::ordinary_return_goal_area_first_clock;
+    if ((!shot && !recovery && !goal_shot && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
         throw std::invalid_argument("Observed field movement requires a supported dispatch and elapsed time");
     auto state=input;
     auto& field=state.current.field;
@@ -362,7 +363,7 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     }
     if (slot!=22) throw std::invalid_argument("Observed pass movement has incomplete player slots");
     field.elapsed=0;
-    state.phase=recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
+    state.phase=goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
     validate_phase_session(state);
     return {std::move(state),index};
 }

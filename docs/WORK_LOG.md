@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-09 - Recovered volley clocks and handoff
+
+The captured startup now matches the unopposed volley's two clock steps, 22 ordered field movements and shot handoff, including the original timing of status6 and captured presentation samples. Final random index148; evidence: ../Captain-Majid-analysis/live-return-area-volley-handoff-v5-20261109. Shared clock, keeper recovery, contact prelude and movement kernels are reused; this sequence and event timing remain guarded and sampled. All62 Windows tests passed. Goalkeeper outcome and a complete match remain unsupported. Overall progress unmeasured; next investigate the direct same-cell keeper entry; suggested model Terra High.
+
+
+
 ## 2026-11-09 - Recovered goal-area volley preparation
 
 The controlled startup chain matches48 route1 menu polls, shot confirmation, explicit observed `U 1` volley subtype and shared attack preparation: player8 stamina416 to326, cost90, power11 and random index7. Original later reaches a goalkeeper comparison and goal, not yet connected or native-compared. The independent banked attacker oracle passed3,882 cases; full Windows build, all62 tests and phase317 replays (576/1152 boundaries) passed. Evidence: ../Captain-Majid-analysis/live-return-area-volley-prepare-final-20261109. Overall progress unmeasured; next compare attack clocks and goalkeeper handoff; suggested model Terra High.
