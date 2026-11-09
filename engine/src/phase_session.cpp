@@ -58,6 +58,8 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool score36_human_pass=score25_human_pass && state.score && state.score->left_goals==3 && state.score->right_goals==6;
     const bool score25_shot=phase>=327 && phase<=330;
     const bool ordinary_human_target=phase==331;
+    if (state.ordinary_pass_candidates && !ordinary_human_target)
+        throw std::invalid_argument("Ordinary pass candidate context requires the target phase");
     const bool score35_opponent_shot=state.score && state.score->left_goals==3 && (state.score->right_goals==5 || (phase>=300 && state.score->right_goals==6)) && state.current.field.ball_owner==19;
     const bool player17_score24=state.score && state.score->left_goals==2 && state.score->right_goals==4 && state.current.field.ball_owner==17;
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
@@ -76,6 +78,24 @@ void validate_phase_session(const PhaseSessionState& state) {
         for (unsigned i = 0; i < field.selected_defenders; ++i)
             if (state.scheduling->selected_ids[i] < 12 || state.scheduling->selected_ids[i] > 21)
                 throw std::invalid_argument("Ordinary pass target requires opposing field defenders");
+        if (state.ordinary_pass_candidates) {
+            const auto& context = *state.ordinary_pass_candidates;
+            const auto& candidates = context.candidates;
+            if (candidates.count > 4 || candidates.allied_count > candidates.count ||
+                (!context.scanned && (candidates.count || candidates.allied_count)))
+                throw std::invalid_argument("Invalid ordinary pass candidate counts");
+            for (unsigned i = 0; i < 4; ++i) {
+                const auto id = candidates.ids[i];
+                if (i >= candidates.count) {
+                    if (id) throw std::invalid_argument("Unused pass candidates must be zero");
+                } else if (id == field.ball_owner || id == 0 || id == 11 || id > 21 ||
+                           (i && id <= candidates.ids[i-1]) ||
+                           ((i < candidates.allied_count) != (id < 11)))
+                    throw std::invalid_argument("Invalid ordinary pass candidate prefix");
+            }
+            if (candidates.allied_count && candidates.allied_count != candidates.count)
+                throw std::invalid_argument("Allied pass candidates exclude opponents");
+        }
     }
     if(score25_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
        !state.shot_flight || state.shot_flight->distance!=99 || state.shot_flight->destination!=233 || state.shot_flight->counter!=255 || state.shot_flight->loose_ball ||

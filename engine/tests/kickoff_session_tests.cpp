@@ -1185,18 +1185,46 @@ int main(){try{using namespace captain;
  auto general_pass_input=pass_confirmed;
  general_pass_input.current.field.motion[field_motion_index(5)].x=0x7f32;
  general_pass_input.current.field.motion[field_motion_index(5)].y=0x8467;
+ general_pass_input.current.field.motion[field_motion_index(2)].x=0x8400;
+ general_pass_input.current.field.motion[field_motion_index(2)].y=0x8400;
  const auto general_pass=begin_ordinary_human_pass_target(general_pass_input);
  check(general_pass.phase==FieldSessionPhase::ordinary_human_pass_target && general_pass.human_pass_cursor==114 &&
        general_pass.current.field.ball_x==127 && general_pass.current.field.ball_y==132 && general_pass.current.field.ball_cell==114 &&
        general_pass.current.clock.ball_mode==129 && !general_pass.recovery->attack_subtype &&
        general_pass_input.current.field.ball_x==108,"Ordinary pass target refreshes from carrier and preserves input");
+ check(general_pass.ordinary_pass_candidates && !general_pass.ordinary_pass_candidates->scanned,
+       "Initial ordinary target marks candidate scan as not performed");
  const auto general_bytes=bytes(general_pass);std::istringstream general_stream(general_bytes);
  check(bytes(load_phase_session(general_stream))==general_bytes,"Ordinary pass target snapshot roundtrip");
+ auto legacy_target=general_pass;legacy_target.ordinary_pass_candidates.reset();
+ const auto legacy_target_bytes=bytes(legacy_target);std::istringstream legacy_target_stream(legacy_target_bytes);
+ check(!load_phase_session(legacy_target_stream).ordinary_pass_candidates,
+       "Earlier target snapshots retain unknown candidate context");
+ const auto legacy_move=poll_ordinary_human_pass_cursor(legacy_target,1,0);
+ check(legacy_move.state.ordinary_pass_candidates && legacy_move.state.ordinary_pass_candidates->scanned,
+       "A subsequent move resolves unknown legacy candidate context");
  const auto general_move=poll_ordinary_human_pass_cursor(general_pass,1,0);
  check(general_move.cursor_changed && general_move.state.human_pass_cursor==126 && general_pass.human_pass_cursor==114 &&
        general_move.state.current.field.ball_cell==114,"Ordinary cursor move preserves ball and source");
+ check(general_move.state.ordinary_pass_candidates && general_move.state.ordinary_pass_candidates->scanned &&
+       general_move.state.ordinary_pass_candidates->candidates.count==1 &&
+       general_move.state.ordinary_pass_candidates->candidates.allied_count==1 &&
+       general_move.state.ordinary_pass_candidates->candidates.ids[0]==2,
+       "A changed cursor records a candidate scan");
+ const auto moved_bytes=bytes(general_move.state);std::istringstream moved_stream(moved_bytes);
+ check(bytes(load_phase_session(moved_stream))==moved_bytes,"Scanned pass candidates survive snapshot roundtrip");
+ auto malformed_candidates=general_move.state;
+ malformed_candidates.ordinary_pass_candidates->candidates.count=5;
+ rejects([&]{validate_phase_session(malformed_candidates);});
+ auto malformed_snapshot=general_bytes;malformed_snapshot[421]=2;
+ rejects([&]{std::istringstream bad(malformed_snapshot);load_phase_session(bad);});
  const auto general_idle=poll_ordinary_human_pass_cursor(general_move.state,0,0);
  check(!general_idle.cursor_changed && bytes(general_idle.state)==bytes(general_move.state),"Neutral target input preserves cursor");
+ auto changed_positions=general_move.state;
+ changed_positions.current.field.motion[field_motion_index(2)].x=0x3400;
+ const auto still_saved=poll_ordinary_human_pass_cursor(changed_positions,0,0);
+ check(still_saved.state.ordinary_pass_candidates->candidates.ids[0]==2,
+       "Candidate prefix remains from the last scan when player positions later change");
  const auto general_edge=poll_ordinary_human_pass_cursor(general_pass,1,1);
  check(general_edge.state.human_pass_cursor==126,"Directional press edge does not suppress held movement");
  const auto target_nmi=advance_observed_nmi_events(general_pass,255,{{ObservedClockEventKind::random,{0,0,0,false}}});

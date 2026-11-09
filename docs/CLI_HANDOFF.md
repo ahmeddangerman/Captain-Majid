@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: preserved ordinary-pass candidates
+
+Added the original-backed side-zero target candidate scan and saved it in phase331 only when the cursor changes. The scan skips the carrier and goalkeepers, keeps at most four players in ID order, and prioritizes teammates over opponents; 2,048 constructed original CPU cases across two independent target seeds matched. It also matched candidate prefixes for 106 moved polls among 160 full original/native cursor checkpoints. Version148 preserves whether a scan occurred and the resulting prefix/count; new target initialization is explicitly unscanned because the original scratch list can be stale. Earlier version146 target snapshots still load with candidate context unknown and acquire a scan on the next move. Captured startup replay still matches 55 target polls including the original opponent-only candidate and one supplied motion sample. Private evidence: ../Captain-Majid-analysis/ordinary-cursor-candidates-final-20261109 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/target-move-candidates-20261109.
+
+General: side-zero target candidate scan and persistent scan snapshot under supplied input. Scenario-specific: captured startup and separately guarded phase317 pass flow. Unknown: original confirmation/recipient chooser, target cancel, live motion/presentation scheduling, generalized defender/pass continuation and complete match progression. Full Windows build and all 62 registered CTest tests passed; phase317 possession regressions matched 576/1,152 boundaries. Next derive and compare confirmation for empty, single-teammate and multiple-teammate candidates, with original B/A precedence. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: general ordinary-pass cursor movement
 
 `--poll-ordinary-human-pass-cursor HELD PRESSED` advances phase331 using the original linear cell arithmetic: lowest direction bit selects +12/-12/+1/-1 and moves outside 0–239 retain the cursor. A/B confirmation or cancellation reject; a changed cursor reports an acknowledged visual update. The existing CMJNMISEQ1 evidence feed now accepts an explicitly observed motion-request byte `M VALUE` only in this target phase; it does not simulate the presentation task that produced it.

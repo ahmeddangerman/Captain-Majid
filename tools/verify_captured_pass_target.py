@@ -18,7 +18,7 @@ from verify_player7_pass_end_to_end import field_name, prepare_output
 
 def compare_target(actual, raw):
     expected = checkpoint(raw, 19)
-    if len(actual) != 421 or actual[:10] != b'CMJSESSION' or actual[10] != 146:
+    if actual[:10] != b'CMJSESSION' or (len(actual), actual[10]) not in ((421, 146), (428, 148)):
         raise ValueError('boundary target.initial: invalid native session format or length')
     if int.from_bytes(actual[258:260], 'little') != 331:
         raise ValueError(f'boundary target.initial, session.phase: native {int.from_bytes(actual[258:260], "little")}, expected 331')
@@ -34,6 +34,20 @@ def compare_target(actual, raw):
     for index, name, value in trailing:
         if actual[index] != value:
             raise ValueError(f'boundary target.initial, {name}: native {actual[index]}, original {value}')
+    if actual[10] == 148:
+        scanned = actual[421]
+        if scanned not in (0, 1):
+            raise ValueError(f'boundary target.initial, candidates.scanned: invalid value {scanned}')
+        count, allies = actual[422:424]
+        if not scanned:
+            if any(actual[422:428]) or raw[0x625] != 0:
+                raise ValueError('boundary target.initial, candidates: invalid unscanned state')
+        else:
+            wanted = (raw[0x430], raw[0x625], *(raw[0x431 + i] if i < raw[0x430] else 0 for i in range(4)))
+            got = (count, allies, *actual[424:428])
+            for name, native_value, original_value in zip(('count', 'allied_count', 'ids[0]', 'ids[1]', 'ids[2]', 'ids[3]'), got, wanted):
+                if native_value != original_value:
+                    raise ValueError(f'boundary target.initial, candidates.{name}: native {native_value}, original {original_value}')
 
 
 def main():

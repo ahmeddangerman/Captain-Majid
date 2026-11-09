@@ -20,6 +20,20 @@ std::uint8_t advance_ordinary_pass_cursor(std::uint8_t cursor, std::uint8_t held
  const int target = static_cast<int>(cursor) + deltas[direction];
  return target < 0 || target >= 240 ? cursor : static_cast<std::uint8_t>(target);
 }
+OrdinaryPassCandidates select_ordinary_pass_candidates(
+    std::uint8_t carrier, std::uint8_t cursor, const std::array<std::array<std::uint8_t, 2>, 22>& positions) {
+ if (carrier < 1 || carrier > 10 || cursor >= 240)
+  throw std::invalid_argument("Ordinary pass candidates require a side-zero carrier and field cursor");
+ OrdinaryPassCandidates result{};
+ for (unsigned id=1; id<22; ++id) {
+  if (id==11 || id==carrier || field_cell_at(positions[id][0],positions[id][1])!=cursor || result.count==4)
+   continue;
+  if (id>=12 && result.allied_count) continue;
+  result.ids[result.count++]=static_cast<std::uint8_t>(id);
+  if (id<11) ++result.allied_count;
+ }
+ return result;
+}
 std::uint8_t resolve_pass_target_cell(std::uint8_t recipient,std::uint8_t previous_cell,
                                       std::uint8_t recipient_x,std::uint8_t recipient_y) {
  if(recipient==255)return previous_cell;

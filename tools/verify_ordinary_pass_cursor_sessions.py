@@ -41,7 +41,7 @@ def main():
         if run.returncode:
             raise RuntimeError(f'case {tag}, boundary cursor.setup: {run.stderr.strip()}')
         adjusted = bytearray(initialized.read_bytes())
-        adjusted[-2] = before[0x624]
+        adjusted[419] = before[0x624]
         prior = output / f'{index:03d}-cursor.cmjsession'
         prior.write_bytes(adjusted)
         try:

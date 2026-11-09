@@ -51,7 +51,7 @@ def main():
         if len(samples) != len(rows):
             raise ValueError('boundary cursor.wait: ambiguous motion-sample ordering')
         data = source_path.read_bytes()
-        if len(data) != 421 or data[10] != 146:
+        if (len(data), data[10]) not in ((421, 146), (428, 148)):
             raise ValueError('boundary cursor.wait: unexpected target-session layout')
         motion = data[305]
         ordered = []

@@ -2,6 +2,7 @@
 #include "captain/contact_prelude.hpp"
 #include "captain/terminal_flight_phase.hpp"
 #include "captain/experience.hpp"
+#include "captain/pass_target.hpp"
 #include <vector>
 
 namespace captain {
@@ -113,6 +114,10 @@ struct ActionContext {
     std::uint8_t move_effect = 0, move_flags = 0;
     std::uint16_t power = 0;
 };
+struct OrdinaryPassCandidateContext {
+    bool scanned = false;
+    OrdinaryPassCandidates candidates{};
+};
 struct ShotContactProgress {
     std::uint8_t cursor = 0, result_code = 0, defender_id = 0, defense_action = 0, defense_subtype = 0;
 };
@@ -160,6 +165,7 @@ struct PhaseSessionState {
     std::optional<HumanDefenseChoices> human_defense_choices{};
     std::optional<std::uint8_t> human_pass_cursor{};
     std::uint8_t human_pass_steps=0;
+    std::optional<OrdinaryPassCandidateContext> ordinary_pass_candidates{};
     std::optional<BallTrajectoryContext> ball_trajectory{};
     std::optional<KeeperDecisionContext> keeper_decision{};
     std::optional<std::uint8_t> keeper_menu_action{};

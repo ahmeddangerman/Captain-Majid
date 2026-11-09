@@ -22,6 +22,18 @@ int main() {try {
  check(advance_ordinary_pass_cursor(87,15)==99 && advance_ordinary_pass_cursor(87,0xf4)==88,
        "Lowest direction bit wins and non-direction held bits do not move the cursor");
  rejects([&]{advance_ordinary_pass_cursor(240,0);});
+ std::array<std::array<std::uint8_t,2>,22> positions{};
+ for (auto id : {2,5,8,12,20}) positions[id] = {127,132};
+ auto allies=captain::select_ordinary_pass_candidates(5,114,positions);
+ check(allies.count==2 && allies.allied_count==2 && allies.ids[0]==2 && allies.ids[1]==8,
+       "Teammates exclude the carrier and take priority over opponents");
+ positions[2]={0,0};positions[8]={0,0};
+ for (auto id : {13,14,15,16}) positions[id] = {127,132};
+ auto opponents=captain::select_ordinary_pass_candidates(5,114,positions);
+ check(opponents.count==4 && !opponents.allied_count && opponents.ids==std::array<std::uint8_t,4>{12,13,14,15},
+       "Opponent-only candidates are limited to the first four field players");
+ rejects([&]{captain::select_ordinary_pass_candidates(0,114,positions);});
+ rejects([&]{captain::select_ordinary_pass_candidates(5,240,positions);});
  check(resolve_pass_target_cell(7,42,52,84)==0,"First field cell");
  check(resolve_pass_target_cell(21,42,204,172)==239,"Last field cell");
  check(resolve_pass_target_cell(1,42,47,84)==255,"Out-of-field recipient");

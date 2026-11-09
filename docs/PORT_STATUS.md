@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - preserved pass candidates (2026-11-09):** The side-zero target scan matches 2,048 original CPU cases; version148 saves the last scanned prefix while old version146 targets remain readable with unknown candidates. 160 full cursor checkpoints, 55 captured target polls, all 62 Windows tests and both phase317 replays passed. Confirmation, chooser and a complete match remain unsupported; overall progress is unmeasured.
+
 **Latest - general pass cursor (2026-11-09):** Cursor movement matches 122,880 original CPU cases and 160 full controlled checkpoints in two contexts. A captured startup replay matches 55 target polls and one move using recorded random/travel plus an explicit presentation motion sample. Confirmation, recipient selection, live timing and a complete match remain unsupported. All 62 Windows CTest tests and both phase317 replays passed; overall progress is unmeasured.
 
 **Latest - saved ordinary target (2026-11-09):** The captured startup reaches an initialized, score-independent ordinary-pass target using 571 recorded NMI/travel pairs and an acknowledged pass-type selection. Sixteen full target checkpoints matched across two encounter contexts and eight positions. General target movement/confirmation, autonomous timing and a complete match remain unsupported. All 62 Windows CTest tests and both phase317 replays passed; overall progress is unmeasured.

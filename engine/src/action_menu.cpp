@@ -454,6 +454,7 @@ PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& inpu
     state.recovery->attack_subtype = target.attack_subtype;
     state.human_pass_cursor = target.cursor;
     state.human_pass_steps = 0;
+    state.ordinary_pass_candidates = OrdinaryPassCandidateContext{};
     state.phase = FieldSessionPhase::ordinary_human_pass_target;
     validate_phase_session(state);
     return state;
@@ -466,6 +467,16 @@ OrdinaryPassCursorResult poll_ordinary_human_pass_cursor(const PhaseSessionState
     const auto next = advance_ordinary_pass_cursor(*state.human_pass_cursor, held);
     const bool changed = next != *state.human_pass_cursor;
     state.human_pass_cursor = next;
+    if (changed) {
+        std::array<std::array<std::uint8_t,2>,22> positions{};
+        for (unsigned id = 1; id < 22; ++id) {
+            if (id == 11) continue;
+            const auto& motion = state.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];
+            positions[id] = {static_cast<std::uint8_t>(motion.x >> 8), static_cast<std::uint8_t>(motion.y >> 8)};
+        }
+        state.ordinary_pass_candidates = OrdinaryPassCandidateContext{
+            true, select_ordinary_pass_candidates(state.current.field.ball_owner, next, positions)};
+    }
     validate_phase_session(state);
     return {std::move(state), changed};
 }

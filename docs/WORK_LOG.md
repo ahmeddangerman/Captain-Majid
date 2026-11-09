@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Persist original ordinary-pass candidate scan
+
+Added a side-zero original candidate scan and version148 target context distinguishing an unscanned initial list from a scanned prefix. Older version146 targets remain readable with candidate state unknown. Two independent original target seeds matched 2,048 constructed CPU scans; 106 moved polls and 160 full cursor checkpoints matched, and the captured startup still matched 55 polls with the recorded opponent-only prefix. Confirmation and recipient chooser remain guarded. All 62 Windows CTest tests and both phase317 regressions passed. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - General ordinary-pass target movement
 
 Added score-independent phase331 cursor movement, leaving confirmation/cancel guarded. Original D80F arithmetic matched 122,880 cases across two seeds/all cells/all held bytes; 160 full original/native cursor checkpoints matched. The captured startup replay matched 55 consecutive target polls including one move, using recorded NMI/travel and one explicit presentation motion-request sample. The sample is not an emulated presentation engine. All 62 registered Windows tests and the 576/1,152-boundary phase317 regressions passed. Overall progress is unmeasured; suggested model Terra High.
