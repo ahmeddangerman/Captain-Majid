@@ -15,6 +15,7 @@
 #include "captain/attack_clock.hpp"
 #include "captain/approach_session.hpp"
 #include "captain/ball_flight_session.hpp"
+#include "captain/pass_distance.hpp"
 #include "captain/keeper_session.hpp"
 #include "captain/keeper_save_session.hpp"
 #include "captain/goal_session.hpp"
@@ -902,7 +903,7 @@ int main(int argc, char** argv) {
                      "Extended movement: --advance-sampled-player14-pass-handoff | --advance-sampled-player19-return-shot-approach | --advance-sampled-score23-pass-handoff\n"
                      "Player5 dribble: --capture-sampled-score24-dribble-defense ACTION SUBTYPE | --capture-sampled-player5-defense A0 A1 A2 A3 A4 S0 S1 S2 S3 S4 | --prepare-sampled-player5-dribble | --begin-sampled-player5-defenders | --prepare-sampled-player5-defender | --compare-sampled-player5-defender RANGE OFFSET ELIGIBLE T0 T1 T2 T3 | --advance-sampled-player5-terminal | --advance-sampled-player5-terminal-field | --transfer-sampled-player5-possession | --prepare-sampled-player5-result3-control\n"
                      "Area actions: --continue-area-action4 FACING MOTION | --continue-area-action6 FILE FACING MOTION | --continue-area-pass-received | --prepare-area-pass-keeper\n"
-                     "AI: --ack-sampled-unaffordable-shot | --begin-sampled-opponent-goal-restart | --ack-sampled-opponent-goal | --prepare-sampled-opponent-goal | --compare-sampled-home-goalkeeper | --ack-sampled-keeper-overlay | --poll-sampled-goalkeeper PRESSED ICON0 ICON1 | --ack-sampled-mixed-result4-pass | --advance-sampled-mixed-result4 | --compare-sampled-mixed-defender | --prepare-sampled-mixed-defender | --prepare-sampled-field-contact-attack | --poll-sampled-field-defense PRESSED | --ack-sampled-field-defense-prompt BLINK | --ack-sampled-opponent-contact | --continue-sampled-field-pass-control | --begin-sampled-field-pass-flight FILE XLOW YLOW | --capture-sampled-field-pass-target RECIPIENT DEST COUNTER DISTANCE | --ack-sampled-field-ai-pass-handoff | --ack-sampled-field-ai-pass-presentation FILE | --advance-sampled-field-ai-dispatch | --ack-sampled-field-ai-presentation | --capture-sampled-field-ai-preparation SUBTYPE POWER | --capture-sampled-home-shot-handoff FILE | --advance-sampled-home-shot-dispatch | --advance-sampled-home-shot-contact | --resolve-sampled-home-shot-defender | --capture-sampled-home-shot-defender ACTION SUBTYPE | --capture-sampled-field-ai-choice ACTION SUBTYPE\n"
+                     "AI: --ack-sampled-unaffordable-shot | --begin-sampled-opponent-goal-restart | --ack-sampled-opponent-goal | --prepare-sampled-opponent-goal | --compare-sampled-home-goalkeeper | --ack-sampled-keeper-overlay | --poll-sampled-goalkeeper PRESSED ICON0 ICON1 | --ack-sampled-mixed-result4-pass | --advance-sampled-mixed-result4 | --compare-sampled-mixed-defender | --prepare-sampled-mixed-defender | --prepare-sampled-field-contact-attack | --poll-sampled-field-defense PRESSED | --ack-sampled-field-defense-prompt BLINK | --ack-sampled-opponent-contact | --continue-sampled-field-pass-control | --begin-sampled-field-pass-flight FILE XLOW YLOW | --capture-sampled-field-pass-target RECIPIENT DEST COUNTER DISTANCE | --calculate-sampled-field-pass-target TABLE RECIPIENT DEST COUNTER | --ack-sampled-field-ai-pass-handoff | --ack-sampled-field-ai-pass-presentation FILE | --advance-sampled-field-ai-dispatch | --ack-sampled-field-ai-presentation | --capture-sampled-field-ai-preparation SUBTYPE POWER | --capture-sampled-home-shot-handoff FILE | --advance-sampled-home-shot-dispatch | --advance-sampled-home-shot-contact | --resolve-sampled-home-shot-defender | --capture-sampled-home-shot-defender ACTION SUBTYPE | --capture-sampled-field-ai-choice ACTION SUBTYPE\n"
                      "Area flight: --recover-sampled-keeper-result4-action | --advance-sampled-keeper-result4-extra-time | --prepare-sampled-keeper-result4-action ACTION SUBTYPE CONTEXT COST POWER | --ack-sampled-keeper-result4-formation FILE | --route-sampled-keeper-result4 CARRY SIDE | --recover-sampled-loose-shot-result2 | --compare-sampled-loose-shot-defender | --prepare-sampled-loose-shot-defender | --continue-area-action4-keeper-result0-goal | --prepare-area-action4-keeper-result0-goal | --begin-area-action4-restart-flight FILE | --prepare-area-action4-restart-pass-control | --begin-area-flight FILE LX LY DIST FACING MOTION VXLO VXHI VYLO VYHI | --advance-area-ball-cell | --resolve-area-ball-cell | --continue-area-already-arrived | --ack-area-pass-defender | --prepare-area-pass-defender COSTLO COSTHI | --compare-area-pass-defender FILE POWERLO POWERHI CONTEXT | --begin-area-action4-encounters | --continue-area-action4-control | --prepare-area-action4-control | --ack-area-action4-restart-pass | --resume-area-action4-restart-clock | --dispatch-area-action4-restart | --advance-area-action4-restart-clock | --prepare-area-action4-restart-power | --compute-area-action4-restart-formation TABLE | --ack-area-action4-restart-formation FIELD | --prepare-area-action4-keeper-restart OWNER ACTION SUBTYPE CHOICE | --route-area-action4-keeper-restart | --advance-area-action4-keeper-jitter | --continue-area-action4-keeper-result ACTION | --ack-area-action4-keeper-result | --compare-area-action4-keeper POWER ACTION SUBTYPE ADJUSTMENT | --spend-area-action4-keeper-stamina | --begin-area-action4-keeper | --ack-area-action4-keeper FACING MOTION | --prepare-area-action4-keeper COSTLO COSTHI POWERLO POWERHI\n";
         return 2;
     }
@@ -948,6 +949,7 @@ int main(int argc, char** argv) {
         std::optional<unsigned> sampled_field_defense_blink;
         std::optional<std::string> sampled_field_ai_pass_field,sampled_home_shot_handoff_field,human_pass_recovery_field,player3_handoff_field;
         std::optional<std::array<unsigned,4>> sampled_field_pass_target;
+        std::optional<std::string> sampled_pass_distance_file;
         std::optional<std::string> sampled_field_pass_flight_file;std::array<unsigned,2> sampled_field_pass_fractions{};
         std::optional<unsigned> code, defender, elapsed;
         std::optional<unsigned> menu_pressed,area_menu_facing,area_defense_blink,area_defense_pressed,area_special_pressed;
@@ -1327,6 +1329,12 @@ int main(int argc, char** argv) {
                 if(i+3>=argc || sampled_field_pass_flight_file)throw std::invalid_argument("Expected velocity file and captured ball fractions");
                 sampled_field_pass_flight_file=argv[++i];for(auto& value:sampled_field_pass_fractions)value=number(argv[++i]);
             }
+            else if (option == "--calculate-sampled-field-pass-target") {
+                if (i+4>=argc || sampled_field_pass_target) throw std::invalid_argument("Expected distance table, recipient, destination and counter");
+                sampled_pass_distance_file=argv[++i];std::array<unsigned,4> values{};
+                for(unsigned j=0;j<3;++j)values[j]=number(argv[++i]);
+                sampled_field_pass_target=values;
+            }
             else if (option == "--capture-sampled-field-pass-target") {
                 if (i+4>=argc || sampled_field_pass_target) throw std::invalid_argument("Expected captured recipient, destination, counter and distance");
                 std::array<unsigned,4> values{};for(auto& value:values)value=number(argv[++i]);sampled_field_pass_target=values;
@@ -1644,7 +1652,13 @@ int main(int argc, char** argv) {
         if(sampled_opponent_contact_ack)state=captain::acknowledge_sampled_opponent_contact_presentation(state);
         if(sampled_field_defense_blink)state=captain::acknowledge_sampled_field_defense_prompt(state,*sampled_field_defense_blink);
         if(sampled_field_pass_target) {
-            const auto& t=*sampled_field_pass_target;
+            auto t=*sampled_field_pass_target;
+            if(sampled_pass_distance_file) {
+                std::ifstream table_file(*sampled_pass_distance_file,std::ios::binary);
+                if(!table_file)throw std::invalid_argument("Unable to open pass distance table");
+                const auto table=captain::read_pass_distance_content(table_file);
+                t[3]=captain::calculate_pass_distance(state.current.field.ball_x,state.current.field.ball_y,static_cast<std::uint8_t>(t[1]),table);
+            }
             state=(state.phase==captain::FieldSessionPhase::sampled_player3_pass_handoff || state.phase==captain::FieldSessionPhase::sampled_score25_pass_handoff)
                 ? captain::capture_sampled_player3_pass_target(state,t[0],t[1],t[2],t[3])
                 : captain::capture_sampled_field_pass_target(state,t[0],t[1],t[2],t[3]);

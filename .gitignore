@@ -155,6 +155,7 @@ vite.config.ts.timestamp-*
 *.ups
 *.xdelta
 *.cmjpack
+*.cmjpdist
 *.cmjstate
 *.cmjsession
 .analysis/

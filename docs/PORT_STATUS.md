@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - shared pass-distance kernel (2026-11-09):** All3,686,400 bounded coordinate/cell combinations match the controlled original routine, and the two existing phase317 replays match with calculated distance. Recipient/AI choice remains captured and live gameplay unsupported. Windows build/all56 CTest tests passed; the local Linux environment has independently reproducible compiler/linker/Python instability, so a complete Linux check is not claimed. Overall progress is unmeasured.
+
 **Latest - shared core original comparisons (2026-11-09):** Existing isolated routine harnesses passed broad controlled fixtures for attack strength/power, keeper and energy state, random byte stepping, shot/defender outcomes, field interruption, selection and recovery. These do not establish live gameplay. Phase317 replay remains constrained to observed routes; a complete playable match is unsupported and overall progress is unmeasured.
 
 **Latest - shared defender original comparisons (2026-11-09):** Existing isolated routine harnesses matched16,064 defender-preparation cases,91,392 profile/preparation fixtures,550 comparison-selection fixtures and19,200 contact cases. These are constructed inputs, not live match coverage. The phase317 replay remains bounded to observed routes; live initialization and a complete playable match remain unsupported. Overall progress is unmeasured.

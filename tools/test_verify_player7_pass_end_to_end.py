@@ -58,6 +58,13 @@ class ReplayChecks(unittest.TestCase):
         with self.assertRaisesRegex(EvidenceMismatch, r"boundary arrival, session.magic"):
             compare_checkpoint(actual, bytes(2048), 99, 19, "7", "arrival")
 
+    def test_trailing_snapshot_bytes_are_rejected(self):
+        actual = bytearray(419)
+        actual[:10] = b"CMJSESSION"
+        actual[10] = 133
+        with self.assertRaisesRegex(EvidenceMismatch, r"boundary arrival: unexpected native checkpoint length"):
+            compare_checkpoint(actual, bytes(2048), 99, 19, "7", "arrival")
+
     def test_unknown_normal_snapshot_layout_is_rejected(self):
         actual = bytearray(418)
         actual[:10] = b"CMJSESSION"

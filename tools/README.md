@@ -220,3 +220,5 @@ compares prepared defender announcements through89D5, supplying captured facing.
 The current writer is snapshot59x398bytes.
 
 The [phase 317 player 7 pass replay](../docs/REPLAY_PLAYER7_PASS.md) compares one complete sampled pass through resumed control using private evidence paths.
+
+The [shared pass-distance kernel](../docs/NATIVE_PASS_DISTANCE.md) uses a privately exported replaceable table and includes an optional controlled original-CPU verifier.

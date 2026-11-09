@@ -126,6 +126,8 @@ def compare_checkpoint(actual, raw, phase, export_phase, case, boundary, contact
     minimum = 425 if target else 421 if extended else 418
     if len(actual) < minimum:
         raise EvidenceMismatch(f"case {case}, boundary {boundary}: truncated native checkpoint")
+    if len(actual) > minimum:
+        raise EvidenceMismatch(f"case {case}, boundary {boundary}: unexpected native checkpoint length {len(actual)} (expected {minimum})")
     check_value(case, boundary, 'session.magic', actual[:10], b'CMJSESSION')
     check_value(case, boundary, 'session.version', actual[10], 147 if target else 146 if extended else 133)
     expected = export_session(raw, export_phase)
@@ -169,6 +171,7 @@ def main():
         parser.add_argument('--' + name, required=True, type=Path)
     parser.add_argument('--start-suffix', default='-clock.cmjsession')
     parser.add_argument('--expected-cases', type=int, help='fail if the starting directory has a different case count')
+    parser.add_argument('--distance-table', type=Path, help='calculate the pass distance from this private table')
     parser.add_argument('--flight-fractions', required=True, type=int, nargs=2, metavar=('X', 'Y'))
     args = parser.parse_args()
     if any(value < 0 or value > 255 for value in args.flight_fractions):
@@ -176,6 +179,8 @@ def main():
     cases = case_ids(args.starts, args.start_suffix, args.expected_cases)
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
     count = 0
+    target_operation = (['--calculate-sampled-field-pass-target', str(args.distance_table), '7', '103', '255']
+                        if args.distance_table else ['--capture-sampled-field-pass-target', '7', '103', '255', '3'])
     for case in cases:
         before = args.starts / (case + args.start_suffix)
         steps = [('phase317', None, args.encounter_original / f'{case}-80dc-1.bin', 317, 19, (0, 255), False, False),
@@ -187,7 +192,7 @@ def main():
                  ('defender20.clock', ['--advance-sampled-player3-contact'], args.encounter_original / f'{case}-80dc-3.bin', 323, 19, (2, 255), False, False),
                  ('dispatch', ['--advance-sampled-player3-dispatch'], args.encounter_original / f'{case}-80ed-1.bin', 324, 19, (2, 255), False, False),
                  ('field.handoff', ['--advance-sampled-score23-pass-handoff'], args.handoff_original / f'{case}-c612-1.bin', 325, 19, (2, 255), False, False),
-                 ('pass.target', ['--capture-sampled-field-pass-target', '7', '103', '255', '3'], args.handoff_original / f'{case}-de64-1.bin', 326, 19, (2, 255), False, True),
+                 ('pass.target', target_operation, args.handoff_original / f'{case}-de64-1.bin', 326, 19, (2, 255), False, True),
                  ('flight.setup', ['--begin-sampled-field-pass-flight', str(args.velocity), *map(str, args.flight_fractions)], args.flight_original / f'{case}-e773-1.bin', 96, 19, None, True, False)]
         for step in range(2, 6):
             original = args.flight_original / f'{case}-e773-{step}.bin'

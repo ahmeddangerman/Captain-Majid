@@ -2,7 +2,7 @@
 
 `tools/verify_player7_pass_end_to_end.py` checks one continuous sampled route, beginning with the saved first-defender contact at phase 317 and ending after player 7 receives the pass and control is set up. It advances the second and third defenders, pass dispatch and field update, target, numeric flight, reception and control. It checks the starting boundary as well as every generated boundary against the supplied original RAM snapshots, including flight metadata and reception trajectories. A mismatch stops the replay at the first case, boundary and named field, with native and original values.
 
-The session, RAM, content pack, velocity data and generated outputs are private. Supply their paths on the command line; the output directory must be empty and outside the Git checkout. No ROM or private evidence is included in this repository. Requires Python 3 and a built `captain-phase-session` binary.
+The session, RAM, content pack, velocity data and generated outputs are private. Pass `--distance-table PRIVATE_TABLE` to calculate the target distance using the optional private `CMJPDST1` table; without it the replay supplies the observed distance byte explicitly. Supply their paths on the command line; the output directory must be empty and outside the Git checkout. No ROM or private evidence is included in this repository. Requires Python 3 and a built `captain-phase-session` binary.
 
 ```text
 python tools/verify_player7_pass_end_to_end.py \
