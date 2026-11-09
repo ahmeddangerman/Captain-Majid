@@ -205,6 +205,7 @@ def main():
     parser.add_argument('--free-setup-index', type=int, help='original first NMI after control setup writes')
     parser.add_argument('--free-ready-index', type=int, help='original control-ready boundary')
     parser.add_argument('--race-content', type=Path, help='private original-derived race speed table')
+    parser.add_argument('--returned-polls', type=int, default=0, help='number of consecutive returned-control polls to compare')
     args = parser.parse_args()
     if args.defender_boundary_index is not None and args.prepared_boundary_index is None:
         raise ValueError('First-defender comparison requires the attacker-prepared boundary')
@@ -230,6 +231,8 @@ def main():
     free_indices=(args.free_before_index,args.free_winner_index,args.free_control_index,args.free_setup_index,args.free_ready_index)
     if any(value is not None for value in free_indices) and (any(value is None for value in free_indices) or args.race_content is None or args.flight_setup_index is None):
         raise ValueError('Free pass replay requires five original boundaries, flight setup and private race content')
+    if args.returned_polls<0 or (args.returned_polls and args.free_ready_index is None):
+        raise ValueError('Returned polls require the free-pass control-ready boundary')
     if not 0 <= args.initial_index <= 255:
         raise ValueError('Initial random index must be a byte')
     lines, pcs, ram = trace_data(args.trace_directory)
@@ -550,8 +553,41 @@ def main():
         if index!=ram(ready)[0xe1]:
             raise ValueError(f'boundary free.control_ready, random.index: native {index}, original {ram(ready)[0xe1]}')
         source=waiting
+    if args.returned_polls:
+        polls=[i for i in range(args.free_ready_index,len(pcs)) if pcs[i]=='E145']
+        if len(polls)<=args.returned_polls:
+            raise ValueError('boundary returned.poll: not enough original poll boundaries')
+        for slot in range(args.returned_polls):
+            start,end=polls[slot:slot+2]
+            group=[i for i in range(start+1,end) if pcs[i] in ('C9C5','C9E8','E3CA','E3DE','E406')]
+            names=[pcs[i] for i in group]
+            if names not in (['C9C5','C9E8','E3CA','E406'],['C9C5','C9E8','E3CA','E3DE','E406']):
+                raise ValueError(f'boundary returned.poll[{slot+1}]: unsupported original NMI/travel ordering')
+            nmi,travel,poll=ram(group[0]),ram(group[2]),ram(group[-1])
+            if nmi[0xe1]!=index:
+                raise ValueError(f'boundary returned.poll[{slot+1}], random.index: native {index}, original {nmi[0xe1]}')
+            active=travel[0x5fb]!=0 or bool(travel[0x1c]&15)
+            if active!=(len(group)==5):
+                raise ValueError(f'boundary returned.poll[{slot+1}]: inconsistent travel speed capture')
+            speed=0 if not active else ram(group[3])[0x32] | (ram(group[3])[0x33]<<8)
+            flags=re.search(r'\bP=([0-9A-Fa-f]{2})\b',lines[group[0]])
+            if flags is None:
+                raise ValueError(f'boundary returned.poll[{slot+1}]: missing original carry')
+            row=(poll[0x1c],poll[0x1e],nmi[0x300+index],nmi[0x700+index],nmi[(0x780+index)&2047],
+                 int(flags.group(1),16)&1,1,travel[0x1c],speed&255,speed>>8)
+            events=output / f'returned-poll-{slot+1}-events.txt'
+            events.write_text('CMJPOLLNMI1\n'+' '.join(map(str,row))+'\n')
+            destination=output / f'returned-poll-{slot+1}.cmjsession'
+            run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-poll',str(events),str(index),'--capture',str(destination)],capture_output=True,text=True,timeout=30)
+            if run.returncode:
+                raise RuntimeError(f'boundary returned.poll[{slot+1}]: {run.stderr.strip()}')
+            compare_checkpoint(destination.read_bytes(),ram(end),9,9,'startup',f'returned.poll[{slot+1}]',None,False,False)
+            indices=re.findall(r'final random index (\d+);',run.stdout)
+            if indices!=[str(ram(end)[0xe1])]:
+                raise ValueError(f'boundary returned.poll[{slot+1}], random.index: native {indices}, original {ram(end)[0xe1]}')
+            index=int(indices[0]);source=destination
     print(f'Matched ordered mode change and {count} explicitly recorded defender choices'
-          f'{" through free-pass control ready" if args.free_before_index is not None else " through flight setup" if args.flight_setup_index is not None else " through pass flight target" if args.flight_target_index is not None else " through field movement and pass handoff" if args.movement_end_index is not None else " through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
+          f'{" through returned control polls" if args.returned_polls else " through free-pass control ready" if args.free_before_index is not None else " through flight setup" if args.flight_setup_index is not None else " through pass flight target" if args.flight_target_index is not None else " through field movement and pass handoff" if args.movement_end_index is not None else " through pass dispatch clock" if args.dispatch_clock_index is not None else " and both defender contact clocks" if args.next_defender_index is not None else " and first contact clock" if args.contact_index is not None else " and first defender comparison" if args.comparison_boundary_index is not None else " and first defender preparation" if args.defender_boundary_index is not None else " and attacker preparation" if args.prepared_boundary_index is not None else " to attacker-preparation entry"}; '
           f'final random index {index}; checkpoint {source}.')
 
 

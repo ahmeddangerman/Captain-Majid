@@ -576,4 +576,45 @@ NmiFieldRoundResult advance_observed_nmi_field_round(const PhaseSessionState& in
     auto result = run_control_field_round(input, primary, movement, control, world, buttons, nullptr, &inputs, &index);
     return {std::move(result), index};
 }
+NmiControlPollResult advance_observed_ordinary_return_poll(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
+    std::uint8_t initial_random_index,const ObservedNmiFieldPoll& sample) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::control_ready || !input.area_defender_cursor || input.area_defender_cursor>5 ||
+       input.current.field.side!=0 || input.saved_ball_flight_flag!=1 || input.current.field.selected_defenders)
+        throw std::invalid_argument("Returned pass poll requires a saved home control cursor");
+    auto normalized=input;normalized.area_defender_cursor=0;
+    auto result=advance_observed_nmi_control_poll(normalized,primary,movement,control,initial_random_index,sample);
+    if(result.poll.state.phase==FieldSessionPhase::control_clock_pending)
+        result.poll.state.phase=FieldSessionPhase::ordinary_return_clock_pending;
+    else if(result.poll.state.phase!=FieldSessionPhase::control_ready)
+        throw std::invalid_argument("Returned pass input requires an unsupported continuation");
+    result.poll.state.area_defender_cursor=input.area_defender_cursor;
+    validate_phase_session(result.poll.state);return result;
+}
+NmiClockResult advance_observed_ordinary_return_clock(const PhaseSessionState& input,
+    const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content,
+    std::uint8_t initial_random_index,const std::vector<ObservedClockEvent>& events) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_clock_pending)throw std::invalid_argument("Returned pass clock requires a pending control clock");
+    auto normalized=input;normalized.phase=FieldSessionPhase::control_clock_pending;normalized.area_defender_cursor=0;
+    auto result=advance_observed_nmi_control_clock(normalized,field,keepers,content,initial_random_index,events);
+    if(result.tick.state.phase!=FieldSessionPhase::field_round_pending)
+        throw std::invalid_argument("Returned pass clock needs an unsupported continuation");
+    result.tick.state.phase=FieldSessionPhase::ordinary_return_field_round;
+    result.tick.state.area_defender_cursor=input.area_defender_cursor;
+    validate_phase_session(result.tick.state);return result;
+}
+NmiFieldRoundResult advance_observed_ordinary_return_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
+    const WorldStepContent& world,std::uint8_t initial_random_index,const std::array<ObservedNmiFieldPoll,22>& inputs) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_return_field_round)throw std::invalid_argument("Returned pass field round requires a completed control clock");
+    auto normalized=input;normalized.phase=FieldSessionPhase::field_round_pending;normalized.area_defender_cursor=0;
+    auto result=advance_observed_nmi_field_round(normalized,primary,movement,control,world,initial_random_index,inputs);
+    if(result.round.state.phase!=FieldSessionPhase::control_ready)
+        throw std::invalid_argument("Returned pass field round needs an unsupported continuation");
+    result.round.state.area_defender_cursor=input.area_defender_cursor;
+    validate_phase_session(result.round.state);return result;
+}
 }

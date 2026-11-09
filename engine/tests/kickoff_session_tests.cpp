@@ -1407,6 +1407,14 @@ int main(){try{using namespace captain;
        ordinary_ready.state.current.field.ball_owner==7,"Ordinary reception uses the existing control setup and preserves the original cursor residue");
  auto forged_ready=ordinary_ready.state;forged_ready.area_defender_cursor=6;
  rejects([&]{validate_phase_session(forged_ready);});
+ auto ordinary_poll_ready=ordinary_ready.state;ordinary_poll_ready.control->decision_timer=0;
+ ObservedNmiFieldPoll ordinary_poll_sample{};
+ const auto ordinary_return_poll=advance_observed_ordinary_return_poll(ordinary_poll_ready,profile_mappings,
+     pass_movement_content,travel_content,0,ordinary_poll_sample);
+ check(ordinary_return_poll.poll.state.phase==FieldSessionPhase::ordinary_return_clock_pending &&
+       ordinary_return_poll.poll.state.area_defender_cursor==2,"Returned control preserves cursor into its evidence-fed clock boundary");
+ const auto ordinary_return_bytes=bytes(ordinary_return_poll.poll.state);std::istringstream ordinary_return_stream(ordinary_return_bytes);
+ check(bytes(load_phase_session(ordinary_return_stream))==ordinary_return_bytes,"Returned control clock snapshot roundtrip");
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
  rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});

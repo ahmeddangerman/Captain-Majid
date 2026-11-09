@@ -157,6 +157,8 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::ordinary_pass_recipient_positioned: return "ordinary pass recipient positioned";
     case captain::FieldSessionPhase::ordinary_pass_control_entry: return "ordinary pass control entry";
     case captain::FieldSessionPhase::ordinary_free_pass_contest_winner: return "ordinary free pass contest winner";
+    case captain::FieldSessionPhase::ordinary_return_clock_pending: return "ordinary returned control clock pending";
+    case captain::FieldSessionPhase::ordinary_return_field_round: return "ordinary returned control field round";
     case captain::FieldSessionPhase::sampled_human_pass_empty_confirmed: return "sampled empty pass target confirmed";
     case captain::FieldSessionPhase::sampled_human_pass_cancel_pending: return "sampled human pass cancel pending";
     case captain::FieldSessionPhase::sampled_human_pass_prepared: return "sampled human pass prepared";
@@ -659,15 +661,16 @@ void advance_observed_world_file(captain::PhaseSessionState& state, const captai
         std::cout << "Presentation request " << static_cast<unsigned>(request.kind) << " | id " << unsigned(request.id) << '\n';
 }
 void advance_observed_nmi_world_file(captain::PhaseSessionState& state, const captain::ShotContent& content,
-                                     const std::string& path, std::uint8_t initial_index) {
+                                     const std::string& path, std::uint8_t initial_index, bool ordinary_return=false) {
     if (!content.movement || !content.world_step || !content.control_movement)
         throw std::invalid_argument("Observed NMI field round requires private movement and world content");
     std::ifstream input(path);
     if (!input) throw std::invalid_argument("Unable to open observed NMI world file");
     const auto samples = captain::load_observed_nmi_field_polls(input);
-    const auto result = captain::advance_observed_nmi_field_round(
-        state, content.field_players, *content.movement, *content.control_movement, *content.world_step,
-        initial_index, samples);
+    const auto result = ordinary_return ? captain::advance_observed_ordinary_return_field_round(
+        state, content.field_players, *content.movement, *content.control_movement, *content.world_step, initial_index, samples) :
+        captain::advance_observed_nmi_field_round(state, content.field_players, *content.movement,
+        *content.control_movement, *content.world_step, initial_index, samples);
     state = result.round.state;
     std::cout << "Observed NMI world round | polls " << result.round.consumed_polls
               << " | final random index " << unsigned(result.random_index)
@@ -676,14 +679,15 @@ void advance_observed_nmi_world_file(captain::PhaseSessionState& state, const ca
         std::cout << "Presentation request " << static_cast<unsigned>(request.kind) << " | id " << unsigned(request.id) << '\n';
 }
 void advance_observed_nmi_poll_file(captain::PhaseSessionState& state, const captain::ShotContent& content,
-                                    const std::string& path, std::uint8_t initial_index) {
+                                    const std::string& path, std::uint8_t initial_index, bool ordinary_return=false) {
     if (!content.movement || !content.control_movement)
         throw std::invalid_argument("Observed NMI control poll requires private movement content");
     std::ifstream input(path);
     if (!input) throw std::invalid_argument("Unable to open observed NMI poll file");
     const auto sample = captain::load_observed_nmi_poll(input);
-    const auto result = captain::advance_observed_nmi_control_poll(
-        state, content.field_players, *content.movement, *content.control_movement, initial_index, sample);
+    const auto result = ordinary_return ? captain::advance_observed_ordinary_return_poll(
+        state, content.field_players, *content.movement, *content.control_movement, initial_index, sample) :
+        captain::advance_observed_nmi_control_poll(state, content.field_players, *content.movement, *content.control_movement, initial_index, sample);
     state = result.poll.state;
     std::cout << "Observed NMI control poll | final random index " << unsigned(result.random_index)
               << "; captured inputs supplied, no frame/audio/presentation emulation.\n";
@@ -691,13 +695,14 @@ void advance_observed_nmi_poll_file(captain::PhaseSessionState& state, const cap
         std::cout << "Presentation request " << static_cast<unsigned>(request.kind) << " | id " << unsigned(request.id) << '\n';
 }
 void advance_observed_nmi_clock_file(captain::PhaseSessionState& state, const captain::ShotContent& content,
-                                     const std::string& path, std::uint8_t initial_index) {
+                                     const std::string& path, std::uint8_t initial_index, bool ordinary_return=false) {
     if (!content.world_step) throw std::invalid_argument("Observed NMI clock requires private world content");
     std::ifstream input(path);
     if (!input) throw std::invalid_argument("Unable to open observed NMI clock file");
     const auto events = captain::load_observed_clock_events(input);
-    const auto result = captain::advance_observed_nmi_control_clock(
-        state, content.field_players, content.goalkeepers, *content.world_step, initial_index, events);
+    const auto result = ordinary_return ? captain::advance_observed_ordinary_return_clock(
+        state, content.field_players, content.goalkeepers, *content.world_step, initial_index, events) :
+        captain::advance_observed_nmi_control_clock(state, content.field_players, content.goalkeepers, *content.world_step, initial_index, events);
     state = result.tick.state;
     std::cout << "Observed NMI control clock | final random index " << unsigned(result.random_index)
               << "; captured events supplied, no frame/audio/presentation emulation.\n";
@@ -993,7 +998,7 @@ int main(int argc, char** argv) {
     if (argc < 3) {
         std::cerr << "Usage: captain-phase-session PACK STATE [--contact CODE | --rewarded-contact CODE] --defender ID; "
                      "or [--resume | --recover | --continue-recovery | --setup-control | --poll-control HELD PRESSED | --begin-sampled-human-pass-target | --begin-ordinary-human-pass-target | --confirm-ordinary-human-pass-target | --begin-ordinary-pass-defenses | --prepare-ordinary-pass | --prepare-first-ordinary-pass-defender VARIANT | --compare-first-ordinary-pass-defender RANGE OFFSET ELIGIBLE T0 T1 T2 T3 | --advance-first-ordinary-pass-contact | --prepare-next-ordinary-pass-defender | --compare-next-ordinary-pass-defender RANGE OFFSET ELIGIBLE T0 T1 T2 T3 | --advance-next-ordinary-pass-contact | --advance-ordinary-pass-dispatch-clock | --advance-ordinary-pass-ball-cell | --resolve-ordinary-pass-ball-cell | --continue-ordinary-pass-reception | --position-ordinary-pass-recipient | --continue-ordinary-pass-control FACING | --record-ordinary-pass-defense DEFENDER ACTION SUBTYPE | --poll-sampled-human-pass-target HELD PRESSED | --poll-ordinary-human-pass-cursor HELD PRESSED | --capture-sampled-score25-pass-defenses A0 A1 A2 S0 S1 S2 | --prepare-sampled-score25-player7-pass | --prepare-sampled-human-empty-pass | --prepare-sampled-player3-defender | --compare-sampled-player3-defender RANGE OFFSET ELIGIBLE T0 T1 T2 T3 | --advance-sampled-player3-contact | --advance-sampled-player3-dispatch | --capture-sampled-player3-pass-handoff FILE | --ack-sampled-human-empty-pass | --capture-sampled-human-pass-recovery FILE | "
-                     "--advance-control-travel HELD SPEED_LOW SPEED_HIGH | --advance-profiled-control-travel HELD | --advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | --advance-observed-world-file FILE | --advance-observed-nmi-world-file FILE INITIAL_INDEX | --advance-observed-nmi-poll FILE INITIAL_INDEX | --advance-observed-nmi-clock FILE INITIAL_INDEX | --advance-observed-nmi-sequence FILE INITIAL_INDEX | --advance-observed-pass-movement FILE INITIAL_INDEX | --resolve-ordinary-pass-flight-target DISTANCE_TABLE | "
+                     "--advance-control-travel HELD SPEED_LOW SPEED_HIGH | --advance-profiled-control-travel HELD | --advance-control | --resume-control-time | --advance-world HELD PRESSED | --advance-world-file FILE | --advance-observed-world-file FILE | --advance-observed-nmi-world-file FILE INITIAL_INDEX | --advance-observed-nmi-poll FILE INITIAL_INDEX | --advance-observed-nmi-clock FILE INITIAL_INDEX | --advance-observed-nmi-sequence FILE INITIAL_INDEX | --advance-observed-pass-movement FILE INITIAL_INDEX | --resolve-ordinary-pass-flight-target DISTANCE_TABLE | --advance-observed-ordinary-return KIND FILE INDEX | "
                      "--open-action-menu | --menu-input PRESSED | --prepare-basic-shot | --shot-defenders-file FILE | --step-shot-defense ACTION SUBTYPE RANDOM1 RANDOM2 | --resume-shot-clock | --dispatch-shot ELAPSED | --resolve-shot-result | --recover-selected-file FILE | --continue-selected-recovery | --prepare-clearance-file FILE | --clearance-race-file FILE | --continue-clearance | --begin-ball-flight FILE LOWX LOWY | --continue-flight-arrival | --recover-shot-loose | --prepare-kickoff-formation FILE SIDE | --prepare-kickoff-receiver RANDOM C1 C2 C3 C4 C5 | --prepare-kickoff-ball | --continue-prepared-kickoff | --continue-prepared-goal-restart | --prepare-scored-goal LEFT RIGHT KICKOFF | --resolve-keeper-save | --recover-keeper-punch | --poll-keeper-area-special PRESSED | --advance-profiled-area-prefix-clock | --advance-area-prefix-clock ELAPSED | --resume-area-prefix-clock | --present-area-contact-result | --advance-area-defender | --skip-area-defender | --advance-area-contact-clock | --resume-area-contact-clock | --resolve-area-defender | --dispatch-area-result | --recover-area-result | --announce-prepared-area-defenders FACING | --begin-prepared-area-defense | --prepare-opponent-area-attack | --choose-keeper-area-action | --continue-keeper-area-special | --redraw-keeper-area-special | --resolve-keeper-area-special | --open-keeper-area-special | --inspect-keeper-area-defense | --prepare-keeper-area-defense | --poll-keeper-area-defense PRESSED | --open-keeper-area-defense | --begin-keeper-area-defense BLINK | --open-prepared-keeper-area-menu FACING | --prepare-keeper-area | --prepare-keeper-entry | --resolve-prepared-keeper ACTION SUBTYPE OPPONENT_TEAM | --resolve-stunned-keeper T0 T1 | --resolve-ball-cell | --advance-ball-cell | --prepare-shot-approach | --continue-unopposed-attack ACTION | --continue-prepared-attack | --resume-attack-clock | --route-selected-restart | --open-prepared-restart-options | --restart-options-input HELD PRESSED | --advance N] "
                      "[--defense-action N] [--defense-subtype N] [--capture NEW.cmjsession] [--interactive]\n"
                      "Area recovery: --continue-area-ordinary-recovery FACING | --continue-area-story-recovery FACING\n"
@@ -1078,6 +1083,9 @@ int main(int argc, char** argv) {
         unsigned observed_nmi_sequence_index = 0;
         std::optional<std::string> observed_pass_movement_file;
         unsigned observed_pass_movement_index=0;
+        std::optional<std::string> ordinary_return_file;
+        std::string ordinary_return_kind;
+        unsigned ordinary_return_index=0;
         std::optional<std::string> ordinary_pass_distance_file;
         unsigned action = 0, subtype = 0;
         std::string capture;
@@ -1500,6 +1508,12 @@ int main(int argc, char** argv) {
                 observed_pass_movement_index=number(argv[++i]);
                 if (observed_pass_movement_index>255) throw std::invalid_argument("Random index must be a byte");
             }
+            else if (option == "--advance-observed-ordinary-return") {
+                if(i+3>=argc || ordinary_return_file)throw std::invalid_argument("Expected returned-control kind, events and index");
+                ordinary_return_kind=argv[++i];ordinary_return_file=argv[++i];ordinary_return_index=number(argv[++i]);
+                if((ordinary_return_kind!="poll" && ordinary_return_kind!="clock" && ordinary_return_kind!="world") || ordinary_return_index>255)
+                    throw std::invalid_argument("Invalid returned-control kind or random index");
+            }
             else if (option == "--resolve-ordinary-pass-flight-target") {
                 if (++i>=argc || ordinary_pass_distance_file) throw std::invalid_argument("Expected one private pass distance table");
                 ordinary_pass_distance_file=argv[i];
@@ -1622,7 +1636,7 @@ int main(int argc, char** argv) {
         if (unsigned(run_sampled_goal_restart) + unsigned(run_sampled_goal_presentation) + unsigned(run_sampled_opponent_goal) + unsigned(run_sampled_home_keeper) + unsigned(run_keeper_overlay) + unsigned(bool(sampled_keeper_poll)) + unsigned(run_sampled_mixed_compare) + unsigned(run_sampled_mixed_result4) + unsigned(run_sampled_mixed_pass) + unsigned(run_sampled_mixed_defender) + unsigned(run_sampled_contact_attack) + unsigned(bool(sampled_field_defense_blink)) + unsigned(sampled_opponent_contact_ack) + unsigned(sampled_field_pass_control) + unsigned(bool(sampled_field_pass_flight_file)) + unsigned(bool(ordinary_pass_flight_file)) + unsigned(bool(sampled_field_pass_target)) + unsigned(sampled_field_ai_pass_handoff) + unsigned(bool(sampled_field_ai_pass_field)) + unsigned(sampled_field_ai_dispatch) + unsigned(sampled_field_ai_ack) + unsigned(bool(sampled_field_ai_prep)) + unsigned(bool(sampled_field_ai)) + unsigned(bool(sampled_home_shot_defender)) + unsigned(run_sampled_home_shot_defender) + unsigned(run_sampled_home_shot_contact) + unsigned(run_sampled_home_shot_dispatch) + unsigned(bool(sampled_home_shot_handoff_field)) + unsigned(bool(code)) + unsigned(run_resume) + unsigned(bool(elapsed)) + unsigned(run_recovery) +
             unsigned(run_continue_recovery) + unsigned(bool(area_ordinary_facing)) + unsigned(bool(area_story_facing)) + unsigned(bool(area_flight_file)) + unsigned(bool(restart_flight_file)) + unsigned(run_area_ball_step) + unsigned(run_area_ball_cell) + unsigned(run_area_pass_received) + unsigned(run_area_pass_keeper) + unsigned(run_area_pass_announcement) + unsigned(run_area_pass_restore) + unsigned(run_area_pass_nonterminal) + unsigned(run_area_pass_next) + unsigned(run_area_pass_blocked) + unsigned(run_area_pass_terminal) + unsigned(run_area_pass_capture) + unsigned(run_area_pass_capture_control) + unsigned(run_area_pass_blocked_control) + unsigned(run_area_pass_resume) + unsigned(run_area_pass_recovery) + unsigned(run_area_pass_recover) + unsigned(bool(area_pass_capture_ack)) + unsigned(bool(area_pass_recovery_ack)) + unsigned(bool(area_pass_cost)) + unsigned(bool(area_pass_result_ack)) + unsigned(bool(area_pass_compare_file)) + unsigned(run_prepare_area_pass_keeper) + unsigned(bool(area_action4_ack)) + unsigned(run_area_action4_field_entry) + unsigned(run_area_action4_control_entry) + unsigned(run_area_action4_control_ready) + unsigned(run_area_action4_keeper) + unsigned(run_area_action4_keeper_stamina) + unsigned(run_area_action4_keeper_result_ack) + unsigned(run_area_action4_keeper_jitter) + unsigned(run_area_action4_keeper_restart) + unsigned(bool(area_action4_keeper_restart_prep)) + unsigned(bool(area_action4_restart_field)) + unsigned(bool(area_action4_restart_table)) + unsigned(run_area_action4_restart_power) + unsigned(run_area_action4_restart_clock) + unsigned(run_area_action4_restart_resume) + unsigned(run_area_action4_restart_dispatch) + unsigned(run_area_action4_restart_pass) + unsigned(run_area_action4_restart_pass_control) + unsigned(run_area_action4_result0_goal) + unsigned(run_area_action4_postgoal) + unsigned(run_sampled_loose_defender) + unsigned(run_compare_sampled_loose_defender) + unsigned(run_recover_sampled_loose_result2) + unsigned(run_sampled_result4_extra_time) + unsigned(run_recover_sampled_result4_action) + unsigned(bool(sampled_keeper_result4)) + unsigned(bool(sampled_result4_formation_file)) + unsigned(bool(sampled_result4_action)) + unsigned(bool(area_action4_keeper_result_action)) + unsigned(bool(area_action4_keeper_compare)) + unsigned(bool(area_action4_keeper_ack)) + unsigned(bool(area_action4_keeper_prep)) + unsigned(bool(area_action6_file)) + unsigned(bool(area_action6_race_file)) + unsigned(bool(area_action6_winner_ack)) + unsigned(run_area_action6_recover) + unsigned(bool(area_action6_recovery_ack)) + unsigned(run_area_action6_control) + unsigned(run_setup_control) + unsigned(bool(control_travel_input)) + unsigned(bool(profiled_control_travel_input)) + unsigned(bool(poll_input)) +
             unsigned(run_control_tick) + unsigned(resume_control_time) + unsigned(bool(world_input)) +
-            unsigned(bool(world_file)) + unsigned(bool(observed_world_file)) + unsigned(bool(observed_nmi_world_file)) + unsigned(bool(observed_nmi_poll_file)) + unsigned(bool(observed_nmi_clock_file)) + unsigned(bool(observed_nmi_sequence_file)) + unsigned(bool(observed_pass_movement_file)) + unsigned(bool(ordinary_pass_distance_file)) + unsigned(bool(human_pass_recovery_field)) + unsigned(bool(human_race_recovery_file)) + unsigned(bool(ordinary_free_race_file)) + unsigned(bool(player3_handoff_field)) + unsigned(bool(player3_race_file)) + unsigned(position_player3_winner) + unsigned(continue_player3_winner) + unsigned(bool(player5_defense)) + unsigned(bool(score24_dribble_defense)) + unsigned(prepare_player5_dribble) + unsigned(begin_player5_defenders) + unsigned(prepare_player5_defender) + unsigned(advance_player5_terminal) + unsigned(advance_player5_terminal_field) + unsigned(transfer_player5_possession) + unsigned(prepare_player5_result3_control) + unsigned(advance_player14_handoff) + unsigned(advance_player19_return_approach) + unsigned(advance_score23_handoff) + unsigned(bool(compare_player5_defender)) + unsigned(prepare_player3_defender) + unsigned(bool(compare_player3_defender)) + unsigned(advance_player3_contact) + unsigned(advance_player3_dispatch) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
+            unsigned(bool(world_file)) + unsigned(bool(observed_world_file)) + unsigned(bool(observed_nmi_world_file)) + unsigned(bool(observed_nmi_poll_file)) + unsigned(bool(observed_nmi_clock_file)) + unsigned(bool(observed_nmi_sequence_file)) + unsigned(bool(observed_pass_movement_file)) + unsigned(bool(ordinary_pass_distance_file)) + unsigned(bool(ordinary_return_file)) + unsigned(bool(human_pass_recovery_field)) + unsigned(bool(human_race_recovery_file)) + unsigned(bool(ordinary_free_race_file)) + unsigned(bool(player3_handoff_field)) + unsigned(bool(player3_race_file)) + unsigned(position_player3_winner) + unsigned(continue_player3_winner) + unsigned(bool(player5_defense)) + unsigned(bool(score24_dribble_defense)) + unsigned(prepare_player5_dribble) + unsigned(begin_player5_defenders) + unsigned(prepare_player5_defender) + unsigned(advance_player5_terminal) + unsigned(advance_player5_terminal_field) + unsigned(transfer_player5_possession) + unsigned(prepare_player5_result3_control) + unsigned(advance_player14_handoff) + unsigned(advance_player19_return_approach) + unsigned(advance_score23_handoff) + unsigned(bool(compare_player5_defender)) + unsigned(prepare_player3_defender) + unsigned(bool(compare_player3_defender)) + unsigned(advance_player3_contact) + unsigned(advance_player3_dispatch) + unsigned(run_open_action_menu) + unsigned(bool(menu_pressed)) +
             unsigned(run_prepare_basic_shot) + unsigned(run_reject_sampled_shot) + unsigned(begin_human_pass) + unsigned(begin_ordinary_human_pass) + unsigned(confirm_ordinary_human_pass) + unsigned(begin_ordinary_defenses) + unsigned(bool(ordinary_defense)) + unsigned(prepare_ordinary_pass) + unsigned(bool(ordinary_defender_variant)) + unsigned(bool(compare_first_ordinary_defender)) + unsigned(advance_first_ordinary_contact) + unsigned(prepare_next_ordinary_defender) + unsigned(bool(compare_next_ordinary_defender)) + unsigned(advance_next_ordinary_contact) + unsigned(advance_ordinary_dispatch_clock) + unsigned(advance_ordinary_ball) + unsigned(resolve_ordinary_ball) + unsigned(continue_ordinary_reception) + unsigned(position_ordinary_recipient) + unsigned(bool(ordinary_control_facing)) + unsigned(prepare_human_pass) + unsigned(prepare_score25_pass) + unsigned(bool(score25_pass_defenses)) + unsigned(ack_human_pass) + unsigned(bool(poll_human_pass)) + unsigned(bool(poll_ordinary_pass)) + unsigned(bool(shot_file)) + unsigned(bool(staged_input)) + unsigned(bool(dispatch_elapsed)) + unsigned(resume_shot_clock) + unsigned(run_selected_result) + unsigned(run_continue_selected) + unsigned(bool(selected_recovery_file)) + unsigned(bool(clearance_file)) + unsigned(bool(race_file)) + unsigned(run_continue_clearance) + unsigned(run_restart_route) + unsigned(run_restart_options) + unsigned(bool(restart_input)) + unsigned(run_attack_clock) + unsigned(run_resume_attack) + unsigned(bool(unopposed_attack)) + unsigned(run_approach) + unsigned(run_ball_step) + unsigned(bool(flight_file)) + unsigned(run_ball_cell) + unsigned(run_arrival) + unsigned(run_shot_recovery) + unsigned(run_keeper_entry) + unsigned(bool(stunned_thresholds)) + unsigned(bool(keeper_choice)) + unsigned(run_keeper_save) + unsigned(run_punch_recovery) + unsigned(bool(goal_baseline)) + unsigned(run_goal_restart) + unsigned(bool(kickoff_file)) + unsigned(bool(kickoff_receiver)) + unsigned(run_kickoff_ball) + unsigned(run_kickoff_handoff) + unsigned(run_keeper_area) + unsigned(bool(area_menu_facing)) + unsigned(bool(area_defense_blink)) + unsigned(run_area_defense_prompt) + unsigned(bool(area_defense_pressed)) + unsigned(run_prepare_area_defense) + unsigned(run_inspect_area_defense) + unsigned(run_open_area_special) + unsigned(bool(area_special_pressed)) + unsigned(run_resolve_area_special) + unsigned(run_redraw_area_special) + unsigned(run_continue_area_special) + unsigned(run_area_ai) + unsigned(run_area_attack) + unsigned(run_area_defense_entry) + unsigned(bool(area_announce_facing)) + unsigned(run_area_contact) + unsigned(run_area_clock) + unsigned(run_area_clock_resume) + unsigned(run_area_result_dispatch) + unsigned(run_area_result_recovery) + unsigned(bool(area_sequence_operation)) + unsigned(bool(area_prefix_elapsed)) + unsigned(resume_area_prefix) + unsigned(run_profiled_area_prefix) > 1)
             throw std::invalid_argument("Choose one initial operation");
         if (bool(code) != bool(defender) || (defense_options && !code))
@@ -1779,6 +1793,11 @@ int main(int argc, char** argv) {
             state=moved.state;
             std::cout << "Observed pass movement | final random index " << unsigned(moved.random_index)
                       << "; captured events supplied, no frame/audio/presentation emulation.\n";
+        }
+        if(ordinary_return_file) {
+            if(ordinary_return_kind=="poll") advance_observed_nmi_poll_file(state,content,*ordinary_return_file,static_cast<std::uint8_t>(ordinary_return_index),true);
+            else if(ordinary_return_kind=="clock") advance_observed_nmi_clock_file(state,content,*ordinary_return_file,static_cast<std::uint8_t>(ordinary_return_index),true);
+            else advance_observed_nmi_world_file(state,content,*ordinary_return_file,static_cast<std::uint8_t>(ordinary_return_index),true);
         }
         if (ordinary_pass_distance_file) {
             std::ifstream input(*ordinary_pass_distance_file,std::ios::binary);
