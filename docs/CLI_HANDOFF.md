@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: blocked-shot owner recovered
+
+The original/native startup replay now continues through result2 recovery, loose-ball jitter, 22 interleaved random/travel/player updates and nearest-player selection. At bank26:$8C31 both have side0 player8 at188/124, selected count0, elapsed0 and random index51. The stale cell234 and original scratch aliases remain preserved. The ordered movement, jitter and nearest-player arithmetic reuse shared kernels; opposing-side winners and out-of-bounds jitter reject until compared. `tools/verify_returned_menu_polls.py` accepts a separate private recovery-owner trace and verifies its full RAM handoff before replaying it. Private evidence: ../Captain-Majid-analysis/live-return-shot-recovered-owner-final-20261109 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-blocked-recovery-owner.
+
+All62 registered Windows tests passed, including new guard cases; phase317 replays matched576/1152 boundaries. This is a captured startup with supplied NMI/travel and presentation events, not autonomous gameplay. Original execution next detects the opponent goal area and opens an area menu; that transition is not yet native-compared in this continuation. AI, live timing/presentation, goalkeeper and complete match remain unsupported. Next trace and compare the area detection/selection and menu handoff. Overall progress unmeasured; suggested model Terra High.
+
+
 ## Current stopping point - 2026-11-09: blocked shot enters recovery
 
 The startup chain now matches the original result2 handler after193 captured random/travel waits and an explicit facing sample. Shared experience, placement and contact-clock rules reproduce the defender-positioned ball at x164/y132 with stale cell234, shooter status5 and clock164 to162; after three captured waits the selected prefix clears at bank26:$8BDF. Phase373 retains original result2 and stale ball data for the next recovery. Final random index29. The explicit facing sample preserves observed presentation; it does not simulate it. Private replay: ../Captain-Majid-analysis/live-return-shot-recovery-entry-final-20261109. The distinct earlier loose-shot recovery remains guarded, with the same underlying contact/experience rules.

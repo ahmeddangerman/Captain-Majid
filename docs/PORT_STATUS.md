@@ -1,5 +1,8 @@
 # Port status and completion checkpoints
 
+**Latest - blocked-shot recovered owner (2026-11-09):** One captured startup now matches jitter,22 ordered player updates and nearest-player selection through side0 player8. Later goal-area entry, autonomous timing/AI and a complete match remain unsupported. All62 Windows tests and both phase317 replay sets passed; overall progress unmeasured.
+
+
 **Latest - blocked shot recovery entry (2026-11-09):** The directed startup matches the result2 handler through ball placement, clock and recovery entry using captured timing/facing. Jitter, subsequent field movement and owner choice are still original-only; autonomous AI/timing and a complete match remain unsupported. All62 Windows tests and phase317 replays passed; overall progress unmeasured.
 
 

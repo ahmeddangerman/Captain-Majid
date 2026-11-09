@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Returned blocked-shot recovered owner
+
+Connected result2 recovery through original-backed jitter,22 ordered field-player updates and nearest eligible player. The single captured startup matches represented state at $8BE5, $8C10 and $8C31: side0 player8 at188/124, stale cell234 and random index51. Opposing winner and boundary jitter reject; timing and earlier facing are supplied observations. Original later enters the opponent goal area, not yet native-compared. All62 Windows tests and phase317 replays (576/1152 boundaries) passed. Private evidence: ../Captain-Majid-analysis/live-return-shot-recovered-owner-final-20261109. Overall progress unmeasured; next compare area detection and menu; suggested model Terra High.
+
+
 ## 2026-11-09 - Returned blocked shot recovery entry
 
 The controlled startup now matches the result2 handler through explicit presentation-facing sample, defender position, two experience calls, two-tick contact clock and cleared defender prefix at $8BDF. The original retains cell234 while ball x/y become164/132; native phase373 preserves that ordering. Final random index29. Original-only continuation jitters to188/124 and later chooses player8; it is not yet native-compared. Full Windows build and all62 tests passed; phase317 replays matched576/1152 boundaries. Evidence: ../Captain-Majid-analysis/live-return-shot-recovery-entry-final-20261109. Overall progress unmeasured; next compare jitter, interleaved field movement and owner selection; suggested model Terra High.

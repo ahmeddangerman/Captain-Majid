@@ -1569,6 +1569,28 @@ int main(){try{using namespace captain;
  check(!returned_blocked_recovery.current.field.selected_defenders && returned_blocked_recovery.current.field.elapsed==2 &&
        returned_blocked_recovery.current.field.ball_x==164 && returned_blocked_recovery.area_sequence_result==2,
        "Blocked shot clears its selected prefix at the recovery handoff");
+ auto blocked_jitter_fixture=returned_blocked_recovery;
+ blocked_jitter_fixture.current.field.random_first=249;blocked_jitter_fixture.current.field.random_second=15;
+ const auto blocked_jitter=jitter_ordinary_return_blocked_recovery(blocked_jitter_fixture);
+ check(blocked_jitter.current.field.ball_x==188 && blocked_jitter.current.field.ball_y==124 &&
+       blocked_jitter.recovery->x_jitter_control==3 && blocked_jitter.current.field.ball_cell==shot_arrival_cell,
+       "Blocked-shot recovery jitters the ball before updating the retained cell");
+ const auto blocked_field_movement=advance_observed_pass_field_movement(blocked_jitter,profile_mappings,pass_movement_content,0,pass_movement_events);
+ check(blocked_field_movement.state.current.field.elapsed==0 && blocked_field_movement.state.current.field.ball_x==188 &&
+       blocked_jitter.current.field.elapsed==2,"Blocked recovery consumes ordered player movement and preserves its source");
+ auto blocked_owner_fixture=blocked_field_movement.state;
+ for(auto& player:blocked_owner_fixture.current.field.motion)player.status=1;
+ auto& near_home=blocked_owner_fixture.current.field.motion[field_motion_index(8)];near_home.status=0;near_home.x=188u<<8;near_home.y=124u<<8;
+ auto& far_opponent=blocked_owner_fixture.current.field.motion[field_motion_index(12)];far_opponent.status=0;far_opponent.x=100u<<8;far_opponent.y=100u<<8;
+ const auto blocked_owner=choose_ordinary_return_blocked_recovery_owner(blocked_owner_fixture);
+ check(blocked_owner.current.field.ball_owner==8 && blocked_owner.current.field.side==0 &&
+       blocked_owner.current.field.motion[field_motion_index(8)].x==188u<<8,
+       "Blocked-shot recovery selects the nearest eligible player and positions the winner");
+ auto blocked_outside=blocked_jitter_fixture;blocked_outside.current.field.ball_x=52;
+ blocked_outside.ball_trajectory->x=52u<<8;blocked_outside.current.field.random_second=131;
+ rejects([&]{jitter_ordinary_return_blocked_recovery(blocked_outside);});
+ auto opposing_recovery=blocked_owner_fixture;opposing_recovery.current.field.motion[field_motion_index(8)].status=1;
+ rejects([&]{choose_ordinary_return_blocked_recovery_owner(opposing_recovery);});
  auto forged_shot_movement=shot_movement.state;forged_shot_movement.current.field.elapsed=1;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});

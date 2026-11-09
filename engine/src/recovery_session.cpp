@@ -5,6 +5,39 @@
 #include <utility>
 
 namespace captain {
+PhaseSessionState choose_ordinary_return_blocked_recovery_owner(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_shot_recovery_field_moved)
+  throw std::invalid_argument("Blocked-shot owner choice requires the completed observed field update");
+ const auto& field=input.current.field;BallRecoveryInput choice{};
+ choice.ball_x=field.ball_x;choice.ball_y=field.ball_y;choice.ball_owner=field.ball_owner;
+ choice.opposing_player=input.recovery->opposing_player;choice.random_e2=field.random_first;choice.random_e3=field.random_second;
+ choice.ball_update_active=field.elapsed!=0;
+ for(std::size_t i=0;i<field.motion.size();++i){const auto& actor=field.motion[i];
+  choice.players[i]={static_cast<std::uint8_t>(actor.x>>8),static_cast<std::uint8_t>(actor.y>>8),actor.status!=0};}
+ const auto result=recover_stationary_ball(choice);
+ if(result.possession_side!=0)throw std::invalid_argument("Opposing blocked-shot recovery winner is unsupported");
+ auto state=input;state.current.field.ball_owner=result.ball_owner;state.current.field.side=result.possession_side;
+ auto& owner=state.current.field.motion[field_motion_index(result.ball_owner)];
+ owner.x=static_cast<std::uint16_t>((owner.x&255u)|(unsigned(field.ball_x)<<8));
+ owner.y=static_cast<std::uint16_t>((owner.y&255u)|(unsigned(field.ball_y)<<8));
+ state.recovery->attack_subtype=result.attack_subtype;
+ state.phase=FieldSessionPhase::ordinary_return_shot_recovered_owner;validate_phase_session(state);return state;
+}
+PhaseSessionState jitter_ordinary_return_blocked_recovery(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ordinary_return_shot_blocked_recovery)
+  throw std::invalid_argument("Blocked-shot jitter needs its recovery handoff");
+ const auto ball=jitter_loose_ball(input.current.field.ball_x,input.current.field.ball_y,
+  input.current.field.random_first,input.current.field.random_second);
+ if(!ball.inside_field)throw std::invalid_argument("Blocked-shot boundary recovery is unsupported");
+ auto state=input;state.current.field.ball_x=ball.x;state.current.field.ball_y=ball.y;
+ state.recovery->x_jitter_control=ball.x_jitter_control;
+ state.ball_trajectory->x=static_cast<std::uint16_t>((unsigned(ball.x)<<8)|(state.ball_trajectory->x&255u));
+ state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(ball.y)<<8)|(state.ball_trajectory->y&255u));
+ state.ball_trajectory->direction=ball.x_jitter_control;
+ state.phase=FieldSessionPhase::ordinary_return_shot_recovery_jittered;validate_phase_session(state);return state;
+}
 PhaseSessionState continue_session_area_pass_blocked_recovery(const PhaseSessionState& input,std::uint8_t facing,std::uint8_t motion) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::area_pass_blocked_recovered_owner || (facing!=0 && facing!=64))

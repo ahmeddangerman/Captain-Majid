@@ -1,5 +1,8 @@
 # Evidence-fed field-round comparison
 
+A guarded blocked-shot recovery now uses the same 22-slot event-fed field movement after explicit original-backed ball jitter. It requires captured random/travel order and leaves the stale original ball-cell byte untouched. A subsequent nearest-player selection is compared separately; see CLI_HANDOFF for bounds.
+
+
 For the returned ordinary shot, phases365-367 compose shared numeric ball stepping and opposing-player selection with supplied random/travel events. Captured `M` motion samples are accepted during these flight phases; they do not generate presentation. The startup trace matches six step/callback pairs through arrival, while later interruption remains unverified. See CLI_HANDOFF.
 
 

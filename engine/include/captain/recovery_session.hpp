@@ -21,6 +21,8 @@ RecoverySessionResult advance_session_keeper_punch_recovery(const PhaseSessionSt
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement);
 RecoverySessionResult advance_session_shot_loose_recovery(const PhaseSessionState& input,
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement);
+PhaseSessionState jitter_ordinary_return_blocked_recovery(const PhaseSessionState& input);
+PhaseSessionState choose_ordinary_return_blocked_recovery_owner(const PhaseSessionState& input);
 RecoverySessionResult advance_session_recovery(const PhaseSessionState& input,
     const PlayerProfileMappings& primary, const FieldPhaseContent& movement);
 RecoverySessionResult advance_session_selected_recovery(const PhaseSessionState& input,
