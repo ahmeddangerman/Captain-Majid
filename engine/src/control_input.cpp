@@ -444,6 +444,43 @@ PhaseSessionState prepare_sampled_home_shot_target(const PhaseSessionState& inpu
  state.shot_flight=ShotFlightContext{target.distance_adjustment,target.destination_cell,255,target.loose_ball};
  state.phase=FieldSessionPhase::sampled_home_shot_target;validate_phase_session(state);return state;
 }
+PhaseSessionState capture_postgoal_opponent_choice(const PhaseSessionState& input, std::uint8_t action,
+    std::uint8_t subtype, std::uint8_t recipient, std::uint8_t target) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::ai_cell_decision || !input.action || !input.recovery || !input.score || !input.control ||
+    input.area_ai_target || action!=3 || subtype!=0 || recipient!=14 || target!=161 ||
+    input.current.field.side!=11 || input.current.field.ball_owner!=18 || input.current.field.ball_x!=141 ||
+    input.current.field.ball_y!=108 || input.current.field.ball_cell!=135 || input.current.field.elapsed!=1 ||
+    input.current.field.roster[18].type || input.current.field.roster[18].stamina || input.current.field.roster[18].level ||
+    input.current.field.random_first!=93 || input.current.field.random_second!=128 || input.current.field.selected_defenders ||
+    input.current.clock.remaining!=158 || input.current.clock.extra_time || input.current.clock.ball_mode!=128 ||
+    input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 ||
+    input.control->controlled_player!=10 || input.control->last_carrier_cell!=135 ||
+    input.action->action!=0 || input.action->power!=11 || input.action->move_flags || input.recovery->attack_subtype!=1)
+  throw std::invalid_argument("Unsupported captured post-goal opponent choice");
+ auto state=input;state.action->action=action;state.recovery->attack_subtype=subtype;
+ state.area_ai_target=PhaseSessionState::AreaAiTarget{recipient,target,0};
+ state.phase=FieldSessionPhase::postgoal_opponent_action_choice;validate_phase_session(state);return state;
+}
+PhaseSessionState prepare_postgoal_opponent_action(const PhaseSessionState& input,
+    const FieldPlayerProfiles& profiles, const FieldDefenseContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_action_choice)
+  throw std::invalid_argument("Post-goal opponent preparation requires its captured choice");
+ const auto& player=input.current.field.roster[18];
+ const auto result=prepare_attacking_action({{18,player.type,static_cast<std::uint8_t>(player.stamina),
+  static_cast<std::uint8_t>(player.stamina>>8),player.level},3,0,0,11,0,
+  input.current.field.random_first,input.current.field.random_second,false},profiles,content);
+ if(result.preparation.skill_selector!=2 || result.preparation.skill_index!=17 || result.preparation.base_strength!=13 ||
+    result.preparation.move_effect || result.preparation.stamina_cost!=60 || result.move_flags!=3 ||
+    result.action_power.power!=12 || result.action_power.subtype!=0)
+  throw std::invalid_argument("Unverified post-goal opponent action content");
+ auto state=input;state.current.field.roster[18].stamina=result.energy.stamina;
+ state.action->move_effect=result.preparation.move_effect;state.action->move_flags=result.move_flags;
+ state.action->power=result.action_power.power;state.recovery->attack_subtype=result.action_power.subtype;
+ state.area_ai_target->cost=result.preparation.stamina_cost;
+ state.phase=FieldSessionPhase::postgoal_opponent_action_prepared;validate_phase_session(state);return state;
+}
 PhaseSessionState capture_sampled_field_ai_choice(const PhaseSessionState& input, std::uint8_t action, std::uint8_t subtype) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ai_cell_decision && input.action && input.score && input.recovery && input.control && input.experience &&

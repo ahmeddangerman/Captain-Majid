@@ -226,6 +226,15 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
             break;
+        case ObservedClockEventKind::ball_mode_sample:
+            if (!input.score || input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
+                (input.current.clock.remaining != 160 && input.current.clock.remaining != 159) || input.current.clock.extra_time != 0 ||
+                input.current.field.side != 11 || input.current.field.ball_owner != 18 ||
+                !((event.held == 192 && state.current.clock.ball_mode == 128) ||
+                  (event.held == 128 && state.current.clock.ball_mode == 192)))
+                throw std::invalid_argument("Only the observed kickoff clock ball-mode change is supported");
+            state.current.clock.ball_mode = event.held;
+            break;
         case ObservedClockEventKind::schedule:
             if (stage != 0 || !begin_after_clock(state))
                 throw std::invalid_argument("Unsupported or out-of-order observed clock schedule");
@@ -267,10 +276,10 @@ static std::vector<ObservedClockEvent> read_observed_events(std::istream& input,
                 throw std::invalid_argument("Invalid observed clock travel event");
             events.push_back({ObservedClockEventKind::travel, {}, static_cast<std::uint8_t>(held),
                               static_cast<std::uint16_t>(low | (high << 8))});
-        } else if ((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "U" || token == "P") && !milestones) {
+        } else if (((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "U" || token == "P") && !milestones) || token == "B") {
             unsigned value;
             if (!(input >> value) || value > 255) throw std::invalid_argument("Invalid observed presentation sample");
-            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : token == "D" ? ObservedClockEventKind::display_sample : token == "L" ? ObservedClockEventKind::carrier_cell_sample : token == "C" ? ObservedClockEventKind::defender_cursor_sample : token == "U" ? ObservedClockEventKind::attack_subtype_sample : ObservedClockEventKind::field_player,
+            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : token == "D" ? ObservedClockEventKind::display_sample : token == "L" ? ObservedClockEventKind::carrier_cell_sample : token == "C" ? ObservedClockEventKind::defender_cursor_sample : token == "U" ? ObservedClockEventKind::attack_subtype_sample : token == "B" ? ObservedClockEventKind::ball_mode_sample : ObservedClockEventKind::field_player,
                               {}, static_cast<std::uint8_t>(value)});
         } else if (token == "S" && milestones) events.push_back({ObservedClockEventKind::schedule});
         else if (token == "E" && milestones) events.push_back({ObservedClockEventKind::energy});
@@ -288,7 +297,17 @@ std::vector<ObservedClockEvent> load_observed_nmi_events(std::istream& input) {
 NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& input,
     std::uint8_t initial_random_index, const std::vector<ObservedClockEvent>& events) {
     validate_phase_session(input);
-    if ((input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
+    const bool captured_kickoff = input.phase == FieldSessionPhase::kickoff_ball_placed && input.score &&
+        input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 &&
+        input.current.clock.remaining == 160 && input.current.clock.extra_time == 0 &&
+        input.current.field.side == 11 && input.current.field.ball_owner == 19 &&
+        input.kickoff_receiver && *input.kickoff_receiver == 18;
+    const bool captured_kickoff_control = input.phase == FieldSessionPhase::kickoff_control_pending && input.score &&
+        input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 &&
+        input.current.clock.remaining == 160 && input.current.clock.extra_time == 0 &&
+        input.current.field.side == 11 && input.current.field.ball_owner == 18 &&
+        input.kickoff_receiver && *input.kickoff_receiver == 18;
+    if ((!captured_kickoff && !captured_kickoff_control && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
          input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded && input.phase != FieldSessionPhase::ordinary_pass_prepared &&
@@ -299,7 +318,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
          input.phase != FieldSessionPhase::control_ready && input.phase != FieldSessionPhase::ordinary_return_contact_pending &&
          input.phase != FieldSessionPhase::ordinary_return_action_menu && input.phase != FieldSessionPhase::ordinary_return_shot_choice && input.phase != FieldSessionPhase::ordinary_return_shot_prepared &&
          input.phase != FieldSessionPhase::ordinary_return_shot_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_contact && input.phase != FieldSessionPhase::ordinary_return_shot_dispatch &&
-         input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival && input.phase != FieldSessionPhase::ordinary_return_shot_defenders_pending && input.phase != FieldSessionPhase::ordinary_return_shot_flight_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_blocked_clocked && input.phase != FieldSessionPhase::ordinary_return_goal_area_defenders && input.phase != FieldSessionPhase::ordinary_return_goal_area_menu && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_choice && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_prepared && input.phase != FieldSessionPhase::ordinary_return_goal_area_first_clock && input.phase != FieldSessionPhase::ordinary_return_goal_area_field_moved && input.phase != FieldSessionPhase::ordinary_return_goal_area_dispatch && input.phase != FieldSessionPhase::ordinary_return_goal_area_keeper_ready && input.phase != FieldSessionPhase::ordinary_return_goal_area_keeper_compared) || !input.control)
+         input.phase != FieldSessionPhase::ordinary_return_shot_flight_ready && input.phase != FieldSessionPhase::ordinary_return_shot_flight_callback && input.phase != FieldSessionPhase::ordinary_return_shot_flight_arrival && input.phase != FieldSessionPhase::ordinary_return_shot_defenders_pending && input.phase != FieldSessionPhase::ordinary_return_shot_flight_defender_compared && input.phase != FieldSessionPhase::ordinary_return_shot_blocked_clocked && input.phase != FieldSessionPhase::ordinary_return_goal_area_defenders && input.phase != FieldSessionPhase::ordinary_return_goal_area_menu && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_choice && input.phase != FieldSessionPhase::ordinary_return_goal_area_shot_prepared && input.phase != FieldSessionPhase::ordinary_return_goal_area_first_clock && input.phase != FieldSessionPhase::ordinary_return_goal_area_field_moved && input.phase != FieldSessionPhase::ordinary_return_goal_area_dispatch && input.phase != FieldSessionPhase::ordinary_return_goal_area_keeper_ready && input.phase != FieldSessionPhase::ordinary_return_goal_area_keeper_compared && input.phase != FieldSessionPhase::ordinary_return_goal_area_goal_scored && input.phase != FieldSessionPhase::goal_kickoff_pending) || !input.control)
         throw std::invalid_argument("Observed NMI sequence requires a supported contact, menu or pass-target boundary");
     auto state = input;
     auto index = initial_random_index;
@@ -313,6 +332,32 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
+        } else if (event.kind == ObservedClockEventKind::facing_sample && captured_kickoff) {
+            if (event.held != 64) throw std::invalid_argument("Only the observed kickoff facing is supported");
+            state.control->facing = event.held;
+        } else if (event.kind == ObservedClockEventKind::motion_sample && captured_kickoff) {
+            if (event.held != 0 && event.held != 2) throw std::invalid_argument("Only observed kickoff motion is supported");
+            state.control->motion_requested = event.held;
+        } else if (event.kind == ObservedClockEventKind::facing_sample && captured_kickoff_control) {
+            if (event.held != 0) throw std::invalid_argument("Only the observed control presentation facing is supported");
+            state.control->facing = event.held;
+        } else if (event.kind == ObservedClockEventKind::motion_sample && captured_kickoff_control) {
+            if (event.held != 0 && event.held != 1) throw std::invalid_argument("Only observed control presentation motion is supported");
+            state.control->motion_requested = event.held;
+        } else if (event.kind == ObservedClockEventKind::ball_mode_sample && input.phase == FieldSessionPhase::control_ready &&
+                   input.score && input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 &&
+                   (input.current.clock.remaining == 160 || input.current.clock.remaining == 159 || input.current.clock.remaining == 158) && input.current.clock.extra_time == 0 &&
+                   input.current.field.side == 11 && input.current.field.ball_owner == 18) {
+            if (!((event.held == 192 && state.current.clock.ball_mode == 128) ||
+                  (event.held == 128 && state.current.clock.ball_mode == 192)))
+                throw std::invalid_argument("Only the observed kickoff control ball-mode change is supported");
+            state.current.clock.ball_mode = event.held;
+        } else if (event.kind == ObservedClockEventKind::facing_sample && input.phase == FieldSessionPhase::ordinary_return_goal_area_goal_scored) {
+            if (event.held!=0) throw std::invalid_argument("Only the observed goal celebration facing is supported");
+            state.control->facing=event.held;
+        } else if (event.kind == ObservedClockEventKind::motion_sample && input.phase == FieldSessionPhase::ordinary_return_goal_area_goal_scored) {
+            if (event.held!=0 && event.held!=19 && event.held!=28) throw std::invalid_argument("Only observed goal celebration motion is supported");
+            state.control->motion_requested=event.held;
         } else if (event.kind == ObservedClockEventKind::motion_sample && input.phase == FieldSessionPhase::ordinary_return_goal_area_keeper_compared) {
             if (event.held!=3) throw std::invalid_argument("Only the observed goalkeeper presentation motion is supported");
             state.control->motion_requested=event.held;
@@ -418,6 +463,16 @@ static FieldRoundResult run_control_field_round(const PhaseSessionState& input,
             *random_index = result.state.index;
             state.current.field.random_first = result.state.first;
             state.current.field.random_second = result.state.second;
+            if (sample.ball_mode_sample) {
+                const auto mode = *sample.ball_mode_sample;
+                if (!input.score || input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
+                    (input.current.clock.remaining != 159 && input.current.clock.remaining != 158) || input.current.clock.extra_time != 0 ||
+                    input.current.field.side != 11 || input.current.field.ball_owner != 18 ||
+                    !((mode == 192 && state.current.clock.ball_mode == 128) ||
+                      (mode == 128 && state.current.clock.ball_mode == 192)))
+                    throw std::invalid_argument("Only the observed kickoff field-round ball-mode change is supported");
+                state.current.clock.ball_mode = mode;
+            }
             if (sample.travel_observed) {
                 state.control->travel_accumulator = advance_control_travel(
                     state.control->travel_accumulator, sample.travel_speed, state.current.field.side,
@@ -553,10 +608,18 @@ ObservedNmiFieldPoll load_observed_nmi_poll(std::istream& input) {
 }
 std::array<ObservedNmiFieldPoll, 22> load_observed_nmi_field_polls(std::istream& input) {
     std::string magic;
-    if (!(input >> magic) || magic != "CMJWORLDNMI1")
+    if (!(input >> magic) || (magic != "CMJWORLDNMI1" && magic != "CMJWORLDNMI2"))
         throw std::invalid_argument("Invalid observed NMI world file header");
     std::array<ObservedNmiFieldPoll, 22> samples{};
-    for (auto& sample : samples) sample = read_nmi_poll(input);
+    for (auto& sample : samples) {
+        sample = read_nmi_poll(input);
+        if (magic == "CMJWORLDNMI2") {
+            unsigned mode;
+            if (!(input >> mode) || (mode != 128 && mode != 192 && mode != 256))
+                throw std::invalid_argument("Invalid observed NMI ball-mode sample");
+            if (mode != 256) sample.ball_mode_sample = static_cast<std::uint8_t>(mode);
+        }
+    }
     finish_nmi_input(input);
     return samples;
 }
@@ -568,6 +631,8 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::control_ready || !input.control)
         throw std::invalid_argument("Observed NMI poll requires ready control");
+    if (sample.ball_mode_sample)
+        throw std::invalid_argument("Ball-mode samples require an observed field round");
     if (!sample.travel_observed && (sample.travel_held || sample.travel_speed))
         throw std::invalid_argument("Unobserved travel event must have zero inputs");
     auto state = input;

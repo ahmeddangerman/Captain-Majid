@@ -125,6 +125,55 @@ int main() {
             world, 7, {{ObservedClockEventKind::schedule}, {ObservedClockEventKind::energy}});
         if (bytes(plain_clock.tick.state) != bytes(advance_control_tick(clock_input, field_profiles, keeper_profiles, world).state) ||
             plain_clock.random_index != 7) return 1;
+        auto captured_clock = clock_input;
+        captured_clock.score = MatchScoreContext{1, 0, 4};
+        captured_clock.current.clock.remaining = 160;
+        captured_clock.current.clock.ball_mode = 128;
+        captured_clock.current.field.side = 11;
+        captured_clock.current.field.ball_owner = 18;
+        captured_clock.control->controlled_player = 1;
+        const auto sampled_clock = advance_observed_nmi_control_clock(captured_clock, field_profiles, keeper_profiles,
+            world, 7, {{ObservedClockEventKind::ball_mode_sample, {}, 192},
+                       {ObservedClockEventKind::schedule}, {ObservedClockEventKind::energy}});
+        if (sampled_clock.tick.state.current.clock.ball_mode != 192) return 1;
+        auto second_clock = captured_clock;
+        second_clock.current.clock.remaining = 159;
+        second_clock.current.clock.ball_mode = 192;
+        const auto second_clock_result = advance_observed_nmi_control_clock(second_clock, field_profiles, keeper_profiles,
+            world, 0, {{ObservedClockEventKind::ball_mode_sample, {}, 128},
+                       {ObservedClockEventKind::schedule}, {ObservedClockEventKind::energy}});
+        if (second_clock_result.tick.state.current.clock.ball_mode != 128) return 1;
+        std::istringstream sampled_clock_stream("CMJCLOCKNMI1\nB 192\nS\nE\n");
+        if (load_observed_clock_events(sampled_clock_stream)[0].kind != ObservedClockEventKind::ball_mode_sample) return 1;
+        std::string sampled_world_text = "CMJWORLDNMI2\n";
+        for (unsigned i = 0; i < 22; ++i)
+            sampled_world_text += i == 0 ? "0 0 0 0 0 0 0 0 0 0 128\n" : "0 0 0 0 0 0 0 0 0 0 256\n";
+        std::istringstream sampled_world_stream(sampled_world_text);
+        const auto sampled_world_events = load_observed_nmi_field_polls(sampled_world_stream);
+        if (!sampled_world_events[0].ball_mode_sample || *sampled_world_events[0].ball_mode_sample != 128 ||
+            sampled_world_events[1].ball_mode_sample) return 1;
+        const auto sampled_world = advance_observed_nmi_field_round(sampled_clock.tick.state, profiles, movement,
+            control, world, 7, sampled_world_events);
+        if (sampled_world.round.state.current.clock.ball_mode != 128) return 1;
+        bool stray_sample_rejected = false;
+        try { advance_observed_nmi_control_poll(sampled_world.round.state, profiles, movement, control, 7, sampled_world_events[0]); }
+        catch (const std::invalid_argument&) { stray_sample_rejected = true; }
+        if (!stray_sample_rejected) return 1;
+        auto second_world_events = sampled_world_events;
+        second_world_events[0].ball_mode_sample = 192;
+        const auto second_world = advance_observed_nmi_field_round(second_clock_result.tick.state, profiles, movement,
+            control, world, 7, second_world_events);
+        if (second_world.round.state.current.clock.ball_mode != 192) return 1;
+        auto invalid_world_events = sampled_world_events;
+        invalid_world_events[0].ball_mode_sample = 192;
+        bool duplicate_mode_rejected = false;
+        try { advance_observed_nmi_field_round(sampled_clock.tick.state, profiles, movement, control, world, 7, invalid_world_events); }
+        catch (const std::invalid_argument&) { duplicate_mode_rejected = true; }
+        if (!duplicate_mode_rejected) return 1;
+        bool invalid_mode_rejected = false;
+        try { std::istringstream invalid("CMJWORLDNMI2\n0 0 0 0 0 0 0 0 0 0 129\n"); load_observed_nmi_field_polls(invalid); }
+        catch (const std::invalid_argument&) { invalid_mode_rejected = true; }
+        if (!invalid_mode_rejected) return 1;
         auto warning_clock = clock_input; warning_clock.current.clock.remaining = 30;
         bool warning_rejected = false;
         try { advance_observed_nmi_control_clock(warning_clock, field_profiles, keeper_profiles, world, 0,

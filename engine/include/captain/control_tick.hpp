@@ -44,6 +44,7 @@ struct ObservedNmiFieldPoll {
     bool travel_observed = false;
     std::uint8_t travel_held = 0;
     std::uint16_t travel_speed = 0;
+    std::optional<std::uint8_t> ball_mode_sample{};
 };
 struct NmiFieldRoundResult {
     FieldRoundResult round;
@@ -53,7 +54,7 @@ struct NmiControlPollResult {
     ControlPollResult poll;
     std::uint8_t random_index = 0;
 };
-enum class ObservedClockEventKind { random, travel, schedule, energy, motion_sample, facing_sample, display_sample, carrier_cell_sample, defender_cursor_sample, attack_subtype_sample, field_player };
+enum class ObservedClockEventKind { random, travel, schedule, energy, motion_sample, facing_sample, display_sample, carrier_cell_sample, defender_cursor_sample, attack_subtype_sample, field_player, ball_mode_sample };
 struct ObservedClockEvent {
     ObservedClockEventKind kind;
     ReferenceRandomInputs random{};

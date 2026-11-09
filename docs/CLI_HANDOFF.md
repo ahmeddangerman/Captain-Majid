@@ -1,5 +1,35 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: captured opponent action3 prepared
+
+After the matched 1-0 goal and opponent kickoff, explicitly supplied action3/subtype0/recipient14/target161 is saved in phase392 and matches original E1B2. Phase393 reuses the shared attack kernel and matches E1CB: base13, cost60, flags3, power12. The target/cost survive reload; original/native represented fields and score/formation match both boundaries. Private replay: ../Captain-Majid-analysis/post-kickoff-action3-session-final-20261110. The original-only later route reaches bank26:$8027, $C606 and $E773; action presentation, routing, autonomous AI/timing and a complete playable match remain unsupported. Full Windows build and all62 checks passed. Overall progress unmeasured; next compare action3 presentation and handoff. Suggested model GPT-6.1 Terra High.
+
+
+## Current research - 2026-11-10: opponent action3 preparation
+
+After the matched E19B decision, the captured original sets action3/subtype0 and player14 at E1B2. An isolated 484-instruction continuation reproduces E1CB outside the stack, and the existing native attack kernel matches all14 controlled original outputs for captured player18/team3: base13, cost60, flags3 and power12. This kernel comparison is not yet integrated into a saved native AI continuation. A separate live trace overlaps E19B exactly and later reaches bank26:$8027, fixed-bank $C606, then $E773 with target148; these later boundaries are original-only. Full semantics, live presentation and timing are unverified. Private evidence: ../Captain-Majid-analysis/post-kickoff-attack-kernel-20261110.py and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-post-kickoff-action3-20261110/trace. Overall progress unmeasured; next preserve selected target in a guarded saved context, connect the verified kernel, then compare action3 routing. Suggested model GPT-6.1 Terra High.
+
+
+## Current stopping point - 2026-11-10: opposing AI decision after goal
+
+Captured startup replay matches original through the 1-0 goal, opposing kickoff, live control and 33 further neutral polls, two clocks and two field rounds to bank26:$E19B, random index37. Recorded timing and guarded ball-mode/facing/motion samples are supplied; presentation and autonomous timing remain unsupported. The original alone then writes action3 and selected player14 at E1B2, and reaches E1CB with represented power12 and move flags3 (scratch $32 is13); these are not yet native-compared or semantically classified. Do not mistake scratch $43D for action $43B. Private continuation evidence is in ../Captain-Majid-analysis/post-kickoff-ai-decision-20261110 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-post-kickoff-ai-20261110/trace; poll/clock/world replay directories are listed in the latest work log. Full Windows build and all62 checks passed. Overall progress unmeasured; next trace action3 preparation and routing. Suggested model GPT-6.1 Terra High.
+
+
+## Current stopping point - 2026-11-10: live post-goal neutral polls
+
+The captured 1-0 startup now matches continuously through opposing kickoff, live control setup and eleven neutral polls to original E1E7, random index220. Recorded timing, facing/motion and guarded ball-mode samples are supplied; no live presentation or timing scheduler is simulated. Fresh trace overlap matched all 2,048 original RAM bytes. The next clock partially matches at E407 and reaches clock159, but original ball mode192 differs from native128 because the original toggles a presentation bit during the clock. Do not claim that clock matched or advance further until the ordered event is handled and compared. Private evidence: ../Captain-Majid-analysis/post-kickoff-polls-20261110, ../Captain-Majid-analysis/post-kickoff-clock-20261110 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-post-kickoff-control-v2-20261110/trace. Full Windows build and all62 checks passed. Overall progress unmeasured; suggested model GPT-6.1 Terra High.
+
+
+## Current stopping point - 2026-11-09: captured goal restart to control setup
+
+The captured 1-0 startup goal now matches original represented state through the celebration, confirmed post-goal menu, side11 kickoff, formation, receiver18, ball placement and post-display handoff. An independent original CPU continuation with cooperative presentation acknowledgements matches native control setup, ball148/108 and defender10. The recorded event stream supplies 1,108 celebration/menu, seven pre-formation and 189 kickoff-display random/travel pairs, plus observed facing/motion samples. It does not simulate the presentation or autonomous scheduling. The later live original control trace has not yet been native-compared. Private evidence: ../Captain-Majid-analysis/goal-restart-investigation-20261109-v2, ../Captain-Majid-analysis/goal-restart-investigation-20261109-v3 and ../Captain-Majid-analysis/goal-restart-display-20261109. Full Windows build and all62 registered checks passed. Overall progress unmeasured; next compare live control after kickoff and continue toward a complete playable match. Suggested model GPT-6.1 Terra High.
+
+
+## Working tree restart investigation - 2026-11-09
+
+Uncommitted changes already present on resume extend captured goal celebration samples, acknowledged restart and an identified 1-0 kickoff status reset. Preserve them; their original/native restart parity is not yet documented. Fresh `cmake --build build -j 2` and `build/kickoff-session-tests.exe` passed, but the synthetic test is not original behavior evidence. The verified replay still ends at goal registration. Next compare celebration/menu and restart boundaries, especially status-reset order and snapshot fields. Overall progress unmeasured; suggested model: a high-reasoning coding model.
+
+
 ## Current stopping point - 2026-11-09: captured startup goal registered
 
 The captured startup replay now matches through original bank26:$85AC goal handler and $85F0 score write: score0-0 to1-0 and scorer8 experience +15. Phase391 reuses existing score/reward arithmetic after explicitly acknowledging the keeper presentation; the replay supplies 226 captured random/travel pairs and one motion sample, ending at random index119. Private full replay: ../Captain-Majid-analysis/live-return-area-volley-goal-scored-20261109; original trace: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-live-goal-continuation-20261109/trace.

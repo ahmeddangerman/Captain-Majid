@@ -1686,6 +1686,109 @@ int main(){try{using namespace captain;
        "Acknowledged keeper presentation reaches the observed home-goal registration");
  const auto returned_goal_bytes=bytes(returned_goal);std::istringstream returned_goal_stream(returned_goal_bytes);
  check(bytes(load_phase_session(returned_goal_stream))==returned_goal_bytes,"Returned goal registration snapshot roundtrips");
+ const auto goal_celebration_wait=advance_observed_nmi_events(returned_goal,119,
+   {{ObservedClockEventKind::facing_sample,{},0},{ObservedClockEventKind::motion_sample,{},19},
+    {ObservedClockEventKind::random,{0,0,0,false}}});
+ check(goal_celebration_wait.random_index==120 && goal_celebration_wait.state.control->facing==0 &&
+       goal_celebration_wait.state.control->motion_requested==19 && goal_celebration_wait.state.score->left_goals==returned_goal.score->left_goals,
+       "Recorded celebration events preserve the score while presentation remains pending");
+ const auto goal_menu_wait=advance_observed_nmi_events(goal_celebration_wait.state,120,{{ObservedClockEventKind::motion_sample,{},0}});
+ const auto returned_restart=continue_prepared_goal_restart(goal_menu_wait.state);
+ check(returned_restart.phase==FieldSessionPhase::goal_kickoff_pending && returned_restart.current.field.side==11 &&
+       returned_restart.score->kickoff==4 && returned_restart.score->left_goals==returned_goal.score->left_goals &&
+       !returned_restart.shot_flight && !returned_restart.keeper_decision && !returned_restart.area_contact,
+       "Acknowledged post-goal menu transfers kickoff to the opposing side");
+ const auto returned_restart_wait=advance_observed_nmi_events(returned_restart,203,{{ObservedClockEventKind::random,{0,0,0,false}}});
+ check(returned_restart_wait.random_index==204 && returned_restart_wait.state.phase==returned_restart.phase &&
+       returned_restart_wait.state.score->kickoff==4,"Recorded timing is accepted before kickoff formation");
+ auto returned_formation_input=returned_restart_wait.state;
+ returned_formation_input.score->left_goals=1;returned_formation_input.score->right_goals=0;
+ returned_formation_input.current.clock.remaining=160;returned_formation_input.current.clock.extra_time=0;
+ for(auto& player:returned_formation_input.current.field.motion)player.status=0;
+ for(auto player:{3,14,16,19,20})returned_formation_input.current.field.motion[field_motion_index(player)].status=player==3?5:player<19?6:1;
+ const auto returned_formation=prepare_session_kickoff_formation(returned_formation_input,11,c);
+ check(!returned_formation.current.field.motion[field_motion_index(3)].status && !returned_formation.current.field.motion[field_motion_index(14)].status,
+       "Observed post-goal status reset precedes opposing kickoff formation");
+ const auto returned_receiver=prepare_session_kickoff_receiver(returned_formation,71,{5,6,7,9,10});
+ const auto returned_ball=prepare_session_kickoff_ball(returned_receiver);
+ const auto returned_display=advance_observed_nmi_events(returned_ball,210,
+   {{ObservedClockEventKind::facing_sample,{},64},{ObservedClockEventKind::motion_sample,{},2},
+    {ObservedClockEventKind::motion_sample,{},0}});
+ check(returned_display.state.phase==FieldSessionPhase::kickoff_ball_placed &&
+       returned_display.state.control->facing==64 && returned_display.state.control->motion_requested==0 &&
+       *returned_display.state.kickoff_receiver==18,
+       "Observed opposing kickoff display retains receiver and recorded presentation values");
+ rejects([&]{advance_observed_nmi_events(returned_ball,210,{{ObservedClockEventKind::facing_sample,{},0}});});
+ rejects([&]{advance_observed_nmi_events(returned_ball,210,{{ObservedClockEventKind::motion_sample,{},3}});});
+ auto other_kickoff=returned_ball;other_kickoff.score->left_goals=2;
+ rejects([&]{advance_observed_nmi_events(other_kickoff,210,{{ObservedClockEventKind::motion_sample,{},2}});});
+ const auto returned_control_entry=continue_prepared_session_kickoff(returned_display.state);
+ const auto returned_control_display=advance_observed_nmi_events(returned_control_entry,143,
+   {{ObservedClockEventKind::facing_sample,{},0},{ObservedClockEventKind::motion_sample,{},1},
+    {ObservedClockEventKind::motion_sample,{},0}});
+ check(returned_control_display.state.control->facing==0 && returned_control_display.state.control->motion_requested==0 &&
+       returned_control_display.state.phase==FieldSessionPhase::kickoff_control_pending,
+       "Observed kickoff control presentation preserves pending control setup");
+ const auto returned_control_ready=prepare_session_control(returned_control_display.state).state;
+ const auto returned_ball_mode=advance_observed_nmi_events(returned_control_ready,205,
+   {{ObservedClockEventKind::ball_mode_sample,{},192}});
+ check(returned_ball_mode.state.current.clock.ball_mode==192,
+       "Recorded kickoff control presentation retains the observed ball-mode bit");
+ const auto returned_ball_mode_cleared=advance_observed_nmi_events(returned_ball_mode.state,209,
+   {{ObservedClockEventKind::ball_mode_sample,{},128}});
+ check(returned_ball_mode_cleared.state.current.clock.ball_mode==128,
+       "Recorded kickoff control presentation clears the observed ball-mode bit");
+ rejects([&]{advance_observed_nmi_events(returned_control_ready,205,{{ObservedClockEventKind::ball_mode_sample,{},128}});});
+ auto returned_second_cycle=returned_control_ready;returned_second_cycle.current.clock.remaining=159;
+ const auto second_cycle_mode=advance_observed_nmi_events(returned_second_cycle,245,
+   {{ObservedClockEventKind::ball_mode_sample,{},192}});
+ check(second_cycle_mode.state.current.clock.ball_mode==192,
+       "Recorded second-cycle control presentation retains its observed ball-mode bit");
+ auto returned_third_cycle=returned_control_ready;returned_third_cycle.current.clock.remaining=158;
+ const auto third_cycle_mode=advance_observed_nmi_events(returned_third_cycle,26,
+   {{ObservedClockEventKind::ball_mode_sample,{},192}});
+ check(third_cycle_mode.state.current.clock.ball_mode==192,
+       "Recorded third-cycle control presentation retains its observed ball-mode bit");
+ auto postgoal_decision=returned_control_ready;
+ postgoal_decision.phase=FieldSessionPhase::ai_cell_decision;
+ postgoal_decision.current.clock.remaining=158;
+ postgoal_decision.current.field.ball_owner=18;
+ postgoal_decision.current.field.ball_x=141;postgoal_decision.current.field.ball_y=108;postgoal_decision.current.field.ball_cell=135;
+ postgoal_decision.current.field.elapsed=1;postgoal_decision.current.field.random_first=93;postgoal_decision.current.field.random_second=128;
+ postgoal_decision.current.field.roster[18]={0,0,0};
+ postgoal_decision.control->controlled_player=10;postgoal_decision.control->last_carrier_cell=135;
+ postgoal_decision.action->action=0;postgoal_decision.action->power=11;postgoal_decision.recovery->attack_subtype=1;
+ const auto postgoal_before=bytes(postgoal_decision);
+ const auto postgoal_choice=capture_postgoal_opponent_choice(postgoal_decision,3,0,14,161);
+ check(postgoal_choice.phase==FieldSessionPhase::postgoal_opponent_action_choice && postgoal_choice.area_ai_target &&
+       postgoal_choice.area_ai_target->recipient==14 && postgoal_choice.area_ai_target->cell==161 &&
+       postgoal_choice.action->action==3 && !postgoal_choice.recovery->attack_subtype && bytes(postgoal_decision)==postgoal_before,
+       "Captured post-goal choice preserves the observed target and input state");
+ const auto postgoal_choice_bytes=bytes(postgoal_choice);std::istringstream postgoal_choice_stream(postgoal_choice_bytes);
+ check(bytes(load_phase_session(postgoal_choice_stream))==postgoal_choice_bytes,"Post-goal choice snapshot roundtrips");
+ auto invalid_postgoal_choice=postgoal_choice;invalid_postgoal_choice.area_ai_target.reset();
+ rejects([&]{validate_phase_session(invalid_postgoal_choice);});
+ auto invalid_postgoal_effect=postgoal_choice;invalid_postgoal_effect.action->move_effect=1;
+ rejects([&]{validate_phase_session(invalid_postgoal_effect);});
+ auto truncated_postgoal_choice=postgoal_choice_bytes;truncated_postgoal_choice.pop_back();
+ rejects([&]{std::istringstream input(truncated_postgoal_choice);load_phase_session(input);});
+ rejects([&]{capture_postgoal_opponent_choice(postgoal_decision,3,0,14,160);});
+ auto wrong_postgoal_player=postgoal_decision;wrong_postgoal_player.current.field.roster[18].stamina=1;
+ rejects([&]{capture_postgoal_opponent_choice(wrong_postgoal_player,3,0,14,161);});
+ rejects([&]{capture_postgoal_opponent_choice(postgoal_choice,3,0,14,161);});
+ FieldPlayerProfiles postgoal_profiles{};postgoal_profiles.skills.resize(1);postgoal_profiles.skills[0].fill(17);postgoal_profiles.team_types={0};
+ FieldDefenseContent postgoal_content{};postgoal_content.skill_selectors[3][0]=2;
+ postgoal_content.moves[3]={{0,0,60,24}};postgoal_content.strength_curve.fill(13);
+ const auto postgoal_prepared=prepare_postgoal_opponent_action(postgoal_choice,postgoal_profiles,postgoal_content);
+ check(postgoal_prepared.phase==FieldSessionPhase::postgoal_opponent_action_prepared && postgoal_prepared.action->power==12 &&
+       postgoal_prepared.action->move_flags==3 && postgoal_prepared.area_ai_target->cost==60 &&
+       bytes(postgoal_choice)==postgoal_choice_bytes,"Post-goal action uses shared original-backed preparation");
+ const auto postgoal_prepared_bytes=bytes(postgoal_prepared);std::istringstream postgoal_prepared_stream(postgoal_prepared_bytes);
+ check(bytes(load_phase_session(postgoal_prepared_stream))==postgoal_prepared_bytes,"Post-goal preparation snapshot roundtrips");
+ auto bad_postgoal_content=postgoal_content;bad_postgoal_content.strength_curve.fill(12);
+ rejects([&]{prepare_postgoal_opponent_action(postgoal_choice,postgoal_profiles,bad_postgoal_content);});
+ rejects([&]{prepare_postgoal_opponent_action(postgoal_prepared,postgoal_profiles,postgoal_content);});
+ rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});
  rejects([&]{resolve_prepared_session_keeper(returned_keeper_result,0,0,3,returned_keeper_content);});

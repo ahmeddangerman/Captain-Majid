@@ -75,6 +75,22 @@ PhaseSessionState prepare_session_kickoff_formation(const PhaseSessionState& inp
   for(auto& player:state.current.field.motion)player.status=0;
   for(auto& keeper:state.current.field.keepers)keeper.stun=0;
  }
+ // The captured 1-0 restart resets these statuses before the formation routine.
+ if(input.phase==FieldSessionPhase::goal_kickoff_pending && selected_side==11 && input.score &&
+    input.score->left_goals==1 && input.score->right_goals==0 && input.score->kickoff==4 &&
+    input.current.clock.remaining==160 && input.current.clock.extra_time==0 && field.side==11 &&
+    field.ball_owner==8 && field.ball_cell==234 && field.selected_defenders==1 &&
+    input.scheduling && input.scheduling->selected_ids[0]==11) {
+  for(unsigned id=1;id<=21;++id) {
+   if(id==11)continue;
+   const auto expected=id==3?5u:(id==14 || id==16)?6u:(id==19 || id==20)?1u:0u;
+   if(field.motion[field_motion_index(id)].status!=expected)
+    throw std::invalid_argument("Unobserved 1-0 restart status pattern");
+  }
+  if(field.keepers[0].stun || field.keepers[1].stun)
+   throw std::invalid_argument("Unobserved 1-0 restart goalkeeper status");
+  for(auto& player:state.current.field.motion)player.status=0;
+ }
  KickoffFormationContext captured{};
  for(unsigned slot=0;slot<22;++slot){
   if(slot==0 || slot==11){const auto i=slot==0?0u:1u;auto& k=state.current.field.keepers[i];

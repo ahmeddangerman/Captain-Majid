@@ -54,11 +54,14 @@ PhaseSessionState prepare_session_scored_goal(const PhaseSessionState& input,Mat
 }
 PhaseSessionState continue_prepared_goal_restart(const PhaseSessionState& input) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::goal_celebration_pending || input.current.clock.ball_mode!=0)
+ const bool returned=input.phase==FieldSessionPhase::ordinary_return_goal_area_goal_scored;
+ if((input.phase!=FieldSessionPhase::goal_celebration_pending && !returned) || input.current.clock.ball_mode!=0 ||
+    (returned && (input.control->motion_requested!=0 || input.control->facing!=0)))
   throw std::invalid_argument("Post-goal restart requires acknowledged presentations/menu and ball mode zero");
  auto state=input;state.current.field.side=11;
  auto& keeper=state.current.field.keepers[1];keeper.timer=0;keeper.penalty=0;keeper.stun=0;
  state.score->kickoff=4;state.shot_flight.reset();state.ball_trajectory.reset();state.keeper_decision.reset();
+ if(returned)state.area_contact.reset();
  state.phase=FieldSessionPhase::goal_kickoff_pending;validate_phase_session(state);return state;
 }
 

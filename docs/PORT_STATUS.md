@@ -1,5 +1,17 @@
 # Port status and completion checkpoints
 
+**Latest - captured opponent action3 (2026-11-10):** One startup matches through the 1-0 goal, opposing kickoff and a supplied action3 choice/preparation. Later action presentation and routing are original-only; autonomous AI/timing and a complete playable match remain unsupported. Windows build and all62 registered checks passed; overall progress unmeasured.
+
+
+**Latest - opposing decision after kickoff (2026-11-10):** A captured startup now matches through goal, opposing kickoff, 33 further neutral polls, two clocks and two field rounds to an opponent AI decision. Timing and presentation samples are supplied; subsequent action3 is original-only. Autonomous timing/AI and a complete playable match remain unsupported. Full Windows build and all62 registered checks passed; overall progress unmeasured.
+
+
+**Latest - live post-goal control (2026-11-10):** One captured startup matches through opposing kickoff and eleven neutral control polls, using recorded timing and presentation samples. The next clock has a known presentation-bit mismatch and remains partial. Autonomous timing/AI and a complete playable match remain unsupported. Full Windows build and all62 registered checks passed; overall progress unmeasured.
+
+
+**Latest - captured goal restart (2026-11-09):** One captured 1-0 goal now matches through opposing kickoff and receiver18 possession, with recorded timing and presentation samples. An independent original CPU continuation with acknowledged presentation matches native control setup. Live presentation, autonomous timing/AI and a complete playable match remain unsupported. Full Windows build and all62 registered checks passed; overall progress remains unmeasured.
+
+
 **Latest - captured startup goal (2026-11-09):** The startup replay matches original score0-0 to1-0 and scorer8 experience +15, with 226 recorded random/travel pairs and a sampled presentation motion. Goal celebration, post-goal menu/restart, autonomous match and a complete playable match remain unsupported in this continuation. Full Windows build and all62 registered checks passed; overall progress unmeasured.
 
 
