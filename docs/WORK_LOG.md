@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-09 - Numeric field movement after player7 pass
+
+- Extended the existing numerical field advancement to phase325 after the three-defender dispatch. All24 constructed original/native cases match represented session bytes11..323, defender cursor and flight flag at original $C612; target cursor and step count are retained in version146. Focused tests exercise advancement, snapshot roundtrip and replay rejection. Private evidence: ../Captain-Majid-analysis/mixed25-fieldhandoff-native-d0fe5255 and ../Captain-Majid-analysis/mixed25-afterdispatch-original-6bff3082.
+- The original reaches $DE64 with player7 as target in all24 cases. A representative observer did not reach expected flight/setup or control hooks after10,000 cooperative waits; this is not proof of an original-game stall or of its cause. Next retain target state compatibly and investigate scheduler/flight behavior using controlled observations. AI choices are supplied and presentation acknowledged; authentic initialization, live audiovisual timing and a complete playable match remain unverified. Overall progress is unmeasured. Suggested model: Terra High.
+
 ## 2026-11-09 - Player7 pass clears three defenders
 
 - Extended the existing numerical defender preparation, comparison and contact-clock operations to defender19 and defender20 and advanced the pass dispatch. New phases318-324 use the existing version146 snapshot layout; earlier snapshots remain supported. Across24 constructed cases, original/native represented session bytes11..323, saved contact, cursor and flag match seven new boundaries (168 comparisons). Focused tests cover progression, replay rejection, cursor validation and snapshot roundtrip, wrong-version and truncation. Private evidence: ../Captain-Majid-analysis/mixed25-seconddefender-native-31bb9679, ../Captain-Majid-analysis/mixed25-secondcontact-native-57084032 and ../Captain-Majid-analysis/mixed25-thirddispatch-native-d5255acc.

@@ -1861,6 +1861,11 @@ int main(){try{using namespace captain;
  rejects([&]{std::istringstream in(invalid_dispatch);load_phase_session(in);});
  auto changed_second=player25_second_defender;changed_second.area_defender_cursor=2;
  rejects([&]{validate_phase_session(changed_second);});
+ auto player25_field_handoff=advance_sampled_score23_pass_handoff(player25_dispatch,player3_race_mappings,player3_race_movement);
+ check(player25_field_handoff.phase==FieldSessionPhase::sampled_score25_pass_handoff && !player25_field_handoff.current.field.elapsed && player25_field_handoff.current.clock.remaining==321,"The player7 pass advances its field movement");
+ auto player25_handoff_bytes=bytes(player25_field_handoff);std::istringstream player25_handoff_stream(player25_handoff_bytes);
+ check(bytes(load_phase_session(player25_handoff_stream))==player25_handoff_bytes,"The player7 pass handoff snapshot roundtrips");
+ rejects([&]{advance_sampled_score23_pass_handoff(player25_field_handoff,player3_race_mappings,player3_race_movement);});
  auto confirmed_empty_bytes=bytes(pass_empty_confirm);std::istringstream confirmed_empty_stream(confirmed_empty_bytes);
  auto cancel_pending_bytes=bytes(pass_cancel_pending);std::istringstream cancel_pending_stream(cancel_pending_bytes);
  check(bytes(load_phase_session(confirmed_empty_stream))==confirmed_empty_bytes && bytes(load_phase_session(cancel_pending_stream))==cancel_pending_bytes,

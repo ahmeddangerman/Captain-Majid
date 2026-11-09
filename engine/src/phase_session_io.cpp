@@ -46,7 +46,7 @@ PhaseSessionState load_phase_session(std::istream& input) {
        (static_cast<unsigned>(state.phase)>=296 && static_cast<unsigned>(state.phase)<=302)))
         throw std::invalid_argument("Extended goalkeeper choice requires session version145");
     if((version==146)!=((static_cast<unsigned>(state.phase)>=276 && static_cast<unsigned>(state.phase)<=284) ||
-       (static_cast<unsigned>(state.phase)>=310 && static_cast<unsigned>(state.phase)<=324)))
+       (static_cast<unsigned>(state.phase)>=310 && static_cast<unsigned>(state.phase)<=325)))
         throw std::invalid_argument("Extended human pass cursor requires session version146");
     if(version<133 && (static_cast<unsigned>(state.phase)==188 || static_cast<unsigned>(state.phase)==189))throw std::invalid_argument("Prepared sampled loose defender requires session version67");
     if((version==139)!=(static_cast<unsigned>(state.phase)==220 || static_cast<unsigned>(state.phase)==221 || static_cast<unsigned>(state.phase)==222 || static_cast<unsigned>(state.phase)==223 || static_cast<unsigned>(state.phase)==224 || static_cast<unsigned>(state.phase)==225 || static_cast<unsigned>(state.phase)==226))

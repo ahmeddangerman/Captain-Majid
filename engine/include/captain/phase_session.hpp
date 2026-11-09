@@ -87,7 +87,7 @@ enum class FieldSessionPhase : std::uint16_t {
     sampled_score25_first_contact_clock = 317, sampled_score25_second_defender_prepared = 318,
     sampled_score25_second_defender_compared = 319, sampled_score25_second_contact_clock = 320,
     sampled_score25_third_defender_prepared = 321, sampled_score25_third_defender_compared = 322,
-    sampled_score25_third_contact_clock = 323, sampled_score25_dispatch_clock = 324
+    sampled_score25_third_contact_clock = 323, sampled_score25_dispatch_clock = 324, sampled_score25_pass_handoff = 325
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

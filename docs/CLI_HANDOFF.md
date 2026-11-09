@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: player7 pass field handoff
+
+From phase324 the existing numerical field advancement reaches $C612 as phase325. All24 constructed original/native represented session bytes11..323 and retained cursor/flag match; outputs are ../Captain-Majid-analysis/mixed25-fieldhandoff-native-d0fe5255. Original-only target $DE64 snapshots are ../Captain-Majid-analysis/mixed25-afterdispatch-original-6bff3082. A representative original observer did not reach the expected flight/setup or control hooks after10,000 cooperative waits; this does not establish the cause or actual game behavior. Next capture the target in a compatible saved context and diagnose the original scheduler/flight path. Presentation and AI choices are acknowledged/supplied; real initialization and complete match remain unverified. Overall progress is unmeasured.
+
 ## Current stopping point - 2026-11-09: 2-5 pass dispatch
 
 The player7 pass now advances from phase317 through defender19, defender20 and dispatch at phase324. Original/native represented session bytes and contact/cursor/flag matched all24 constructed cases at each of seven new boundaries (168 comparisons). Continue from ../Captain-Majid-analysis/mixed25-thirddispatch-native-d5255acc. Original-only traces in ../Captain-Majid-analysis/mixed25-afterdispatch-original-6bff3082 reach the pass handoff $C612 and target $DE64 in all24 cases; the observer subsequently hit its 2,500 cooperative-wait bound. Next compare calculated field advancement to $C612, then target/flight; do not infer why the observer waits. Defender AI choices are supplied and presentation is acknowledged. Complete playable match, authentic initialization and live presentation remain unverified. Overall progress is unmeasured.

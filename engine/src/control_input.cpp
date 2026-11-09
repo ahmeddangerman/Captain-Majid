@@ -258,10 +258,11 @@ PhaseSessionState capture_sampled_player3_pass_handoff(const PhaseSessionState& 
 PhaseSessionState advance_sampled_score23_pass_handoff(const PhaseSessionState& input,
  const PlayerProfileMappings& mappings,const FieldPhaseContent& movement) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::sampled_score23_dispatch_clock)
-  throw std::invalid_argument("Unsupported sampled 2-3 pass handoff");
+ const bool score25=input.phase==FieldSessionPhase::sampled_score25_dispatch_clock;
+ if(input.phase!=FieldSessionPhase::sampled_score23_dispatch_clock && !score25)
+  throw std::invalid_argument("Unsupported sampled pass handoff");
  auto state=input;state.current.field=advance_field_phase(input.current.field,mappings,movement).state;
- state.phase=FieldSessionPhase::sampled_score23_pass_handoff;validate_phase_session(state);return state;
+ state.phase=score25 ? FieldSessionPhase::sampled_score25_pass_handoff : FieldSessionPhase::sampled_score23_pass_handoff;validate_phase_session(state);return state;
 }
 PhaseSessionState capture_sampled_player3_pass_target(const PhaseSessionState& input,std::uint8_t recipient,std::uint8_t destination,std::uint8_t counter,std::uint8_t distance) {
  validate_phase_session(input);

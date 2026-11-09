@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - numeric player7 pass handoff (2026-11-09):** Existing field advancement matches24 constructed original/native cases at $C612 after the 2-5 three-defender pass. Target and flight remain original-only, and the observer wait is unresolved. Actual match initialization, live presentation and a complete playable match remain unverified; overall progress is unmeasured.
+
 **Latest - three-defender player7 pass dispatch (2026-11-09):** All24 constructed original/native cases match defender19, defender20 and dispatch at seven new boundaries. Original-only continuations reach the pass target, with a subsequent observer wait unresolved. AI choices and presentation remain supplied/acknowledged; authentic startup and a playable match remain unverified. Overall progress is unmeasured. See CLI_HANDOFF and WORK_LOG.
 
 **Latest - player7 pass, first defender (2026-11-08):** All24 constructed original/native cases match the 2-5 teammate target and confirmation, supplied defender choices, numerical pass preparation, first defender17 preparation/comparison and contact clock. The other two defenders and subsequent dispatch are traced only in the original. Full Windows CMake build and all45 tests passed. Original traces use cooperative presentation waits and explicitly captured AI choices; live timing, presentation, authentic initialization and a complete playable match remain unverified. Overall progress is unmeasured.

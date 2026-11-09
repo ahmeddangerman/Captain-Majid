@@ -187,6 +187,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::sampled_score25_third_defender_compared: return "sampled player7 third defender compared";
     case captain::FieldSessionPhase::sampled_score25_third_contact_clock: return "sampled player7 third contact clock";
     case captain::FieldSessionPhase::sampled_score25_dispatch_clock: return "sampled player7 dispatch clock";
+    case captain::FieldSessionPhase::sampled_score25_pass_handoff: return "sampled player7 pass handoff";
     case captain::FieldSessionPhase::sampled_player3_contact_clock: return "sampled player3 contact clock advanced";
     case captain::FieldSessionPhase::sampled_player3_dispatch_clock: return "sampled player3 pass dispatch clock advanced";
     case captain::FieldSessionPhase::sampled_player3_pass_handoff: return "sampled player3 pass handoff";
