@@ -1236,6 +1236,37 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(teammate_stream))==teammate_bytes,"Confirmed pass recipient survives snapshot roundtrip");
  auto wrong_recipient=teammate_pass;wrong_recipient.ordinary_pass_recipient=3;
  rejects([&]{validate_phase_session(wrong_recipient);});
+ auto defended_pass=free_pass;
+ defended_pass.current.field.selected_defenders=2;
+ defended_pass.scheduling->selected_ids={19,20,0,0,0};
+ defended_pass.recovery->ball_variant=0;
+ const auto selection=begin_ordinary_pass_defense_selection(defended_pass);
+ check(selection.phase==FieldSessionPhase::ordinary_pass_defense_selection && selection.ordinary_pass_defenses &&
+       !selection.ordinary_pass_defenses->count && !selection.current.clock.ball_mode,
+       "Acknowledged defense selection begins with no fabricated choices");
+ const auto selection_nmi=advance_observed_nmi_events(selection,255,{{ObservedClockEventKind::random,{0,0,0,false}}});
+ check(selection_nmi.random_index==0 && !selection_nmi.state.ordinary_pass_defenses->count,
+       "Captured random event preserves pending defender choices");
+ const auto first_choice=record_ordinary_pass_defense(selection,19,1,0);
+ check(first_choice.phase==FieldSessionPhase::ordinary_pass_defense_selection && first_choice.ordinary_pass_defenses->count==1 &&
+       first_choice.recovery->opposing_player==19 && !selection.ordinary_pass_defenses->count,
+       "First observed defender choice is retained without changing input");
+ const auto second_choice=record_ordinary_pass_defense(first_choice,20,1,0);
+ check(second_choice.phase==FieldSessionPhase::ordinary_pass_defenses_recorded && second_choice.ordinary_pass_defenses->count==2 &&
+       second_choice.recovery->opposing_player==20,"Complete observed defender prefix reaches preparation boundary");
+ const auto defense_bytes=bytes(second_choice);std::istringstream defense_stream(defense_bytes);
+ check(bytes(load_phase_session(defense_stream))==defense_bytes,"Observed defender choices survive snapshot roundtrip");
+ FieldDefenseContent ordinary_pass_content{};ordinary_pass_content.skill_selectors[1][0]=1;
+ ordinary_pass_content.moves[1]={{0,0,20,0}};ordinary_pass_content.strength_curve.fill(22);
+ const auto ordinary_prepared=prepare_ordinary_pass(second_choice,sampled_attack_profiles,ordinary_pass_content);
+ check(ordinary_prepared.phase==FieldSessionPhase::ordinary_pass_prepared &&
+       ordinary_prepared.current.field.roster[5].stamina==11 && second_choice.current.field.roster[5].stamina==31 &&
+       ordinary_prepared.ordinary_pass_defenses->count==2,"Ordinary pass preparation charges stamina and preserves captured choices");
+ const auto ordinary_prepared_bytes=bytes(ordinary_prepared);std::istringstream ordinary_prepared_stream(ordinary_prepared_bytes);
+ check(bytes(load_phase_session(ordinary_prepared_stream))==ordinary_prepared_bytes,"Prepared ordinary pass snapshot roundtrip");
+ rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
+ rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
+ rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});
  rejects([&]{confirm_ordinary_human_pass_target(legacy_target);});
  auto multiple=general_move.state;multiple.ordinary_pass_candidates->candidates.count=2;
  multiple.ordinary_pass_candidates->candidates.allied_count=2;multiple.ordinary_pass_candidates->candidates.ids[1]=3;

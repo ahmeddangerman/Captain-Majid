@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-09 - Ordinary pass choice recording and preparation
+
+Added score-independent phases333–335/version150 for ordered, explicitly supplied defender choices (currently action1/subtype0) and existing profile-based attacker preparation. The captured startup matched its two choices and preparation, owner9 stamina733→713 and power12; 24 earlier original cases with three defenders matched the same general operations. No defender AI is generated, and defender processing from the new phase remains pending. All 62 registered Windows tests and the 576/1,152-boundary phase317 regressions passed. Overall progress is unmeasured; suggested model Terra High.
+
 ## 2026-11-09 - Ordinary target confirmation
 
 Added phase332/version149 for an explicitly supplied A-only confirmation of a known free/opponent-only or single-teammate target. Multiple teammates stop at the original chooser, and old unknown candidate states reject. Six full original controlled confirmations matched across two contexts; two chooser cases rejected atomically. The captured startup additionally matched 25 polls and confirmed cell126 as free recipient255. Full 62 Windows tests, both phase317 regressions and the focused forged-recipient check passed. Live presentation/AI, cancellation, chooser and a complete match remain unsupported. Overall progress is unmeasured; suggested model Terra High.

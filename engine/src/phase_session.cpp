@@ -57,11 +57,13 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool score25_human_pass=phase>=310 && phase<=326;
     const bool score36_human_pass=score25_human_pass && state.score && state.score->left_goals==3 && state.score->right_goals==6;
     const bool score25_shot=phase>=327 && phase<=330;
-    const bool ordinary_human_target=phase==331 || phase==332;
+    const bool ordinary_human_target=phase>=331 && phase<=335;
     if (state.ordinary_pass_candidates && !ordinary_human_target)
         throw std::invalid_argument("Ordinary pass candidate context requires the target phase");
-    if (bool(state.ordinary_pass_recipient) != (phase==332))
+    if (bool(state.ordinary_pass_recipient) != (phase>=332 && phase<=335))
         throw std::invalid_argument("Ordinary pass recipient requires the confirmed target phase");
+    if (bool(state.ordinary_pass_defenses) != (phase>=333 && phase<=335))
+        throw std::invalid_argument("Ordinary pass defense context requires its selection phase");
     const bool score35_opponent_shot=state.score && state.score->left_goals==3 && (state.score->right_goals==5 || (phase>=300 && state.score->right_goals==6)) && state.current.field.ball_owner==19;
     const bool player17_score24=state.score && state.score->left_goals==2 && state.score->right_goals==4 && state.current.field.ball_owner==17;
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
@@ -71,8 +73,8 @@ void validate_phase_session(const PhaseSessionState& state) {
         const auto& field = state.current.field;
         if (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling ||
             !state.human_pass_cursor || state.human_pass_steps || field.side != 0 || field.ball_owner < 1 || field.ball_owner > 10 || field.selected_defenders > 5 ||
-            state.action->action != 1 || state.action->menu_route != 0 || state.current.clock.ball_mode != 129 ||
-            state.recovery->attack_subtype != 0 || *state.human_pass_cursor >= 240 ||
+            state.action->action != 1 || state.action->menu_route != 0 || state.current.clock.ball_mode != (phase>=333 ? 0 : 129) ||
+            (phase==335 ? (state.recovery->attack_subtype != 0 && state.recovery->attack_subtype != 128) : state.recovery->attack_subtype != 0) || *state.human_pass_cursor >= 240 ||
             field_cell_at(field.ball_x, field.ball_y) != field.ball_cell ||
             (field.motion[field_motion_index(field.ball_owner)].x >> 8) != field.ball_x ||
             (field.motion[field_motion_index(field.ball_owner)].y >> 8) != field.ball_y)
@@ -98,13 +100,24 @@ void validate_phase_session(const PhaseSessionState& state) {
             if (candidates.allied_count && candidates.allied_count != candidates.count)
                 throw std::invalid_argument("Allied pass candidates exclude opponents");
         }
-        if (phase==332) {
+        if (phase>=332) {
             if (!state.ordinary_pass_candidates || state.ordinary_pass_candidates->candidates.allied_count > 1)
                 throw std::invalid_argument("Confirmed ordinary pass requires a known single or empty target");
             const auto& candidates = state.ordinary_pass_candidates->candidates;
             const auto expected = candidates.allied_count == 1 ? candidates.ids[0] : 255;
             if (*state.ordinary_pass_recipient != expected)
                 throw std::invalid_argument("Confirmed ordinary pass recipient disagrees with saved candidates");
+        }
+        if (state.ordinary_pass_defenses) {
+            const auto& defense = *state.ordinary_pass_defenses;
+            if (!field.selected_defenders || defense.count > field.selected_defenders ||
+                (phase==333 && defense.count >= field.selected_defenders) ||
+                (phase>=334 && defense.count != field.selected_defenders) ||
+                (defense.count && state.recovery->opposing_player != state.scheduling->selected_ids[defense.count-1]))
+                throw std::invalid_argument("Invalid ordinary pass defender selection cursor");
+            for (unsigned i=0; i<5; ++i)
+                if (defense.subtypes[i] || defense.actions[i] != (i < defense.count ? 1 : 0))
+                    throw std::invalid_argument("Only explicitly captured ordinary action-one defenses are supported");
         }
     }
     if(score25_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||

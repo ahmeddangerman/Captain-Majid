@@ -90,7 +90,8 @@ enum class FieldSessionPhase : std::uint16_t {
     sampled_score25_third_defender_prepared = 321, sampled_score25_third_defender_compared = 322,
     sampled_score25_third_contact_clock = 323, sampled_score25_dispatch_clock = 324, sampled_score25_pass_handoff = 325, sampled_score25_pass_target_captured = 326, sampled_score25_shot_target = 327,
     sampled_score25_shot_advance = 328, sampled_score25_shot_callback = 329, sampled_score25_shot_arrival = 330,
-    ordinary_human_pass_target = 331, ordinary_human_pass_confirmed = 332
+    ordinary_human_pass_target = 331, ordinary_human_pass_confirmed = 332,
+    ordinary_pass_defense_selection = 333, ordinary_pass_defenses_recorded = 334, ordinary_pass_prepared = 335
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;
@@ -117,6 +118,10 @@ struct ActionContext {
 struct OrdinaryPassCandidateContext {
     bool scanned = false;
     OrdinaryPassCandidates candidates{};
+};
+struct OrdinaryPassDefenseContext {
+    std::uint8_t count = 0;
+    std::array<std::uint8_t, 5> actions{}, subtypes{};
 };
 struct ShotContactProgress {
     std::uint8_t cursor = 0, result_code = 0, defender_id = 0, defense_action = 0, defense_subtype = 0;
@@ -167,6 +172,7 @@ struct PhaseSessionState {
     std::uint8_t human_pass_steps=0;
     std::optional<OrdinaryPassCandidateContext> ordinary_pass_candidates{};
     std::optional<std::uint8_t> ordinary_pass_recipient{};
+    std::optional<OrdinaryPassDefenseContext> ordinary_pass_defenses{};
     std::optional<BallTrajectoryContext> ball_trajectory{};
     std::optional<KeeperDecisionContext> keeper_decision{};
     std::optional<std::uint8_t> keeper_menu_action{};

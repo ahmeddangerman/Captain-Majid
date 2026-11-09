@@ -493,6 +493,57 @@ PhaseSessionState confirm_ordinary_human_pass_target(const PhaseSessionState& in
     validate_phase_session(state);
     return state;
 }
+PhaseSessionState begin_ordinary_pass_defense_selection(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::ordinary_human_pass_confirmed || !input.current.field.selected_defenders)
+        throw std::invalid_argument("Ordinary pass defense selection requires a nonempty opposing prefix");
+    auto state = input;
+    state.current.clock.ball_mode = 0;
+    state.ordinary_pass_defenses = OrdinaryPassDefenseContext{};
+    state.phase = FieldSessionPhase::ordinary_pass_defense_selection;
+    validate_phase_session(state);
+    return state;
+}
+PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
+    std::uint8_t defender, std::uint8_t action, std::uint8_t subtype) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::ordinary_pass_defense_selection || !input.ordinary_pass_defenses ||
+        !input.scheduling || action != 1 || subtype != 0)
+        throw std::invalid_argument("Unsupported observed ordinary pass defender choice");
+    auto state = input;
+    auto& defense = *state.ordinary_pass_defenses;
+    if (defender != state.scheduling->selected_ids[defense.count])
+        throw std::invalid_argument("Observed ordinary pass defender is out of order");
+    defense.actions[defense.count] = action;
+    defense.subtypes[defense.count] = subtype;
+    ++defense.count;
+    state.recovery->opposing_player = defender;
+    if (defense.count == state.current.field.selected_defenders)
+        state.phase = FieldSessionPhase::ordinary_pass_defenses_recorded;
+    validate_phase_session(state);
+    return state;
+}
+PhaseSessionState prepare_ordinary_pass(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players, const FieldDefenseContent& attack) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded || !input.recovery ||
+        input.recovery->ball_variant != 0)
+        throw std::invalid_argument("Ordinary pass preparation requires recorded defenses and the supported field situation");
+    const auto& field = input.current.field;
+    const auto& player = field.roster[field.ball_owner];
+    const auto prepared = prepare_attacking_action({{field.ball_owner, player.type,
+        static_cast<std::uint8_t>(player.stamina), static_cast<std::uint8_t>(player.stamina >> 8), player.level},
+        1, 0, 0, 0, field.selected_defenders, field.random_first, field.random_second, false}, players, attack);
+    auto state = input;
+    state.current.field.roster[field.ball_owner].stamina = prepared.energy.stamina;
+    state.action->power = prepared.action_power.power;
+    state.action->move_effect = prepared.preparation.move_effect;
+    state.action->move_flags = prepared.move_flags;
+    state.recovery->attack_subtype = prepared.action_power.subtype;
+    state.phase = FieldSessionPhase::ordinary_pass_prepared;
+    validate_phase_session(state);
+    return state;
+}
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input) {
     validate_phase_session(input);const auto& f=input.current.field;
     const bool score25=input.phase==FieldSessionPhase::attack_choice_pending && input.score && input.action && input.recovery && input.scheduling &&

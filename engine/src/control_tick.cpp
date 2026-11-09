@@ -288,7 +288,9 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
     std::uint8_t initial_random_index, const std::vector<ObservedClockEvent>& events) {
     validate_phase_session(input);
     if ((input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
-         input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target) || !input.control)
+         input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
+         input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
+         input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded) || !input.control)
         throw std::invalid_argument("Observed NMI sequence requires a supported contact, menu or pass-target boundary");
     auto state = input;
     auto index = initial_random_index;

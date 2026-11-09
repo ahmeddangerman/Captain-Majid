@@ -68,6 +68,11 @@ PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& inpu
 struct OrdinaryPassCursorResult { PhaseSessionState state; bool cursor_changed = false; };
 OrdinaryPassCursorResult poll_ordinary_human_pass_cursor(const PhaseSessionState& input, std::uint8_t held, std::uint8_t pressed);
 PhaseSessionState confirm_ordinary_human_pass_target(const PhaseSessionState& input);
+PhaseSessionState begin_ordinary_pass_defense_selection(const PhaseSessionState& input);
+PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
+    std::uint8_t defender, std::uint8_t action, std::uint8_t subtype);
+PhaseSessionState prepare_ordinary_pass(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players, const FieldDefenseContent& attack);
 PhaseSessionState begin_sampled_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState poll_sampled_human_pass_target(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed);
 // Explicit defender choices observed for the bounded player7 pass; no AI is inferred.

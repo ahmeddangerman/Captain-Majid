@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-09: general ordinary pass preparation with recorded defenses
+
+Added phases333–335/version150 for a side-zero ordinary pass with a nonempty selected-defender prefix. The caller acknowledges the mode transition and records each defender choice in original order; only explicitly supplied action1/subtype0 is supported. The engine then prepares the attacker with the existing profile, energy and power kernels. These operations do not select defender AI, and they stop before defender processing. Saved candidates and recipient remain available.
+
+The captured startup continuously matches the original mode change, random/travel intervals, supplied choices for defenders19 and20, and attacker preparation: owner9 stamina733→713 and power12. A separate earlier encounter matched 24 complete attacker-preparation entries and prepared states with three supplied defender choices. Tools accept private evidence paths and report differing boundary/field: tools/verify_captured_pass_defenses.py and tools/verify_ordinary_pass_defenses_sessions.py. Private evidence: ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/pass-prepared-verifier-20261109 and ../Captain-Majid-analysis/ordinary-defense-prepared-verifier-20261109.
+
+General: bounded choice recording and profile-based pass preparation. Scenario-specific: observed action1 choices and captured startup schedules; earlier phase317 full replay remains separately guarded. Unknown: original AI choice generation, general defender processing and dispatch from this new phase, live scheduler/audio/presentation, and complete match progression. Full Windows build and all 62 registered CTest tests passed; existing 24/48-case phase317 possession replays matched 576/1,152 boundaries. Next compare the shared defender preparation/comparison rules against the startup defenders and the earlier verified encounter, retaining guards for unknown outcomes. Overall progress is unmeasured; suggested model: Terra High.
+
 ## Current stopping point - 2026-11-09: ordinary free/single-teammate target confirmation
 
 `--confirm-ordinary-human-pass-target` saves phase332 after an explicitly supplied A-only, no-movement confirmation. An unscanned initial target or scanned target with no teammates becomes free recipient255; exactly one teammate becomes that recipient. Multiple teammates reject at the original chooser boundary, and a version146 target with unknown candidate state rejects until a move supplies a scan. B/cancel and simultaneous B/A are not executed; original controlled probes show B takes precedence. Snapshot version149 explicitly retains the recipient and destination cursor. No defenders, animation, ball flight or live chooser is implied.
