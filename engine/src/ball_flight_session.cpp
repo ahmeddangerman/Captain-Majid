@@ -143,6 +143,27 @@ PhaseSessionState snap_postgoal_opponent_return_arrival(const PhaseSessionState&
  state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(y)<<8)|(state.ball_trajectory->y&255u));
  state.phase=FieldSessionPhase::postgoal_opponent_return_flight_snapped;validate_phase_session(state);return state;
 }
+PhaseSessionState compare_postgoal_return_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,
+ const FieldDefenseContent& defense,const AreaPassComparisonContent& comparison) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_flight_snapped || input.current.field.random_first!=104 ||
+    input.current.field.random_second!=186 || comparison.range!=128 || comparison.offset!=128 || comparison.eligibility!=251 ||
+    comparison.thresholds!=std::array<std::uint8_t,4>{154,96,68,0})
+  throw std::invalid_argument("Post-goal defender requires the observed wait and action3 comparison table");
+ const auto& player=input.current.field.roster[8];
+ const auto prep=prepare_profiled_field_defender({8,player.type,static_cast<std::uint8_t>(player.stamina),
+  static_cast<std::uint8_t>(player.stamina>>8),player.level},profiles,2,0,0,defense);
+ if(prep.base_strength!=8 || prep.stamina_cost!=50 || prep.move_effect)
+  throw std::invalid_argument("Unobserved post-goal defender preparation");
+ const auto result=compare_defender_contact({input.action->power,prep.base_strength,input.current.field.random_first,
+  input.current.field.random_second,comparison.range,comparison.offset,false,bool(comparison.eligibility&128u),0,8,0,comparison.thresholds});
+ if(result.strength!=4 || result.loss!=1 || result.score!=192 || result.result_code || result.subtype)
+  throw std::invalid_argument("Unobserved post-goal defender comparison");
+ auto state=input;state.recovery->opposing_player=8;state.area_sequence_result=result.result_code;
+ state.area_contact=AreaContactContext{0,2,result.subtype,prep.move_effect,prep.base_strength,prep.stamina_cost,
+  result.strength,result.loss,result.score,result.result_code,false};
+ state.phase=FieldSessionPhase::postgoal_opponent_return_defender_compared;validate_phase_session(state);return state;
+}
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {

@@ -1955,6 +1955,28 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(postgoal_snapped_stream))==postgoal_snapped_bytes,"Post-goal snapped arrival snapshot roundtrips");
  rejects([&]{snap_postgoal_opponent_return_arrival(postgoal_return);});
  rejects([&]{snap_postgoal_opponent_return_arrival(postgoal_snapped);});
+ auto defender_fixture=postgoal_snapped;defender_fixture.current.field.roster[8].type=10;defender_fixture.current.field.roster[8].stamina=330;defender_fixture.current.field.roster[8].level=0;
+ FieldPlayerProfiles defender_profiles{};defender_profiles.skills.resize(1);defender_profiles.skills[0].fill(0);
+ FieldDefenseContent defender_content{};defender_content.skill_selectors[2][0]=6;
+ defender_content.moves[2]={{0,0,50,0}};defender_content.strength_curve.fill(8);
+ const auto defender_wait=advance_observed_nmi_events(defender_fixture,9,
+  {{ObservedClockEventKind::random,{0,226,182,true}},{ObservedClockEventKind::travel,{},0,112}});
+ check(defender_wait.random_index==10 && defender_wait.state.current.field.random_first==104 &&
+       defender_wait.state.current.field.random_second==186,"Recorded defender wait advances original random bytes");
+ const AreaPassComparisonContent defender_comparison{128,128,251,{154,96,68,0}};
+ const auto defender_compared=compare_postgoal_return_defender(defender_wait.state,defender_profiles,defender_content,defender_comparison);
+ check(defender_compared.phase==FieldSessionPhase::postgoal_opponent_return_defender_compared &&
+       defender_compared.recovery->opposing_player==8 && defender_compared.recovery->ball_variant==1 &&
+       defender_compared.area_contact && defender_compared.area_contact->defender_power==8 &&
+       defender_compared.area_contact->cost==50 && defender_compared.area_contact->strength==4 &&
+       defender_compared.area_contact->loss==1 && defender_compared.area_contact->score==192 &&
+       defender_compared.area_contact->result==0,"Captured defender8 comparison uses the action3 variation table");
+ const auto postgoal_defender_bytes=bytes(defender_compared);std::istringstream postgoal_defender_stream(postgoal_defender_bytes);
+ check(bytes(load_phase_session(postgoal_defender_stream))==postgoal_defender_bytes,"Post-goal defender comparison snapshot roundtrips");
+ rejects([&]{compare_postgoal_return_defender(defender_fixture,defender_profiles,defender_content,defender_comparison);});
+ auto bad_defender_comparison=defender_comparison;bad_defender_comparison.range=0;
+ rejects([&]{compare_postgoal_return_defender(defender_wait.state,defender_profiles,defender_content,bad_defender_comparison);});
+ rejects([&]{compare_postgoal_return_defender(defender_compared,defender_profiles,defender_content,defender_comparison);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

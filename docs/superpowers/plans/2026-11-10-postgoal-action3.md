@@ -94,3 +94,10 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Test the captured unsnapped-to-centered transition, preserved fractions and defender context, replay rejection and snapshot roundtrip.
 - [x] Add a guarded boundary matching the original ordering before defender execution.
 - [x] Compare native output to original $E7CC, then verify and document the result.
+
+## Task 12: Compare defender8's action3 interception
+
+- [x] Trace the captured defender preparation and comparison, identify the action-specific variation table, and compare the shared arithmetic with controlled original CPU continuations.
+- [x] Test the recorded NMI wait and the defender preparation/comparison boundary, including invalid inputs and snapshot roundtrip.
+- [x] Connect the profiled preparation and comparison using explicitly supplied, guarded action3 table values.
+- [x] Compare the saved native state with the original after comparison, run verification, and document the exact limits.

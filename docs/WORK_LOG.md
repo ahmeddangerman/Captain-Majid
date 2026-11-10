@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-10 - Action3 return defender comparison
+
+One recorded NMI random/travel pair takes the centered arrival to original $8845, random index10 and bytes104/186. Defender8's action2 preparation gives base8 and cost50. The original action3-specific comparison table has range128, offset128 and eligibility251: shared arithmetic gives strength4, loss1, score192 and result0. A controlled isolated original CPU comparison matched 513 cases against the native calculation. The action0 flight-content row is a different table and must not be used for this action3 encounter.
+
+Guarded phase409 uses explicitly supplied comparison-table bytes and the existing player-profile and defender kernels. All represented fields, trajectory and score match the original at $8845 and $8874; the restored ball variant and selected defender are retained. Private evidence: ../Captain-Majid-analysis/defender3-contact-compare-20261110.py and ../Captain-Majid-analysis/postgoal-defender-compare-final-20261110. Focused checks cover recorded timing, comparison, invalid input and snapshot roundtrip. A fresh Windows build and all 62 registered checks passed. Result presentation and later clock/defender handling remain original-only; recorded timing and presentation are supplied rather than simulated. Overall progress remains unmeasured and a complete playable match is unsupported. Next compare the result0 continuation. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Return-flight arrival center snap
 
 The captured return-flight arrival now has a separate guarded phase408 matching original $E7CC. The original changes ball x119/y110 to the cell center x116/y108 and preserves fractional bytes 248/152, the flight context and selected defender8. The native replay matches represented fields and trajectory; private evidence is in ../Captain-Majid-analysis/post-kickoff-returnflight-snap-20261110. Focused coverage checks the transition, snapshot roundtrip and rejection of invalid replay. A fresh Windows build and all 62 registered checks passed. Original defender processing is not yet native-compared. Timing and presentation remain supplied, and a complete playable match is unsupported. Overall progress remains unmeasured; next compare defender8's captured zero-range calculation. Suggested model GPT-6.1 Terra High.
