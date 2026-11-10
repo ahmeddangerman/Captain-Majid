@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: second one-two contact
+
+The player3 one-two now matches defender19 result1 and its contact: clock137, elapsed3, defender19 status6, player3 experience9, power7, random index202. Private checkpoint: `../Captain-Majid-analysis/player3-one-two-next-contact-v1-20261110/second-contact-clock.cmjsession`. Original presentation/random events and direct table inputs are supplied. Windows build and 62 checks passed. Next compare defender20; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: second one-two defender
 
 The player3 one-two matches defender19's preparation and result1 (strength5, loss1, score102), random index51. Private checkpoint: `../Captain-Majid-analysis/player3-one-two-second-v1-20261110/second-defender-compared.cmjsession`. The verifier requires both explicitly supplied original direct-table selections. Windows build and 62 checks passed. Next compare result1 continuation and the third defender; full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.

@@ -196,7 +196,37 @@ def main():
     score, result = (int(value,16) for value in registers.groups())
     if actual[407:412] != bytes((original[0x71],original[0x619],score,result,0)) or actual[413] != result:
         raise ValueError('Second defender comparison differs from original')
-    print(f'Matched one-two through second defender result {result}; random index {ram(last)[0xe1]}.')
+    rows, last = menu_wait_events(lines, pcs, ram, 15480, 16269)
+    points = [i for i in range(15481,16269) if pcs[i] in ('C9C5','E3CA')]
+    if last != 16268 or len(rows) != len(points):
+        raise ValueError('Ambiguous second defender result presentation')
+    facing, samples, ordered = 64, [], []
+    for row, point in zip(rows, points):
+        value = ram(point)[0x517]
+        if value != facing:
+            facing = value; samples.append(value); ordered.append(f'F {value}')
+        ordered.append(row)
+    if samples != [0]:
+        raise ValueError(f'Unexpected second defender facing samples: {samples}')
+    events = output / 'second-contact-wait-events.txt'
+    events.write_text('CMJNMISEQ1\n' + '\n'.join(ordered) + '\n')
+    waiting = output / 'second-contact-wait.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(compared),
+                          '--advance-observed-nmi-sequence', str(events), str(ram(15480)[0xe1]),
+                          '--capture', str(waiting)], capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    if re.findall(r'final random index (\d+);', run.stdout) != [str(ram(last)[0xe1])]:
+        raise ValueError('Second contact wait random index differs')
+    compare_choices(waiting, last, 20)
+    clocked = output / 'second-contact-clock.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(waiting),
+                          '--advance-player3-one-two-next-contact', '--capture', str(clocked)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    compare_choices(clocked, 16269, 20)
+    print(f'Matched one-two through second defender contact; random index {ram(last)[0xe1]}.')
 
 
 if __name__ == '__main__':

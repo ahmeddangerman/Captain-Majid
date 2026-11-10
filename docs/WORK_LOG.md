@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Second one-two contact
+
+After defender19's matched result1, the captured presentation wait and contact now match: clock138-to137, elapsed2-to3, defender19 status6, player3 experience6-to9 and action power8-to7, random index202. The guarded transition uses the existing loss, experience and contact kernels; wrong/repeated contact rejects, input is unchanged and the saved snapshot roundtrips. `tools/verify_player3_one_two.py` checks the captured event sequence and original contact boundary. Private evidence: `../Captain-Majid-analysis/player3-one-two-next-contact-v1-20261110`. Windows build and all 62 registered checks passed. Third defender, live timing and full match remain unsupported; overall progress unmeasured. Next compare defender20. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Second defender against the one-two
 
 The player3 one-two replay now matches defender19 after the first contact: captured wait and direct-table index14, defender strength8/cost50, compared strength5/loss1/score102 and result1, random index51. The table content is supplied from the private original rather than substituted with the field-selection table. `tools/verify_player3_one_two.py` checks the original preparation and result; wrong table indices reject, inputs stay unchanged and version142 snapshots roundtrip. Private evidence: `../Captain-Majid-analysis/player3-one-two-second-v1-20261110`. Windows build and all 62 registered checks passed. The subsequent power/contact and third defender remain unmatched; events remain supplied, full match unsupported, progress unmeasured. Next trace the result1 continuation. Suggested model GPT-6.1 Terra High.

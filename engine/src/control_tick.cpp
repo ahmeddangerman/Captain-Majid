@@ -378,7 +378,9 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.human_defense_choices->actions == std::array<std::uint8_t,5>{1,2,2,0,0} && input.action && input.action->action==3 && !input.area_contact;
     const bool captured_one_two_first_result = input.phase == FieldSessionPhase::attack_prepared && input.human_defense_choices &&
         input.human_defense_choices->actions == std::array<std::uint8_t,5>{1,2,2,0,0} && input.action && input.action->action==3 && input.area_contact && input.area_sequence_result==0;
-    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && !captured_player7_shot && !captured_player7_result && !captured_player7_contact && !captured_player3_recovery && !captured_one_two_defender_wait && !captured_one_two_first_result && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
+    const bool captured_one_two_second_result = input.phase == FieldSessionPhase::attack_prepared && input.human_defense_choices &&
+        input.human_defense_choices->actions == std::array<std::uint8_t,5>{1,2,2,0,0} && input.action && input.action->action==3 && input.area_contact && input.area_defender_cursor==1 && input.area_sequence_result==1;
+    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && !captured_player7_shot && !captured_player7_result && !captured_player7_contact && !captured_player3_recovery && !captured_one_two_defender_wait && !captured_one_two_first_result && !captured_one_two_second_result && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
          input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded && input.phase != FieldSessionPhase::ordinary_pass_prepared &&
@@ -408,6 +410,9 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
+        } else if (captured_one_two_second_result && event.kind==ObservedClockEventKind::facing_sample) {
+            if(event.held || state.control->facing!=64) throw std::invalid_argument("Unsupported second defender facing sample");
+            state.control->facing=0;
         } else if (captured_one_two_defender_wait && (event.kind == ObservedClockEventKind::carrier_cell_sample || event.kind == ObservedClockEventKind::motion_sample || event.kind == ObservedClockEventKind::facing_sample)) {
             if(one_two_defender_stage==0 && event.kind==ObservedClockEventKind::carrier_cell_sample && event.held==0 && state.control->last_carrier_cell==128) state.control->last_carrier_cell=0;
             else if(one_two_defender_stage==1 && event.kind==ObservedClockEventKind::motion_sample && event.held==0 && state.control->motion_requested==1) state.control->motion_requested=0;

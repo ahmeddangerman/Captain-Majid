@@ -755,12 +755,12 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool player3_one_two_choices=state.human_defense_choices && (phase==19 || phase==20) && state.score && state.action && state.recovery && state.scheduling && state.control && state.experience &&
        state.human_defense_choices->actions==std::array<std::uint8_t,5>{1,2,2,0,0} && state.human_defense_choices->subtypes==std::array<std::uint8_t,5>{} &&
        state.score->left_goals==1 && state.score->right_goals==0 && state.score->kickoff==4 &&
-       state.current.clock.remaining==(player3_one_two_contact && state.current.field.motion[field_motion_index(16)].status==6 ? 138 : 139) && state.current.clock.extra_time==0 &&
+       state.current.clock.remaining==(player3_one_two_contact && state.current.field.motion[field_motion_index(19)].status==6 ? 137 : player3_one_two_contact && state.current.field.motion[field_motion_index(16)].status==6 ? 138 : 139) && state.current.clock.extra_time==0 &&
        state.current.field.side==0 && state.current.field.ball_owner==3 && state.current.field.ball_x==120 && state.current.field.ball_y==140 && state.current.field.ball_cell==115 &&
        state.current.field.roster[3].stamina==(phase==19 ? 310 : 250) && state.current.field.selected_defenders==3 &&
        state.scheduling->selected_ids==std::array<std::uint8_t,5>{16,19,20,0,0} && (phase==20 || (state.current.field.random_first==32 && state.current.field.random_second==42)) &&
        state.recovery->opposing_player==(player3_one_two_contact ? (state.area_defender_cursor==1 ? 19 : 16) : 20) && state.action->action==3 && state.action->cursor==162 && state.action->move_flags==3 &&
-       state.action->power==(phase==19 ? 5 : 8) && (phase==19 ? state.control->motion_requested==1 : state.control->motion_requested<=1) &&
+       state.action->power==(phase==19 ? 5 : player3_one_two_contact && state.current.field.motion[field_motion_index(19)].status==6 ? 7 : 8) && (phase==19 ? state.control->motion_requested==1 : state.control->motion_requested<=1) &&
        state.saved_ball_flight_flag==1 && state.area_defender_cursor<=(player3_one_two_contact ? 1 : 0) && (!state.area_contact || player3_one_two_contact);
     if(state.human_defense_choices && !player3_one_two_choices && !player7_shot_choices && !player7_shot36_choices && ((phase!=19 && phase!=20) || !state.score || !state.action || !state.recovery || !state.scheduling || !state.control || !state.experience ||
        state.human_defense_choices->actions!=std::array<std::uint8_t,5>{1,1,1,1,1} ||
@@ -775,7 +775,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        (phase==19 ? state.area_defender_cursor!=1 : state.area_defender_cursor>1) ||
        (phase==20 && state.area_defender_cursor==0 && state.control->last_carrier_cell!=0) || state.saved_ball_flight_flag!=1))
         throw std::invalid_argument("Invalid sampled five-defender dribble context");
-    if(player3_one_two_contact && (state.recovery->ball_variant!=2 || state.control->facing!=64 || state.control->motion_requested || state.control->last_carrier_cell!=128 ||
+    if(player3_one_two_contact && (state.recovery->ball_variant!=2 || (state.area_defender_cursor ? (state.control->facing!=0 && state.control->facing!=64) : state.control->facing!=64) || state.control->motion_requested || state.control->last_carrier_cell!=128 ||
        state.area_contact->cursor!=state.area_defender_cursor || state.area_contact->defense_action!=(state.area_defender_cursor ? 2 : 1) || state.area_contact->defense_subtype || state.area_contact->effect ||
        state.area_contact->defender_power!=8 || state.area_contact->cost!=(state.area_defender_cursor ? 50 : 60) || state.area_contact->weakened ||
        (state.area_sequence_result==255 ? (state.area_contact->strength || state.area_contact->loss || state.area_contact->score || state.area_contact->result) :

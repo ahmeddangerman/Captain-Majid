@@ -203,6 +203,20 @@ int main() {
         try { auto wrong=second_comparison; wrong.table_index=13; compare_player3_one_two_next_defender(second_defender,wrong); }
         catch (const std::invalid_argument&) { wrong_second_table_rejected = true; }
         if (!wrong_second_table_rejected) return 1;
+        const auto second_wait = advance_observed_nmi_events(second_compared, 0, {{ObservedClockEventKind::facing_sample,{},0}});
+        auto second_contact_input = second_wait.state;
+        second_contact_input.current.field.random_first = 10; second_contact_input.current.field.random_second = 211;
+        one_two_prelude.field_elapsed[5] = 1; one_two_prelude.defender_status[2] = 6;
+        const auto second_contact = advance_player3_one_two_next_contact(second_contact_input,one_two_prelude,one_two_experience);
+        if (second_contact.current.clock.remaining != 137 || second_contact.current.field.elapsed != 3 ||
+            second_contact.current.field.motion[field_motion_index(19)].status != 6 || second_contact.action->power != 7 ||
+            second_contact.experience->totals[3] != 6 || second_contact_input.action->power != 8) return 1;
+        std::istringstream second_contact_snapshot(bytes(second_contact));
+        if (bytes(load_phase_session(second_contact_snapshot)) != bytes(second_contact)) return 1;
+        bool repeated_second_contact_rejected = false;
+        try { advance_player3_one_two_next_contact(second_contact,one_two_prelude,one_two_experience); }
+        catch (const std::invalid_argument&) { repeated_second_contact_rejected = true; }
+        if (!repeated_second_contact_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;

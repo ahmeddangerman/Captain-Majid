@@ -1,4 +1,5 @@
 #include "captain/action_menu.hpp"
+#include "captain/action_strength.hpp"
 #include "captain/ball_recovery.hpp"
 #include "captain/defender_selection.hpp"
 #include "captain/defensive_move_inspection.hpp"
@@ -690,6 +691,24 @@ PhaseSessionState advance_player3_one_two_contact(const PhaseSessionState& input
        applied.state.field.motion[field_motion_index(16)].status!=6)
         throw std::invalid_argument("Unsupported player3 one-two contact clock");
     auto state=input; state.current=applied.state; state.experience=reward.state; validate_phase_session(state); return state;
+}
+PhaseSessionState advance_player3_one_two_next_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || !input.area_contact || !input.experience ||
+       input.action->action!=3 || input.area_defender_cursor!=1 || input.recovery->opposing_player!=19 || input.area_sequence_result!=1 ||
+       input.current.field.random_first!=10 || input.current.field.random_second!=211 || input.current.field.elapsed!=2 || input.control->facing ||
+       input.current.field.motion[field_motion_index(19)].status || prelude.field_elapsed[5]!=1 || prelude.defender_status[2]!=6)
+        throw std::invalid_argument("Player3 one-two second contact needs its captured result boundary");
+    const auto reward=award_player_experience(*input.experience,input.current.field.roster[3].type,1,experience);
+    if(!reward.slot || *reward.slot!=3 || reward.award!=3) throw std::invalid_argument("Unsupported player3 second contact experience");
+    const auto applied=apply_contact_prelude({input.current,19,2,true},prelude);
+    if(applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready || applied.state.clock.remaining!=137 ||
+       applied.state.field.motion[field_motion_index(19)].status!=6)
+        throw std::invalid_argument("Unsupported player3 second contact clock");
+    auto state=input; state.current=applied.state; state.experience=reward.state;
+    state.action->power=reduce_action_strength(state.action->power,state.area_contact->loss);
+    if(state.action->power!=7) throw std::invalid_argument("Unsupported player3 one-two power reduction");
+    validate_phase_session(state); return state;
 }
 PhaseSessionState prepare_player3_one_two_next_defender(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);
