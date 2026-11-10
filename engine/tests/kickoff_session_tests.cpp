@@ -2010,6 +2010,15 @@ int main(){try{using namespace captain;
  rejects([&]{finish_postgoal_return_defender(defender_clock);});
  auto bad_defender_clock=defender_clock_content;bad_defender_clock.defender_status[2]=0;
  rejects([&]{advance_postgoal_defender_clock(defender_clock_input,bad_defender_clock);});
+ const auto defender_received=receive_postgoal_return_flight(defender_done);
+ check(defender_received.phase==FieldSessionPhase::postgoal_opponent_return_received &&
+       defender_received.current.field.ball_owner==18 && defender_received.current.field.ball_x==117 &&
+       defender_received.current.field.ball_y==108 && (defender_received.ball_trajectory->x&255)==248,
+       "Return-flight reception transfers the ball to player18 at the observed player position");
+ const auto defender_received_bytes=bytes(defender_received);std::istringstream defender_received_stream(defender_received_bytes);
+ check(bytes(load_phase_session(defender_received_stream))==defender_received_bytes,"Return-flight reception snapshot roundtrips");
+ rejects([&]{receive_postgoal_return_flight(defender_clock);});
+ rejects([&]{receive_postgoal_return_flight(defender_received);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

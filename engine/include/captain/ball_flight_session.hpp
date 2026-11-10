@@ -54,6 +54,7 @@ PhaseSessionState compare_postgoal_return_defender(const PhaseSessionState& inpu
 PhaseSessionState begin_postgoal_defender_result_wait(const PhaseSessionState& input);
 PhaseSessionState advance_postgoal_defender_clock(const PhaseSessionState& input,const ContactPreludeContent& content);
 PhaseSessionState finish_postgoal_return_defender(const PhaseSessionState& input);
+PhaseSessionState receive_postgoal_return_flight(const PhaseSessionState& input);
 PhaseSessionState compare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_power,
  std::uint8_t captured_context,const AreaPassComparisonContent& content);
 PhaseSessionState restore_area_pass_ball_variant(const PhaseSessionState& input);

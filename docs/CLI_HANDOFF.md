@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: action3 return received
+
+The captured startup now matches original through the action3 return reception at bank26:$8107: player18 becomes owner and ball x changes from116 to117, preserving the fractional bytes and trajectory. Phase413 matches represented fields and score. A longer isolated original trace matches the earlier overlapping checkpoints and continues through presentation, field control and later decisions, all original-only after reception. Private evidence: ../Captain-Majid-analysis/postgoal-return-reception-20261110 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-continuation-20261110/trace. Timing/presentation remain supplied; overall progress is unmeasured and a complete playable match unsupported. Next compare the reception presentation and return to control. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: defender result0 cleanup
 
 The captured action3 defender result0 now matches original through $888A: the shared contact prelude sets defender8 status6 and moves clock157 to156; three recorded NMI random/travel pairs lead to index154; cleanup resets elapsed and clears the selected defender prefix, retaining cursor1. Phases411/412 match represented fields, score and trajectory at original $C9C5, $8882 and $888A. Private evidence: ../Captain-Majid-analysis/postgoal-defender-clock-20261110. The original flight continuation after this is not yet native-compared. Timing and presentation remain supplied; a complete playable match is unsupported and overall progress unmeasured. Next trace continuation after $E7CF. Suggested model GPT-6.1 Terra High.

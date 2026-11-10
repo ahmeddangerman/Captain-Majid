@@ -112,7 +112,7 @@ enum class FieldSessionPhase : std::uint16_t {
     postgoal_opponent_return_flight_callback = 406, postgoal_opponent_return_flight_arrived = 407,
     postgoal_opponent_return_flight_snapped = 408, postgoal_opponent_return_defender_compared = 409,
     postgoal_opponent_return_defender_wait = 410, postgoal_opponent_return_defender_clocked = 411,
-    postgoal_opponent_return_defender_done = 412
+    postgoal_opponent_return_defender_done = 412, postgoal_opponent_return_received = 413
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

@@ -191,6 +191,19 @@ PhaseSessionState finish_postgoal_return_defender(const PhaseSessionState& input
  state.scheduling->selected_ids.fill(0);state.current.field.elapsed=0;
  state.phase=FieldSessionPhase::postgoal_opponent_return_defender_done;validate_phase_session(state);return state;
 }
+PhaseSessionState receive_postgoal_return_flight(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_defender_done || input.area_ai_target->recipient!=18)
+  throw std::invalid_argument("Post-goal return reception requires the completed observed defender");
+ const auto& recipient=input.current.field.motion[field_motion_index(18)];
+ const auto x=static_cast<std::uint8_t>(recipient.x>>8),y=static_cast<std::uint8_t>(recipient.y>>8);
+ if(x!=117 || y!=108 || field_cell_at(x,y)!=input.current.field.ball_cell)
+  throw std::invalid_argument("Unobserved post-goal return recipient position");
+ auto state=input;state.current.field.ball_owner=18;state.current.field.ball_x=x;state.current.field.ball_y=y;
+ state.ball_trajectory->x=static_cast<std::uint16_t>((unsigned(x)<<8)|(state.ball_trajectory->x&255u));
+ state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(y)<<8)|(state.ball_trajectory->y&255u));
+ state.phase=FieldSessionPhase::postgoal_opponent_return_received;validate_phase_session(state);return state;
+}
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {

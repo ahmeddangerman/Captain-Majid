@@ -113,3 +113,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Trace original status, clock, NMI ordering and selected-defender cleanup.
 - [x] Test and connect the existing contact clock and guarded list cleanup, including snapshots.
 - [x] Compare against original boundaries, verify and document the next continuation.
+
+## Task 15: Compare return-flight recipient possession
+
+- [x] Extend the isolated original trace and verify its overlap with the prior capture.
+- [x] Test and implement the observed recipient possession and ball position change.
+- [x] Compare to the original post-arrival boundary, verify and document remaining presentation.
