@@ -1,5 +1,13 @@
 # Development log
 
+## 2026-11-10 - Third return encounter later wait
+
+Using the existing observed sequence support, 74 additional recorded random/travel pairs carry the matched encounter from 85BF to original C600, random index19. Represented fields and score match at the boundary. Private evidence: `../Captain-Majid-analysis/third-return-contact-later-wait-20261110`. Timing and presentation remain supplied; C600 continuation remains unmatched. No further engine changes or new suite run were needed for this trace comparison. Overall progress is unmeasured and a complete playable match remains unsupported. Next inspect C600 and subsequent encounter state changes. Suggested model GPT-6.1 Terra High.
+
+## 2026-11-10 - Third return encounter presentation wait
+
+From the matched E4BE encounter, 21 recorded random/travel pairs and sampled motion1-to0 and display2-to0 reproduce original 85BF represented fields and score at random index201. Guarded presentation-sample acceptance and atomic rejection checks cover the recorded owner18/defender5/clock153 context. Private evidence: `../Captain-Majid-analysis/third-return-contact-wait-v2-20261110`. This is supplied presentation state, not a running original presentation engine. Original continuation after 85BF remains unmatched. Windows build and all 62 registered checks passed via direct execution. Overall progress is unmeasured; full match and autonomous AI/timing remain unsupported. Next trace the encounter continuation. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Third post-return decision to encounter
 
 The eleventh poll reaches a pending opponent decision; supplying the observed action2/subtype0 changes the preserved action3 to action2 and matches original E1E7 represented fields and score. The following captured clock tick matches 154 to153, including three random/travel pairs and one supplied mode sample. The subsequent 22-player round matches original E4BE encounter, random index180, including five supplied mode samples. Private evidence: `../Captain-Majid-analysis/postgoal-third-return-choice-20261110.cmjsession`, `../Captain-Majid-analysis/postgoal-third-return-clock-v2-20261110` and `../Captain-Majid-analysis/postgoal-third-return-world-20261110`. Guarded acceptance and atomic rejection checks were added. Windows build and all 62 registered checks passed via direct execution. AI choice, random/timing and presentation remain supplied; encounter continuation and a complete playable match remain unsupported. Overall progress is unmeasured. Next compare the encounter transition. Suggested model GPT-6.1 Terra High.

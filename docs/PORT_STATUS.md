@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** The third return encounter wait now matches through original C600 with 74 further recorded random/travel pairs. The subsequent encounter, autonomous AI/timing and a complete match remain unsupported. Overall progress is unmeasured.
+
+**Latest match checkpoint (2026-11-10):** The third return encounter now matches through the sampled pre-presentation wait to original 85BF, using 21 recorded random/travel pairs and motion/display samples. Later encounter continuation, autonomous AI/timing and a complete playable match remain unsupported. All 62 registered Windows checks passed; overall progress is unmeasured.
+
 **Latest match checkpoint (2026-11-10):** Captured action2 choice, clock154 to153 and a 22-player field round now match original through E4BE encounter with supplied inputs and presentation samples. Encounter continuation, autonomous AI/timing and a complete playable match remain unsupported. Windows 62 registered checks passed; overall progress is unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Ten more post-return control polls at clock154 match the original with recorded samples. At the eleventh boundary, original action.id changes from 3 to 2 while native retains 3; that decision remains unmatched. Autonomous AI/timing and a complete playable match remain unsupported; overall progress is unmeasured.

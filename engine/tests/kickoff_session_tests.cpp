@@ -2084,6 +2084,20 @@ int main(){try{using namespace captain;
        bytes(third_choice_input)==third_choice_before,"Captured third return decision preserves its input");
  rejects([&]{capture_sampled_field_ai_choice(third_choice_input,1,0);});
  check(bytes(third_choice_input)==third_choice_before,"Rejected third return decision is atomic");
+ auto third_contact_input=third_choice_input;
+ third_contact_input.phase=FieldSessionPhase::field_contact_pending;
+ third_contact_input.current.clock.remaining=153;
+ third_contact_input.current.field.selected_defenders=1;
+ third_contact_input.scheduling->selected_ids={5,0,0,0,0};
+ third_contact_input.action->action=2;
+ third_contact_input.control->motion_requested=1;third_contact_input.control->display_parameter=2;
+ const auto third_contact_before=bytes(third_contact_input);
+ const auto third_contact_wait=advance_observed_nmi_events(third_contact_input,180,
+   {{ObservedClockEventKind::motion_sample,{},0},{ObservedClockEventKind::display_sample,{},0}});
+ check(third_contact_wait.state.control->motion_requested==0 && third_contact_wait.state.control->display_parameter==0 &&
+       bytes(third_contact_input)==third_contact_before,"Captured contact samples preserve input");
+ rejects([&]{advance_observed_nmi_events(third_contact_input,180,{{ObservedClockEventKind::motion_sample,{},2}});});
+ check(bytes(third_contact_input)==third_contact_before,"Rejected contact sample is atomic");
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

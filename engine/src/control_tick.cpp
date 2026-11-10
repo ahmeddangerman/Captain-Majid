@@ -307,6 +307,12 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.clock.remaining == 160 && input.current.clock.extra_time == 0 &&
         input.current.field.side == 11 && input.current.field.ball_owner == 18 &&
         input.kickoff_receiver && *input.kickoff_receiver == 18;
+    const bool captured_return_contact = input.phase == FieldSessionPhase::field_contact_pending && input.score && input.action && input.control && input.scheduling &&
+        input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 &&
+        input.current.clock.remaining == 153 && input.current.clock.extra_time == 0 &&
+        input.current.field.side == 11 && input.current.field.ball_owner == 18 && input.current.field.ball_x == 110 &&
+        input.current.field.ball_y == 108 && input.current.field.ball_cell == 87 && input.current.field.selected_defenders == 1 &&
+        input.scheduling->selected_ids[0] == 5 && input.action->action == 2;
     if ((!captured_kickoff && !captured_kickoff_control && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
@@ -341,6 +347,12 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::facing_sample && input.phase == FieldSessionPhase::postgoal_opponent_field_moved) {
             if (event.held != 64) throw std::invalid_argument("Only the observed opponent action facing is supported");
             state.control->facing = event.held;
+        } else if (event.kind == ObservedClockEventKind::motion_sample && captured_return_contact) {
+            if (event.held != 0 || state.control->motion_requested != 1) throw std::invalid_argument("Unsupported return contact motion sample");
+            state.control->motion_requested = 0;
+        } else if (event.kind == ObservedClockEventKind::display_sample && captured_return_contact) {
+            if (event.held != 0 || state.control->display_parameter != 2) throw std::invalid_argument("Unsupported return contact display sample");
+            state.control->display_parameter = 0;
         } else if (event.kind == ObservedClockEventKind::motion_sample && input.phase == FieldSessionPhase::postgoal_opponent_field_moved) {
             if (event.held != 0) throw std::invalid_argument("Only the observed opponent action motion is supported");
             state.control->motion_requested = event.held;

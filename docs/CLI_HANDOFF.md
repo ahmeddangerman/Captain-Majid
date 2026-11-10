@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: third return encounter at C600
+
+After the 85BF encounter wait, 74 further supplied random/travel pairs match original C600 represented fields and score, random index19. Private evidence: `../Captain-Majid-analysis/third-return-contact-later-wait-20261110`. Presentation/timing remain supplied and subsequent encounter transitions remain unmatched. The prior increment's Windows build and all 62 registered checks passed; this trace-only continuation made no further engine change. Overall progress is unmeasured and a complete match unsupported. Next inspect C600 and subsequent state changes. Suggested model GPT-6.1 Terra High.
+
+## Current stopping point - 2026-11-10: third return encounter wait
+
+From the matched E4BE encounter, 21 recorded random/travel pairs and sampled motion/display changes match original 85BF represented fields and score, random index201. Private evidence is `../Captain-Majid-analysis/third-return-contact-wait-v2-20261110`. The samples are supplied; the original presentation engine is not running. Later encounter continuation remains unmatched. Windows build and 62 registered checks passed. Overall progress is unmeasured and a complete playable match is unsupported. Next trace continuation after 85BF. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: third post-return encounter
 
 The third post-return cycle now matches eleven polls and the captured opponent action2 choice at E1E7, the 154-to-153 clock, and a 22-player field round to original E4BE encounter at random index180. Represented fields and score match at these boundaries. Evidence stays private in `../Captain-Majid-analysis/postgoal-third-return-choice-20261110.cmjsession`, `../Captain-Majid-analysis/postgoal-third-return-clock-v2-20261110` and `../Captain-Majid-analysis/postgoal-third-return-world-20261110`. Choice, timing and presentation samples are supplied. The encounter itself is unverified; 62 registered Windows checks passed. Overall progress is unmeasured and a complete match remains unsupported. Next compare encounter transition. Suggested model GPT-6.1 Terra High.
