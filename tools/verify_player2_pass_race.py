@@ -174,7 +174,55 @@ def main():
     if re.findall(r'final random index (\d+);', command.stdout) != ['170']:
         raise ValueError('Opponent recovery wait random index differs')
     compare_represented(owner_wait.read_bytes(), export_session(ram(21889)), True, 'player2', 'race.control_entry')
-    print('Matched timeout, opponent20 recovery and captured presentation to control entry; random index 170.')
+    setup_events = args.output.with_name(args.output.stem + '-setup-wait.events.txt')
+    setup_wait = args.output.with_name(args.output.stem + '-setup-wait.cmjsession')
+    if setup_events.exists() or setup_wait.exists():
+        raise ValueError('Control setup evidence outputs must not exist')
+    rows, last = menu_wait_events(lines, pcs, ram, 21889, 22253)
+    points = [i for i in range(21890, 22253) if pcs[i] in ('C9C5', 'E3CA')]
+    if len(rows) != 124 or len(points) != len(rows) or last != 22252:
+        raise ValueError('Unexpected opponent control presentation ordering')
+    addresses = (('F', 0x517), ('M', 0x532))
+    values = {key: ram(21889)[address] for key, address in addresses}
+    samples = []; ordered = []
+    for row, point in zip(rows, points):
+        for key, address in addresses:
+            value = ram(point)[address]
+            if value != values[key]:
+                values[key] = value; samples.append((key, value)); ordered.append(f'{key} {value}')
+        ordered.append(row)
+    if samples != [('F', 0), ('M', 1), ('M', 0)]:
+        raise ValueError(f'Unexpected opponent control presentation samples: {samples}')
+    setup_events.write_text('CMJNMISEQ1\n' + '\n'.join(ordered) + '\n')
+    command = subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(owner_wait.resolve()),
+                              '--advance-observed-nmi-sequence', str(setup_events.resolve()), '170',
+                              '--capture', str(setup_wait.resolve())], capture_output=True, text=True, check=True)
+    if re.findall(r'final random index (\d+);', command.stdout) != ['232']:
+        raise ValueError('Opponent control setup wait random index differs')
+    compare_represented(setup_wait.read_bytes(), export_session(ram(22252)), True, 'player2', 'race.pre_control_setup')
+    setup = args.output.with_name(args.output.stem + '-control-setup.cmjsession')
+    if setup.exists():
+        raise ValueError('Control setup output must not exist')
+    subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(setup_wait.resolve()),
+                    '--setup-control', '--capture', str(setup.resolve())], capture_output=True, text=True, check=True)
+    prepared = setup.read_bytes()
+    if int.from_bytes(prepared[258:260], 'little') != 434:
+        raise ValueError('Unexpected opponent control setup phase')
+    compare_represented(prepared, export_session(ram(22253)), True, 'player2', 'race.control_setup')
+    if prepared[413] != ram(22253)[0x616] or prepared[418] != ram(22253)[0x61b]:
+        raise ValueError('Prepared control cursor or flight flag differs')
+    replay = subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(setup.resolve()),
+                             '--setup-control', '--capture', str(rejected_path.resolve())], capture_output=True, text=True)
+    if replay.returncode == 0 or rejected_path.exists() or setup.read_bytes() != prepared:
+        raise ValueError('Repeated control setup did not reject atomically')
+    setup_roundtrip = args.output.with_name(args.output.stem + '-setup-roundtrip.cmjsession')
+    if setup_roundtrip.exists():
+        raise ValueError('Setup roundtrip output must not exist')
+    subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(setup.resolve()),
+                    '--capture', str(setup_roundtrip.resolve())], capture_output=True, text=True, check=True)
+    if setup_roundtrip.read_bytes() != prepared:
+        raise ValueError('Control setup snapshot roundtrip differs')
+    print('Matched opponent20 recovery, captured presentation and control setup; random index 232.')
 
 
 if __name__ == '__main__':

@@ -3,6 +3,15 @@
 #include <stdexcept>
 
 namespace captain {
+ControlSetupResult prepare_player2_opponent_control(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_same_cell_pass_recovered_owner || input.current.field.random_first!=128 ||
+    input.current.field.random_second!=104 || input.control->facing || input.control->motion_requested)
+  throw std::invalid_argument("Opponent control requires the observed pre-setup boundary");
+ auto prepared=input;prepared.phase=FieldSessionPhase::player_control;prepared.clearance_race.reset();prepared.area_defender_cursor=0;
+ auto result=prepare_session_control(prepared);result.state.area_defender_cursor=input.area_defender_cursor;
+ result.state.phase=FieldSessionPhase::player2_opponent_control_ready;validate_phase_session(result.state);return result;
+}
 ControlSetupResult prepare_player2_one_two_control(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::player3_one_two_ball_recovered || input.current.field.random_first!=123 ||

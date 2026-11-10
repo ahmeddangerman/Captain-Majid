@@ -56,6 +56,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::player2_same_cell_pass_first_round: return "player2 same-cell pass first round; original random event pending";
     case captain::FieldSessionPhase::player2_same_cell_pass_recovery_moved: return "player2 same-cell pass recovery movement complete";
     case captain::FieldSessionPhase::player2_same_cell_pass_recovered_owner: return "player2 same-cell pass recovered by opponent";
+    case captain::FieldSessionPhase::player2_opponent_control_ready: return "opponent20 control prepared";
     case captain::FieldSessionPhase::third_return_defender_compared: return "third return defender comparison pending result";
     case captain::FieldSessionPhase::third_return_defender_result: return "third return defender result2 pending contact";
     case captain::FieldSessionPhase::third_return_contact_clocked: return "third return result2 contact clock complete";
@@ -649,7 +650,9 @@ void continue_recovery(captain::PhaseSessionState& state) {
               << "; frozen development inputs, no presentation/NMI emulation.\n";
 }
 void setup_control(captain::PhaseSessionState& state) {
-    const auto result = state.phase==captain::FieldSessionPhase::postgoal_opponent_return_reception_wait
+    const auto result = state.phase==captain::FieldSessionPhase::player2_same_cell_pass_recovered_owner
+        ? captain::prepare_player2_opponent_control(state)
+        : state.phase==captain::FieldSessionPhase::postgoal_opponent_return_reception_wait
         ? captain::prepare_postgoal_return_control(state)
         : state.phase==captain::FieldSessionPhase::player3_one_two_ball_recovered
             ? captain::prepare_player2_one_two_control(state)
