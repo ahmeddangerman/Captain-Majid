@@ -16,6 +16,8 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--comparison-content', nargs=7, type=int, required=True,
                         metavar=('RANGE','OFFSET','ELIGIBLE','T0','T1','T2','T3'))
+    parser.add_argument('--next-comparison-content', nargs=7, type=int, required=True,
+                        metavar=('RANGE','OFFSET','ELIGIBLE','T0','T1','T2','T3'))
     args = parser.parse_args()
     lines, pcs, ram = trace_data(args.trace_directory)
     start, final = 14986, 15288
@@ -157,7 +159,44 @@ def main():
     if run.returncode:
         raise RuntimeError(run.stderr.strip())
     compare_choices(clocked, 15463, 20)
-    print(f'Matched one-two first defender and contact clock; random index {ram(last)[0xe1]}.')
+    rows, last = menu_wait_events(lines, pcs, ram, 15462, 15475)
+    events = output / 'second-defender-wait-events.txt'
+    events.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
+    waiting = output / 'second-defender-wait.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(clocked),
+                          '--advance-observed-nmi-sequence', str(events), str(ram(15463)[0xe1]),
+                          '--capture', str(waiting)], capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    if last != 15474 or re.findall(r'final random index (\d+);', run.stdout) != [str(ram(last)[0xe1])]:
+        raise ValueError('Second defender wait random index differs')
+    compare_choices(waiting, last, 20)
+    defender = output / 'second-defender-prepared.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(waiting),
+                          '--prepare-player3-one-two-next-defender', '--capture', str(defender)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    compare_choices(defender, 15477, 20)
+    actual = defender.read_bytes(); observed = ram(15477)
+    expected = bytes((1,1,2,0,observed[0x444],observed[0x32],observed[0x33],observed[0x43f],observed[0x440],0,0,0,0,0))
+    if actual[398:412] != expected:
+        raise ValueError('Second defender preparation differs from original')
+    compared = output / 'second-defender-compared.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(defender),
+                          '--compare-player3-one-two-next-defender', *map(str,args.next_comparison_content), '--capture', str(compared)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    compare_choices(compared, 15480, 20)
+    actual = compared.read_bytes(); original = ram(15480)
+    registers = re.search(r'\bA=([0-9A-F]{2}).*\bY=([0-9A-F]{2})', lines[15480])
+    if registers is None:
+        raise ValueError('Missing second defender original result registers')
+    score, result = (int(value,16) for value in registers.groups())
+    if actual[407:412] != bytes((original[0x71],original[0x619],score,result,0)) or actual[413] != result:
+        raise ValueError('Second defender comparison differs from original')
+    print(f'Matched one-two through second defender result {result}; random index {ram(last)[0xe1]}.')
 
 
 if __name__ == '__main__':

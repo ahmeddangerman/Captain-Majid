@@ -187,6 +187,22 @@ int main() {
         try { advance_player3_one_two_contact(one_two_contact,one_two_prelude,one_two_experience); }
         catch (const std::invalid_argument&) { repeated_one_two_contact_rejected = true; }
         if (!repeated_one_two_contact_rejected) return 1;
+        auto second_defender_input = one_two_contact;
+        second_defender_input.current.field.random_first = 93; second_defender_input.current.field.random_second = 144;
+        one_two_defense.skill_selectors[2][0] = 1; one_two_defense.moves[2].push_back({0,0,50,0});
+        const auto second_defender = prepare_player3_one_two_next_defender(second_defender_input,one_two_profiles,one_two_defense);
+        if (second_defender.recovery->opposing_player != 19 || second_defender.area_defender_cursor != 1 ||
+            second_defender.area_contact->defense_action != 2 || second_defender_input.recovery->opposing_player != 16) return 1;
+        const FieldComparisonSelection second_comparison{14,255,64,false,{200,100,50,0}};
+        const auto second_compared = compare_player3_one_two_next_defender(second_defender,second_comparison);
+        if (second_compared.area_contact->strength != 5 || second_compared.area_contact->score != 102 ||
+            second_compared.area_sequence_result != 1 || second_defender.area_sequence_result != 255) return 1;
+        std::istringstream second_compared_snapshot(bytes(second_compared));
+        if (bytes(load_phase_session(second_compared_snapshot)) != bytes(second_compared)) return 1;
+        bool wrong_second_table_rejected = false;
+        try { auto wrong=second_comparison; wrong.table_index=13; compare_player3_one_two_next_defender(second_defender,wrong); }
+        catch (const std::invalid_argument&) { wrong_second_table_rejected = true; }
+        if (!wrong_second_table_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;
