@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Pre-control presentation samples
+
+Following original $E0DF, another 62 captured random/travel pairs and ordered facing64 to0, motion0 to1 to0 samples take phase414 to the last $E406 before field-control setup. Native represented fields, score and trajectory match at random index67. Private evidence: ../Captain-Majid-analysis/postgoal-field-entry-wait-20261110. A fresh Windows build and all 62 registered checks passed. These are supplied presentation samples, not a running original presentation engine. Original control setup and subsequent polling remain unmatched. Overall progress remains unmeasured and a complete playable match is unsupported. Next compare the control setup boundary. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Return reception field entry
 
 After player18 receives the action3 return, a guarded phase414 preserves possession and the flight context through 107 recorded random/travel pairs and one facing sample changing0 to64. Native represented fields, score and trajectory match original $E0DF at random index5. Private evidence: ../Captain-Majid-analysis/postgoal-reception-wait-20261110. A fresh Windows build and all 62 registered checks passed. This acknowledges captured presentation timing; it does not run the original presentation engine. The later field-control setup is original-only. Overall progress remains unmeasured and a complete playable match is unsupported. Next compare control setup. Suggested model GPT-6.1 Terra High.

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: pre-control presentation
+
+The action3 return replay now matches through the final observed pre-setup wait after original $E0DF: another 62 supplied random/travel pairs and facing64 to0, motion0 to1 to0, give random index67. Phase414 matches represented fields, score and trajectory at the final $E406 before setup. Private evidence: ../Captain-Majid-analysis/postgoal-field-entry-wait-20261110. Subsequent setup/control is original-only; presentation and timing remain supplied. Overall progress is unmeasured, and a complete playable match remains unsupported. Next compare control setup and the first poll. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: reception field entry
 
 After player18 receives the action3 return, phase414 matches original $E0DF after 107 recorded random/travel pairs and a supplied facing change to64. Random index5, represented fields, score and trajectory match. Private evidence: ../Captain-Majid-analysis/postgoal-reception-wait-20261110. The later return to control is original-only; timing and presentation are supplied, not autonomously executed. Overall progress is unmeasured and a complete playable match unsupported. Next compare the observed field-control entry and setup. Suggested model GPT-6.1 Terra High.

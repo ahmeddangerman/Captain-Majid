@@ -125,3 +125,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Identify the recorded random/travel and facing events before original field entry.
 - [x] Test and implement a guarded wait retaining player18 possession.
 - [x] Compare the native state at original $E0DF, verify and document the next control transition.
+
+## Task 17: Compare field entry presentation before setup
+
+- [x] Trace the original ordered facing and motion samples before control setup.
+- [x] Test and replay those recorded samples while retaining reception context.
+- [x] Compare the last pre-setup boundary, verify and document the setup boundary.

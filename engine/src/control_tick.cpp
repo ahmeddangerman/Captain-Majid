@@ -332,6 +332,9 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
+        } else if (event.kind == ObservedClockEventKind::motion_sample && input.phase == FieldSessionPhase::postgoal_opponent_return_reception_wait) {
+            if (event.held > 1) throw std::invalid_argument("Only observed reception presentation motion is supported");
+            state.control->motion_requested = event.held;
         } else if (event.kind == ObservedClockEventKind::facing_sample && (input.phase == FieldSessionPhase::postgoal_opponent_return_defender_wait || input.phase == FieldSessionPhase::postgoal_opponent_return_reception_wait)) {
             if (event.held != 0 && event.held != 64) throw std::invalid_argument("Only observed defender presentation facing is supported");
             state.control->facing = event.held;

@@ -454,7 +454,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        (phase>=403 && ((phase<=404 && (state.current.field.random_first!=236 || state.current.field.random_second!=69)) ||
         (state.current.field.motion[field_motion_index(18)].x>>8)!=117)) ||
        ((phase==399 || phase>=400) && ((phase==399 && (state.current.field.random_first!=176 || state.current.field.random_second!=26)) ||
-        (phase<=409 ? state.control->facing!=64 : (state.control->facing!=64 && state.control->facing!=0)) || state.control->display_parameter || state.control->motion_requested || state.recovery->ball_variant!=1)) ||
+        (phase<=409 ? state.control->facing!=64 : (state.control->facing!=64 && state.control->facing!=0)) || state.control->display_parameter || (phase==414 ? state.control->motion_requested>1 : state.control->motion_requested!=0) || state.recovery->ball_variant!=1)) ||
        state.control->controlled_player!=10 || state.control->last_carrier_cell!=(phase>=399 ? 128 : phase>=397 ? 0 : 135) || state.action->action!=3 || state.action->move_effect || state.recovery->attack_subtype ||
        state.area_ai_target->recipient!=(phase>=404 ? 18 : 14) || state.area_ai_target->cell!=(phase>=405 ? 99 : phase>=400 ? 148 : 161) || state.area_ai_target->cost!=(phase>=393 ? 60 : 0) ||
        state.action->power!=(phase>=393 ? 12 : 11) || state.action->move_flags!=(phase>=393 ? 3 : 0)))

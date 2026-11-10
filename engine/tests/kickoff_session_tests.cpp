@@ -2029,6 +2029,11 @@ int main(){try{using namespace captain;
  rejects([&]{begin_postgoal_return_reception_wait(defender_done);});
  rejects([&]{begin_postgoal_return_reception_wait(reception_wait);});
  rejects([&]{advance_observed_nmi_events(reception_wait,154,{{ObservedClockEventKind::facing_sample,{},1}});});
+ const auto reception_motion=advance_observed_nmi_events(reception_sample.state,154,
+  {{ObservedClockEventKind::facing_sample,{},0},{ObservedClockEventKind::motion_sample,{},1},{ObservedClockEventKind::motion_sample,{},0}});
+ check(reception_motion.state.control->facing==0 && reception_motion.state.control->motion_requested==0,
+       "Field-entry presentation accepts the observed facing and motion samples in order");
+ rejects([&]{advance_observed_nmi_events(reception_wait,154,{{ObservedClockEventKind::motion_sample,{},2}});});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});
