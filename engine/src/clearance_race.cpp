@@ -38,6 +38,39 @@ FieldLooseBallRaceResult resolve_field_loose_ball_race(const FieldPhaseState& in
     } while(remaining!=0);
     return {std::move(field),rounds,remaining,active,other,winner};
 }
+PhaseSessionState begin_player2_same_cell_pass_race(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,const ClearanceRaceContent& content) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_pass_flight_target || !input.sampled_field_pass ||
+       input.sampled_field_pass->recipient!=255 || input.sampled_field_pass->destination!=input.current.field.ball_cell ||
+       !input.score || input.score->left_goals!=1 || input.score->right_goals || input.current.field.ball_owner!=2 ||
+       input.current.field.ball_x!=104 || input.current.field.ball_y!=164 || input.current.field.ball_cell!=94 ||
+       input.current.clock.remaining!=128 || input.ordinary_pass_defenses->count!=1 || input.sampled_field_pass->distance!=2 ||
+       input.current.field.random_first!=56 || input.current.field.random_second!=51)
+        throw std::invalid_argument("Unsupported player2 same-cell pass timeout");
+    auto numeric=resolve_field_loose_ball_race(input.current.field,input.recovery->opposing_player,
+        1,mappings,movement,content);
+    if(numeric.rounds!=1 || numeric.remaining || numeric.active_candidate!=3 || numeric.opposing_candidate!=20 || numeric.winner)
+        throw std::invalid_argument("Unobserved same-cell contest outcome");
+    auto state=input; state.current.field=std::move(numeric.field);
+    state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
+    state.area_defender_cursor=input.ordinary_pass_defenses->count;state.area_sequence_result=255;state.area_contact.reset();
+    state.ordinary_pass_candidates.reset();state.ordinary_pass_recipient.reset();state.ordinary_pass_defenses.reset();
+    state.sampled_field_pass.reset();state.human_pass_cursor.reset();state.human_pass_steps=0;
+    state.saved_ball_flight_flag=1;state.clearance_race=ClearanceRaceContext{1,numeric.active_candidate,numeric.opposing_candidate};
+    state.phase=FieldSessionPhase::player2_same_cell_pass_first_round;validate_phase_session(state);return state;
+}
+PhaseSessionState finish_player2_same_cell_pass_race(const PhaseSessionState& input,
+    const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,const ClearanceRaceContent& content) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_same_cell_pass_first_round || input.current.field.random_first!=203 || input.current.field.random_second!=142)
+        throw std::invalid_argument("The observed race random event must precede the second round");
+    auto numeric=resolve_field_loose_ball_race(input.current.field,input.recovery->opposing_player,1,mappings,movement,content);
+    if(numeric.rounds!=1 || numeric.remaining || numeric.active_candidate!=3 || numeric.opposing_candidate!=20 || numeric.winner)
+        throw std::invalid_argument("Unobserved same-cell second round");
+    auto state=input;state.current.field=std::move(numeric.field);state.clearance_race->remaining=0;
+    state.phase=FieldSessionPhase::player2_same_cell_pass_timeout;validate_phase_session(state);return state;
+}
 PhaseSessionState resolve_ordinary_free_pass_contest(const PhaseSessionState& input,
     const PlayerProfileMappings& mappings,const FieldPhaseContent& movement,const ClearanceRaceContent& content) {
     validate_phase_session(input);

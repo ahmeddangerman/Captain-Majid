@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player2 saved pass timeout
+
+Player2's same-cell pass now saves phase430 after the first race round, accepts the explicitly captured random event (index70 to71), and saves phase431 after the second round times out. The verifier compares all represented session bytes at each original boundary and tests early/repeated rejection and timeout snapshot roundtrip. Latest private snapshot: `../Captain-Majid-analysis/player2-pass-race-split-v2-timeout.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Use `--advance-player2-same-cell-pass-race PRIVATE_RACE_TABLE` on phase344 or phase430; the observed random event must be supplied between the calls. Windows build and all 62 registered checks passed. Next match timeout presentation and opponent20 recovery; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player2 same-cell contest
 
 The shared numeric contest matches the original two-round timeout with candidates3/20 and all 20 motion records. Random index70 to71 occurs during the original contest and is not applied by the numeric helper. `tools/probe_pass_race.cpp` reads the phase344 snapshot, private pack and race table; `tools/verify_player2_pass_race.py` compares its output to the private instrumented trace. On this Windows build, compile with `clang++ -std=c++17 -Iengine/include tools/probe_pass_race.cpp build/libcaptain_core.a -o PRIVATE_PROBE.exe`; use the verifier's `--help` for inputs. Next design a guarded saved timeout continuation preserving observed random/presentation ordering, and compare opponent20 recovery. No engine changes in this increment; 62 checks last passed at the previous engine checkpoint. Full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
