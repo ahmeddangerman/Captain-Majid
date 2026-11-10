@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: loose-ball field movement
+
+The third-return result2 path now matches loose-ball jitter at C606 and the subsequent 22-player field movement to E0DE, random index6. Ball is (110,124), selected defenders cleared and elapsed0. Private evidence: `../Captain-Majid-analysis/third-return-jitter-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-recovery-movement-v2-20261110`. The original next chooses player7; that session transition is not yet matched. Timing/presentation remain supplied; 62 Windows checks passed, complete match unsupported and progress unmeasured. Next compare owner selection. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: result2 contact before loose ball
 
 The third-return result2 path matches 117 sampled presentation-wait pairs, shared contact and experience at original 8127, and three more sampled pairs to E406 immediately before C606. Clock153-to151, elapsed1-to3, owner18 status5, defender5 experience plus1 and represented fields/score match; random index240. Private evidence: `../Captain-Majid-analysis/third-return-result-wait-20261110`, `../Captain-Majid-analysis/third-return-contact-clock-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-postcontact-wait-20261110`. Timing and presentation are supplied; 62 Windows checks passed, complete match unsupported and progress unmeasured. Next compare the C606 loose-ball position and handoff. Suggested model GPT-6.1 Terra High.

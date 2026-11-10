@@ -1,6 +1,7 @@
 #include "captain/control_input.hpp"
 #include "captain/defender_selection.hpp"
 #include "captain/prepared_attack.hpp"
+#include "captain/ball_recovery.hpp"
 #include "captain/field_state_io.hpp"
 #include <sstream>
 #include <stdexcept>
@@ -829,6 +830,19 @@ PhaseSessionState advance_third_return_contact(const PhaseSessionState& input, c
   throw std::invalid_argument("Unverified third-return contact clock");
  auto state=input;state.current=applied.state;state.experience=reward.state;
  state.phase=FieldSessionPhase::third_return_contact_clocked;validate_phase_session(state);return state;
+}
+PhaseSessionState jitter_third_return_ball(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::third_return_contact_clocked || input.current.field.random_first!=118 || input.current.field.random_second!=100 ||
+    !input.recovery || !input.scheduling)throw std::invalid_argument("Third-return loose ball needs its captured recovery boundary");
+ const auto ball=jitter_loose_ball(input.current.field.ball_x,input.current.field.ball_y,
+  input.current.field.random_first,input.current.field.random_second);
+ if(!ball.inside_field || ball.x!=110 || ball.y!=124 || ball.x_jitter_control!=0)
+  throw std::invalid_argument("Unverified third-return loose ball position");
+ auto state=input;state.current.field.ball_x=ball.x;state.current.field.ball_y=ball.y;
+ state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);
+ state.recovery->x_jitter_control=ball.x_jitter_control;state.phase=FieldSessionPhase::third_return_ball_jittered;
+ validate_phase_session(state);return state;
 }
 PhaseSessionState compare_sampled_mixed_defender(const PhaseSessionState& input,const FieldComparisonContent& comparison) {
  validate_phase_session(input);

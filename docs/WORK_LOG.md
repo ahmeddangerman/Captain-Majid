@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Third-return loose-ball jitter and movement
+
+Shared jitter calculation matches original C606: random118/100 moves the loose ball from (110,108) to (110,124), resets jitter control and clears the selected defenders. The following 22-slot field movement, with recorded random/travel events, matches original E0DE at random index6 and elapsed0. Represented fields and score match both boundaries. Private evidence: `../Captain-Majid-analysis/third-return-jitter-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-recovery-movement-v2-20261110`. Unit tests cover guards, atomic errors and extended snapshot roundtrips. Windows build and 62 registered checks passed. The next original boundary selects player7, not yet connected; timing/presentation remain supplied, full match unsupported and overall progress unmeasured. Next compare loose-ball owner selection. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Third-return result2 contact clock
 
 From the classified defender result, 117 captured random/travel pairs and sampled motion0-to2-to16-to0 and facing0-to64 match the original pre-contact boundary. Shared contact/experience calculations then match original 8127: clock153-to151, elapsed1-to3, owner18 status5 and defender5 experience plus1. Three more supplied random/travel pairs match original E406 before C606 at random index240. Private evidence: `../Captain-Majid-analysis/third-return-result-wait-20261110`, `../Captain-Majid-analysis/third-return-contact-clock-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-postcontact-wait-20261110`. Tests cover sampled ordering, atomic rejection, clock/experience and snapshot roundtrip. Windows build and 62 registered checks passed. Timing/presentation remain supplied; loose-ball handoff and a complete match remain unsupported. Overall progress is unmeasured. Next compare the original C606 loose-ball position. Suggested model GPT-6.1 Terra High.

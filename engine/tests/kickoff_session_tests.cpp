@@ -2201,6 +2201,27 @@ int main(){try{using namespace captain;
  const auto third_postcontact_wait=advance_observed_nmi_events(third_clocked,237,{{ObservedClockEventKind::random,{0,0,0,true}}});
  check(third_postcontact_wait.state.phase==FieldSessionPhase::third_return_contact_clocked &&
        third_postcontact_wait.state.current.field.elapsed==3,"Post-contact wait preserves the clocked contact");
+ auto third_jitter_input=third_postcontact_wait.state;third_jitter_input.current.field.random_first=118;third_jitter_input.current.field.random_second=100;
+ const auto third_jitter_before=bytes(third_jitter_input);const auto third_jitter=jitter_third_return_ball(third_jitter_input);
+ check(third_jitter.phase==FieldSessionPhase::third_return_ball_jittered && third_jitter.current.field.ball_x==110 &&
+       third_jitter.current.field.ball_y==124 && third_jitter.current.field.selected_defenders==0 &&
+       third_jitter.scheduling->selected_ids==std::array<std::uint8_t,5>{0,0,0,0,0} && bytes(third_jitter_input)==third_jitter_before,
+       "Captured third return jitter positions the loose ball and clears defenders atomically");
+ const auto third_jitter_bytes=bytes(third_jitter);std::istringstream third_jitter_stream(third_jitter_bytes);
+ check(bytes(load_phase_session(third_jitter_stream))==third_jitter_bytes,"Third return jitter snapshot roundtrips");
+ auto bad_third_jitter=third_jitter_input;bad_third_jitter.current.field.random_first=117;
+ rejects([&]{jitter_third_return_ball(bad_third_jitter);});
+ auto third_movement_input=third_jitter;
+ for(unsigned id=0;id<22;++id)if(id!=5 && id!=18)third_movement_input.current.field.roster[id].type=1;
+ const auto third_movement_before=bytes(third_movement_input);
+ const auto third_movement=advance_observed_pass_field_movement(third_movement_input,profile_mappings,pass_movement_content,240,pass_movement_events);
+ check(third_movement.state.phase==FieldSessionPhase::third_return_recovery_field_moved && !third_movement.state.current.field.elapsed &&
+       bytes(third_movement_input)==third_movement_before,"Third return recovery movement preserves its input and finishes all slots");
+ auto bad_third_movement=pass_movement_events;bad_third_movement.pop_back();
+ rejects([&]{advance_observed_pass_field_movement(third_movement_input,profile_mappings,pass_movement_content,240,bad_third_movement);});
+ check(bytes(third_movement_input)==third_movement_before,"Rejected third return movement is atomic");
+ const auto third_movement_bytes=bytes(third_movement.state);std::istringstream third_movement_stream(third_movement_bytes);
+ check(bytes(load_phase_session(third_movement_stream))==third_movement_bytes,"Third return recovery movement snapshot roundtrips");
  auto bad_third_prelude=third_prelude;bad_third_prelude.field_elapsed[0]=1;
  rejects([&]{advance_third_return_contact(third_result_wait.state,bad_third_prelude,third_experience);});
  check(bytes(third_result_wait.state)==third_wait_bytes,"Rejected third return contact preserves input");

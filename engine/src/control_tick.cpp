@@ -438,7 +438,8 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     const bool recovery=input.phase==FieldSessionPhase::ordinary_return_shot_recovery_jittered;
     const bool goal_shot=input.phase==FieldSessionPhase::ordinary_return_goal_area_first_clock;
     const bool postgoal=input.phase==FieldSessionPhase::postgoal_opponent_dispatch;
-    if ((!shot && !recovery && !goal_shot && !postgoal && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
+    const bool third_return=input.phase==FieldSessionPhase::third_return_ball_jittered;
+    if ((!shot && !recovery && !goal_shot && !postgoal && !third_return && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
         throw std::invalid_argument("Observed field movement requires a supported dispatch and elapsed time");
     auto state=input;
     auto& field=state.current.field;
@@ -461,7 +462,7 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     }
     if (slot!=22) throw std::invalid_argument("Observed pass movement has incomplete player slots");
     field.elapsed=0;
-    state.phase=postgoal ? FieldSessionPhase::postgoal_opponent_field_moved : goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
+    state.phase=third_return ? FieldSessionPhase::third_return_recovery_field_moved : postgoal ? FieldSessionPhase::postgoal_opponent_field_moved : goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
     validate_phase_session(state);
     return {std::move(state),index};
 }
