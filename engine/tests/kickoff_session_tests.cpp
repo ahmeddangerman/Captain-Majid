@@ -2168,6 +2168,17 @@ int main(){try{using namespace captain;
        "Captured third return attack derives power and clears the observed scratch fields");
  auto bad_third_attack=third_attack_content;bad_third_attack.strength_curve.fill(10);
  rejects([&]{prepare_sampled_field_contact_attack(third_attack_choice,third_attack_profiles,bad_third_attack);});
+ auto third_defense_content=sampled_attack_content;third_defense_content.skill_selectors[0][0]=1;third_defense_content.moves[0]={{0,0,70,0}};third_defense_content.strength_curve.fill(8);
+ FieldComparisonContent third_comparison{};third_comparison.variation={{128,128}};third_comparison.eligibility={0};third_comparison.thresholds={160,96,64,0};
+ const auto third_defender_before=bytes(third_attack_prepared);
+ const auto third_defender_compared=compare_third_return_defender(third_attack_prepared,third_attack_profiles,third_defense_content,third_comparison);
+ check(third_defender_compared.phase==FieldSessionPhase::third_return_defender_compared && third_defender_compared.current.field.roster[5].stamina==330 &&
+       bytes(third_attack_prepared)==third_defender_before,"Third return comparison spends captured defender stamina atomically");
+ const auto third_defender_bytes=bytes(third_defender_compared);std::istringstream third_defender_stream(third_defender_bytes);
+ check(bytes(load_phase_session(third_defender_stream))==third_defender_bytes,"Third return defender comparison snapshot roundtrips");
+ auto invalid_third_comparison=third_comparison;invalid_third_comparison.variation[0][0]=0;
+ rejects([&]{compare_third_return_defender(third_attack_prepared,third_attack_profiles,third_defense_content,invalid_third_comparison);});
+ check(bytes(third_attack_prepared)==third_defender_before,"Rejected third return comparison preserves input");
  auto unobserved_registration=third_register_input;unobserved_registration.current.field.roster[5].type=8;
  rejects([&]{prepare_keeper_area_defense(unobserved_registration,field_menu);});
  rejects([&]{acknowledge_sampled_field_defense_prompt(third_presented,7);});

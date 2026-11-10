@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: third-return defender compared
+
+Native phase415 matches original 8132 before result classification: defender5 stamina400-to330, defender strength4, loss1 and score64 against incoming power4; represented fields and score match. The original next sets result2, which the native comparison calculates but has not yet committed as a session transition. Private evidence: `../Captain-Majid-analysis/verify-third-return-defender-20261110.py` and `../Captain-Majid-analysis/third-return-defender-compared-20261110.cmjsession`. Extended snapshot roundtrip and 62 Windows registered checks passed. Timing/presentation remain supplied; complete match unsupported and progress unmeasured. Next compare result2 classification and contact. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: third-return attacker prepared
 
 After defender confirmation, the captured action2 choice and shared attacker preparation match original through the second 8107 boundary: player18 type0/stamina0, base9, cost40, flags0 and power4. Represented fields and score match. Private evidence: `../Captain-Majid-analysis/third-return-action-choice-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-action-prepared-20261110.cmjsession`. Original 8132 shows defender5 stamina330 and comparison score64 but remains unmatched by a session transition. Timing/presentation are supplied; all 62 Windows checks passed; full match unsupported and progress unmeasured. Next compare defender preparation and outcome. Suggested model GPT-6.1 Terra High.

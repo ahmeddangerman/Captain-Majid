@@ -784,6 +784,30 @@ PhaseSessionState prepare_sampled_mixed_defender(const PhaseSessionState& input,
  auto state=input;state.recovery->opposing_player=3;state.control->last_carrier_cell=0;
  state.phase=FieldSessionPhase::sampled_mixed_defender_prepared;validate_phase_session(state);return state;
 }
+PhaseSessionState compare_third_return_defender(const PhaseSessionState& input, const FieldPlayerProfiles& profiles,
+ const FieldDefenseContent& defense, const FieldComparisonContent& comparison) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::sampled_field_contact_ai_prepared || !input.score || input.score->left_goals!=1 || input.score->right_goals ||
+    input.current.clock.remaining!=153 || input.current.field.ball_owner!=18 || input.current.field.ball_cell!=87 ||
+    input.current.field.random_first!=75 || input.current.field.random_second!=195 || !input.scheduling || input.scheduling->selected_ids[0]!=5 ||
+    !input.area_defense || input.area_defense->actions!=std::array<std::uint8_t,4>{0,255,255,255})
+  throw std::invalid_argument("Unsupported third-return defender comparison");
+ const auto& player=input.current.field.roster[5];
+ if(player.type!=7 || player.level!=0 || player.stamina!=400)throw std::invalid_argument("Unsupported third-return defender profile");
+ const auto prep=prepare_profiled_field_defender({5,player.type,static_cast<std::uint8_t>(player.stamina),
+  static_cast<std::uint8_t>(player.stamina>>8),player.level},profiles,0,0,0,defense);
+ const auto energy=calculate_energy({player.stamina,prep.stamina_cost,player.type,11,2,0,true,false});
+ DefenderContactInput contact{};contact.incoming_power=input.action->power;contact.defender_power=prep.base_strength;
+ contact.random_first=input.current.field.random_first;contact.random_second=input.current.field.random_second;
+ contact.weakened=energy.weakened;contact.context=0;contact.subtype=0;
+ contact=configure_field_comparison(contact,2,0,5,comparison);
+ const auto result=compare_defender_contact(contact);
+ if(prep.base_strength!=8 || prep.stamina_cost!=70 || prep.move_effect!=0 || energy.stamina!=330 || energy.weakened ||
+    result.strength!=4 || result.loss!=1 || result.score!=64 || result.result_code!=2 || result.incoming_power!=4)
+  throw std::invalid_argument("Unverified third-return defender result");
+ auto state=input;state.current.field.roster[5].stamina=energy.stamina;
+ state.phase=FieldSessionPhase::third_return_defender_compared;validate_phase_session(state);return state;
+}
 PhaseSessionState compare_sampled_mixed_defender(const PhaseSessionState& input,const FieldComparisonContent& comparison) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::sampled_mixed_defender_prepared)

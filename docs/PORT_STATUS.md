@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** The third-return defender comparison matches original 8132: stamina400-to330 and comparison score64. Native result classification and later contact remain uncommitted; timing and presentation are supplied. All 62 registered Windows checks passed; full match unsupported, progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** After the timed defender menu, the captured action2 choice and shared attacker preparation match original to the second 8107 boundary with power4. The following defender comparison is original-only; timing/presentation remain supplied. All 62 registered Windows checks passed, full match unsupported, overall progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The third-return defender choice is registered and final confirmation matches original D568 after another 59 sampled menu polls. Later encounter action remains unmatched; timing and presentation are supplied. All 62 Windows registered checks passed; complete match unsupported and progress unmeasured.
