@@ -676,6 +676,21 @@ PhaseSessionState compare_player3_one_two_defender(const PhaseSessionState& inpu
     state.area_contact->score=result.score; state.area_contact->result=result.result_code; state.area_sequence_result=result.result_code;
     validate_phase_session(state); return state;
 }
+PhaseSessionState advance_player3_one_two_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || !input.area_contact || !input.experience ||
+       input.action->action!=3 || input.recovery->opposing_player!=16 || input.area_sequence_result!=0 ||
+       input.current.field.random_first!=128 || input.current.field.random_second!=175 || input.current.field.elapsed!=1 ||
+       input.current.field.motion[field_motion_index(16)].status || prelude.field_elapsed[3]!=1 || prelude.defender_status[1]!=6)
+        throw std::invalid_argument("Player3 one-two contact needs its captured nonterminal boundary");
+    const auto reward=award_player_experience(*input.experience,input.current.field.roster[3].type,1,experience);
+    if(!reward.slot || *reward.slot!=3 || reward.award!=3) throw std::invalid_argument("Unsupported player3 one-two experience");
+    const auto applied=apply_contact_prelude({input.current,16,1,true},prelude);
+    if(applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready || applied.state.clock.remaining!=138 ||
+       applied.state.field.motion[field_motion_index(16)].status!=6)
+        throw std::invalid_argument("Unsupported player3 one-two contact clock");
+    auto state=input; state.current=applied.state; state.experience=reward.state; validate_phase_session(state); return state;
+}
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
     const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);

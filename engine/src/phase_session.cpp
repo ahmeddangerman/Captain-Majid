@@ -754,7 +754,8 @@ void validate_phase_session(const PhaseSessionState& state) {
     }
     const bool player3_one_two_choices=state.human_defense_choices && (phase==19 || phase==20) && state.score && state.action && state.recovery && state.scheduling && state.control && state.experience &&
        state.human_defense_choices->actions==std::array<std::uint8_t,5>{1,2,2,0,0} && state.human_defense_choices->subtypes==std::array<std::uint8_t,5>{} &&
-       state.score->left_goals==1 && state.score->right_goals==0 && state.score->kickoff==4 && state.current.clock.remaining==139 && state.current.clock.extra_time==0 &&
+       state.score->left_goals==1 && state.score->right_goals==0 && state.score->kickoff==4 &&
+       state.current.clock.remaining==(player3_one_two_contact && state.current.field.motion[field_motion_index(16)].status==6 ? 138 : 139) && state.current.clock.extra_time==0 &&
        state.current.field.side==0 && state.current.field.ball_owner==3 && state.current.field.ball_x==120 && state.current.field.ball_y==140 && state.current.field.ball_cell==115 &&
        state.current.field.roster[3].stamina==(phase==19 ? 310 : 250) && state.current.field.selected_defenders==3 &&
        state.scheduling->selected_ids==std::array<std::uint8_t,5>{16,19,20,0,0} && (phase==20 || (state.current.field.random_first==32 && state.current.field.random_second==42)) &&

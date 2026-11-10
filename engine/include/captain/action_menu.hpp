@@ -80,6 +80,7 @@ PhaseSessionState capture_player3_one_two_defenders(const PhaseSessionState& inp
 SessionAttackResult prepare_player3_one_two(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
 PhaseSessionState prepare_player3_one_two_defender(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& defense);
 PhaseSessionState compare_player3_one_two_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison);
+PhaseSessionState advance_player3_one_two_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude,const ExperienceContent& experience);
 SessionAttackResult prepare_ordinary_return_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,const FieldPlayerProfiles& players,const FieldDefenseContent& defense);
 PhaseSessionState compare_ordinary_return_shot_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison);

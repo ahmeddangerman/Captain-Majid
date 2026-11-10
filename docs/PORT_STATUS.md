@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Player3's one-two matches its first defender and contact clock, including experience. Defender19 remains unmatched; all 62 Windows checks passed. Full match unsupported, progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** Player3's one-two matches its first defender's nonterminal result using explicitly supplied original direct-table content. Later defenders remain unmatched; all 62 Windows checks passed. Full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Player3's one-two matches captured defender choices and attacker preparation, with stamina250 and power8. The defenders' results remain unmatched; all 62 Windows checks passed. Full match unsupported and progress unmeasured.

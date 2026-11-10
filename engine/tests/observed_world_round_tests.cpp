@@ -171,6 +171,22 @@ int main() {
         try { auto wrong=one_two_comparison; wrong.table_index=12; compare_player3_one_two_defender(first_defender,wrong); }
         catch (const std::invalid_argument&) { wrong_one_two_table_rejected = true; }
         if (!wrong_one_two_table_rejected) return 1;
+        auto one_two_contact_input = first_compared;
+        one_two_contact_input.current.field.random_first = 128; one_two_contact_input.current.field.random_second = 175;
+        one_two_contact_input.current.field.roster[3].type = 3;
+        ContactPreludeContent one_two_prelude{}; one_two_prelude.field_elapsed[3] = 1; one_two_prelude.defender_status[1] = 6;
+        ExperienceContent one_two_experience{}; one_two_experience.player_mappings[3] = 3;
+        one_two_experience.stage_bases[0] = 128; one_two_experience.reward_factors[1] = 6;
+        const auto one_two_contact = advance_player3_one_two_contact(one_two_contact_input,one_two_prelude,one_two_experience);
+        if (one_two_contact.current.clock.remaining != 138 || one_two_contact.current.field.elapsed != 2 ||
+            one_two_contact.current.field.motion[field_motion_index(16)].status != 6 || one_two_contact.experience->totals[3] != 3 ||
+            one_two_contact_input.current.clock.remaining != 139) return 1;
+        std::istringstream one_two_contact_snapshot(bytes(one_two_contact));
+        if (bytes(load_phase_session(one_two_contact_snapshot)) != bytes(one_two_contact)) return 1;
+        bool repeated_one_two_contact_rejected = false;
+        try { advance_player3_one_two_contact(one_two_contact,one_two_prelude,one_two_experience); }
+        catch (const std::invalid_argument&) { repeated_one_two_contact_rejected = true; }
+        if (!repeated_one_two_contact_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;
