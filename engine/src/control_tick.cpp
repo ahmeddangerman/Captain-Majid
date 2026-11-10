@@ -366,7 +366,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
             state.current.clock.ball_mode = event.held;
         } else if (event.kind == ObservedClockEventKind::ball_mode_sample && input.phase == FieldSessionPhase::control_ready &&
                    input.score && input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 &&
-                   (input.current.clock.remaining == 160 || input.current.clock.remaining == 159 || input.current.clock.remaining == 158) && input.current.clock.extra_time == 0 &&
+                   (input.current.clock.remaining == 160 || input.current.clock.remaining == 159 || input.current.clock.remaining == 158 || input.current.clock.remaining == 156) && input.current.clock.extra_time == 0 &&
                    input.current.field.side == 11 && input.current.field.ball_owner == 18) {
             if (!((event.held == 192 && state.current.clock.ball_mode == 128) ||
                   (event.held == 128 && state.current.clock.ball_mode == 192)))
@@ -621,9 +621,15 @@ static void finish_nmi_input(std::istream& input) {
 }
 ObservedNmiFieldPoll load_observed_nmi_poll(std::istream& input) {
     std::string magic;
-    if (!(input >> magic) || magic != "CMJPOLLNMI1")
+    if (!(input >> magic) || (magic != "CMJPOLLNMI1" && magic != "CMJPOLLNMI2"))
         throw std::invalid_argument("Invalid observed NMI poll file header");
     auto sample = read_nmi_poll(input);
+    if (magic == "CMJPOLLNMI2") {
+        unsigned mode;
+        if (!(input >> mode) || (mode != 128 && mode != 192 && mode != 256))
+            throw std::invalid_argument("Invalid observed NMI ball-mode sample");
+        if (mode != 256) sample.ball_mode_sample = static_cast<std::uint8_t>(mode);
+    }
     finish_nmi_input(input);
     return sample;
 }
@@ -652,8 +658,6 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::control_ready || !input.control)
         throw std::invalid_argument("Observed NMI poll requires ready control");
-    if (sample.ball_mode_sample)
-        throw std::invalid_argument("Ball-mode samples require an observed field round");
     if (!sample.travel_observed && (sample.travel_held || sample.travel_speed))
         throw std::invalid_argument("Unobserved travel event must have zero inputs");
     auto state = input;
@@ -661,6 +665,14 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
         {initial_random_index, state.current.field.random_first, state.current.field.random_second}, sample.random);
     state.current.field.random_first = random.state.first;
     state.current.field.random_second = random.state.second;
+    if (sample.ball_mode_sample) {
+        const auto mode=*sample.ball_mode_sample;
+        if (!input.score || input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 ||
+            input.current.clock.remaining!=156 || input.current.clock.extra_time || input.current.field.side!=11 || input.current.field.ball_owner!=18 ||
+            !((mode==192 && state.current.clock.ball_mode==128) || (mode==128 && state.current.clock.ball_mode==192)))
+            throw std::invalid_argument("Unsupported observed control-poll ball-mode sample");
+        state.current.clock.ball_mode=mode;
+    }
     if (sample.travel_observed)
         state = advance_session_control_travel(state, sample.travel_speed, sample.travel_held);
     auto poll = poll_session_control(state, sample.buttons.held, sample.buttons.pressed, primary, movement, control);

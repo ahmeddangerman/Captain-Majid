@@ -137,3 +137,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Identify the original pre-setup and completed setup boundaries.
 - [x] Test and connect the shared player-control setup after the captured reception.
 - [x] Compare the native state with the original setup and document the remaining polls.
+
+## Task 19: Compare first control presentation and poll
+
+- [x] Identify the original ball-mode sample and recorded events before the first poll.
+- [x] Test and replay the captured presentation and neutral control poll.
+- [x] Compare against original poll boundaries, verify and document the next steps.

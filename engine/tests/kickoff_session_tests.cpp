@@ -2046,6 +2046,16 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(postgoal_control_stream))==postgoal_control_bytes,"Post-goal return control setup snapshot roundtrips");
  rejects([&]{prepare_postgoal_return_control(defender_received);});
  rejects([&]{prepare_postgoal_return_control(postgoal_return_control.state);});
+ const auto return_control_mode=advance_observed_nmi_events(postgoal_return_control.state,67,
+  {{ObservedClockEventKind::ball_mode_sample,{},192}});
+ check(return_control_mode.state.current.clock.ball_mode==192,"Captured return-control presentation accepts the observed ball-mode sample");
+ rejects([&]{advance_observed_nmi_events(postgoal_return_control.state,67,{{ObservedClockEventKind::ball_mode_sample,{},64}});});
+ auto mode_profile_mappings=profile_mappings;mode_profile_mappings.team_types={0};
+ ObservedNmiFieldPoll postgoal_mode_poll{};postgoal_mode_poll.ball_mode_sample=192;
+ const auto sampled_return_poll=advance_observed_nmi_control_poll(postgoal_return_control.state,mode_profile_mappings,
+  travel_movement,travel_content,67,postgoal_mode_poll);
+ check(sampled_return_poll.poll.state.current.clock.ball_mode==192 && sampled_return_poll.poll.state.control->decision_timer==9,
+       "Return control poll applies the recorded ball-mode sample before polling");
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

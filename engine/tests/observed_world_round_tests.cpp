@@ -41,6 +41,9 @@ int main() {
         std::istringstream single_poll("CMJPOLLNMI1\n1 0 5 6 7 1 1 1 160 3\n");
         const auto parsed_poll = load_observed_nmi_poll(single_poll);
         if (parsed_poll.buttons.held != 1 || !parsed_poll.random.carry || parsed_poll.travel_speed != 928) return 1;
+        std::istringstream sampled_single_poll("CMJPOLLNMI2\n1 0 5 6 7 1 1 1 160 3 192\n");
+        const auto sampled_single = load_observed_nmi_poll(sampled_single_poll);
+        if (!sampled_single.ball_mode_sample || *sampled_single.ball_mode_sample != 192) return 1;
         bool bad_poll_rejected = false;
         try { std::istringstream bad("CMJPOLLNMI1\n1 0 5 6 7 1 1 1 160 3 4\n"); load_observed_nmi_poll(bad); }
         catch (const std::invalid_argument&) { bad_poll_rejected = true; }
