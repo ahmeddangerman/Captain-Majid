@@ -150,6 +150,31 @@ int main() {
         const auto return_clock_result=advance_observed_nmi_control_clock(return_clock,field_profiles,keeper_profiles,
             world,0,{{ObservedClockEventKind::ball_mode_sample,{},128},{ObservedClockEventKind::schedule},{ObservedClockEventKind::energy}});
         if(return_clock_result.tick.state.current.clock.remaining!=154 || return_clock_result.tick.state.current.clock.ball_mode!=128) return 1;
+        auto stamina_input=clock_input;stamina_input.score=MatchScoreContext{1,0,4};
+        stamina_input.current.clock.remaining=147;stamina_input.current.field.side=0;stamina_input.current.field.ball_owner=7;
+        stamina_input.current.field.ball_x=120;stamina_input.current.field.ball_y=124;
+        stamina_input.current.field.roster[7].type=9;stamina_input.current.field.roster[7].stamina=388;
+        stamina_input.current.field.random_first=158;stamina_input.current.field.random_second=188;
+        std::istringstream stamina_stream("CMJCLOCKNMI2\nS\nE\nR 87 15 1 1\nH 7 129 1\n");
+        const auto stamina_events=load_observed_clock_events(stamina_stream);const auto stamina_before=bytes(stamina_input);
+        const auto stamina_result=advance_observed_nmi_control_clock(stamina_input,field_profiles,keeper_profiles,world,30,stamina_events);
+        if(stamina_result.tick.state.current.field.roster[7].stamina!=385 || stamina_result.random_index!=31 || bytes(stamina_input)!=stamina_before) return 1;
+        auto missing_stamina=stamina_events;missing_stamina.pop_back();bool missing_sample_rejected=false;
+        try { advance_observed_nmi_control_clock(stamina_input,field_profiles,keeper_profiles,world,30,missing_stamina); }
+        catch(const std::invalid_argument&) { missing_sample_rejected=true; }
+        if(!missing_sample_rejected || bytes(stamina_input)!=stamina_before) return 1;
+        auto wrong_stamina=stamina_events;wrong_stamina.back().speed=384;bool wrong_sample_rejected=false;
+        try { advance_observed_nmi_control_clock(stamina_input,field_profiles,keeper_profiles,world,30,wrong_stamina); }
+        catch(const std::invalid_argument&) { wrong_sample_rejected=true; }
+        if(!wrong_sample_rejected || bytes(stamina_input)!=stamina_before) return 1;
+        auto early_stamina=stamina_events;std::swap(early_stamina[2],early_stamina[3]);bool early_sample_rejected=false;
+        try { advance_observed_nmi_control_clock(stamina_input,field_profiles,keeper_profiles,world,30,early_stamina); }
+        catch(const std::invalid_argument&) { early_sample_rejected=true; }
+        if(!early_sample_rejected || bytes(stamina_input)!=stamina_before) return 1;
+        bool old_format_rejected=false;
+        try { std::istringstream old("CMJCLOCKNMI1\nH 7 129 1\n");load_observed_clock_events(old); }
+        catch(const std::invalid_argument&) { old_format_rejected=true; }
+        if(!old_format_rejected) return 1;
         auto third_return_clock=captured_clock;third_return_clock.current.clock.remaining=154;
         third_return_clock.current.clock.ball_mode=128;
         const auto third_return_clock_result=advance_observed_nmi_control_clock(third_return_clock,field_profiles,keeper_profiles,

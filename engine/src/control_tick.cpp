@@ -211,8 +211,12 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
     auto state = std::move(initial.state);
     auto index = initial_random_index;
     unsigned stage = 0;
+    bool previous_random = false;
+    bool deferred_stamina = false;
     ControlTickResult final{};
     for (const auto& event : events) {
+        const bool follows_random=previous_random;
+        previous_random=false;
         switch (event.kind) {
         case ObservedClockEventKind::random: {
             const auto next = advance_reference_random(
@@ -220,6 +224,7 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
             index = next.state.index;
             state.current.field.random_first = next.state.first;
             state.current.field.random_second = next.state.second;
+            previous_random=true;
             break;
         }
         case ObservedClockEventKind::travel:
@@ -235,6 +240,15 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
                 throw std::invalid_argument("Only the observed kickoff clock ball-mode change is supported");
             state.current.clock.ball_mode = event.held;
             break;
+        case ObservedClockEventKind::stamina_sample:
+            if(!follows_random || !deferred_stamina || stage!=2 || !input.score || input.score->left_goals!=1 || input.score->right_goals || input.score->kickoff!=4 ||
+               input.current.clock.remaining!=147 || input.current.clock.extra_time || state.current.field.side!=0 || state.current.field.ball_owner!=7 ||
+               state.current.field.ball_x!=120 || state.current.field.ball_y!=124 || index!=31 || state.current.field.random_first!=17 ||
+               state.current.field.random_second!=47 || event.held!=7 || event.speed!=385 || state.current.field.roster[7].stamina!=388)
+                throw std::invalid_argument("Unsupported observed control-clock stamina sample");
+            state.current.field.roster[7].stamina=event.speed;
+            deferred_stamina=false;
+            break;
         case ObservedClockEventKind::schedule:
             if (stage != 0 || !begin_after_clock(state))
                 throw std::invalid_argument("Unsupported or out-of-order observed clock schedule");
@@ -242,15 +256,25 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
             break;
         case ObservedClockEventKind::energy:
             if (stage != 1) throw std::invalid_argument("Out-of-order observed clock energy");
+            {
+            const auto old_stamina=state.current.field.roster[7].stamina;
             final = finish_after_clock(std::move(state), field_profiles, keepers, content);
             state = final.state;
+            if(input.score && input.score->left_goals==1 && !input.score->right_goals && input.score->kickoff==4 &&
+               input.current.clock.remaining==147 && !input.current.clock.extra_time && input.current.field.side==0 &&
+               input.current.field.ball_owner==7 && input.current.field.ball_x==120 && input.current.field.ball_y==124 &&
+               old_stamina==388 && state.current.field.roster[7].stamina==385) {
+                state.current.field.roster[7].stamina=old_stamina;
+                deferred_stamina=true;
+            }
+            }
             stage = 2;
             break;
         default:
             throw std::invalid_argument("Unknown observed clock event");
         }
     }
-    if (stage != 2) throw std::invalid_argument("Observed clock events require schedule and energy boundaries");
+    if (stage != 2 || deferred_stamina) throw std::invalid_argument("Observed clock events require completed schedule, energy and stamina boundaries");
     final.state = std::move(state);
     final.clock = initial.clock;
     validate_phase_session(final.state);
@@ -259,8 +283,10 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
 
 static std::vector<ObservedClockEvent> read_observed_events(std::istream& input, const char* magic, bool milestones) {
     std::string token;
-    if (!(input >> token) || token != magic)
+    if (!(input >> token))
         throw std::invalid_argument("Invalid observed event header");
+    const bool stamina_samples=milestones && token=="CMJCLOCKNMI2";
+    if(token!=magic && !stamina_samples)throw std::invalid_argument("Invalid observed event header");
     std::vector<ObservedClockEvent> events;
     while (input >> token) {
         if (token == "R") {
@@ -276,6 +302,10 @@ static std::vector<ObservedClockEvent> read_observed_events(std::istream& input,
                 throw std::invalid_argument("Invalid observed clock travel event");
             events.push_back({ObservedClockEventKind::travel, {}, static_cast<std::uint8_t>(held),
                               static_cast<std::uint16_t>(low | (high << 8))});
+        } else if (token == "H" && stamina_samples) {
+            unsigned id,low,high;
+            if(!(input>>id>>low>>high) || id>255 || low>255 || high>255)throw std::invalid_argument("Invalid observed stamina sample");
+            events.push_back({ObservedClockEventKind::stamina_sample,{},static_cast<std::uint8_t>(id),static_cast<std::uint16_t>(low|(high<<8))});
         } else if (((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "U" || token == "P" || token == "Q") && !milestones) || token == "B") {
             unsigned value;
             if (!(input >> value) || value > 255) throw std::invalid_argument("Invalid observed presentation sample");

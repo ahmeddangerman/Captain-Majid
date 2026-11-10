@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: directed player7 encounter
+
+The directed player7 path now matches the next clock and 22-player round to E4BE: clock146, side0/owner7, ball(120,124), selected defender20, random index56. Original player7 stamina388-to385 is supplied at its observed frame position after NMI random and before travel; `CMJCLOCKNMI2` carries this guarded sample and the older `CMJCLOCKNMI1` reader remains supported. It is not a general live stamina implementation. Private evidence: `../Captain-Majid-analysis/third-return-player7-directed-third-clock-v4-20261110`, `../Captain-Majid-analysis/third-return-player7-directed-third-world-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-third-return-player7-stamina-watch-20261110`. Windows build and 62 checks passed. Next compare the encounter/menu; a complete match remains unsupported and overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: directed player7 movement
 
 After player7 recovery, a second neutral cycle and a captured right-directed input match through three 11-poll groups and two clock/22-player rounds. Latest original E1E7 has ball (120,124), clock147, player7/side0 and random index27. The next original clock has an additional frame-driven player7 stamina write; native continuation stops before it pending research. Private evidence: `../Captain-Majid-analysis/third-return-player7-second-world-20261110`, `../Captain-Majid-analysis/third-return-player7-directed-third-polls-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-third-return-player7-directed-20261110`. The prior increment passed all 62 Windows checks; this trace-only comparison changed no engine code. Inputs, timing and presentation remain supplied, a full match is unsupported and overall progress unmeasured. Next trace the stamina write. Suggested model GPT-6.1 Terra High.
