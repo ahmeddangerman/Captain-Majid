@@ -366,7 +366,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.field.selected_defenders == 1 && input.scheduling->selected_ids[0] == 20 && input.recovery->opposing_player == 20 && input.action->power == 5;
     const bool captured_player7_result = input.phase == FieldSessionPhase::player7_shot_defender_compared;
     const bool captured_player7_contact = input.phase == FieldSessionPhase::player7_shot_contact_clocked;
-    const bool captured_player3_recovery = input.phase == FieldSessionPhase::player7_shot_ball_recovered;
+    const bool captured_player3_recovery = input.phase == FieldSessionPhase::player7_shot_ball_recovered || input.phase == FieldSessionPhase::player3_one_two_ball_recovered;
     const bool captured_player3_one_two = input.phase == FieldSessionPhase::attack_choice_pending && input.score && input.action && input.recovery && input.control && input.scheduling &&
         input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 && input.current.clock.remaining == 139 &&
         input.current.clock.extra_time == 0 && input.current.field.side == 0 && input.current.field.ball_owner == 3 &&

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Replay the captured blocked-shot recovery through player3 control setup."""
+"""Replay captured blocked-shot or one-two recovery through resumed control."""
 import argparse
 import re
 import subprocess
@@ -15,9 +15,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--scenario', choices=('player3', 'player2'), default='player3')
     args = parser.parse_args()
     lines, pcs, ram = trace_data(args.trace_directory)
-    start, last_wait, setup = 11449, 12002, 12003
+    start, last_wait, setup, first = ((11449,12002,12003,12011) if args.scenario=='player3' else (17374,17946,17947,17956))
     if [pcs[i] for i in (start, last_wait, setup)] != ['8C31', 'E406', 'C9C5']:
         raise ValueError('Unexpected player3 recovery control boundaries')
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
@@ -29,8 +30,8 @@ def main():
             if len(actual) != 419 or actual[10] != 143 or int.from_bytes(actual[258:260], 'little') != phase:
                 raise ValueError(f'{label}: unexpected extended session')
             actual = bytearray(actual[:259] + actual[260:])
-            actual[10], actual[258] = 133, 20
-            phase = 20
+            actual[10], actual[258] = 133, (20 if args.scenario=='player3' else 19)
+            phase = 20 if args.scenario=='player3' else 19
         compare_checkpoint(actual, ram(at), phase, phase, 'player3', label, None, False, False)
 
     def run(option, destination, *values):
@@ -43,7 +44,8 @@ def main():
         source = destination
         return result.stdout
 
-    compare(source, start, 426, 'recovered owner')
+    recovery_phase = 426 if args.scenario=='player3' else 429
+    compare(source, start, recovery_phase, 'recovered owner')
     rows, last = menu_wait_events(lines, pcs, ram, start, setup)
     points = [i for i in range(start + 1, setup) if pcs[i] in ('C9C5', 'E3CA')]
     if last != last_wait or len(rows) != len(points):
@@ -65,16 +67,16 @@ def main():
     result = run('--advance-observed-nmi-sequence', output / 'recovery-wait.cmjsession', events, ram(start)[0xe1])
     if re.findall(r'final random index (\d+);', result) != [str(ram(last)[0xe1])]:
         raise ValueError('Recovery wait random index differs')
-    compare(source, last, 426, 'pre-setup wait')
+    compare(source, last, recovery_phase, 'pre-setup wait')
     run('--setup-control', output / 'control-ready.cmjsession')
     compare(source, setup, 9, 'control setup')
-    rows, last = menu_wait_events(lines, pcs, ram, setup - 1, 12011)
+    rows, last = menu_wait_events(lines, pcs, ram, setup - 1, first)
     events = output / 'control-setup-wait-events.txt'
     events.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
     result = run('--advance-observed-nmi-sequence', output / 'control-poll-entry.cmjsession', events, ram(setup)[0xe1])
-    if pcs[12011] != 'E145' or re.findall(r'final random index (\d+);', result) != [str(ram(last)[0xe1])]:
+    if pcs[first] != 'E145' or re.findall(r'final random index (\d+);', result) != [str(ram(last)[0xe1])]:
         raise ValueError('Control setup wait random index differs')
-    compare(source, 12011, 9, 'first control poll entry')
+    compare(source, first, 9, 'first control poll entry')
     def poll_cycle(previous, index, cycle):
       count = 0
       for at in range(previous + 1, len(pcs)):
@@ -108,9 +110,10 @@ def main():
         raise ValueError(f'Expected 11 captured polls, got {count}')
       return previous, index
 
-    previous, index = 12011, ram(12011)[0xe1]
-    for cycle, (round_number, clock_end, world_end) in enumerate(((9,12103,12276),(10,12369,12503),
-            (11,12595,12729),(12,12822,12956),(13,13048,13182)), 1):
+    previous, index = first, ram(first)[0xe1]
+    cycles = (((9,12103,12276),(10,12369,12503),(11,12595,12729),(12,12822,12956),(13,13048,13182)) if args.scenario=='player3'
+              else ((14,18048,18220),(15,18312,18447),(16,18540,18674),(17,18766,18900),(18,18993,19127)))
+    for cycle, (round_number, clock_end, world_end) in enumerate(cycles, 1):
         previous, index = poll_cycle(previous, index, cycle)
         if pcs[previous] != 'E1E7' or pcs[clock_end] != 'E407':
             raise ValueError(f'Unexpected player3 clock boundary in cycle {cycle}')
@@ -131,7 +134,7 @@ def main():
             raise ValueError(f'Player3 cycle {cycle} field-round random index differs')
         compare(source, world_end, 15 if boundary == 'E4BE' else 9, f'field round {cycle}')
         previous, index = world_end, end[0xe1]
-    print(f'Matched player3 recovery and five control/clock/field cycles to the next encounter; random index {index}.')
+    print(f'Matched {args.scenario} recovery and five control/clock/field cycles to the next encounter; random index {index}.')
 
 
 if __name__ == '__main__':

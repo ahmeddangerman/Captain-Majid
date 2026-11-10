@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Player2 resumes after the stopped one-two and matches five captured control/clock/field cycles to an encounter with defender21. All 62 Windows checks passed; complete match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** After the stopped one-two, 22-player movement and player2 recovery match the captured original. Resumed control is unmatched; all 62 Windows checks passed. Full match unsupported, progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The stopped one-two matches loose-ball jitter at (104,164); recovery remains unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.

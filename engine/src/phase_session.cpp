@@ -560,7 +560,8 @@ void validate_phase_session(const PhaseSessionState& state) {
         state.current.field.selected_defenders || state.scheduling->selected_ids!=std::array<std::uint8_t,5>{} || state.recovery->opposing_player!=20 ||
         state.recovery->ball_variant!=2 || state.recovery->x_jitter_control!=130 || state.current.field.elapsed!=(phase>=428 ? 0 : 5) ||
         (phase==429 && ((state.current.field.motion[field_motion_index(2)].x>>8)!=104 || (state.current.field.motion[field_motion_index(2)].y>>8)!=164)) ||
-        state.current.field.motion[field_motion_index(3)].status!=5 || state.action->action!=3 || state.action->power!=7 || state.control->facing ||
+        state.current.field.motion[field_motion_index(3)].status!=5 || state.action->action!=3 || state.action->power!=7 ||
+        (phase==429 ? (state.control->facing!=0 && state.control->facing!=64) : state.control->facing!=0) ||
         state.control->motion_requested || state.area_defender_cursor!=2 || state.area_sequence_result!=2 || state.saved_ball_flight_flag!=1))
         throw std::invalid_argument("Invalid player3 one-two loose ball");
     if ((phase>=421 && phase<=426) && (!state.score || !state.action || !state.recovery || !state.control || !state.scheduling || !state.area_contact ||
@@ -693,7 +694,13 @@ void validate_phase_session(const PhaseSessionState& state) {
        ((state.score->left_goals==2 && state.score->right_goals==5 && state.current.clock.remaining==304 && state.area_defender_cursor==5) ||
         (state.score->left_goals==3 && state.score->right_goals==6 && state.current.clock.remaining==263 && state.area_defender_cursor==4)) && state.current.field.side==0 && state.current.field.ball_owner==7 &&
        state.current.field.ball_cell==233 && state.saved_ball_flight_flag==0 && state.shot_flight && state.shot_flight->destination==233;
-    if((phase<82 && state.area_defender_cursor && !player3_one_two_contact && !ordinary_pass_control_cursor && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor && !score25_shot_keeper_cursor) ||
+    const bool player2_one_two_residue=(phase==1 || phase==9 || phase==10 || phase==13 || phase==15 || phase==18 || phase==19) &&
+       state.area_defender_cursor==2 && state.area_sequence_result==2 && state.saved_ball_flight_flag==1 && state.score &&
+       state.score->left_goals==1 && state.score->right_goals==0 && state.score->kickoff==4 &&
+       state.current.clock.remaining>=130 && state.current.clock.remaining<=135 && state.current.clock.extra_time==0 &&
+       state.current.field.side==0 && state.current.field.ball_owner==2 && state.current.field.ball_x==104 && state.current.field.ball_y==164 &&
+       (state.current.field.ball_cell==115 || state.current.field.ball_cell==94);
+    if((phase<82 && state.area_defender_cursor && !player2_one_two_residue && !player3_one_two_contact && !ordinary_pass_control_cursor && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor && !score25_shot_keeper_cursor) ||
        (phase>=82 && phase<=94 && (state.area_defender_cursor>state.current.field.selected_defenders ||
         ((phase==88 || (phase>=90 && phase<=93)) ? state.area_defender_cursor!=state.current.field.selected_defenders :
          state.area_defender_cursor>=state.current.field.selected_defenders))) ||

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player2 resumes after the one-two
+
+An extended original capture reproduces all 17,566 prior instruction records. Player2's recovery presentation, control setup and five captured control/clock/field cycles now match through the next E4BE encounter: clock130, side0/owner2, ball(104,164), defender21, random index188. The captured defender cursor/result remain intact through setup. `tools/verify_player3_recovered_control.py --scenario player2` feeds the native checkpoints forward; its previous player3 scenario also remains matched. Private evidence: `../Captain-Majid-analysis/player2-control-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-one-two-recovery-20261110`. Windows build and all 62 checks passed. Timing/random/presentation events remain supplied; a complete match is unsupported and overall progress unmeasured. Next compare the new encounter. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player2 recovers the stopped one-two
 
 The stopped player3 one-two now matches the captured 22-player recovery movement and stationary-ball selection: player2/side0 recovers at (104,164), retaining fractional coordinates, random index141. `tools/verify_player3_one_two.py` feeds the jittered state through ordered captured NMI/travel/player events and checks the original 8C10/8C31 boundaries. The guarded recovery rejects early calls, leaves its input unchanged and roundtrips the extended snapshot. Private evidence: `../Captain-Majid-analysis/player3-one-two-recovery-v1-20261110`. Windows build and all 62 registered checks passed. Resumed control, live timing and a complete match remain unsupported; overall progress unmeasured. Next compare player2 control setup. Suggested model GPT-6.1 Terra High.

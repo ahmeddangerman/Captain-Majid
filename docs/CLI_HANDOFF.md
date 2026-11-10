@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player2 encounter
+
+Player2 now matches the original recovery presentation, setup and five control/clock/field cycles through E4BE: clock130, ball(104,164), defender21, random index188. Private checkpoint: `../Captain-Majid-analysis/player2-control-v1-20261110/cycle-05-field.cmjsession`; replay tool `tools/verify_player3_recovered_control.py --scenario player2`. Original events remain supplied. Windows build and 62 checks passed. Next compare the encounter; complete match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player2 recovers one-two
 
 After the stopped player3 one-two, the native replay matches 22-player movement and player2/side0 recovery at (104,164), random index141. Private checkpoint: `../Captain-Majid-analysis/player3-one-two-recovery-v1-20261110/terminal-loose-ball-recovered.cmjsession`. Event timing and direct table inputs remain supplied. Windows build and 62 checks passed. Next trace player2 control; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

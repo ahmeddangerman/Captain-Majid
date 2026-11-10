@@ -274,6 +274,20 @@ int main() {
         try { recover_player3_one_two_ball(one_two_loose); }
         catch(const std::invalid_argument&) { early_one_two_recovery_rejected=true; }
         if(!early_one_two_recovery_rejected) return 1;
+        const auto player2_wait = advance_observed_nmi_events(one_two_recovered, 0,
+            {{ObservedClockEventKind::facing_sample, {}, 64}, {ObservedClockEventKind::motion_sample, {}, 1},
+             {ObservedClockEventKind::motion_sample, {}, 0}});
+        if(player2_wait.state.control->facing!=64 || player2_wait.state.control->motion_requested || one_two_recovered.control->facing) return 1;
+        auto player2_setup_input=player2_wait.state;
+        player2_setup_input.current.field.random_first=123; player2_setup_input.current.field.random_second=65;
+        const auto player2_ready=prepare_player2_one_two_control(player2_setup_input);
+        if(player2_ready.state.phase!=FieldSessionPhase::control_ready || player2_ready.state.current.field.ball_owner!=2 ||
+           player2_ready.state.current.field.ball_cell!=94 || player2_ready.state.area_defender_cursor!=2 ||
+           player2_ready.state.area_sequence_result!=2 || player2_setup_input.phase!=FieldSessionPhase::player3_one_two_ball_recovered) return 1;
+        bool early_player2_setup_rejected=false;
+        try { prepare_player2_one_two_control(player2_wait.state); }
+        catch(const std::invalid_argument&) { early_player2_setup_rejected=true; }
+        if(!early_player2_setup_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;
