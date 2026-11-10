@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Opponent20 control ready
+
+The captured opponent20 control setup now continues through four observed NMI/travel pairs and the original ball-mode sample to the E145 control-ready boundary, random index236. The replay compares all represented session bytes; event timing and presentation remain explicitly supplied. Evidence: `../Captain-Majid-analysis/player2-opponent-ready-v2-ready.cmjsession` and the private instrumented race trace. The original comparison and all 62 registered Windows checks passed. Opponent control cycles and decisions remain unmatched; a complete playable match is unsupported and overall progress is unmeasured. Next compare opponent20's first control polls and field cycle. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Opponent20 control setup
 
 The captured opponent20 recovery now continues through 62 additional original NMI/travel pairs and observed facing/motion samples to the pre-setup boundary. A guarded wrapper reuses the control setup kernel: it matches all represented original session bytes at the first post-setup NMI, selects defender2, retains the original cursor/flight flag and saves phase434, random index232. Repeated setup rejects atomically and the new snapshot roundtrips. Evidence: `../Captain-Majid-analysis/player2-opponent-control-v3-control-setup.cmjsession` and the instrumented race trace. Windows build, original replay and all 62 registered checks passed. Post-setup presentation/input and autonomous opponent decisions remain unmatched; event timing is supplied, full match unsupported, progress unmeasured. Next compare the remaining setup wait and opponent control. Suggested model GPT-6.1 Terra High.

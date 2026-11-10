@@ -222,7 +222,30 @@ def main():
                     '--capture', str(setup_roundtrip.resolve())], capture_output=True, text=True, check=True)
     if setup_roundtrip.read_bytes() != prepared:
         raise ValueError('Control setup snapshot roundtrip differs')
-    print('Matched opponent20 recovery, captured presentation and control setup; random index 232.')
+    ready_events = args.output.with_name(args.output.stem + '-ready.events.txt')
+    ready = args.output.with_name(args.output.stem + '-ready.cmjsession')
+    if ready_events.exists() or ready.exists():
+        raise ValueError('Control ready evidence must not exist')
+    rows, last = menu_wait_events(lines, pcs, ram, 22252, 22273)
+    points = [i for i in range(22253, 22273) if pcs[i] in ('C9C5', 'E3CA')]
+    if len(rows) != 8 or len(points) != len(rows) or last != 22272:
+        raise ValueError('Unexpected post-setup event ordering')
+    ball_mode = ram(22253)[0x62d]; samples = []; ordered = []
+    for row, point in zip(rows, points):
+        value = ram(point)[0x62d]
+        if value != ball_mode:
+            ball_mode = value; samples.append(value); ordered.append(f'B {value}')
+        ordered.append(row)
+    if samples != [192]:
+        raise ValueError('Unexpected post-setup ball-mode samples')
+    ready_events.write_text('CMJNMISEQ1\n' + '\n'.join(ordered) + '\n')
+    command = subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(setup.resolve()),
+                              '--advance-observed-nmi-sequence', str(ready_events.resolve()), '232',
+                              '--capture', str(ready.resolve())], capture_output=True, text=True, check=True)
+    if re.findall(r'final random index (\d+);', command.stdout) != ['236']:
+        raise ValueError('Opponent control ready random index differs')
+    compare_represented(ready.read_bytes(), export_session(ram(22273)), True, 'player2', 'race.control_ready')
+    print('Matched opponent20 recovery, captured presentation and control ready; random index 236.')
 
 
 if __name__ == '__main__':

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: opponent20 control ready
+
+Opponent20's post-recovery setup now matches through the original E145 control-ready boundary, including four supplied NMI/travel pairs and a captured ball-mode sample; random index236. Private checkpoint: `../Captain-Majid-analysis/player2-opponent-ready-v2-ready.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Original replay and all 62 registered Windows checks passed. Next compare opponent20's control polls and first field cycle; presentation/timing remain supplied, full match unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: opponent20 control setup
 
 After the player2 pass recovery, the captured facing/motion samples and 62 NMI/travel pairs lead to opponent20's native control setup; it selects defender2 and matches all represented original session fields at the first post-setup NMI, random index232. The saved state is phase434: `../Captain-Majid-analysis/player2-opponent-control-v3-control-setup.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Snapshot roundtrip and repeated setup rejection passed. Next compare the remaining setup presentation wait and subsequent opponent control; recorded timing remains supplied. Windows build and 62 checks passed. Full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

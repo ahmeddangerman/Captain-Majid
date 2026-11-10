@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Opponent20's captured post-recovery setup matches through the original control-ready boundary. Subsequent opponent control and a complete match remain unmatched; all 62 Windows checks passed and progress is unmeasured.
+
 **Latest match checkpoint (2026-11-10):** Opponent20's captured recovery presentation and native control setup match the original, selecting defender2. Post-setup presentation and opponent decisions remain unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Opponent20's captured recovery presentation matches through control entry, including 53 supplied NMI/travel pairs. Opponent control setup remains unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.
