@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player3 selects a one-two
+
+An extended isolated original capture reproduces all 14,381 earlier instruction records, then selects the one-two action at the player3 three-defender encounter. The shared encounter-menu verifier now matches 174 captured polls through action3 confirmation, random index195; the previous player7 shot scenario still matches 121 polls. Presentation facing/display changes and random/travel timing are supplied. Private evidence: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player3-encounter-action-20261110` and `../Captain-Majid-analysis/player3-second-menu-v1-20261110`. Windows build and all 62 checks passed. The one-two action outcome is not yet matched; a complete match remains unsupported and overall progress unmeasured. Next compare the selected action and defender sequence. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player3 returns to a three-defender encounter
 
 Extended `tools/verify_player3_recovered_control.py` to feed five captured control cycles forward from the recovered player: 55 input polls, five clock updates and five 22-player field rounds match through the next original E4BE encounter. The resulting state is clock139, side0/owner3, ball(120,140), selected defenders16/19/20, random index125. The replay supplies original input, random, travel and presentation events. Private evidence: `../Captain-Majid-analysis/player3-recovered-five-cycles-v1-20261110` and the original trace under `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. This is a trace-verification increment; no engine code changed, so the previous full Windows build and 62-check result remains the last full suite run. Full match unsupported and progress unmeasured. Next compare the encounter menu and chosen action. Suggested model GPT-6.1 Terra High.

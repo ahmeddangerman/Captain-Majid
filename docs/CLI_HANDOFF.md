@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player3 one-two selected
+
+At player3's three-defender encounter, `tools/verify_player7_encounter_menu.py --scenario player3` matches 174 original menu polls through one-two/action3 confirmation, random index195. Private evidence: `../Captain-Majid-analysis/player3-second-menu-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player3-encounter-action-20261110`. Prior player7 shot-menu replay remains matched; Windows build and 62 checks passed. Next compare the one-two action and defender sequence; original timing remains supplied, a full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player3 three-defender encounter
 
 After recovering the blocked shot, player3 now matches five captured control/clock/22-player cycles through E4BE at clock139, ball(120,140), defenders16/19/20, random index125. `tools/verify_player3_recovered_control.py` produces `../Captain-Majid-analysis/player3-recovered-five-cycles-v1-20261110/cycle-05-field.cmjsession`; input, random and presentation timing are supplied. The last full Windows build and 62 checks passed before this verifier-only change. Next compare the encounter menu and action; complete match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.

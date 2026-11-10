@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Compare one captured player7 encounter and its original menu button edges.
+"""Compare captured player7 or player3 encounter menu button edges.
 
 The original trace supplies NMI random/travel and two presentation samples;
 this replay does not simulate the original frame or presentation scheduler.
@@ -18,9 +18,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
+    parser.add_argument('--scenario', choices=('player7', 'player3'), default='player7')
     args = parser.parse_args()
     lines, pcs, ram = trace_data(args.trace_directory)
-    encounter, sample, menu = 8106, 8159, 8711
+    encounter, sample, menu = (8106, 8159, 8711) if args.scenario == 'player7' else (13182, 13235, 13906)
     if [pcs[i] for i in (encounter, sample, menu)] != ['E4BE', 'C9C5', 'D5E5']:
         raise ValueError('Unexpected player7 encounter trace boundaries')
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
@@ -74,7 +75,10 @@ def main():
         count += 1
         previous = end
         if phase == 19:
-            print(f'Matched player7 encounter menu and {count} polls through shot confirmation; '
+            expected_count, expected_action = (121, 0) if args.scenario == 'player7' else (174, 3)
+            if count != expected_count or ram(end)[0x43b] != expected_action:
+                raise ValueError('Unexpected captured menu choice or poll count')
+            print(f'Matched {args.scenario} encounter menu and {count} polls through action confirmation; '
                   f'final random index {index}. Frame and presentation timing supplied.')
             return
     raise ValueError('No captured shot confirmation')

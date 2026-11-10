@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Player3's three-defender menu matches 174 captured polls through one-two selection. The action outcome remains unmatched; all 62 Windows checks passed. A complete match remains unsupported, progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** Recovered player3 matches five captured control, clock and 22-player cycles to an encounter with defenders16/19/20. Events remain supplied; full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Player3 resumes control after a blocked shot and matches 11 captured input polls through the next clock boundary. Timing/random events are supplied; all 62 Windows checks passed. Full match unsupported and progress unmeasured.

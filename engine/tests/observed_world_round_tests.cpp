@@ -107,6 +107,17 @@ int main() {
         try { advance_observed_nmi_events(player7_encounter, 0, {{ObservedClockEventKind::facing_sample, {}, 1}}); }
         catch (const std::invalid_argument&) { wrong_encounter_sample_rejected = true; }
         if (!wrong_encounter_sample_rejected) return 1;
+        auto player3_encounter = player7_encounter;
+        player3_encounter.current.clock.remaining = 139;
+        player3_encounter.current.field.ball_owner = 3;
+        player3_encounter.current.field.ball_y = 140;
+        player3_encounter.current.field.ball_cell = 115;
+        player3_encounter.current.field.selected_defenders = 3;
+        player3_encounter.scheduling->selected_ids = {16,19,20,0,0};
+        const auto player3_menu_presentation = advance_observed_nmi_events(player3_encounter, 0,
+            {{ObservedClockEventKind::facing_sample, {}, 0}, {ObservedClockEventKind::display_sample, {}, 0}});
+        if (player3_menu_presentation.state.control->facing || player3_menu_presentation.state.control->display_parameter ||
+            player3_encounter.control->facing != 64) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;
