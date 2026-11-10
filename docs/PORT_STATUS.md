@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Player3's one-two matches all three captured defender comparisons, ending in a terminal result2. Its contact and recovery remain unmatched; all 62 Windows checks passed. Full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** Player3's one-two matches the second defender's contact and power reduction to7. The third defender remains unmatched; all 62 Windows checks passed. Full match unsupported, progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Player3's one-two matches the second defender's result1; later continuation remains unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.

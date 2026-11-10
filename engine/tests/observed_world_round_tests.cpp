@@ -217,6 +217,20 @@ int main() {
         try { advance_player3_one_two_next_contact(second_contact,one_two_prelude,one_two_experience); }
         catch (const std::invalid_argument&) { repeated_second_contact_rejected = true; }
         if (!repeated_second_contact_rejected) return 1;
+        auto third_defender_input = second_contact;
+        third_defender_input.current.field.random_first = 139; third_defender_input.current.field.random_second = 175;
+        const auto third_defender = prepare_player3_one_two_next_defender(third_defender_input,one_two_profiles,one_two_defense);
+        if (third_defender.recovery->opposing_player != 20 || third_defender.area_defender_cursor != 2 ||
+            third_defender.area_contact->defense_action != 2 || third_defender_input.recovery->opposing_player != 19) return 1;
+        const auto third_compared = compare_player3_one_two_next_defender(third_defender,second_comparison);
+        if (third_compared.area_contact->strength != 6 || third_compared.area_contact->score != 74 ||
+            third_compared.area_sequence_result != 2 || third_defender.area_sequence_result != 255) return 1;
+        std::istringstream third_compared_snapshot(bytes(third_compared));
+        if (bytes(load_phase_session(third_compared_snapshot)) != bytes(third_compared)) return 1;
+        bool repeated_third_compare_rejected = false;
+        try { compare_player3_one_two_next_defender(third_compared,second_comparison); }
+        catch (const std::invalid_argument&) { repeated_third_compare_rejected = true; }
+        if (!repeated_third_compare_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;

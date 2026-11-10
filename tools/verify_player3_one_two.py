@@ -226,7 +226,44 @@ def main():
     if run.returncode:
         raise RuntimeError(run.stderr.strip())
     compare_choices(clocked, 16269, 20)
-    print(f'Matched one-two through second defender contact; random index {ram(last)[0xe1]}.')
+    rows, last = menu_wait_events(lines, pcs, ram, 16268, 16281)
+    events = output / 'third-defender-wait-events.txt'
+    events.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
+    waiting = output / 'third-defender-wait.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(clocked),
+                          '--advance-observed-nmi-sequence', str(events), str(ram(16269)[0xe1]),
+                          '--capture', str(waiting)], capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    if last != 16280 or re.findall(r'final random index (\d+);', run.stdout) != [str(ram(last)[0xe1])]:
+        raise ValueError('Third defender wait random index differs')
+    compare_choices(waiting, last, 20)
+    defender = output / 'third-defender-prepared.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(waiting),
+                          '--prepare-player3-one-two-next-defender', '--capture', str(defender)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    compare_choices(defender, 16283, 20)
+    actual = defender.read_bytes(); observed = ram(16283)
+    expected = bytes((1,2,2,0,observed[0x444],observed[0x32],observed[0x33],observed[0x43f],observed[0x440],0,0,0,0,0))
+    if actual[398:412] != expected:
+        raise ValueError('Third defender preparation differs from original')
+    compared = output / 'third-defender-compared.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(defender),
+                          '--compare-player3-one-two-next-defender', *map(str,args.next_comparison_content), '--capture', str(compared)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    compare_choices(compared, 16286, 20)
+    actual = compared.read_bytes(); original = ram(16286)
+    registers = re.search(r'\bA=([0-9A-F]{2}).*\bY=([0-9A-F]{2})', lines[16286])
+    if registers is None:
+        raise ValueError('Missing third defender original result registers')
+    score, result = (int(value,16) for value in registers.groups())
+    if actual[407:412] != bytes((original[0x71],original[0x619],score,result,0)) or actual[413] != result:
+        raise ValueError('Third defender comparison differs from original')
+    print(f'Matched one-two through third defender result {result}; random index {ram(last)[0xe1]}.')
 
 
 if __name__ == '__main__':
