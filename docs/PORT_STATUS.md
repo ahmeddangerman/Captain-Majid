@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - defender result wait (2026-11-10):** One captured startup matches through original $88AD after the defender result0 wait, using recorded timing and a facing sample. The subsequent defender status, clock and list cleanup are original-only. Autonomous timing/AI and a complete playable match remain unsupported; overall progress is unmeasured.
+
 **Latest - defender8 comparison (2026-11-10):** One captured startup now matches through the action3 return defender's result0 comparison, using explicitly supplied timing and action-specific table content. Result presentation and continuation remain original-only; autonomous timing/AI and a complete playable match remain unsupported. Overall progress is unmeasured.
 
 **Latest - return-flight center snap (2026-11-10):** One captured startup matches through original $E7CC, with the ball centered and defender8 selected. Defender resolution remains original-only; autonomous timing/AI and a complete playable match remain unsupported. Overall progress is unmeasured.

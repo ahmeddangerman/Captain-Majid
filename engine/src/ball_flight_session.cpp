@@ -164,6 +164,12 @@ PhaseSessionState compare_postgoal_return_defender(const PhaseSessionState& inpu
   result.strength,result.loss,result.score,result.result_code,false};
  state.phase=FieldSessionPhase::postgoal_opponent_return_defender_compared;validate_phase_session(state);return state;
 }
+PhaseSessionState begin_postgoal_defender_result_wait(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_defender_compared)
+  throw std::invalid_argument("Post-goal defender presentation wait requires the observed comparison");
+ auto state=input;state.phase=FieldSessionPhase::postgoal_opponent_return_defender_wait;validate_phase_session(state);return state;
+}
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {

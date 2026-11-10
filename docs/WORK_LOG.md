@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Defender result0 presentation wait
+
+The captured action3 defender result0 now continues through the original $88AD boundary. Phase410 retains the comparison and ball trajectory while accepting 141 recorded NMI random/travel pairs and one recorded facing change from64 to0; native represented fields, score and trajectory match the original, with final random index151. This is a supplied presentation wait, not execution of the original presentation engine. Private evidence: ../Captain-Majid-analysis/postgoal-defender-wait-20261110. A fresh Windows build and all 62 registered checks passed. The original next changes defender8 status to6, advances the clock and clears the selected defender list; those changes remain original-only. Overall progress remains unmeasured, and a complete playable match and autonomous timing/AI remain unsupported. Next compare those changes. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Action3 return defender comparison
 
 One recorded NMI random/travel pair takes the centered arrival to original $8845, random index10 and bytes104/186. Defender8's action2 preparation gives base8 and cost50. The original action3-specific comparison table has range128, offset128 and eligibility251: shared arithmetic gives strength4, loss1, score192 and result0. A controlled isolated original CPU comparison matched 513 cases against the native calculation. The action0 flight-content row is a different table and must not be used for this action3 encounter.

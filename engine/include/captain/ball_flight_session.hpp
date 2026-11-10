@@ -51,6 +51,7 @@ PhaseSessionState prepare_area_pass_defender(const PhaseSessionState& input,std:
 struct AreaPassComparisonContent { std::uint8_t range,offset,eligibility; std::array<std::uint8_t,4> thresholds; };
 PhaseSessionState compare_postgoal_return_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,
  const FieldDefenseContent& defense,const AreaPassComparisonContent& comparison);
+PhaseSessionState begin_postgoal_defender_result_wait(const PhaseSessionState& input);
 PhaseSessionState compare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_power,
  std::uint8_t captured_context,const AreaPassComparisonContent& content);
 PhaseSessionState restore_area_pass_ball_variant(const PhaseSessionState& input);

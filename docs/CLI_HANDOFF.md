@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: defender result wait
+
+The captured action3 defender result0 now matches original $88AD after 141 recorded random/travel pairs and one supplied facing sample. Phase410 retains the defender comparison and trajectory, with random index151; no live presentation is simulated. Private evidence: ../Captain-Majid-analysis/postgoal-defender-wait-20261110. The original then sets defender8 status6, advances the clock and clears the defender list, none yet native-compared. Overall progress is unmeasured; a complete playable match and autonomous timing/AI remain unsupported. Next compare that clock and list cleanup. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: defender8 comparison
 
 The captured action3 return now matches original $8874 after one supplied NMI random/travel pair and defender8's action2 preparation and comparison. The profiled preparation yields base8 and cost50; the action3-specific supplied table produces strength4, loss1, score192 and result0. Phase409 preserves this state with the restored ball variant. The separate flight-content row for a different attack is not the correct table for this case. The shared arithmetic matched 513 controlled original CPU continuations; private evidence: ../Captain-Majid-analysis/defender3-contact-compare-20261110.py and ../Captain-Majid-analysis/postgoal-defender-compare-final-20261110. Original result presentation and continuation remain unimplemented; recorded timing/presentation remain supplied. A complete playable match remains unsupported and overall progress unmeasured. Next trace the result0 presentation and following clock/defender state. Suggested model GPT-6.1 Terra High.

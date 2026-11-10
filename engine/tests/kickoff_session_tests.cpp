@@ -1977,6 +1977,16 @@ int main(){try{using namespace captain;
  auto bad_defender_comparison=defender_comparison;bad_defender_comparison.range=0;
  rejects([&]{compare_postgoal_return_defender(defender_wait.state,defender_profiles,defender_content,bad_defender_comparison);});
  rejects([&]{compare_postgoal_return_defender(defender_compared,defender_profiles,defender_content,defender_comparison);});
+ const auto defender_presentation=begin_postgoal_defender_result_wait(defender_compared);
+ const auto defender_sample=advance_observed_nmi_events(defender_presentation,10,{{ObservedClockEventKind::facing_sample,{},0}});
+ check(defender_sample.state.phase==FieldSessionPhase::postgoal_opponent_return_defender_wait &&
+       defender_sample.state.control->facing==0 && defender_sample.state.area_contact->score==192,
+       "Defender result wait retains the comparison and accepts the recorded facing sample");
+ const auto defender_wait_bytes=bytes(defender_sample.state);std::istringstream defender_wait_stream(defender_wait_bytes);
+ check(bytes(load_phase_session(defender_wait_stream))==defender_wait_bytes,"Post-goal defender presentation wait snapshot roundtrips");
+ rejects([&]{begin_postgoal_defender_result_wait(defender_wait.state);});
+ rejects([&]{begin_postgoal_defender_result_wait(defender_presentation);});
+ rejects([&]{advance_observed_nmi_events(defender_presentation,10,{{ObservedClockEventKind::facing_sample,{},1}});});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

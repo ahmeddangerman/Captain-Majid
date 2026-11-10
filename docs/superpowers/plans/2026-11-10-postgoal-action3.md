@@ -101,3 +101,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Test the recorded NMI wait and the defender preparation/comparison boundary, including invalid inputs and snapshot roundtrip.
 - [x] Connect the profiled preparation and comparison using explicitly supplied, guarded action3 table values.
 - [x] Compare the saved native state with the original after comparison, run verification, and document the exact limits.
+
+## Task 13: Compare defender result0 presentation wait
+
+- [x] Trace the ordered original random/travel events and facing samples through $88AD.
+- [x] Test and implement a guarded wait retaining the defender result and supplied samples.
+- [x] Compare the saved state at $88AD, run verification and document the remaining continuation.
