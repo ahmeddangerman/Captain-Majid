@@ -244,6 +244,19 @@ int main() {
         try { advance_player3_one_two_terminal_contact(terminal_contact,one_two_prelude); }
         catch (const std::invalid_argument&) { repeated_terminal_contact_rejected = true; }
         if (!repeated_terminal_contact_rejected) return 1;
+        auto one_two_loose_input = terminal_contact;
+        one_two_loose_input.current.field.random_first = 51; one_two_loose_input.current.field.random_second = 170;
+        const auto one_two_loose = jitter_player3_one_two_ball(one_two_loose_input);
+        if (one_two_loose.phase != FieldSessionPhase::player3_one_two_ball_jittered || one_two_loose.current.field.ball_x != 104 ||
+            one_two_loose.current.field.ball_y != 164 || one_two_loose.current.field.selected_defenders || one_two_loose.area_contact ||
+            one_two_loose.human_defense_choices || one_two_loose.area_defender_cursor != 2 || one_two_loose.area_sequence_result != 2 ||
+            one_two_loose_input.current.field.ball_x != 120) return 1;
+        std::istringstream one_two_loose_snapshot(bytes(one_two_loose));
+        if (bytes(load_phase_session(one_two_loose_snapshot)) != bytes(one_two_loose)) return 1;
+        bool wrong_one_two_loose_rejected = false;
+        try { jitter_player3_one_two_ball(terminal_contact); }
+        catch (const std::invalid_argument&) { wrong_one_two_loose_rejected = true; }
+        if (!wrong_one_two_loose_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;

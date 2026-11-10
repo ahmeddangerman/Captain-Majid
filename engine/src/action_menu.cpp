@@ -723,6 +723,20 @@ PhaseSessionState advance_player3_one_two_terminal_contact(const PhaseSessionSta
         throw std::invalid_argument("Unsupported player3 one-two terminal contact clock");
     auto state=input; state.current=applied.state; validate_phase_session(state); return state;
 }
+PhaseSessionState jitter_player3_one_two_ball(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || !input.area_contact || input.action->action!=3 ||
+       input.area_defender_cursor!=2 || input.area_sequence_result!=2 || input.current.clock.remaining!=135 || input.current.field.elapsed!=5 ||
+       input.current.field.motion[field_motion_index(3)].status!=5 || input.current.field.random_first!=51 || input.current.field.random_second!=170)
+        throw std::invalid_argument("Player3 one-two loose ball needs its captured terminal boundary");
+    const auto ball=jitter_loose_ball(input.current.field.ball_x,input.current.field.ball_y,input.current.field.random_first,input.current.field.random_second);
+    if(!ball.inside_field || ball.x!=104 || ball.y!=164 || ball.x_jitter_control!=130)
+        throw std::invalid_argument("Unsupported player3 one-two loose ball position");
+    auto state=input; state.current.field.ball_x=ball.x; state.current.field.ball_y=ball.y;
+    state.current.field.selected_defenders=0; state.scheduling->selected_ids.fill(0); state.recovery->x_jitter_control=ball.x_jitter_control;
+    state.human_defense_choices.reset(); state.area_contact.reset(); state.phase=FieldSessionPhase::player3_one_two_ball_jittered;
+    validate_phase_session(state); return state;
+}
 PhaseSessionState prepare_player3_one_two_next_defender(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);
     if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || !input.area_contact || !input.action || !input.recovery || !input.control || input.action->action!=3)

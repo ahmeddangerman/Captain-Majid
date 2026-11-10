@@ -284,7 +284,30 @@ def main():
     if run.returncode:
         raise RuntimeError(run.stderr.strip())
     compare_choices(clocked, 17133, 20)
-    print(f'Matched one-two through terminal contact; random index {ram(last)[0xe1]}.')
+    rows, last = menu_wait_events(lines, pcs, ram, 17132, 17171)
+    events = output / 'terminal-loose-ball-wait-events.txt'
+    events.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
+    waiting = output / 'terminal-loose-ball-wait.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(clocked),
+                          '--advance-observed-nmi-sequence', str(events), str(ram(17133)[0xe1]),
+                          '--capture', str(waiting)], capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    if last != 17170 or re.findall(r'final random index (\d+);', run.stdout) != [str(ram(last)[0xe1])]:
+        raise ValueError('Terminal loose-ball wait random index differs')
+    compare_choices(waiting, last, 20)
+    jittered = output / 'terminal-loose-ball-jittered.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(waiting),
+                          '--jitter-player3-one-two-ball', '--capture', str(jittered)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    actual = jittered.read_bytes()
+    if len(actual) != 419 or actual[10] != 143 or int.from_bytes(actual[258:260], 'little') != 427:
+        raise ValueError('Unexpected one-two loose-ball snapshot')
+    normalized = bytearray(actual[:259] + actual[260:]); normalized[10], normalized[258] = 133, 19
+    compare_checkpoint(normalized, ram(17172), 19, 19, 'player3', 'one-two loose-ball jitter', None, False, False)
+    print(f'Matched one-two terminal contact and loose-ball jitter; random index {ram(last)[0xe1]}.')
 
 
 if __name__ == '__main__':
