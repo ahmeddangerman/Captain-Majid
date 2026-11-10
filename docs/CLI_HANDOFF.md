@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: third-return attacker prepared
+
+After defender confirmation, the captured action2 choice and shared attacker preparation match original through the second 8107 boundary: player18 type0/stamina0, base9, cost40, flags0 and power4. Represented fields and score match. Private evidence: `../Captain-Majid-analysis/third-return-action-choice-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-action-prepared-20261110.cmjsession`. Original 8132 shows defender5 stamina330 and comparison score64 but remains unmatched by a session transition. Timing/presentation are supplied; all 62 Windows checks passed; full match unsupported and progress unmeasured. Next compare defender preparation and outcome. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: defender choice confirmed
 
 The third-return defender registration is now connected to the timed replay, matching the original wait and cursor1 boundary. Another 59 polls and final confirmation match through D568 at random index120 with captured presentation waits. Private evidence: `../Captain-Majid-analysis/third-return-registration-wait-20261110` and `../Captain-Majid-analysis/third-return-final-confirm-20261110`. Subsequent encounter action/preparation remains unmatched. Timing and presentation remain supplied; 62 registered Windows checks passed, overall progress is unmeasured and a complete match remains unsupported. Next compare the following action/preparation boundary. Suggested model GPT-6.1 Terra High.

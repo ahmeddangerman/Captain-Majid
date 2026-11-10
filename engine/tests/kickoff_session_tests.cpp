@@ -2153,6 +2153,21 @@ int main(){try{using namespace captain;
  const auto third_final_wait=advance_observed_nmi_events(third_final_confirmation.state,111,{{ObservedClockEventKind::random,{0,0,0,true}}});
  check(third_final_wait.state.phase==FieldSessionPhase::sampled_field_defense_complete && third_final_wait.state.action->cursor==1,
        "Captured final confirmation wait preserves the selected prefix");
+ auto third_attack_entry=third_final_confirmation.state;third_attack_entry.current.field.random_first=75;third_attack_entry.current.field.random_second=195;
+ third_attack_entry.current.field.roster[18]={0,0,0};third_attack_entry.action->move_flags=3;
+ const auto third_attack_before=bytes(third_attack_entry);
+ const auto third_attack_choice=capture_sampled_field_ai_choice(third_attack_entry,2,0);
+ check(third_attack_choice.phase==FieldSessionPhase::sampled_field_contact_ai_choice && bytes(third_attack_entry)==third_attack_before,
+       "Captured third return attack choice preserves the confirmed input");
+ auto third_attack_profiles=sampled_attack_profiles;third_attack_profiles.team_types.resize(256,0);
+ auto third_attack_content=sampled_attack_content;third_attack_content.strength_curve.fill(9);
+ const auto third_attack_prepared=prepare_sampled_field_contact_attack(third_attack_choice,third_attack_profiles,third_attack_content);
+ check(third_attack_prepared.phase==FieldSessionPhase::sampled_field_contact_ai_prepared && third_attack_prepared.action->power==4 &&
+       third_attack_prepared.action->move_flags==0 && third_attack_prepared.control->last_carrier_cell==0 &&
+       third_attack_prepared.current.field.roster[18].stamina==0,
+       "Captured third return attack derives power and clears the observed scratch fields");
+ auto bad_third_attack=third_attack_content;bad_third_attack.strength_curve.fill(10);
+ rejects([&]{prepare_sampled_field_contact_attack(third_attack_choice,third_attack_profiles,bad_third_attack);});
  auto unobserved_registration=third_register_input;unobserved_registration.current.field.roster[5].type=8;
  rejects([&]{prepare_keeper_area_defense(unobserved_registration,field_menu);});
  rejects([&]{acknowledge_sampled_field_defense_prompt(third_presented,7);});

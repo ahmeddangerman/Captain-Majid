@@ -614,6 +614,13 @@ PhaseSessionState capture_sampled_field_ai_choice(const PhaseSessionState& input
   validate_phase_session(state);return state;
  }
  if(input.phase==FieldSessionPhase::sampled_field_defense_complete) {
+  const bool third_return=input.score && input.score->left_goals==1 && !input.score->right_goals && input.current.clock.remaining==153 &&
+   input.current.field.side==11 && input.current.field.ball_owner==18 && input.current.field.ball_cell==87 && input.current.field.selected_defenders==1 &&
+   input.scheduling && input.scheduling->selected_ids[0]==5 && input.area_defense->actions==std::array<std::uint8_t,4>{0,255,255,255};
+  if(third_return) {
+   if(action!=2 || subtype!=0 || input.action->action!=2)throw std::invalid_argument("Unsupported third-return opponent choice");
+   auto state=input;state.phase=FieldSessionPhase::sampled_field_contact_ai_choice;validate_phase_session(state);return state;
+  }
   const bool mixed=input.area_defense->actions==std::array<std::uint8_t,4>{0,6,6,255};
   if(action!=2 || subtype!=0 || (!mixed && input.area_defense->actions!=std::array<std::uint8_t,4>{6,6,6,255}))
    throw std::invalid_argument("Unsupported captured field contact AI choice");
@@ -748,6 +755,17 @@ PhaseSessionState prepare_sampled_field_contact_attack(const PhaseSessionState& 
  const auto result=prepare_attacking_action({{id,p.type,static_cast<std::uint8_t>(p.stamina),
   static_cast<std::uint8_t>(p.stamina>>8),p.level},static_cast<std::uint8_t>(player12 ? 1 : shot ? 0 : 2),0,input.recovery->attack_subtype,11,
   input.current.field.selected_defenders,input.current.field.random_first,input.current.field.random_second,false},profiles,attack);
+ const bool third_return=input.phase==FieldSessionPhase::sampled_field_contact_ai_choice && input.score && input.score->left_goals==1 &&
+  !input.score->right_goals && input.current.clock.remaining==153 && id==18 && input.current.field.ball_cell==87 &&
+  input.current.field.selected_defenders==1 && input.scheduling && input.scheduling->selected_ids[0]==5;
+ if(third_return) {
+  if(p.type!=0 || p.level!=0 || p.stamina!=0 || result.preparation.base_strength!=9 || result.preparation.stamina_cost!=40 ||
+     result.preparation.move_effect!=0 || result.move_flags!=0 || result.action_power.power!=4 || result.action_power.subtype!=0)
+   throw std::invalid_argument("Unverified third-return attack preparation");
+  auto state=input;state.action->move_flags=result.move_flags;state.action->power=result.action_power.power;
+  state.control->last_carrier_cell=0;state.phase=FieldSessionPhase::sampled_field_contact_ai_prepared;
+  validate_phase_session(state);return state;
+ }
  if(result.preparation.base_strength!=(player12 ? 21 : shot ? 22 : 24) || result.preparation.stamina_cost!=(player12 ? 20 : shot ? 80 : 40) ||
     result.preparation.move_effect!=input.action->move_effect || result.move_flags!=input.action->move_flags)
   throw std::invalid_argument("Unverified sampled field attack content");

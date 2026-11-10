@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** After the timed defender menu, the captured action2 choice and shared attacker preparation match original to the second 8107 boundary with power4. The following defender comparison is original-only; timing/presentation remain supplied. All 62 registered Windows checks passed, full match unsupported, overall progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** The third-return defender choice is registered and final confirmation matches original D568 after another 59 sampled menu polls. Later encounter action remains unmatched; timing and presentation are supplied. All 62 Windows registered checks passed; complete match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The recorded third-return defender menu now matches 220 timed polls through direction selection and A confirmation. A separate controlled check matches defender5 block registration; its continuous presentation wait remains unmatched. Inputs and presentation are supplied, all 62 registered Windows checks passed, full match unsupported, and overall progress unmeasured.
