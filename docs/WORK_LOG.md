@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player2 chooses a pass
+
+The extended original capture reproduces all 19,825 prior instruction records, then selects a pass at player2's defender21 encounter. The native replay matches the menu and 115 captured polls through action1 confirmation, random index191; the prior player3 one-two menu also remains matched. The original's next screen opens pass targeting, not yet matched by this increment. Private evidence: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-encounter-action-20261110` and `../Captain-Majid-analysis/player2-pass-menu-v1-20261110`. Windows build and all 62 checks passed. Presentation/random events remain supplied, full match unsupported and overall progress unmeasured. Next compare pass targeting and continuation. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player2 resumes after the one-two
 
 An extended original capture reproduces all 17,566 prior instruction records. Player2's recovery presentation, control setup and five captured control/clock/field cycles now match through the next E4BE encounter: clock130, side0/owner2, ball(104,164), defender21, random index188. The captured defender cursor/result remain intact through setup. `tools/verify_player3_recovered_control.py --scenario player2` feeds the native checkpoints forward; its previous player3 scenario also remains matched. Private evidence: `../Captain-Majid-analysis/player2-control-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-one-two-recovery-20261110`. Windows build and all 62 checks passed. Timing/random/presentation events remain supplied; a complete match is unsupported and overall progress unmeasured. Next compare the new encounter. Suggested model GPT-6.1 Terra High.

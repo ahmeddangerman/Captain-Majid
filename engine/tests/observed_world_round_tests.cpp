@@ -118,6 +118,15 @@ int main() {
             {{ObservedClockEventKind::facing_sample, {}, 0}, {ObservedClockEventKind::display_sample, {}, 0}});
         if (player3_menu_presentation.state.control->facing || player3_menu_presentation.state.control->display_parameter ||
             player3_encounter.control->facing != 64) return 1;
+        auto player2_encounter=player3_encounter;
+        player2_encounter.current.clock.remaining=130; player2_encounter.current.field.ball_owner=2;
+        player2_encounter.current.field.ball_x=104; player2_encounter.current.field.ball_y=164; player2_encounter.current.field.ball_cell=94;
+        player2_encounter.current.field.selected_defenders=1; player2_encounter.scheduling->selected_ids={21,0,0,0,0};
+        player2_encounter.area_defender_cursor=2; player2_encounter.area_sequence_result=2; player2_encounter.saved_ball_flight_flag=1;
+        const auto player2_menu_presentation=advance_observed_nmi_events(player2_encounter,0,
+            {{ObservedClockEventKind::facing_sample,{},0},{ObservedClockEventKind::display_sample,{},0}});
+        if(player2_menu_presentation.state.control->facing || player2_menu_presentation.state.control->display_parameter ||
+           player2_encounter.control->facing!=64 || player2_menu_presentation.state.area_defender_cursor!=2) return 1;
         auto one_two_choice = player3_menu_presentation.state;
         one_two_choice.phase = FieldSessionPhase::attack_choice_pending;
         one_two_choice.action->action = 3;

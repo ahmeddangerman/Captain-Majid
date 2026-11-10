@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player2 pass confirmation
+
+Player2's defender21 encounter matches 115 captured menu polls through pass/action1 confirmation, random index191. The generalized menu verifier uses `--scenario player2`; private evidence is `../Captain-Majid-analysis/player2-pass-menu-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-encounter-action-20261110`. Windows build and 62 checks passed. Next compare pass targeting; original timing remains supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player2 encounter
 
 Player2 now matches the original recovery presentation, setup and five control/clock/field cycles through E4BE: clock130, ball(104,164), defender21, random index188. Private checkpoint: `../Captain-Majid-analysis/player2-control-v1-20261110/cycle-05-field.cmjsession`; replay tool `tools/verify_player3_recovered_control.py --scenario player2`. Original events remain supplied. Windows build and 62 checks passed. Next compare the encounter; complete match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.

@@ -18,10 +18,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
-    parser.add_argument('--scenario', choices=('player7', 'player3'), default='player7')
+    parser.add_argument('--scenario', choices=('player7', 'player3', 'player2'), default='player7')
     args = parser.parse_args()
     lines, pcs, ram = trace_data(args.trace_directory)
-    encounter, sample, menu = (8106, 8159, 8711) if args.scenario == 'player7' else (13182, 13235, 13906)
+    encounter, sample, menu = {'player7':(8106,8159,8711), 'player3':(13182,13235,13906), 'player2':(19127,19180,19812)}[args.scenario]
     if [pcs[i] for i in (encounter, sample, menu)] != ['E4BE', 'C9C5', 'D5E5']:
         raise ValueError('Unexpected player7 encounter trace boundaries')
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
@@ -75,7 +75,7 @@ def main():
         count += 1
         previous = end
         if phase == 19:
-            expected_count, expected_action = (121, 0) if args.scenario == 'player7' else (174, 3)
+            expected_count, expected_action = {'player7':(121,0), 'player3':(174,3), 'player2':(115,1)}[args.scenario]
             if count != expected_count or ram(end)[0x43b] != expected_action:
                 raise ValueError('Unexpected captured menu choice or poll count')
             print(f'Matched {args.scenario} encounter menu and {count} polls through action confirmation; '

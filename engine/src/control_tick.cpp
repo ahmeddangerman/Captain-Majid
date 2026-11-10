@@ -354,6 +354,12 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.field.ball_owner == 3 && input.current.field.ball_x == 120 && input.current.field.ball_y == 140 &&
         input.current.field.ball_cell == 115 && input.current.field.selected_defenders == 3 &&
         input.scheduling->selected_ids == std::array<std::uint8_t,5>{16,19,20,0,0};
+    const bool captured_player2_encounter = input.phase == FieldSessionPhase::field_contact_pending && input.score && input.control && input.scheduling &&
+        input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 && input.current.clock.remaining == 130 &&
+        input.current.clock.extra_time == 0 && input.current.field.side == 0 && input.current.field.ball_owner == 2 &&
+        input.current.field.ball_x == 104 && input.current.field.ball_y == 164 && input.current.field.ball_cell == 94 &&
+        input.current.field.selected_defenders == 1 && input.scheduling->selected_ids == std::array<std::uint8_t,5>{21,0,0,0,0} &&
+        input.area_defender_cursor == 2 && input.area_sequence_result == 2 && input.saved_ball_flight_flag == 1;
     const bool captured_return_menu = (input.phase == FieldSessionPhase::sampled_field_defense_prompt || input.phase == FieldSessionPhase::sampled_field_defense_poll || input.phase == FieldSessionPhase::sampled_field_defense_preparation || input.phase == FieldSessionPhase::sampled_field_defense_complete) && input.score && input.action && input.control && input.scheduling &&
         input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 && input.current.clock.remaining == 153 &&
         input.current.field.side == 11 && input.current.field.ball_owner == 18 && input.current.field.ball_cell == 87 &&
@@ -477,10 +483,10 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
             if (state.control->facing!=0 || state.control->motion_requested!=0 || event.held!=64)
                 throw std::invalid_argument("Unsupported third-return result facing sample");
             state.control->facing=64;
-        } else if (event.kind == ObservedClockEventKind::facing_sample && (captured_player7_encounter || captured_player3_encounter)) {
+        } else if (event.kind == ObservedClockEventKind::facing_sample && (captured_player7_encounter || captured_player3_encounter || captured_player2_encounter)) {
             if (event.held != 0 || state.control->facing != 64) throw std::invalid_argument("Unsupported player7 encounter facing sample");
             state.control->facing = 0;
-        } else if (event.kind == ObservedClockEventKind::display_sample && (captured_player7_encounter || captured_player3_encounter)) {
+        } else if (event.kind == ObservedClockEventKind::display_sample && (captured_player7_encounter || captured_player3_encounter || captured_player2_encounter)) {
             if (event.held != 0 || state.control->display_parameter != 2) throw std::invalid_argument("Unsupported player7 encounter display sample");
             state.control->display_parameter = 0;
         } else if (event.kind == ObservedClockEventKind::action_cursor_sample && captured_return_contact) {
