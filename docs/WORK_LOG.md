@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Return-flight arrival center snap
+
+The captured return-flight arrival now has a separate guarded phase408 matching original $E7CC. The original changes ball x119/y110 to the cell center x116/y108 and preserves fractional bytes 248/152, the flight context and selected defender8. The native replay matches represented fields and trajectory; private evidence is in ../Captain-Majid-analysis/post-kickoff-returnflight-snap-20261110. Focused coverage checks the transition, snapshot roundtrip and rejection of invalid replay. A fresh Windows build and all 62 registered checks passed. Original defender processing is not yet native-compared. Timing and presentation remain supplied, and a complete playable match is unsupported. Overall progress remains unmeasured; next compare defender8's captured zero-range calculation. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Action3 return flight reaches defender8
 
 After the matched first arrival, 151 recorded random/travel pairs lead to the original inter-flight boundary. Shared byte arithmetic moves player18 from x141 to117 while preserving the low byte; carrier and recipient then exchange, with player14 owning the ball and player18 selected. The return target derives from the moved recipient as cell99. Shared geometry/velocity reproduce direction137, velocity -246/-49 and the first flight's retained coordinate fractions. The original's stale distance18 remains explicitly preserved.

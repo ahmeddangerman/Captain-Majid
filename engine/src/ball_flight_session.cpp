@@ -132,6 +132,17 @@ PhaseSessionState resolve_postgoal_opponent_return_flight_cell(const PhaseSessio
  if(field.ball_cell==112) {state.current.field.selected_defenders=1;state.scheduling->selected_ids[0]=8;}
  state.phase=FieldSessionPhase::postgoal_opponent_return_flight_ready;validate_phase_session(state);return state;
 }
+PhaseSessionState snap_postgoal_opponent_return_arrival(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_flight_arrived)
+  throw std::invalid_argument("Post-goal return-flight snap requires the observed arrival");
+ auto state=input;const auto cell=state.current.field.ball_cell;
+ const auto x=static_cast<std::uint8_t>((cell/12u)*8u+52u),y=static_cast<std::uint8_t>((cell%12u)*8u+84u);
+ state.current.field.ball_x=x;state.current.field.ball_y=y;
+ state.ball_trajectory->x=static_cast<std::uint16_t>((unsigned(x)<<8)|(state.ball_trajectory->x&255u));
+ state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(y)<<8)|(state.ball_trajectory->y&255u));
+ state.phase=FieldSessionPhase::postgoal_opponent_return_flight_snapped;validate_phase_session(state);return state;
+}
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {

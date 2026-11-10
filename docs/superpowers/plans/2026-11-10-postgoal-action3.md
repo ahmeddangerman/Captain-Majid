@@ -88,3 +88,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Reuse shared trajectory stepping and defender selection while preserving original pre-presentation coordinates.
 - [x] Compare each original callback and the arrival boundary with captured timing.
 - [x] Run all checks and document the evidence and remaining encounter work.
+
+## Task 11: Compare the return-flight arrival snap
+
+- [x] Test the captured unsnapped-to-centered transition, preserved fractions and defender context, replay rejection and snapshot roundtrip.
+- [x] Add a guarded boundary matching the original ordering before defender execution.
+- [x] Compare native output to original $E7CC, then verify and document the result.

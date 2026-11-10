@@ -68,7 +68,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool score35_opponent_shot=state.score && state.score->left_goals==3 && (state.score->right_goals==5 || (phase>=300 && state.score->right_goals==6)) && state.current.field.ball_owner==19;
     const bool player17_score24=state.score && state.score->left_goals==2 && state.score->right_goals==4 && state.current.field.ball_owner==17;
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
-    const bool postgoal_opponent_action=phase>=392 && phase<=407;
+    const bool postgoal_opponent_action=phase>=392 && phase<=408;
     const bool extended_opponent=player14_pass || player19_return_shot || player19_return_keeper || score23_opponent_shot || postgoal_opponent_action;
     if(phase>255 && !(phase>=345 && phase<=391) && !extended_opponent && !score23_human_pass && !score24_dribble && !score25_human_pass && !score25_shot && !ordinary_human_target)throw std::invalid_argument("Unsupported extended phase session state");
     if (ordinary_human_target) {
@@ -466,13 +466,16 @@ void validate_phase_session(const PhaseSessionState& state) {
        (phase==400 && state.current.field.ball_cell!=135 && state.current.field.ball_cell!=147) ||
        (phase==401 && state.current.field.ball_cell!=147) || (phase>=402 && state.current.field.ball_cell!=148)))
         throw std::invalid_argument("Invalid captured post-goal first flight");
-    if(phase>=405 && phase<=407 && (!state.shot_flight || !state.ball_trajectory || state.shot_flight->distance!=18 ||
+    if(phase>=405 && phase<=408 && (!state.shot_flight || !state.ball_trajectory || state.shot_flight->distance!=18 ||
        state.shot_flight->destination!=99 || state.shot_flight->counter!=255 || state.shot_flight->loose_ball ||
        state.ball_trajectory->direction!=137 || state.ball_trajectory->vx!=65290 || state.ball_trajectory->vy!=65487 ||
        state.ball_trajectory->flags!=1 || state.saved_ball_flight_flag!=1 ||
        (phase==405 && state.current.field.ball_cell!=148 && state.current.field.ball_cell!=136 && state.current.field.ball_cell!=124 && state.current.field.ball_cell!=112 && state.current.field.ball_cell!=111) ||
        (phase==406 && state.current.field.ball_cell!=136 && state.current.field.ball_cell!=124 && state.current.field.ball_cell!=112 && state.current.field.ball_cell!=111) ||
-       (phase==407 && (state.current.field.ball_cell!=99 || state.current.field.selected_defenders!=1))))
+       (phase>=407 && (state.current.field.ball_cell!=99 || state.current.field.selected_defenders!=1 ||
+        state.current.field.random_first!=19 || state.current.field.random_second!=116 ||
+        state.current.field.ball_x!=(phase==407 ? 119 : 116) || state.current.field.ball_y!=(phase==407 ? 110 : 108) ||
+        (state.ball_trajectory->x&255u)!=248 || (state.ball_trajectory->y&255u)!=152))))
         throw std::invalid_argument("Invalid captured post-goal return flight");
     if(area_action6 && (!state.action || state.action->action!=6 || !state.area_ai_target || state.area_ai_target->recipient || state.area_ai_target->cell!=state.current.field.ball_cell || ((phase==104 || phase==107) && state.current.field.side!=11) || state.current.field.selected_defenders>4))
         throw std::invalid_argument("Area action6 destination needs its captured target cell");
@@ -769,11 +772,11 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Invalid saved final area sequence result");
     if(phase==68 && state.current.field.selected_defenders)
         throw std::invalid_argument("Empty area defense completion requires no selected players");
-    if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59 || (phase>=150 && phase<=159) || phase==188 || phase==189 || phase==243 || phase==364 || (phase>=400 && phase<=407) || (phase>=365 && phase<=391) || score23_shot_flight || score25_shot || area_flight))
+    if (bool(state.shot_flight) != ((phase >= 46 && phase <= 56) || phase==59 || (phase>=150 && phase<=159) || phase==188 || phase==189 || phase==243 || phase==364 || (phase>=400 && phase<=408) || (phase>=365 && phase<=391) || score23_shot_flight || score25_shot || area_flight))
         throw std::invalid_argument("Flight setup requires exactly one shot context");
     if (state.shot_flight && (state.shot_flight->destination >= 240 || (state.shot_flight->counter != 255 && !(area_flight && (state.shot_flight->counter==38 || state.shot_flight->counter==77))) || (area_flight && (state.shot_flight->destination!=state.area_ai_target->cell || state.shot_flight->loose_ball))))
         throw std::invalid_argument("Unsupported initial shot flight context");
-    const bool trajectory=(phase>=47 && phase<=56) || phase==59 || (phase>=150 && phase<=159) || phase==188 || phase==189 || (phase>=400 && phase<=407) || (phase>=292 && phase<=294) || (phase>=328 && phase<=330) || (phase>=365 && phase<=391) || area_flight;
+    const bool trajectory=(phase>=47 && phase<=56) || phase==59 || (phase>=150 && phase<=159) || phase==188 || phase==189 || (phase>=400 && phase<=408) || (phase>=292 && phase<=294) || (phase>=328 && phase<=330) || (phase>=365 && phase<=391) || area_flight;
     if(bool(state.ball_trajectory)!=trajectory)
         throw std::invalid_argument("Numeric flight requires exactly one trajectory context");
     if(state.ball_trajectory) {

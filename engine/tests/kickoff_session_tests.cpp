@@ -1945,6 +1945,16 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(return_arrival_stream))==return_arrival_bytes,"Return-flight defender arrival snapshot roundtrips");
  rejects([&]{advance_postgoal_opponent_return_flight(postgoal_return);});
  rejects([&]{resolve_postgoal_opponent_return_flight_cell(postgoal_return);});
+ const auto postgoal_snapped=snap_postgoal_opponent_return_arrival(return_cursor);
+ check(postgoal_snapped.phase==FieldSessionPhase::postgoal_opponent_return_flight_snapped &&
+       postgoal_snapped.current.field.ball_x==116 && postgoal_snapped.current.field.ball_y==108 &&
+       (postgoal_snapped.ball_trajectory->x&255)==248 && (postgoal_snapped.ball_trajectory->y&255)==152 &&
+       postgoal_snapped.current.field.selected_defenders==1 && postgoal_snapped.scheduling->selected_ids[0]==8,
+       "Original return-flight snap centers the ball while preserving fractions and the defender prefix");
+ const auto postgoal_snapped_bytes=bytes(postgoal_snapped);std::istringstream postgoal_snapped_stream(postgoal_snapped_bytes);
+ check(bytes(load_phase_session(postgoal_snapped_stream))==postgoal_snapped_bytes,"Post-goal snapped arrival snapshot roundtrips");
+ rejects([&]{snap_postgoal_opponent_return_arrival(postgoal_return);});
+ rejects([&]{snap_postgoal_opponent_return_arrival(postgoal_snapped);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

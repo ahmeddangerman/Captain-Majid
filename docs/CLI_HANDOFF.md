@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: return-flight center snap
+
+The captured action3 return flight now matches original $E7CC after snapping the ball from x119/y110 to cell center x116/y108 while preserving fractional bytes 248/152 and selected defender8. Phase408 is the pre-defender boundary; defender resolution remains original-only. Private comparison: ../Captain-Majid-analysis/post-kickoff-returnflight-snap-20261110. Recorded timing and presentation are supplied; autonomous AI/timing and a complete playable match remain unsupported. Overall progress is unmeasured. Next compare the defender8 calculation, including the captured zero-range variation. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: action3 return flight defender entry
 
 The captured 1-0 startup now matches both action3 flights through original E7C0. After151 recorded random/travel pairs, player18 moves x141 to117, carrier switches to player14 and recipient18, and shared geometry prepares return target99, direction137 and velocity -246/-49. Five further event pairs and shared ball/defender kernels match cells136,124,112,111 and99, with defender8 selected at112. Phase407 retains unsnapped x119/y110 and random index9, as at E7C0 before original center snapping and defender handling. The original later reaches E7CF after defender processing, not yet native-compared. Evidence: ../Captain-Majid-analysis/post-kickoff-exchange-final-20261110, ../Captain-Majid-analysis/post-kickoff-returnflight-final-20261110 and ../Captain-Majid-analysis/post-kickoff-returnflight-steps-final-20261110. Full Windows build/all62 checks passed; overall progress unmeasured. Timing/presentation and AI remain supplied, and complete match is unsupported. Next compare the arrival snap and defender8 confrontation. Suggested model GPT-6.1 Terra High.
