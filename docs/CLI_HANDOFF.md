@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player2 pass flight target
+
+Player2's empty pass matches defender contact, experience, dispatch clock, observed field movement and calculated target, random index70. The original loop cursor becomes1 while the saved native contact retains defender index0; the verifier checks both. Latest snapshot: `../Captain-Majid-analysis/player2-pass-flight-v1-20261110/015.cmjsession`, trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-target-20261110/trace`. The original next takes E7CF rather than the previously traced E773 flight setup; investigate that branch before extending native behavior. NMI/travel events and private table content remain supplied. The 62 Windows checks last passed at the preceding engine checkpoint. Full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player2 pass defender
 
 Player2's empty-target pass matches defender21 action1 selection, attacker power6, defender preparation and result0, random index41. `tools/verify_player2_pass_defender.py` uses captured presentation/NMI events and explicit private direct-table content; private checkpoint `../Captain-Majid-analysis/player2-pass-defender-v3-20261110/008.cmjsession`. Windows build and 62 checks passed. Next compare contact and pass continuation; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

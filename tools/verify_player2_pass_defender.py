@@ -15,6 +15,7 @@ def main():
     parser=argparse.ArgumentParser(description=__doc__)
     for name in ('trace-directory','source','pack','exe','output'):
         parser.add_argument('--'+name,type=Path,required=True)
+    parser.add_argument('--distance-table',type=Path,required=True)
     parser.add_argument('--comparison-content',nargs=7,type=int,required=True,
                         metavar=('RANGE','OFFSET','ELIGIBLE','T0','T1','T2','T3'))
     args=parser.parse_args()
@@ -44,7 +45,7 @@ def main():
         index=ram(last)[0xe1]
         return last
 
-    def compare_defenses(at,phase,count,data=None):
+    def compare_defenses(at,phase,count,data=None,raw=None):
         actual=source.read_bytes() if data is None else data
         if len(actual)!=440 or actual[10]!=150 or int.from_bytes(actual[258:260],'little')!=phase:
             raise ValueError('Unexpected player2 pass defense snapshot')
@@ -52,7 +53,7 @@ def main():
         if actual[-11:]!=wanted:
             raise ValueError('Player2 recorded defender choice differs')
         normalized=bytearray(actual[:-11]);normalized[10]=149;normalized[258:260]=(332).to_bytes(2,'little')
-        compare_confirmed_target(normalized,ram(at),expected_sequence=2)
+        compare_confirmed_target(normalized,ram(at) if raw is None else raw,expected_sequence=2)
 
     last=wait(20828,20869)
     compare_confirmed_target(source.read_bytes(),ram(last),expected_sequence=2)
@@ -97,7 +98,48 @@ def main():
         raise ValueError('Player2 pass defender comparison differs')
     normalized=bytearray(actual);normalized[399:413]=bytes(14);normalized[414]=2;normalized[258:260]=(335).to_bytes(2,'little')
     compare_defenses(21040,335,1,normalized)
-    print(f'Matched player2 pass defender21 result {result}; random index {index}.')
+    def compare_contact(at, phase, data=None):
+        actual=source.read_bytes() if data is None else data
+        if int.from_bytes(actual[258:260],'little')!=phase or actual[414]!=result:
+            raise ValueError('Player2 pass contact phase or result differs')
+        normalized=bytearray(actual);normalized[399:413]=bytes(14);normalized[414]=2;normalized[258:260]=(335).to_bytes(2,'little')
+        original=bytearray(ram(at))
+        if phase in (342,343):
+            # Original has advanced its loop cursor past the last defender;
+            # the saved native contact retains the last defender's index.
+            if actual[413]!=0 or original[0x616]!=1:
+                raise ValueError('Unexpected pass dispatch cursor relationship')
+            original[0x616]=actual[413]
+        compare_defenses(at,335,1,normalized,original)
+
+    last=wait(21040,21050)
+    compare_contact(last,337)
+    run('--advance-first-ordinary-pass-contact')
+    compare_contact(21050,338)
+    last=wait(21049,21063)
+    compare_contact(last,338)
+    run('--advance-ordinary-pass-dispatch-clock')
+    compare_contact(21063,342)
+    last=wait(21062,21075)
+    compare_contact(last,342)
+    rows,last=menu_wait_events(lines,pcs,ram,21075,21279)
+    if len(rows)!=44: raise ValueError('Unexpected pass field movement events')
+    events=output/f'{operation+1:03d}-events.txt'
+    events.write_text('CMJNMISEQ1\n'+''.join(rows[2*slot]+'\n'+rows[2*slot+1]+'\nP '+str(slot)+'\n' for slot in range(22)))
+    movement=run('--advance-observed-pass-movement',events,index)
+    if re.findall(r'final random index (\d+);',movement)!=[str(ram(21279)[0xe1])]:
+        raise ValueError('Player2 pass movement random index differs')
+    index=ram(21279)[0xe1]
+    compare_contact(21279,343)
+    run('--resolve-ordinary-pass-flight-target',args.distance_table.resolve())
+    actual=source.read_bytes();original=ram(21282)
+    if len(actual)!=444 or actual[10]!=151 or int.from_bytes(actual[258:260],'little')!=344:
+        raise ValueError('Unexpected player2 pass flight target snapshot')
+    if actual[419:423]!=bytes(original[address] for address in (0x5fc,0x638,0x61a,0x62b)):
+        raise ValueError('Player2 pass flight target differs')
+    normalized=bytearray(actual[:419]+actual[423:]);normalized[10]=150;normalized[258:260]=(343).to_bytes(2,'little')
+    compare_contact(21282,343,normalized)
+    print(f'Matched player2 pass defender21 result {result}, contact, dispatch clock, observed field movement and flight target; original cursor 1, saved contact cursor 0; random index {index}.')
 
 
 if __name__=='__main__':
