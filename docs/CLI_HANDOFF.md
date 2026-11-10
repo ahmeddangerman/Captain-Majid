@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player7 shot blocked
+
+The interrupted player7 shot path now matches defender20 preparation and result2 (strength8, cost50, compared strength4, loss1, score80, random index165). The replay uses captured stage0/team3 data, random/travel and presentation samples; `tools/verify_player7_shot_preparation.py` and `../Captain-Majid-analysis/player7-defender-result-verified-20261110` contain the reproducible checkpoint. Windows build and all 62 checks passed; the compared extended snapshot roundtrips. Next compare the terminal contact clock and loose-ball continuation. A complete match remains unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player7 shot preparation
 
 From the matched player7 shot confirmation, `tools/verify_player7_shot_preparation.py` matches the observed defender20 action2/subtype0 handoff and original shot preparation (stamina305, power5, random index74). The guarded handoff records the opposing player; the observed choice must also be supplied to the later comparison. Private evidence: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110` and `../Captain-Majid-analysis/player7-shot-preparation-replay-v2-20261110`. Windows build and 62 checks passed. Next compare the terminal defender result and loose ball; full match unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.

@@ -535,6 +535,39 @@ SessionAttackResult prepare_ordinary_return_shot(const PhaseSessionState& input,
     result.state.phase=FieldSessionPhase::ordinary_return_shot_prepared;
     validate_phase_session(result.state);return result;
 }
+PhaseSessionState prepare_player7_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
+    const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_prepared || !input.score || !input.control || !input.recovery || !input.scheduling ||
+       input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 || input.current.clock.remaining!=146 ||
+       input.current.clock.extra_time || input.current.field.side!=0 || input.current.field.ball_owner!=7 ||
+       input.current.field.ball_x!=120 || input.current.field.ball_y!=124 || input.current.field.selected_defenders!=1 ||
+       input.scheduling->selected_ids[0]!=20 || input.recovery->opposing_player!=20 || input.current.field.roster[7].stamina!=305 ||
+       input.action->power!=5 || input.control->motion_requested!=2 || input.control->last_carrier_cell || observed_variant!=1 || input.area_contact)
+        throw std::invalid_argument("Unsupported player7 shot defender preparation");
+    const auto& player=input.current.field.roster[20];
+    const auto prepared=prepare_profiled_field_defender({20,player.type,static_cast<std::uint8_t>(player.stamina),
+        static_cast<std::uint8_t>(player.stamina>>8),player.level},players,2,0,0,defense);
+    auto state=input; state.recovery->ball_variant=observed_variant; state.control->last_carrier_cell=128;
+    state.area_contact=AreaContactContext{0,2,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+    state.phase=FieldSessionPhase::player7_shot_defender_prepared; validate_phase_session(state); return state;
+}
+PhaseSessionState compare_player7_shot_defender(const PhaseSessionState& input,const FieldComparisonContent& comparison) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player7_shot_defender_prepared || !input.area_contact)
+        throw std::invalid_argument("Player7 shot comparison requires the prepared defender");
+    DefenderContactInput contact{};
+    contact.incoming_power=input.action->power; contact.defender_power=input.area_contact->defender_power;
+    contact.random_first=input.current.field.random_first; contact.random_second=input.current.field.random_second;
+    contact.weakened=false; contact.context=0; contact.defender_slot=20; contact.subtype=0;
+    const auto configured=configure_field_comparison(contact,0,2,20,comparison);
+    const auto result=compare_defender_contact(configured);
+    if(result.result_code!=2 || result.special || result.subtype!=0)
+        throw std::invalid_argument("Only the observed player7 terminal shot defense is supported");
+    auto state=input; state.area_contact->strength=result.strength; state.area_contact->loss=result.loss;
+    state.area_contact->score=result.score; state.area_contact->result=result.result_code; state.area_sequence_result=result.result_code;
+    state.phase=FieldSessionPhase::player7_shot_defender_compared; validate_phase_session(state); return state;
+}
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
     const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);

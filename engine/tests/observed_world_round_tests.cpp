@@ -120,6 +120,35 @@ int main() {
         try { record_player7_shot_defender(player7_defender, 20, 2, 0); }
         catch (const std::invalid_argument&) { repeated_shot_defender_rejected = true; }
         if (!repeated_shot_defender_rejected) return 1;
+        auto player7_prepared = player7_defender;
+        player7_prepared.phase = FieldSessionPhase::attack_prepared;
+        player7_prepared.current.field.roster[7].stamina = 305;
+        player7_prepared.action->power = 5;
+        const auto player7_shot_motion = advance_observed_nmi_events(player7_prepared, 0,
+            {{ObservedClockEventKind::motion_sample, {}, 11}, {ObservedClockEventKind::motion_sample, {}, 0},
+             {ObservedClockEventKind::motion_sample, {}, 2}});
+        if (player7_shot_motion.state.control->motion_requested != 2 || player7_prepared.control->motion_requested != 0) return 1;
+        bool wrong_shot_motion_rejected = false;
+        try { advance_observed_nmi_events(player7_prepared, 0, {{ObservedClockEventKind::motion_sample, {}, 2}}); }
+        catch (const std::invalid_argument&) { wrong_shot_motion_rejected = true; }
+        if (!wrong_shot_motion_rejected) return 1;
+        FieldPlayerProfiles shot_defender_profiles{};
+        shot_defender_profiles.team_types.resize(1);
+        shot_defender_profiles.skills.resize(1);
+        FieldDefenseContent shot_defense{};
+        shot_defense.skill_selectors[2][0] = 1;
+        shot_defense.moves[2].push_back({0, 0, 50, 0});
+        shot_defense.strength_curve.fill(8);
+        const auto player7_defender_prepared = prepare_player7_shot_defender(player7_shot_motion.state, 1, shot_defender_profiles, shot_defense);
+        if (player7_defender_prepared.phase != FieldSessionPhase::player7_shot_defender_prepared ||
+            player7_defender_prepared.area_contact->defense_action != 2 || player7_defender_prepared.area_contact->defender_power != 8 ||
+            player7_defender_prepared.area_contact->cost != 50 || player7_defender_prepared.control->last_carrier_cell != 128) return 1;
+        std::istringstream defender_snapshot(bytes(player7_defender_prepared));
+        if (bytes(load_phase_session(defender_snapshot)) != bytes(player7_defender_prepared)) return 1;
+        bool wrong_shot_variant_rejected = false;
+        try { prepare_player7_shot_defender(player7_shot_motion.state, 2, shot_defender_profiles, shot_defense); }
+        catch (const std::invalid_argument&) { wrong_shot_variant_rejected = true; }
+        if (!wrong_shot_variant_rejected) return 1;
         bool marker_rejected = false;
         try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
         catch (const std::invalid_argument&) { marker_rejected = true; }

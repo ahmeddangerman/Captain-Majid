@@ -353,7 +353,12 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.field.side == 11 && input.current.field.ball_owner == 18 && input.current.field.ball_cell == 87 &&
         input.current.field.selected_defenders == 1 && input.scheduling->selected_ids[0] == 5 && input.action->action == 2;
     const bool captured_return_result=input.phase==FieldSessionPhase::third_return_defender_result;
-    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
+    const bool captured_player7_shot = input.phase == FieldSessionPhase::attack_prepared && input.score && input.action && input.control && input.recovery && input.scheduling &&
+        input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 && input.current.clock.remaining == 146 &&
+        input.current.clock.extra_time == 0 && input.current.field.side == 0 && input.current.field.ball_owner == 7 &&
+        input.current.field.ball_x == 120 && input.current.field.ball_y == 124 && input.current.field.roster[7].stamina == 305 &&
+        input.current.field.selected_defenders == 1 && input.scheduling->selected_ids[0] == 20 && input.recovery->opposing_player == 20 && input.action->power == 5;
+    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && !captured_player7_shot && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
          input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded && input.phase != FieldSessionPhase::ordinary_pass_prepared &&
@@ -368,6 +373,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         throw std::invalid_argument("Observed NMI sequence requires a supported contact, menu or pass-target boundary");
     auto state = input;
     auto index = initial_random_index;
+    unsigned player7_motion_stage = 0;
     for (const auto& event : events) {
         if (event.kind == ObservedClockEventKind::random) {
             const auto next = advance_reference_random(
@@ -378,6 +384,13 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
+        } else if (event.kind == ObservedClockEventKind::motion_sample && captured_player7_shot) {
+            const std::uint8_t expected[] = {11, 0, 2};
+            if (player7_motion_stage >= 3 || event.held != expected[player7_motion_stage] ||
+                (player7_motion_stage == 0 && state.control->motion_requested != 0))
+                throw std::invalid_argument("Unsupported player7 shot presentation motion");
+            state.control->motion_requested = event.held;
+            ++player7_motion_stage;
         } else if (event.kind == ObservedClockEventKind::motion_sample && input.phase == FieldSessionPhase::postgoal_opponent_return_reception_wait) {
             if (event.held > 1) throw std::invalid_argument("Only observed reception presentation motion is supported");
             state.control->motion_requested = event.held;
@@ -473,6 +486,8 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
             state.recovery->attack_subtype=event.held;
         } else throw std::invalid_argument("Observed NMI sequence contains an unsupported event for this phase");
     }
+    if (player7_motion_stage != 0 && player7_motion_stage != 3)
+        throw std::invalid_argument("Incomplete player7 shot presentation samples");
     validate_phase_session(state);
     return {std::move(state), index};
 }
