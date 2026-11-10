@@ -560,7 +560,8 @@ void validate_phase_session(const PhaseSessionState& state) {
         state.current.field.selected_defenders!=(phase>=424 ? 0 : 1) || state.scheduling->selected_ids[0]!=(phase>=424 ? 0 : 20) || state.recovery->opposing_player!=20 ||
         state.current.field.roster[7].stamina!=305 || state.action->action || state.action->power!=5 ||
         (phase==421 ? state.control->motion_requested!=2 : phase>=423 ? state.control->motion_requested!=0 : (state.control->motion_requested!=0 && state.control->motion_requested!=2)) ||
-        (phase>=423 && (state.current.field.elapsed!=(phase>=425 ? 0 : 3) || state.current.field.motion[field_motion_index(7)].status!=5 || state.control->facing)) ||
+        (phase>=423 && (state.current.field.elapsed!=(phase>=425 ? 0 : 3) || state.current.field.motion[field_motion_index(7)].status!=5 ||
+          (phase==426 ? (state.control->facing!=0 && state.control->facing!=64) : state.control->facing!=0))) ||
         (phase==426 && ((state.current.field.motion[field_motion_index(3)].x>>8)!=120 || (state.current.field.motion[field_motion_index(3)].y>>8)!=140)) ||
         state.control->last_carrier_cell!=128 || state.recovery->ball_variant!=1 || state.area_defender_cursor || state.area_sequence_result!=(phase==421 ? 255 : 2) ||
         state.area_contact->cursor || state.area_contact->defense_action!=2 || state.area_contact->defense_subtype ||

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player3 control after blocked shot
+
+The recovered player3 path matches the captured presentation wait, control setup and 11 input polls through the next clock boundary, random index202. `tools/verify_player3_recovered_control.py` feeds every native result forward, including the reset of the travel accumulator at the observed setup boundary; three facing/motion samples and random/travel events are supplied. Guarded setup clears the completed contact context, rejects early setup and preserves the input. Private evidence: `../Captain-Majid-analysis/player3-recovered-control-v2-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. Windows build and all 62 checks passed. Live timing, rendering and a complete match remain unsupported; overall progress is unmeasured. Next compare the clock and following field round. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player3 recovers blocked shot
 
 The player7 blocked-shot replay now matches the original 22-player field movement and stationary-ball winner: player3/side0 recovers at (120,140), with his fractional coordinates retained and random index82. `tools/verify_player7_shot_terminal.py` feeds the jittered checkpoint through captured random/travel events and ordered player slots, then compares the recovered owner at original 8C31. The recovery is guarded to this observed state; invalid early recovery rejects and the saved state roundtrips. Private evidence: `../Captain-Majid-analysis/player7-loose-owner-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. Windows build and all 62 registered checks passed. Events and presentation timing remain supplied, and resumed control and a complete match remain unsupported. Overall progress is unmeasured. Next compare player3 control setup and ensuing input. Suggested model GPT-6.1 Terra High.

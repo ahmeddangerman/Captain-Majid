@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Player3 resumes control after a blocked shot and matches 11 captured input polls through the next clock boundary. Timing/random events are supplied; all 62 Windows checks passed. Full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** After the blocked player7 shot, 22-player movement and player3 loose-ball recovery match the captured original with supplied timing/random events. Resumed control remains unmatched; all 62 Windows checks passed. Full match unsupported, progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The player7 blocked shot matches the loose ball at (120,140), with captured random/travel events. Recovery remains unmatched; all 62 Windows checks passed. Full match unsupported and progress unmeasured.

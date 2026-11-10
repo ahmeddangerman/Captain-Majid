@@ -360,7 +360,8 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.field.selected_defenders == 1 && input.scheduling->selected_ids[0] == 20 && input.recovery->opposing_player == 20 && input.action->power == 5;
     const bool captured_player7_result = input.phase == FieldSessionPhase::player7_shot_defender_compared;
     const bool captured_player7_contact = input.phase == FieldSessionPhase::player7_shot_contact_clocked;
-    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && !captured_player7_shot && !captured_player7_result && !captured_player7_contact && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
+    const bool captured_player3_recovery = input.phase == FieldSessionPhase::player7_shot_ball_recovered;
+    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && !captured_player7_shot && !captured_player7_result && !captured_player7_contact && !captured_player3_recovery && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
          input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded && input.phase != FieldSessionPhase::ordinary_pass_prepared &&
@@ -377,6 +378,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
     auto index = initial_random_index;
     unsigned player7_motion_stage = 0;
     unsigned player7_terminal_stage = 0;
+    unsigned player3_recovery_stage = 0;
     for (const auto& event : events) {
         if (event.kind == ObservedClockEventKind::random) {
             const auto next = advance_reference_random(
@@ -387,6 +389,12 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
+        } else if ((event.kind == ObservedClockEventKind::motion_sample || event.kind == ObservedClockEventKind::facing_sample) && captured_player3_recovery) {
+            if (player3_recovery_stage == 0 && event.kind == ObservedClockEventKind::facing_sample && event.held == 64 && !state.control->facing && !state.control->motion_requested) state.control->facing = 64;
+            else if (player3_recovery_stage == 1 && event.kind == ObservedClockEventKind::motion_sample && event.held == 1) state.control->motion_requested = 1;
+            else if (player3_recovery_stage == 2 && event.kind == ObservedClockEventKind::motion_sample && event.held == 0) state.control->motion_requested = 0;
+            else throw std::invalid_argument("Unsupported player3 recovery presentation sample");
+            ++player3_recovery_stage;
         } else if ((event.kind == ObservedClockEventKind::motion_sample || event.kind == ObservedClockEventKind::facing_sample) && captured_player7_result) {
             if (player7_terminal_stage == 0 && event.kind == ObservedClockEventKind::facing_sample && event.held == 64 &&
                 state.control->facing == 0 && state.control->motion_requested == 2) state.control->facing = 64;
@@ -500,6 +508,8 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         throw std::invalid_argument("Incomplete player7 shot presentation samples");
     if (player7_terminal_stage != 0 && player7_terminal_stage != 3)
         throw std::invalid_argument("Incomplete player7 terminal presentation samples");
+    if (player3_recovery_stage != 0 && player3_recovery_stage != 3)
+        throw std::invalid_argument("Incomplete player3 recovery presentation samples");
     validate_phase_session(state);
     return {std::move(state), index};
 }

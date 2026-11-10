@@ -1,4 +1,5 @@
 #include "captain/control_tick.hpp"
+#include "captain/control_session.hpp"
 #include "captain/action_menu.hpp"
 #include "captain/phase_session_io.hpp"
 #include <iostream>
@@ -210,6 +211,25 @@ int main() {
         try { recover_player7_shot_ball(player7_loose); }
         catch (const std::invalid_argument&) { early_recovery_rejected = true; }
         if (!early_recovery_rejected) return 1;
+        const auto player3_wait = advance_observed_nmi_events(player7_recovered, 0,
+            {{ObservedClockEventKind::facing_sample, {}, 64}, {ObservedClockEventKind::motion_sample, {}, 1},
+             {ObservedClockEventKind::motion_sample, {}, 0}});
+        if (player3_wait.state.control->facing != 64 || player3_wait.state.control->motion_requested ||
+            player7_recovered.control->facing) return 1;
+        bool wrong_player3_sample_rejected = false;
+        try { advance_observed_nmi_events(player7_recovered, 0, {{ObservedClockEventKind::motion_sample, {}, 1}}); }
+        catch (const std::invalid_argument&) { wrong_player3_sample_rejected = true; }
+        if (!wrong_player3_sample_rejected) return 1;
+        auto player3_setup_input = player3_wait.state;
+        player3_setup_input.current.field.random_first = 95; player3_setup_input.current.field.random_second = 28;
+        const auto player3_ready = prepare_player3_recovered_control(player3_setup_input);
+        if (player3_ready.state.phase != FieldSessionPhase::control_ready || player3_ready.state.current.field.ball_owner != 3 ||
+            player3_ready.state.current.field.ball_cell != 115 || player3_ready.state.area_contact ||
+            player3_ready.state.area_sequence_result != 255 || player3_setup_input.phase != FieldSessionPhase::player7_shot_ball_recovered) return 1;
+        bool early_player3_setup_rejected = false;
+        try { prepare_player3_recovered_control(player3_wait.state); }
+        catch (const std::invalid_argument&) { early_player3_setup_rejected = true; }
+        if (!early_player3_setup_rejected) return 1;
         bool marker_rejected = false;
         try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
         catch (const std::invalid_argument&) { marker_rejected = true; }

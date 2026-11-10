@@ -3,6 +3,15 @@
 #include <stdexcept>
 
 namespace captain {
+ControlSetupResult prepare_player3_recovered_control(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player7_shot_ball_recovered || input.current.field.random_first!=95 ||
+    input.current.field.random_second!=28 || !input.control || input.control->facing!=64 || input.control->motion_requested)
+  throw std::invalid_argument("Player3 recovered control needs its captured pre-setup boundary");
+ auto state=input; state.phase=FieldSessionPhase::player_control; state.area_contact.reset();
+ state.area_defender_cursor=0; state.area_sequence_result=255;
+ return prepare_session_control(state);
+}
 ControlSetupResult prepare_third_return_control(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::third_return_ball_recovered || input.current.field.random_first!=174 ||
