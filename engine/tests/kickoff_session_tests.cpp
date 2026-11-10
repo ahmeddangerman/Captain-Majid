@@ -2137,12 +2137,22 @@ int main(){try{using namespace captain;
        bytes(third_selection.state)==third_selection_before,"Captured third return confirmation selects defender5 atomically");
  auto third_register_input=third_confirmation.state;third_register_input.current.field.roster[5]={7,0,400};
  third_register_input.action->flash_counter=128;third_register_input.area_defense->blink=0;
+ const auto third_registration_wait=advance_observed_nmi_events(third_register_input,51,{{ObservedClockEventKind::random,{0,0,0,true}}});
+ check(third_registration_wait.state.phase==FieldSessionPhase::sampled_field_defense_preparation && third_registration_wait.state.action->cursor==0,
+       "Captured registration wait retains the pending defender cursor");
  const auto third_register_before=bytes(third_register_input);
  const auto third_registered=prepare_keeper_area_defense(third_register_input,field_menu);
  check(third_registered.state.phase==FieldSessionPhase::sampled_field_defense_poll && third_registered.state.action->cursor==1 &&
        third_registered.state.area_defense->actions[0]==0 && !third_registered.state.area_defense->blink &&
        third_registered.presentation.size()==1 && third_registered.presentation[0].id==10 && bytes(third_register_input)==third_register_before,
        "Captured third return defender registration matches original and preserves input");
+ const auto third_final_confirmation=poll_keeper_area_defense(third_registered.state,128,field_menu);
+ check(third_final_confirmation.confirmed && third_final_confirmation.state.phase==FieldSessionPhase::sampled_field_defense_complete &&
+       third_final_confirmation.state.action->cursor==1 && third_final_confirmation.state.area_defense->actions[0]==0,
+       "Captured final defender confirmation completes the selected prefix");
+ const auto third_final_wait=advance_observed_nmi_events(third_final_confirmation.state,111,{{ObservedClockEventKind::random,{0,0,0,true}}});
+ check(third_final_wait.state.phase==FieldSessionPhase::sampled_field_defense_complete && third_final_wait.state.action->cursor==1,
+       "Captured final confirmation wait preserves the selected prefix");
  auto unobserved_registration=third_register_input;unobserved_registration.current.field.roster[5].type=8;
  rejects([&]{prepare_keeper_area_defense(unobserved_registration,field_menu);});
  rejects([&]{acknowledge_sampled_field_defense_prompt(third_presented,7);});

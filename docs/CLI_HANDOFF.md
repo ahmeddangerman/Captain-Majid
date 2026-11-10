@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: defender choice confirmed
+
+The third-return defender registration is now connected to the timed replay, matching the original wait and cursor1 boundary. Another 59 polls and final confirmation match through D568 at random index120 with captured presentation waits. Private evidence: `../Captain-Majid-analysis/third-return-registration-wait-20261110` and `../Captain-Majid-analysis/third-return-final-confirm-20261110`. Subsequent encounter action/preparation remains unmatched. Timing and presentation remain supplied; 62 registered Windows checks passed, overall progress is unmeasured and a complete match remains unsupported. Next compare the following action/preparation boundary. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: timed defender confirmation
 
 From the third-return defender prompt, 220 original menu polls now match through right selection and A confirmation at D3D4, frame18421, random index51, with recorded random/travel and blink waits supplied. A separate controlled original comparison matches defender5/action0 registration, including no special option, cursor1 and sprite12; its presentation wait is not yet connected to the timed replay. Private evidence: `../Captain-Majid-analysis/third-return-timed-defense-v5-20261110` and `../Captain-Majid-analysis/verify-third-return-defense-registration-20261110.py`. Windows build and 62 registered checks passed. Timing and presentation remain supplied; complete match unsupported and overall progress unmeasured. Next connect registration wait and continue the encounter. Suggested model GPT-6.1 Terra High.

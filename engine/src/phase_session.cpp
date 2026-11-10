@@ -894,7 +894,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.score->left_goals==2 && state.score->right_goals==1 && state.score->kickoff==4 &&
        !state.control->display_parameter && !state.control->motion_requested && state.action->action==((phase==228 || phase==229) ? 1 : 2) &&
        state.action->power==((phase==207 || (phase>=216 && phase<=218) || phase==227 || phase==228 || phase==229) ? 24 : 21) && (phase<206 || state.recovery->attack_subtype==((phase==206 || phase==215 || phase==228 || phase==229) ? 0 : 128));
-    const bool third_return_contact=(phase>=201 && phase<=204) && state.action && state.recovery && state.control && state.experience && state.score && state.scheduling &&
+    const bool third_return_contact=(phase>=201 && phase<=205) && state.action && state.recovery && state.control && state.experience && state.score && state.scheduling &&
        state.current.field.side==11 && state.current.field.ball_owner==18 && state.current.field.ball_x==110 && state.current.field.ball_y==108 && state.current.field.ball_cell==87 &&
        state.current.field.elapsed==1 && state.current.field.selected_defenders==1 && state.scheduling->selected_ids==std::array<std::uint8_t,5>{5,0,0,0,0} &&
        (phase!=201 || (state.current.field.random_first==60 && state.current.field.random_second==131)) && state.current.clock.remaining==153 && !state.current.clock.extra_time &&
@@ -928,7 +928,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         if(state.action->menu_route!=0 || state.action->auxiliary!=0 || cursor>3 || defense.blink>13 ||
            (phase==204 ? (!(defense.pressed&128u) || cursor>=3 || defense.actions[cursor]==255 ||
                           state.recovery->opposing_player!=state.scheduling->selected_ids[cursor]) : defense.pressed!=0) ||
-           (phase>=205 && cursor!=3) ||
+           (phase>=205 && cursor!=(third_return_contact ? 1 : 3)) ||
            ((phase>=206 && phase<=208) && defense.actions!=std::array<std::uint8_t,4>{6,6,6,255}) ||
            (((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229)) && defense.actions!=std::array<std::uint8_t,4>{0,6,6,255}))
             throw std::invalid_argument("Invalid sampled field defense poll");
