@@ -160,7 +160,21 @@ def main():
                     '--capture', str(owner_roundtrip.resolve())], capture_output=True, text=True, check=True)
     if owner_roundtrip.read_bytes() != owner:
         raise ValueError('Owner snapshot roundtrip differs')
-    print('Matched race, timeout presentation, 22-player movement and opponent20 recovery; random index 117.')
+    owner_events = args.output.with_name(args.output.stem + '-owner-wait.events.txt')
+    owner_wait = args.output.with_name(args.output.stem + '-owner-wait.cmjsession')
+    if owner_events.exists() or owner_wait.exists():
+        raise ValueError('Owner presentation outputs must not exist')
+    rows, last = menu_wait_events(lines, pcs, ram, 21579, 21889)
+    if len(rows) != 106 or last != 21888:
+        raise ValueError('Unexpected opponent recovery presentation events')
+    owner_events.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
+    command = subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(owner_snapshot.resolve()),
+                              '--advance-observed-nmi-sequence', str(owner_events.resolve()), '117',
+                              '--capture', str(owner_wait.resolve())], capture_output=True, text=True, check=True)
+    if re.findall(r'final random index (\d+);', command.stdout) != ['170']:
+        raise ValueError('Opponent recovery wait random index differs')
+    compare_represented(owner_wait.read_bytes(), export_session(ram(21889)), True, 'player2', 'race.control_entry')
+    print('Matched timeout, opponent20 recovery and captured presentation to control entry; random index 170.')
 
 
 if __name__ == '__main__':

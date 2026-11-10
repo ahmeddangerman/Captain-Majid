@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: opponent20 control entry
+
+Opponent20's recovery presentation matches 53 captured NMI/travel pairs through original E0DF, random index170. Private checkpoint: `../Captain-Majid-analysis/player2-pass-control-v1-owner-wait.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The native state remains phase433: this is entry only, not completed control setup. Original facing and motion change later during the next wait; compare them and subsequent setup before continuing. Windows build and all 62 registered checks passed; timing and presentation are supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: opponent20 pass recovery
 
 After player2's same-cell pass timeout, the captured presentation wait, 22-player recovery movement and opponent20/side11 possession match the original 8C31 boundary, random index117. Private checkpoint: `../Captain-Majid-analysis/player2-pass-owner-v3-owner.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Phases432/433 save the movement and owner, `--recover-player2-same-cell-pass` applies the guarded stationary recovery, and `tools/verify_player2_pass_race.py` checks the replay, represented fields, cursor, flag, snapshot roundtrip and atomic repeated-operation rejection. Captured NMI/travel events remain supplied. Windows build and 62 checks passed. Next compare opponent20's control handoff; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

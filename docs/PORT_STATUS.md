@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Opponent20's captured recovery presentation matches through control entry, including 53 supplied NMI/travel pairs. Opponent control setup remains unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** After the same-cell timeout, captured presentation, 22-player movement and opponent20's recovery match the original. Opponent control remains unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Player2's same-cell pass now matches the first race round, captured random event and second-round timeout in their original order, with saved snapshots. Timeout presentation and opponent recovery remain unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.

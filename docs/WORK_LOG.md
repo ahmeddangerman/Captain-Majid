@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Opponent recovery presentation
+
+Opponent20's captured post-recovery presentation now replays 53 NMI/travel pairs to the original E0DF control-entry boundary; all represented session bytes match, random index117 to170. The original subsequently changes facing and motion during another wait before control setup, so the saved checkpoint is still phase433 and is not yet prepared opponent control. Evidence: `../Captain-Majid-analysis/player2-pass-control-v1-owner-wait.cmjsession`. Windows build and all 62 registered checks passed. Presentation remains supplied; a complete match is unsupported and overall progress unmeasured. Next compare the subsequent presentation samples and opponent control setup. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Opponent recovers player2's pass
 
 The player2 same-cell timeout now replays its captured presentation wait, 22-player field movement and stationary-ball recovery. Opponent20/side11 takes possession at the original 8C31 boundary, random index117. New phases432/433 preserve the observed recovery movement and owner; all represented session bytes, retained defender cursor and flight flag match the original. The verifier checks original event order, random index, owner snapshot roundtrip and atomic rejection of repeated recovery. Private evidence: `../Captain-Majid-analysis/player2-pass-owner-v3-owner.cmjsession` and the instrumented race trace. Windows build and all 62 registered checks passed. Opponent control after recovery remains unmatched; presentation and timing events are supplied, a complete match remains unsupported, and overall progress is unmeasured. Next compare opponent20's control handoff. Suggested model GPT-6.1 Terra High.
