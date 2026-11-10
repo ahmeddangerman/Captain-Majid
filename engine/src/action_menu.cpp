@@ -568,6 +568,18 @@ PhaseSessionState compare_player7_shot_defender(const PhaseSessionState& input,c
     state.area_contact->score=result.score; state.area_contact->result=result.result_code; state.area_sequence_result=result.result_code;
     state.phase=FieldSessionPhase::player7_shot_defender_compared; validate_phase_session(state); return state;
 }
+PhaseSessionState advance_player7_shot_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player7_shot_defender_compared || input.control->facing || input.control->motion_requested ||
+       input.current.field.elapsed!=1 || input.current.field.motion[field_motion_index(7)].status || prelude.field_elapsed[4]!=2)
+        throw std::invalid_argument("Player7 terminal contact needs its observed presentation boundary");
+    const auto applied=apply_contact_prelude({input.current,20,2,false},prelude);
+    if(applied.elapsed_step!=2 || applied.clock.continuation!=ClockContinuation::ready || applied.state.clock.remaining!=144 ||
+       applied.state.field.motion[field_motion_index(7)].status!=5)
+        throw std::invalid_argument("Unsupported player7 terminal contact clock");
+    auto state=input; state.current=applied.state; state.phase=FieldSessionPhase::player7_shot_contact_clocked;
+    validate_phase_session(state); return state;
+}
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
     const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);

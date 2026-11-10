@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player7 terminal contact
+
+The captured player7 terminal shot defense now matches its presentation wait and contact clock: elapsed3, player7 status5, clock144, random index57. `tools/verify_player7_shot_terminal.py` uses the private result checkpoint and team3 pack; evidence is `../Captain-Majid-analysis/player7-shot-terminal-clock-v1-20261110`. Presentation timing remains supplied. Windows build and 62 checks passed. Next compare loose-ball jitter/recovery; full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player7 shot blocked
 
 The interrupted player7 shot path now matches defender20 preparation and result2 (strength8, cost50, compared strength4, loss1, score80, random index165). The replay uses captured stage0/team3 data, random/travel and presentation samples; `tools/verify_player7_shot_preparation.py` and `../Captain-Majid-analysis/player7-defender-result-verified-20261110` contain the reproducible checkpoint. Windows build and all 62 checks passed; the compared extended snapshot roundtrips. Next compare the terminal contact clock and loose-ball continuation. A complete match remains unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.

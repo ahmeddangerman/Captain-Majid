@@ -149,6 +149,36 @@ int main() {
         try { prepare_player7_shot_defender(player7_shot_motion.state, 2, shot_defender_profiles, shot_defense); }
         catch (const std::invalid_argument&) { wrong_shot_variant_rejected = true; }
         if (!wrong_shot_variant_rejected) return 1;
+        auto player7_compared = player7_defender_prepared;
+        player7_compared.phase = FieldSessionPhase::player7_shot_defender_compared;
+        player7_compared.area_contact->strength = 4;
+        player7_compared.area_contact->loss = 1;
+        player7_compared.area_contact->score = 80;
+        player7_compared.area_contact->result = 2;
+        player7_compared.area_sequence_result = 2;
+        player7_compared.control->facing = 0;
+        const auto terminal_wait = advance_observed_nmi_events(player7_compared, 0,
+            {{ObservedClockEventKind::facing_sample, {}, 64}, {ObservedClockEventKind::motion_sample, {}, 0},
+             {ObservedClockEventKind::facing_sample, {}, 0}});
+        if (terminal_wait.state.control->facing || terminal_wait.state.control->motion_requested ||
+            player7_compared.control->motion_requested != 2) return 1;
+        bool invalid_terminal_wait_rejected = false;
+        try { advance_observed_nmi_events(player7_compared, 0, {{ObservedClockEventKind::motion_sample, {}, 0}}); }
+        catch (const std::invalid_argument&) { invalid_terminal_wait_rejected = true; }
+        if (!invalid_terminal_wait_rejected) return 1;
+        ContactPreludeContent player7_contact_content{};
+        player7_contact_content.field_elapsed[4] = 2;
+        const auto player7_contact = advance_player7_shot_contact(terminal_wait.state, player7_contact_content);
+        if (player7_contact.phase != FieldSessionPhase::player7_shot_contact_clocked ||
+            player7_contact.current.clock.remaining != 144 || player7_contact.current.field.elapsed != 3 ||
+            player7_contact.current.field.motion[field_motion_index(7)].status != 5 ||
+            terminal_wait.state.current.clock.remaining != 146) return 1;
+        std::istringstream contact_snapshot(bytes(player7_contact));
+        if (bytes(load_phase_session(contact_snapshot)) != bytes(player7_contact)) return 1;
+        bool invalid_contact_rejected = false;
+        try { advance_player7_shot_contact(player7_compared, player7_contact_content); }
+        catch (const std::invalid_argument&) { invalid_contact_rejected = true; }
+        if (!invalid_contact_rejected) return 1;
         bool marker_rejected = false;
         try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
         catch (const std::invalid_argument&) { marker_rejected = true; }
