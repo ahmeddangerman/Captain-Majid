@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player7 shot loose-ball jitter
+
+The matched terminal contact now advances through three captured NMI random/travel events and the original loose-ball jitter: ball(120,124) to (120,140), selected-defender prefix cleared, random index60. `tools/verify_player7_shot_terminal.py` compares the resulting snapshot with the private original 8BE5 boundary. The guarded operation rejects other random inputs and preserves snapshot roundtrips and input immutability. Evidence: `../Captain-Majid-analysis/player7-loose-ball-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. Windows build and all 62 checks passed. Frame events remain supplied; recovery and a complete match remain unsupported, and overall progress is unmeasured. Next compare the original 22-player movement and loose-ball owner. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player7 terminal shot contact
 
 From the matched defender result, `tools/verify_player7_shot_terminal.py` replays the original presentation wait with captured random/travel events and three observed facing/motion samples, then matches the terminal contact boundary: elapsed1-to3, player7 status5, clock146-to144, random index57. The guarded transition reuses the contact prelude with action2 and the observed two-tick content. Tests cover sample ordering, invalid pre-presentation contact, input immutability and snapshot roundtrips. Private evidence: `../Captain-Majid-analysis/player7-shot-terminal-clock-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. Windows build and all 62 registered checks passed. Frame and presentation timing are supplied, and the following loose-ball handling remains unmatched. A complete match is unsupported and overall progress unmeasured. Next compare the loose-ball jitter and recovery. Suggested model GPT-6.1 Terra High.

@@ -359,7 +359,8 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.field.ball_x == 120 && input.current.field.ball_y == 124 && input.current.field.roster[7].stamina == 305 &&
         input.current.field.selected_defenders == 1 && input.scheduling->selected_ids[0] == 20 && input.recovery->opposing_player == 20 && input.action->power == 5;
     const bool captured_player7_result = input.phase == FieldSessionPhase::player7_shot_defender_compared;
-    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && !captured_player7_shot && !captured_player7_result && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
+    const bool captured_player7_contact = input.phase == FieldSessionPhase::player7_shot_contact_clocked;
+    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && !captured_player7_shot && !captured_player7_result && !captured_player7_contact && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
          input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded && input.phase != FieldSessionPhase::ordinary_pass_prepared &&

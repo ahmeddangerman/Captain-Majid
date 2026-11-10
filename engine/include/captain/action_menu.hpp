@@ -74,6 +74,7 @@ PhaseSessionState prepare_player7_shot_defender(const PhaseSessionState& input,s
     const FieldPlayerProfiles& players,const FieldDefenseContent& defense);
 PhaseSessionState compare_player7_shot_defender(const PhaseSessionState& input,const FieldComparisonContent& comparison);
 PhaseSessionState advance_player7_shot_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude);
+PhaseSessionState jitter_player7_shot_ball(const PhaseSessionState& input);
 SessionAttackResult prepare_ordinary_return_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,const FieldPlayerProfiles& players,const FieldDefenseContent& defense);
 PhaseSessionState compare_ordinary_return_shot_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison);

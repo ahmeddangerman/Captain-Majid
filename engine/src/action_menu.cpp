@@ -1,4 +1,5 @@
 #include "captain/action_menu.hpp"
+#include "captain/ball_recovery.hpp"
 #include "captain/defender_selection.hpp"
 #include "captain/defensive_move_inspection.hpp"
 #include "captain/field_state_io.hpp"
@@ -579,6 +580,17 @@ PhaseSessionState advance_player7_shot_contact(const PhaseSessionState& input,co
         throw std::invalid_argument("Unsupported player7 terminal contact clock");
     auto state=input; state.current=applied.state; state.phase=FieldSessionPhase::player7_shot_contact_clocked;
     validate_phase_session(state); return state;
+}
+PhaseSessionState jitter_player7_shot_ball(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player7_shot_contact_clocked || input.current.field.random_first!=2 || input.current.field.random_second!=56)
+        throw std::invalid_argument("Player7 loose ball needs its observed random boundary");
+    const auto ball=jitter_loose_ball(input.current.field.ball_x,input.current.field.ball_y,input.current.field.random_first,input.current.field.random_second);
+    if(!ball.inside_field || ball.x!=120 || ball.y!=140 || ball.x_jitter_control!=0)
+        throw std::invalid_argument("Unsupported player7 loose ball position");
+    auto state=input; state.current.field.ball_x=ball.x; state.current.field.ball_y=ball.y;
+    state.current.field.selected_defenders=0; state.scheduling->selected_ids.fill(0); state.recovery->x_jitter_control=ball.x_jitter_control;
+    state.phase=FieldSessionPhase::player7_shot_ball_jittered; validate_phase_session(state); return state;
 }
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
     const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {

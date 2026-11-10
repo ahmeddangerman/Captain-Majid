@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** The player7 blocked shot matches the loose ball at (120,140), with captured random/travel events. Recovery remains unmatched; all 62 Windows checks passed. Full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** The player7 blocked shot matches through its terminal contact clock at 144, using captured presentation events. Loose-ball recovery is next; all 62 Windows checks passed. Full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The player7 shot matches a captured terminal defender result2 using explicit stage0/team3 data and supplied presentation events. The subsequent contact clock and loose ball remain unmatched; all 62 Windows checks passed. Complete match unsupported, progress unmeasured.

@@ -179,6 +179,19 @@ int main() {
         try { advance_player7_shot_contact(player7_compared, player7_contact_content); }
         catch (const std::invalid_argument&) { invalid_contact_rejected = true; }
         if (!invalid_contact_rejected) return 1;
+        auto player7_loose_input = player7_contact;
+        player7_loose_input.current.field.random_first = 2;
+        player7_loose_input.current.field.random_second = 56;
+        const auto player7_loose = jitter_player7_shot_ball(player7_loose_input);
+        if (player7_loose.phase != FieldSessionPhase::player7_shot_ball_jittered || player7_loose.current.field.ball_x != 120 ||
+            player7_loose.current.field.ball_y != 140 || player7_loose.current.field.selected_defenders ||
+            player7_loose.scheduling->selected_ids[0] || player7_loose_input.current.field.ball_y != 124) return 1;
+        std::istringstream loose_snapshot(bytes(player7_loose));
+        if (bytes(load_phase_session(loose_snapshot)) != bytes(player7_loose)) return 1;
+        bool invalid_loose_random_rejected = false;
+        try { jitter_player7_shot_ball(player7_contact); }
+        catch (const std::invalid_argument&) { invalid_loose_random_rejected = true; }
+        if (!invalid_loose_random_rejected) return 1;
         bool marker_rejected = false;
         try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
         catch (const std::invalid_argument&) { marker_rejected = true; }

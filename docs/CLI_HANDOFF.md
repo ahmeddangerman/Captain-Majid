@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player7 shot loose ball
+
+The blocked player7 shot now matches the captured loose-ball jitter at (120,140), with the selected defender cleared and random index60. `tools/verify_player7_shot_terminal.py` produces `../Captain-Majid-analysis/player7-loose-ball-v1-20261110/loose-ball-jittered.cmjsession`; events and timing remain supplied. Windows build and 62 checks passed. Next compare the original 22-player movement and recovery; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player7 terminal contact
 
 The captured player7 terminal shot defense now matches its presentation wait and contact clock: elapsed3, player7 status5, clock144, random index57. `tools/verify_player7_shot_terminal.py` uses the private result checkpoint and team3 pack; evidence is `../Captain-Majid-analysis/player7-shot-terminal-clock-v1-20261110`. Presentation timing remains supplied. Windows build and 62 checks passed. Next compare loose-ball jitter/recovery; full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.

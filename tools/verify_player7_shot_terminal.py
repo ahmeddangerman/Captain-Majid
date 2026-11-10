@@ -74,7 +74,36 @@ def main():
     compare_checkpoint(normalized, ram(11219), 20, 20, 'player7', 'terminal contact clock', None, False, False)
     if ram(11219)[0xe1] != ram(end)[0xe1]:
         raise ValueError('Unexpected random change across terminal contact')
-    print(f'Matched terminal-defense wait and contact clock through 144; random index {ram(end)[0xe1]}.')
+    rows, last = menu_wait_events(lines, pcs, ram, 11218, 11258)
+    if last != 11257:
+        raise ValueError('Unexpected original loose-ball wait boundary')
+    events = output / 'loose-ball-wait-events.txt'
+    events.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
+    waiting = output / 'loose-ball-wait.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(clocked),
+                          '--advance-observed-nmi-sequence', str(events), str(ram(11219)[0xe1]),
+                          '--capture', str(waiting)], capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    if re.findall(r'final random index (\d+);', run.stdout) != [str(ram(last)[0xe1])]:
+        raise ValueError('Loose-ball wait random index differs')
+    actual = waiting.read_bytes()
+    normalized = bytearray(actual[:259] + actual[260:])
+    normalized[10], normalized[258] = 133, 20
+    compare_checkpoint(normalized, ram(last), 20, 20, 'player7', 'loose-ball wait', None, False, False)
+    jittered = output / 'loose-ball-jittered.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(waiting),
+                          '--jitter-player7-shot-ball', '--capture', str(jittered)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    actual = jittered.read_bytes()
+    if len(actual) != 419 or actual[10] != 143 or int.from_bytes(actual[258:260], 'little') != 424:
+        raise ValueError('Unexpected jittered loose-ball snapshot')
+    normalized = bytearray(actual[:259] + actual[260:])
+    normalized[10], normalized[258] = 133, 20
+    compare_checkpoint(normalized, ram(11259), 20, 20, 'player7', 'loose-ball jitter', None, False, False)
+    print(f'Matched terminal contact and loose-ball jitter at (120, 140); random index {ram(last)[0xe1]}.')
 
 
 if __name__ == '__main__':
