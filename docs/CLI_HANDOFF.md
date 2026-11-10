@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Research update - 2026-11-10: longer encounter trace
+
+The private original emulator trace now extends to frame18850, with all 3,436 overlapping instruction records and RAM snapshots matching the prior capture. A separate controlled right-direction selection and repeated A inputs advanced the original encounter to a block selection and later action presentation; the first observed defender-action boundary is 8132 at frame18490. This later segment is original-only. Private evidence: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-extended-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-extended-choice-repeat-20261110`. The native matched boundary remains C600 as described below. Next compare menu initialization and selection using these controlled observations. Overall progress remains unmeasured; full match unsupported. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: third return encounter at C600
 
 After the 85BF encounter wait, 74 further supplied random/travel pairs match original C600 represented fields and score, random index19. Private evidence: `../Captain-Majid-analysis/third-return-contact-later-wait-20261110`. Presentation/timing remain supplied and subsequent encounter transitions remain unmatched. The prior increment's Windows build and all 62 registered checks passed; this trace-only continuation made no further engine change. Overall progress is unmeasured and a complete match unsupported. Next inspect C600 and subsequent state changes. Suggested model GPT-6.1 Terra High.

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Extended original encounter capture
+
+Built an isolated private emulator trace through frame18850, leaving the prior capture intact. All 3,436 instruction records and RAM snapshots in the overlap match the earlier trace. A controlled right-direction selection followed by repeated A inputs advanced the original encounter; the captured screen showed a block selection and later action presentation. The first observed defender action boundary is original 8132 at frame18490; continuation changes are original-only, not yet matched by native code. Private traces: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-extended-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-extended-choice-repeat-20261110`. No engine code changed in this research increment. The recorded choice and presentation do not establish autonomous AI or complete match play. Overall progress is unmeasured. Next compare the encounter menu initialization and selection boundaries. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Arabic progress publication
 
 Updated only the November 10 Arabic progress note in the separate website checkout, committed and pushed public main at `d44aa3d`. Inline JavaScript syntax and note structure passed; the live GitHub Pages HTTP response later contained the new note. This was a source/HTTP check, not a browser render verification. Overall engine progress remains unmeasured; a complete match is unsupported. Next verify the local demo's interactive input and continue the original encounter. Suggested model GPT-6.1 Terra High.
