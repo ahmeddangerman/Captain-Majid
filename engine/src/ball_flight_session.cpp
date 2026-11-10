@@ -170,6 +170,27 @@ PhaseSessionState begin_postgoal_defender_result_wait(const PhaseSessionState& i
   throw std::invalid_argument("Post-goal defender presentation wait requires the observed comparison");
  auto state=input;state.phase=FieldSessionPhase::postgoal_opponent_return_defender_wait;validate_phase_session(state);return state;
 }
+PhaseSessionState advance_postgoal_defender_clock(const PhaseSessionState& input,const ContactPreludeContent& content) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_defender_wait || input.control->facing!=0 ||
+    input.current.field.random_first!=40 || input.current.field.random_second!=191 ||
+    input.current.field.motion[field_motion_index(8)].status || content.field_elapsed[5]!=1 || content.defender_status[2]!=6)
+  throw std::invalid_argument("Post-goal defender clock requires the observed result wait");
+ const auto applied=apply_contact_prelude({input.current,8,2,true},content);
+ if(applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready)
+  throw std::invalid_argument("Unobserved post-goal defender clock continuation");
+ auto state=input;state.current=applied.state;state.phase=FieldSessionPhase::postgoal_opponent_return_defender_clocked;
+ validate_phase_session(state);return state;
+}
+PhaseSessionState finish_postgoal_return_defender(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_defender_clocked ||
+    input.current.field.random_first!=62 || input.current.field.random_second!=45)
+  throw std::invalid_argument("Post-goal defender cleanup requires the observed clock wait");
+ auto state=input;state.area_defender_cursor=1;state.current.field.selected_defenders=0;
+ state.scheduling->selected_ids.fill(0);state.current.field.elapsed=0;
+ state.phase=FieldSessionPhase::postgoal_opponent_return_defender_done;validate_phase_session(state);return state;
+}
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {

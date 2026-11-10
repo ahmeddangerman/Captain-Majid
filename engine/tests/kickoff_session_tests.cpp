@@ -1987,6 +1987,29 @@ int main(){try{using namespace captain;
  rejects([&]{begin_postgoal_defender_result_wait(defender_wait.state);});
  rejects([&]{begin_postgoal_defender_result_wait(defender_presentation);});
  rejects([&]{advance_observed_nmi_events(defender_presentation,10,{{ObservedClockEventKind::facing_sample,{},1}});});
+ auto defender_clock_input=defender_sample.state;defender_clock_input.current.field.random_first=40;defender_clock_input.current.field.random_second=191;
+ ContactPreludeContent defender_clock_content{};defender_clock_content.field_elapsed[5]=1;defender_clock_content.defender_status[2]=6;
+ const auto defender_clock=advance_postgoal_defender_clock(defender_clock_input,defender_clock_content);
+ check(defender_clock.phase==FieldSessionPhase::postgoal_opponent_return_defender_clocked &&
+       defender_clock.current.clock.remaining==156 && defender_clock.current.field.elapsed==1 &&
+       defender_clock.current.field.motion[field_motion_index(8)].status==6,"Defender result uses original contact status and clock");
+ const auto defender_clock_wait=advance_observed_nmi_events(defender_clock,151,
+  {{ObservedClockEventKind::random,{88,187,11,true}},{ObservedClockEventKind::travel,{},0,880},
+   {ObservedClockEventKind::random,{156,165,18,true}},{ObservedClockEventKind::travel,{},0,880},
+   {ObservedClockEventKind::random,{116,30,170,true}},{ObservedClockEventKind::travel,{},0,880}});
+ check(defender_clock_wait.random_index==154 && defender_clock_wait.state.current.field.random_first==62 &&
+       defender_clock_wait.state.current.field.random_second==45,"Defender clock consumes the three recorded event pairs");
+ const auto defender_done=finish_postgoal_return_defender(defender_clock_wait.state);
+ check(defender_done.phase==FieldSessionPhase::postgoal_opponent_return_defender_done &&
+       !defender_done.current.field.selected_defenders && !defender_done.scheduling->selected_ids[0] &&
+       !defender_done.current.field.elapsed && defender_done.area_defender_cursor==1,
+       "Defender result cleanup clears the selected prefix and elapsed field");
+ const auto defender_done_bytes=bytes(defender_done);std::istringstream defender_done_stream(defender_done_bytes);
+ check(bytes(load_phase_session(defender_done_stream))==defender_done_bytes,"Post-goal defender cleanup snapshot roundtrips");
+ rejects([&]{advance_postgoal_defender_clock(defender_compared,defender_clock_content);});
+ rejects([&]{finish_postgoal_return_defender(defender_clock);});
+ auto bad_defender_clock=defender_clock_content;bad_defender_clock.defender_status[2]=0;
+ rejects([&]{advance_postgoal_defender_clock(defender_clock_input,bad_defender_clock);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

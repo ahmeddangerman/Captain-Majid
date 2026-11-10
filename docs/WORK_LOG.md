@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Defender result0 clock and cleanup
+
+Following the supplied result0 wait, the original sets defender8 status6 and advances clock157 to156 before the next NMI; the shared contact prelude reproduces those effects and elapsed1. Three recorded random/travel pairs then reach random index154. The original increments the defender cursor, clears the selected prefix and resets elapsed; phase412 matches $888A with cursor1 and defender status retained. Native represented fields, score and trajectory also match the original before the first NMI and at $8882. Private evidence: ../Captain-Majid-analysis/postgoal-defender-clock-20261110. A fresh Windows build and all 62 registered checks passed. Timing and presentation remain supplied; subsequent flight continuation is original-only. Overall progress remains unmeasured and a complete playable match is unsupported. Next trace the continuation following $E7CF. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Defender result0 presentation wait
 
 The captured action3 defender result0 now continues through the original $88AD boundary. Phase410 retains the comparison and ball trajectory while accepting 141 recorded NMI random/travel pairs and one recorded facing change from64 to0; native represented fields, score and trajectory match the original, with final random index151. This is a supplied presentation wait, not execution of the original presentation engine. Private evidence: ../Captain-Majid-analysis/postgoal-defender-wait-20261110. A fresh Windows build and all 62 registered checks passed. The original next changes defender8 status to6, advances the clock and clears the selected defender list; those changes remain original-only. Overall progress remains unmeasured, and a complete playable match and autonomous timing/AI remain unsupported. Next compare those changes. Suggested model GPT-6.1 Terra High.

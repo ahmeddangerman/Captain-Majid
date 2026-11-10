@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: defender result0 cleanup
+
+The captured action3 defender result0 now matches original through $888A: the shared contact prelude sets defender8 status6 and moves clock157 to156; three recorded NMI random/travel pairs lead to index154; cleanup resets elapsed and clears the selected defender prefix, retaining cursor1. Phases411/412 match represented fields, score and trajectory at original $C9C5, $8882 and $888A. Private evidence: ../Captain-Majid-analysis/postgoal-defender-clock-20261110. The original flight continuation after this is not yet native-compared. Timing and presentation remain supplied; a complete playable match is unsupported and overall progress unmeasured. Next trace continuation after $E7CF. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: defender result wait
 
 The captured action3 defender result0 now matches original $88AD after 141 recorded random/travel pairs and one supplied facing sample. Phase410 retains the defender comparison and trajectory, with random index151; no live presentation is simulated. Private evidence: ../Captain-Majid-analysis/postgoal-defender-wait-20261110. The original then sets defender8 status6, advances the clock and clears the defender list, none yet native-compared. Overall progress is unmeasured; a complete playable match and autonomous timing/AI remain unsupported. Next compare that clock and list cleanup. Suggested model GPT-6.1 Terra High.

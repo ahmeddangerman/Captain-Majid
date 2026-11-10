@@ -107,3 +107,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Trace the ordered original random/travel events and facing samples through $88AD.
 - [x] Test and implement a guarded wait retaining the defender result and supplied samples.
 - [x] Compare the saved state at $88AD, run verification and document the remaining continuation.
+
+## Task 14: Compare defender result0 clock and cleanup
+
+- [x] Trace original status, clock, NMI ordering and selected-defender cleanup.
+- [x] Test and connect the existing contact clock and guarded list cleanup, including snapshots.
+- [x] Compare against original boundaries, verify and document the next continuation.
