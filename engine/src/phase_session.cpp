@@ -751,7 +751,15 @@ void validate_phase_session(const PhaseSessionState& state) {
           }
        }
     }
-    if(state.human_defense_choices && !player7_shot_choices && !player7_shot36_choices && ((phase!=19 && phase!=20) || !state.score || !state.action || !state.recovery || !state.scheduling || !state.control || !state.experience ||
+    const bool player3_one_two_choices=state.human_defense_choices && (phase==19 || phase==20) && state.score && state.action && state.recovery && state.scheduling && state.control && state.experience &&
+       state.human_defense_choices->actions==std::array<std::uint8_t,5>{1,2,2,0,0} && state.human_defense_choices->subtypes==std::array<std::uint8_t,5>{} &&
+       state.score->left_goals==1 && state.score->right_goals==0 && state.score->kickoff==4 && state.current.clock.remaining==139 && state.current.clock.extra_time==0 &&
+       state.current.field.side==0 && state.current.field.ball_owner==3 && state.current.field.ball_x==120 && state.current.field.ball_y==140 && state.current.field.ball_cell==115 &&
+       state.current.field.roster[3].stamina==(phase==19 ? 310 : 250) && state.current.field.selected_defenders==3 &&
+       state.scheduling->selected_ids==std::array<std::uint8_t,5>{16,19,20,0,0} && state.current.field.random_first==32 && state.current.field.random_second==42 &&
+       state.recovery->opposing_player==20 && state.action->action==3 && state.action->cursor==162 && state.action->move_flags==3 &&
+       state.action->power==(phase==19 ? 5 : 8) && state.control->motion_requested==1 && state.saved_ball_flight_flag==1 && !state.area_defender_cursor && !state.area_contact;
+    if(state.human_defense_choices && !player3_one_two_choices && !player7_shot_choices && !player7_shot36_choices && ((phase!=19 && phase!=20) || !state.score || !state.action || !state.recovery || !state.scheduling || !state.control || !state.experience ||
        state.human_defense_choices->actions!=std::array<std::uint8_t,5>{1,1,1,1,1} ||
        state.human_defense_choices->subtypes!=std::array<std::uint8_t,5>{} ||
        state.score->left_goals!=2 || state.score->right_goals!=2 || state.score->kickoff!=4 ||

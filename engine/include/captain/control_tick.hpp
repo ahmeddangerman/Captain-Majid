@@ -54,7 +54,7 @@ struct NmiControlPollResult {
     ControlPollResult poll;
     std::uint8_t random_index = 0;
 };
-enum class ObservedClockEventKind { random, travel, schedule, energy, motion_sample, facing_sample, display_sample, carrier_cell_sample, defender_cursor_sample, attack_subtype_sample, field_player, ball_mode_sample, action_cursor_sample, stamina_sample };
+enum class ObservedClockEventKind { random, travel, schedule, energy, motion_sample, facing_sample, display_sample, carrier_cell_sample, defender_cursor_sample, attack_subtype_sample, field_player, ball_mode_sample, action_cursor_sample, stamina_sample, move_flags_sample, opposing_player_sample };
 struct ObservedClockEvent {
     ObservedClockEventKind kind;
     ReferenceRandomInputs random{};

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player3 one-two prepared
+
+Player3's captured one-two matches through the presentation wait, defender choices1/2/2 and attacker preparation (stamina250, power8, random index12). The original timing/random/presentation events are supplied; session version142 roundtrips. Private final checkpoint: `../Captain-Majid-analysis/player3-one-two-prepare-v2-20261110/one-two-prepared.cmjsession`; replay tool `tools/verify_player3_one_two.py`. Windows build and 62 checks passed. Next compare defender calculations and result; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player3 one-two selected
 
 At player3's three-defender encounter, `tools/verify_player7_encounter_menu.py --scenario player3` matches 174 original menu polls through one-two/action3 confirmation, random index195. Private evidence: `../Captain-Majid-analysis/player3-second-menu-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player3-encounter-action-20261110`. Prior player7 shot-menu replay remains matched; Windows build and 62 checks passed. Next compare the one-two action and defender sequence; original timing remains supplied, a full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

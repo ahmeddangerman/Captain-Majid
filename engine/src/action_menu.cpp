@@ -613,6 +613,37 @@ PhaseSessionState recover_player7_shot_ball(const PhaseSessionState& input) {
     state.recovery->attack_subtype=result.attack_subtype;
     state.phase=FieldSessionPhase::player7_shot_ball_recovered; validate_phase_session(state); return state;
 }
+PhaseSessionState capture_player3_one_two_defenders(const PhaseSessionState& input,const std::array<std::uint8_t,3>& actions) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_choice_pending || !input.score || !input.action || !input.control || !input.recovery || !input.scheduling ||
+       input.score->left_goals!=1 || input.score->right_goals || input.score->kickoff!=4 || input.current.clock.remaining!=139 || input.current.clock.extra_time ||
+       input.current.field.side || input.current.field.ball_owner!=3 || input.current.field.ball_x!=120 || input.current.field.ball_y!=140 ||
+       input.current.field.ball_cell!=115 || input.current.field.roster[3].stamina!=310 || input.current.field.selected_defenders!=3 ||
+       input.scheduling->selected_ids!=std::array<std::uint8_t,5>{16,19,20,0,0} || input.current.field.random_first!=32 || input.current.field.random_second!=42 ||
+       input.action->action!=3 || input.action->cursor!=162 || input.action->move_flags!=3 || input.action->power!=5 || input.control->motion_requested!=1 ||
+       input.recovery->opposing_player!=20 || input.saved_ball_flight_flag!=1 || input.area_defender_cursor || input.area_contact ||
+       input.human_defense_choices || actions!=std::array<std::uint8_t,3>{1,2,2})
+        throw std::invalid_argument("Unsupported player3 one-two defender choices");
+    auto state=input; HumanDefenseChoices choices{};
+    for(std::size_t i=0;i<actions.size();++i) choices.actions[i]=actions[i];
+    state.human_defense_choices=choices; validate_phase_session(state); return state;
+}
+SessionAttackResult prepare_player3_one_two(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_choice_pending || !input.human_defense_choices || input.action->action!=3)
+        throw std::invalid_argument("Player3 one-two preparation needs its captured defender choices");
+    const auto& field=input.current.field; const auto& player=field.roster[3];
+    const auto prepared=prepare_attacking_action({{3,player.type,static_cast<std::uint8_t>(player.stamina),
+        static_cast<std::uint8_t>(player.stamina>>8),player.level},3,0,0,0,field.selected_defenders,
+        field.random_first,field.random_second,false},players,attack);
+    if(prepared.preparation.stamina_cost!=60 || prepared.energy.stamina!=250 || prepared.action_power.power!=8 ||
+       prepared.action_power.subtype!=0 || prepared.move_flags!=3)
+        throw std::invalid_argument("Unsupported player3 one-two attack content");
+    auto state=input; state.current.field.roster[3].stamina=prepared.energy.stamina; state.action->power=prepared.action_power.power;
+    state.action->move_effect=prepared.preparation.move_effect; state.action->move_flags=prepared.move_flags;
+    state.recovery->attack_subtype=prepared.action_power.subtype; state.phase=FieldSessionPhase::attack_prepared;
+    validate_phase_session(state); return {std::move(state),prepared};
+}
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
     const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);

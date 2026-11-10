@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player3 one-two preparation
+
+The captured one-two path now matches its original presentation/defender-selection wait and attacker preparation. Explicit ordered samples preserve the observed move flags, motion, ball mode and defender handoffs among captured NMI random/travel events. The observed defender choices are1/2/2 with subtype0; player3's stamina changes310-to250 and action power becomes8 at original 804F, random index12. `tools/verify_player3_one_two.py` feeds results forward and compares represented state and stored choices. Existing session version142 roundtrips; malformed/incomplete samples and wrong choices reject. Private evidence: `../Captain-Majid-analysis/player3-one-two-prepare-v2-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player3-encounter-action-20261110`. Windows build and all 62 checks passed. The following defender comparisons are not yet matched; events remain supplied, full match unsupported, overall progress unmeasured. Next compare each defender. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Corrected published Arabic progress note
 
 The earlier November10 website update had accidentally saved question marks instead of its Arabic progress text. Replaced only that daily note in the separate website checkout, accurately describing the verified blocked-shot recovery, player3 encounter and current demo limitations. Website main commit `6715103` is pushed; UTF-8 Arabic text and inline JavaScript syntax passed local checks, and the published page returned HTTP200 with the corrected note. A browser render was not checked. Engine work remains on `work`; complete match unsupported and progress unmeasured. Next continue the one-two original comparison. Suggested model GPT-6.1 Terra High.

@@ -118,6 +118,32 @@ int main() {
             {{ObservedClockEventKind::facing_sample, {}, 0}, {ObservedClockEventKind::display_sample, {}, 0}});
         if (player3_menu_presentation.state.control->facing || player3_menu_presentation.state.control->display_parameter ||
             player3_encounter.control->facing != 64) return 1;
+        auto one_two_choice = player3_menu_presentation.state;
+        one_two_choice.phase = FieldSessionPhase::attack_choice_pending;
+        one_two_choice.action->action = 3;
+        one_two_choice.recovery->opposing_player = 20;
+        std::istringstream one_two_events("CMJNMISEQ1\nG 3\nM 23\nM 0\nB 130\nM 1\nB 0\nO 16\nO 19\nO 20\n");
+        const auto one_two_wait = advance_observed_nmi_events(one_two_choice, 0, load_observed_nmi_events(one_two_events));
+        if (one_two_wait.state.action->move_flags != 3 || one_two_wait.state.control->motion_requested != 1 ||
+            one_two_wait.state.recovery->opposing_player != 20 || one_two_wait.state.current.clock.ball_mode ||
+            one_two_choice.action->move_flags) return 1;
+        bool incomplete_one_two_rejected = false;
+        try { std::istringstream incomplete("CMJNMISEQ1\nG 3\nM 23\n"); advance_observed_nmi_events(one_two_choice, 0, load_observed_nmi_events(incomplete)); }
+        catch (const std::invalid_argument&) { incomplete_one_two_rejected = true; }
+        if (!incomplete_one_two_rejected) return 1;
+        auto one_two_handoff = one_two_wait.state;
+        one_two_handoff.current.field.roster[3].stamina = 310;
+        one_two_handoff.current.field.random_first = 32; one_two_handoff.current.field.random_second = 42;
+        one_two_handoff.action->cursor = 162; one_two_handoff.action->power = 5; one_two_handoff.saved_ball_flight_flag = 1;
+        const auto one_two_defenders = capture_player3_one_two_defenders(one_two_handoff, {1,2,2});
+        if (!one_two_defenders.human_defense_choices || one_two_handoff.human_defense_choices ||
+            one_two_defenders.human_defense_choices->actions != std::array<std::uint8_t,5>{1,2,2,0,0}) return 1;
+        std::istringstream one_two_snapshot(bytes(one_two_defenders));
+        if (bytes(load_phase_session(one_two_snapshot)) != bytes(one_two_defenders)) return 1;
+        bool wrong_one_two_defense_rejected = false;
+        try { capture_player3_one_two_defenders(one_two_handoff, {1,2,1}); }
+        catch (const std::invalid_argument&) { wrong_one_two_defense_rejected = true; }
+        if (!wrong_one_two_defense_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;
