@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: first one-two defender
+
+Player3's one-two matches defender16 preparation and nonterminal result0 at random index47. The original uses direct comparison table index13, not the general field-selection table; `tools/verify_player3_one_two.py` requires the observed private comparison values as explicit arguments. Private checkpoint: `../Captain-Majid-analysis/player3-one-two-defender-v3-20261110/first-defender-compared.cmjsession`; PC trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player3-comparison-full-20261110`. Windows build and all 62 checks passed. Next compare contact clock and defender19; full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player3 one-two prepared
 
 Player3's captured one-two matches through the presentation wait, defender choices1/2/2 and attacker preparation (stamina250, power8, random index12). The original timing/random/presentation events are supplied; session version142 roundtrips. Private final checkpoint: `../Captain-Majid-analysis/player3-one-two-prepare-v2-20261110/one-two-prepared.cmjsession`; replay tool `tools/verify_player3_one_two.py`. Windows build and 62 checks passed. Next compare defender calculations and result; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

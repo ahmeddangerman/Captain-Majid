@@ -644,6 +644,38 @@ SessionAttackResult prepare_player3_one_two(const PhaseSessionState& input,const
     state.recovery->attack_subtype=prepared.action_power.subtype; state.phase=FieldSessionPhase::attack_prepared;
     validate_phase_session(state); return {std::move(state),prepared};
 }
+PhaseSessionState prepare_player3_one_two_defender(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || input.action->action!=3 || input.area_contact ||
+       input.current.field.random_first!=193 || input.current.field.random_second!=239 || input.control->facing!=64 ||
+       input.control->motion_requested || input.control->last_carrier_cell || input.recovery->opposing_player!=20)
+        throw std::invalid_argument("Player3 one-two defender needs its captured presentation boundary");
+    const auto& player=input.current.field.roster[16];
+    const auto prepared=prepare_profiled_field_defender({16,player.type,static_cast<std::uint8_t>(player.stamina),
+        static_cast<std::uint8_t>(player.stamina>>8),player.level},players,1,0,0,defense);
+    if(prepared.base_strength!=8 || prepared.stamina_cost!=60 || prepared.move_effect)
+        throw std::invalid_argument("Unsupported player3 one-two defender content");
+    auto state=input; state.recovery->opposing_player=16; state.recovery->ball_variant=2; state.control->last_carrier_cell=128;
+    state.area_contact=AreaContactContext{0,1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+    validate_phase_session(state); return state;
+}
+PhaseSessionState compare_player3_one_two_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || !input.area_contact ||
+       input.action->action!=3 || input.recovery->opposing_player!=16 || input.area_sequence_result!=255 || comparison.table_index!=13)
+        throw std::invalid_argument("Player3 one-two defender comparison needs prepared defender16");
+    DefenderContactInput contact{}; contact.incoming_power=input.action->power; contact.defender_power=input.area_contact->defender_power;
+    contact.random_first=input.current.field.random_first; contact.random_second=input.current.field.random_second;
+    contact.weakened=false; contact.context=0; contact.defender_slot=16; contact.subtype=0;
+    contact.range=comparison.range; contact.offset=comparison.offset; contact.eligible=comparison.eligible; contact.thresholds=comparison.thresholds;
+    const auto result=compare_defender_contact(contact);
+    if(result.result_code!=0 || result.strength!=1 || result.loss || result.score!=255 || result.special || result.subtype)
+        throw std::invalid_argument("Unsupported player3 one-two defender comparison: strength " + std::to_string(result.strength) +
+            ", score " + std::to_string(result.score) + ", result " + std::to_string(result.result_code));
+    auto state=input; state.area_contact->strength=result.strength; state.area_contact->loss=result.loss;
+    state.area_contact->score=result.score; state.area_contact->result=result.result_code; state.area_sequence_result=result.result_code;
+    validate_phase_session(state); return state;
+}
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
     const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);

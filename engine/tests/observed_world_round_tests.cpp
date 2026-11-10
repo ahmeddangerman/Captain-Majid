@@ -144,6 +144,33 @@ int main() {
         try { capture_player3_one_two_defenders(one_two_handoff, {1,2,1}); }
         catch (const std::invalid_argument&) { wrong_one_two_defense_rejected = true; }
         if (!wrong_one_two_defense_rejected) return 1;
+        auto one_two_prepared = one_two_defenders;
+        one_two_prepared.phase = FieldSessionPhase::attack_prepared;
+        one_two_prepared.current.field.roster[3].stamina = 250;
+        one_two_prepared.action->power = 8;
+        one_two_prepared.control->last_carrier_cell = 128;
+        std::istringstream defender_wait_events("CMJNMISEQ1\nL 0\nM 0\nF 64\n");
+        const auto one_two_defender_wait = advance_observed_nmi_events(one_two_prepared, 0, load_observed_nmi_events(defender_wait_events));
+        if (one_two_defender_wait.state.control->last_carrier_cell || one_two_defender_wait.state.control->motion_requested ||
+            one_two_defender_wait.state.control->facing != 64 || one_two_prepared.control->last_carrier_cell != 128) return 1;
+        auto first_defender_input = one_two_defender_wait.state;
+        first_defender_input.current.field.random_first = 193; first_defender_input.current.field.random_second = 239;
+        FieldPlayerProfiles one_two_profiles{}; one_two_profiles.team_types.resize(1); one_two_profiles.skills.resize(1);
+        FieldDefenseContent one_two_defense{}; one_two_defense.skill_selectors[1][0] = 1;
+        one_two_defense.moves[1].push_back({0,0,60,0}); one_two_defense.strength_curve.fill(8);
+        const auto first_defender = prepare_player3_one_two_defender(first_defender_input, one_two_profiles, one_two_defense);
+        if (!first_defender.area_contact || first_defender.recovery->opposing_player != 16 ||
+            first_defender.area_contact->defender_power != 8 || first_defender_input.area_contact) return 1;
+        const FieldComparisonSelection one_two_comparison{13,1,32,false,{200,150,100,0}};
+        const auto first_compared = compare_player3_one_two_defender(first_defender, one_two_comparison);
+        if (first_compared.area_contact->strength != 1 || first_compared.area_contact->score != 255 ||
+            first_compared.area_sequence_result != 0 || first_defender.area_sequence_result != 255) return 1;
+        std::istringstream first_compared_snapshot(bytes(first_compared));
+        if (bytes(load_phase_session(first_compared_snapshot)) != bytes(first_compared)) return 1;
+        bool wrong_one_two_table_rejected = false;
+        try { auto wrong=one_two_comparison; wrong.table_index=12; compare_player3_one_two_defender(first_defender,wrong); }
+        catch (const std::invalid_argument&) { wrong_one_two_table_rejected = true; }
+        if (!wrong_one_two_table_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;
