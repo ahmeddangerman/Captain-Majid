@@ -231,6 +231,19 @@ int main() {
         try { compare_player3_one_two_next_defender(third_compared,second_comparison); }
         catch (const std::invalid_argument&) { repeated_third_compare_rejected = true; }
         if (!repeated_third_compare_rejected) return 1;
+        auto terminal_contact_input = third_compared;
+        terminal_contact_input.current.field.random_first = 26; terminal_contact_input.current.field.random_second = 142;
+        one_two_prelude.field_elapsed[4] = 2;
+        const auto terminal_contact = advance_player3_one_two_terminal_contact(terminal_contact_input,one_two_prelude);
+        if (terminal_contact.current.clock.remaining != 135 || terminal_contact.current.field.elapsed != 5 ||
+            terminal_contact.current.field.motion[field_motion_index(3)].status != 5 || terminal_contact.action->power != 7 ||
+            terminal_contact.experience->totals != terminal_contact_input.experience->totals || terminal_contact_input.current.clock.remaining != 137) return 1;
+        std::istringstream terminal_contact_snapshot(bytes(terminal_contact));
+        if (bytes(load_phase_session(terminal_contact_snapshot)) != bytes(terminal_contact)) return 1;
+        bool repeated_terminal_contact_rejected = false;
+        try { advance_player3_one_two_terminal_contact(terminal_contact,one_two_prelude); }
+        catch (const std::invalid_argument&) { repeated_terminal_contact_rejected = true; }
+        if (!repeated_terminal_contact_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;

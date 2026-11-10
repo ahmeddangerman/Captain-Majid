@@ -263,7 +263,28 @@ def main():
     score, result = (int(value,16) for value in registers.groups())
     if actual[407:412] != bytes((original[0x71],original[0x619],score,result,0)) or actual[413] != result:
         raise ValueError('Third defender comparison differs from original')
-    print(f'Matched one-two through third defender result {result}; random index {ram(last)[0xe1]}.')
+    rows, last = menu_wait_events(lines, pcs, ram, 16286, 17119)
+    if last != 17118:
+        raise ValueError('Unexpected original terminal contact wait')
+    events = output / 'terminal-contact-wait-events.txt'
+    events.write_text('CMJNMISEQ1\n' + '\n'.join(rows) + '\n')
+    waiting = output / 'terminal-contact-wait.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(compared),
+                          '--advance-observed-nmi-sequence', str(events), str(ram(16286)[0xe1]),
+                          '--capture', str(waiting)], capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    if re.findall(r'final random index (\d+);', run.stdout) != [str(ram(last)[0xe1])]:
+        raise ValueError('Terminal contact wait random index differs')
+    compare_choices(waiting, last, 20)
+    clocked = output / 'terminal-contact-clock.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(waiting),
+                          '--advance-player3-one-two-terminal-contact', '--capture', str(clocked)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    compare_choices(clocked, 17133, 20)
+    print(f'Matched one-two through terminal contact; random index {ram(last)[0xe1]}.')
 
 
 if __name__ == '__main__':

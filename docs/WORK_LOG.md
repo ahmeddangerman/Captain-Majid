@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - One-two terminal contact
+
+After defender20's matched result2, the native replay matches the original presentation wait and terminal contact: clock137-to135, elapsed3-to5, player3 status5, unchanged power7 and experience, random index116. The guarded transition reuses the action2 terminal contact prelude and rejects premature or repeated execution; version142 snapshots roundtrip. `tools/verify_player3_one_two.py` checks captured random/travel events and the original contact boundary. Private evidence: `../Captain-Majid-analysis/player3-one-two-terminal-v1-20261110`. Windows build and all 62 registered checks passed. Loose-ball recovery and complete match remain unsupported, with timing supplied and overall progress unmeasured. Next compare the loose-ball jitter and recovery. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Third one-two defender stops the action
 
 The captured player3 one-two now matches defender20 preparation and terminal result2 after the second contact: defender strength8/cost50, compared strength6/loss1/score74, random index205. The existing guarded next-defender operations now cover the separately checked second and third defender boundaries, with explicit private direct-table input. `tools/verify_player3_one_two.py` compares both preparations/results and the intervening original event sequence; wrong or repeated operations reject and snapshots roundtrip. Private evidence: `../Captain-Majid-analysis/player3-one-two-third-v1-20261110`. Windows build and all 62 registered checks passed. The terminal contact and loose-ball continuation remain unmatched; timing is supplied, a full match unsupported and overall progress unmeasured. Next trace that terminal result. Suggested model GPT-6.1 Terra High.

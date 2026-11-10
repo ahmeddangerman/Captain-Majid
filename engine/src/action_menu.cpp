@@ -710,6 +710,19 @@ PhaseSessionState advance_player3_one_two_next_contact(const PhaseSessionState& 
     if(state.action->power!=7) throw std::invalid_argument("Unsupported player3 one-two power reduction");
     validate_phase_session(state); return state;
 }
+PhaseSessionState advance_player3_one_two_terminal_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || !input.area_contact || input.action->action!=3 ||
+       input.area_defender_cursor!=2 || input.recovery->opposing_player!=20 || input.area_sequence_result!=2 ||
+       input.current.field.random_first!=26 || input.current.field.random_second!=142 || input.current.field.elapsed!=3 || input.control->facing ||
+       input.current.field.motion[field_motion_index(3)].status || prelude.field_elapsed[4]!=2)
+        throw std::invalid_argument("Player3 one-two terminal contact needs its captured boundary");
+    const auto applied=apply_contact_prelude({input.current,20,2,false},prelude);
+    if(applied.elapsed_step!=2 || applied.clock.continuation!=ClockContinuation::ready || applied.state.clock.remaining!=135 ||
+       applied.state.field.motion[field_motion_index(3)].status!=5)
+        throw std::invalid_argument("Unsupported player3 one-two terminal contact clock");
+    auto state=input; state.current=applied.state; validate_phase_session(state); return state;
+}
 PhaseSessionState prepare_player3_one_two_next_defender(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);
     if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || !input.area_contact || !input.action || !input.recovery || !input.control || input.action->action!=3)

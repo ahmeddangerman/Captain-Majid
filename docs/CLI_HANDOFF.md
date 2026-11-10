@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: one-two terminal contact
+
+The captured player3 one-two now matches through terminal contact: clock135, elapsed5, player3 status5, power7, random index116. Private checkpoint: `../Captain-Majid-analysis/player3-one-two-terminal-v1-20261110/terminal-contact-clock.cmjsession`. Event timing and direct comparison content remain supplied. Windows build and 62 checks passed. Next compare loose-ball jitter and recovery; full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: one-two terminal defender
 
 Player3's one-two now matches defender20's terminal result2 (strength6, loss1, score74), random index205. Private checkpoint: `../Captain-Majid-analysis/player3-one-two-third-v1-20261110/third-defender-compared.cmjsession`; original timing and comparison-table content are supplied. Windows build and all 62 checks passed. Next compare the terminal contact and loose-ball continuation; full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
