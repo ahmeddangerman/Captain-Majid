@@ -2060,6 +2060,30 @@ int main(){try{using namespace captain;
  const auto next_cycle_poll=advance_observed_nmi_control_poll(next_cycle_input,mode_profile_mappings,
   travel_movement,travel_content,67,postgoal_mode_poll);
  check(next_cycle_poll.poll.state.current.clock.ball_mode==192,"The next observed post-return control cycle accepts its mode sample");
+ auto third_return_input=postgoal_return_control.state;third_return_input.current.clock.remaining=154;
+ third_return_input.current.clock.ball_mode=192;
+ auto third_return_sample=postgoal_mode_poll;third_return_sample.ball_mode_sample=128;
+ const auto third_return_poll=advance_observed_nmi_control_poll(third_return_input,mode_profile_mappings,
+  travel_movement,travel_content,145,third_return_sample);
+ check(third_return_poll.poll.state.current.clock.ball_mode==128,
+       "The captured third return cycle accepts the observed ball-mode change");
+ auto uncaptured_return_input=third_return_input;uncaptured_return_input.current.clock.remaining=153;
+ rejects([&]{advance_observed_nmi_control_poll(uncaptured_return_input,mode_profile_mappings,
+  travel_movement,travel_content,145,third_return_sample);});
+ auto third_choice_input=postgoal_return_control.state;
+ third_choice_input.phase=FieldSessionPhase::ai_cell_decision;
+ third_choice_input.current.clock.remaining=154;
+ third_choice_input.current.field.ball_x=110;third_choice_input.current.field.ball_y=108;
+ third_choice_input.current.field.ball_cell=87;third_choice_input.current.field.elapsed=1;
+ third_choice_input.current.field.random_first=188;third_choice_input.current.field.random_second=86;
+ third_choice_input.control->controlled_player=10;third_choice_input.control->last_carrier_cell=87;
+ third_choice_input.action->action=3;third_choice_input.action->power=12;third_choice_input.recovery->attack_subtype=0;
+ const auto third_choice_before=bytes(third_choice_input);
+ const auto third_choice=capture_sampled_field_ai_choice(third_choice_input,2,0);
+ check(third_choice.phase==FieldSessionPhase::control_clock_pending && third_choice.action->action==2 &&
+       bytes(third_choice_input)==third_choice_before,"Captured third return decision preserves its input");
+ rejects([&]{capture_sampled_field_ai_choice(third_choice_input,1,0);});
+ check(bytes(third_choice_input)==third_choice_before,"Rejected third return decision is atomic");
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

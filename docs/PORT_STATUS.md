@@ -1,5 +1,11 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Captured action2 choice, clock154 to153 and a 22-player field round now match original through E4BE encounter with supplied inputs and presentation samples. Encounter continuation, autonomous AI/timing and a complete playable match remain unsupported. Windows 62 registered checks passed; overall progress is unmeasured.
+
+**Latest match checkpoint (2026-11-10):** Ten more post-return control polls at clock154 match the original with recorded samples. At the eleventh boundary, original action.id changes from 3 to 2 while native retains 3; that decision remains unmatched. Autonomous AI/timing and a complete playable match remain unsupported; overall progress is unmeasured.
+
+**Latest demo checkpoint (2026-11-10):** Windows SDL shot scene builds and headless bitmap capture now works with the locally installed mixed-runtime SDL SDK; exclusive output and 62 registered checks passed. A real window was observed earlier, but keyboard shooting/reset and a complete graphical match remain unverified. Overall progress is unmeasured.
+
 **Latest - second post-return field round (2026-11-10):** One captured startup matches through action3's return, 22 further neutral polls, two clock ticks and two 22-player field rounds, with recorded inputs and presentation samples. Later play remains original-only. Autonomous timing/AI and a complete playable match remain unsupported; overall progress is unmeasured.
 
 **Latest - post-return field round (2026-11-10):** One captured startup matches through action3's return, eleven polls, the next clock tick and a 22-player field round. Recorded inputs and presentation samples are supplied; later play remains original-only. Autonomous timing/AI and a complete playable match remain unsupported. Overall progress is unmeasured.

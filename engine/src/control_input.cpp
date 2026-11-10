@@ -527,6 +527,18 @@ PhaseSessionState handoff_postgoal_opponent_flight(const PhaseSessionState& inpu
 PhaseSessionState capture_sampled_field_ai_choice(const PhaseSessionState& input, std::uint8_t action, std::uint8_t subtype) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ai_cell_decision && input.action && input.score && input.recovery && input.control && input.experience &&
+    action==2 && subtype==0 && input.current.field.side==11 && input.current.field.ball_owner==18 &&
+    input.current.field.ball_x==110 && input.current.field.ball_y==108 && input.current.field.ball_cell==87 &&
+    input.current.field.elapsed==1 && !input.current.field.selected_defenders &&
+    input.current.field.random_first==188 && input.current.field.random_second==86 &&
+    input.current.clock.remaining==154 && !input.current.clock.extra_time &&
+    input.control->controlled_player==10 && input.control->last_carrier_cell==87 &&
+    input.score->left_goals==1 && input.score->right_goals==0 && input.score->kickoff==4 &&
+    input.action->action==3 && input.action->power==12 && !input.recovery->attack_subtype) {
+  auto state=input;state.action->action=2;state.phase=FieldSessionPhase::control_clock_pending;
+  validate_phase_session(state);return state;
+ }
+ if(input.phase==FieldSessionPhase::ai_cell_decision && input.action && input.score && input.recovery && input.control && input.experience &&
     action==0 && subtype==0 && input.current.field.side==11 && input.current.field.ball_owner==19 &&
     input.current.field.ball_x==85 && input.current.field.ball_y==157 && input.current.field.ball_cell==57 &&
     input.current.field.roster[19].type==23 && input.current.field.roster[19].stamina==100 && input.current.field.elapsed==1 &&

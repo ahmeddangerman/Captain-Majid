@@ -150,6 +150,11 @@ int main() {
         const auto return_clock_result=advance_observed_nmi_control_clock(return_clock,field_profiles,keeper_profiles,
             world,0,{{ObservedClockEventKind::ball_mode_sample,{},128},{ObservedClockEventKind::schedule},{ObservedClockEventKind::energy}});
         if(return_clock_result.tick.state.current.clock.remaining!=154 || return_clock_result.tick.state.current.clock.ball_mode!=128) return 1;
+        auto third_return_clock=captured_clock;third_return_clock.current.clock.remaining=154;
+        third_return_clock.current.clock.ball_mode=128;
+        const auto third_return_clock_result=advance_observed_nmi_control_clock(third_return_clock,field_profiles,keeper_profiles,
+            world,155,{{ObservedClockEventKind::ball_mode_sample,{},192},{ObservedClockEventKind::schedule},{ObservedClockEventKind::energy}});
+        if(third_return_clock_result.tick.state.current.clock.remaining!=153 || third_return_clock_result.tick.state.current.clock.ball_mode!=192) return 1;
         std::istringstream sampled_clock_stream("CMJCLOCKNMI1\nB 192\nS\nE\n");
         if (load_observed_clock_events(sampled_clock_stream)[0].kind != ObservedClockEventKind::ball_mode_sample) return 1;
         std::string sampled_world_text = "CMJWORLDNMI2\n";
@@ -175,6 +180,9 @@ int main() {
         return_world_input.current.clock.remaining=155;
         const auto return_world=advance_observed_nmi_field_round(return_world_input,profiles,movement,control,world,7,second_world_events);
         if (return_world.round.state.current.clock.ball_mode!=192) return 1;
+        auto third_return_world=third_return_clock_result.tick.state;
+        const auto third_world=advance_observed_nmi_field_round(third_return_world,profiles,movement,control,world,158,sampled_world_events);
+        if (third_world.round.state.current.clock.ball_mode!=128) return 1;
         return_world_input.current.clock.remaining=154;
         const auto second_return_world=advance_observed_nmi_field_round(return_world_input,profiles,movement,control,world,7,second_world_events);
         if (second_return_world.round.state.current.clock.ball_mode!=192) return 1;

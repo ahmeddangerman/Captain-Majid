@@ -1,5 +1,17 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: third post-return encounter
+
+The third post-return cycle now matches eleven polls and the captured opponent action2 choice at E1E7, the 154-to-153 clock, and a 22-player field round to original E4BE encounter at random index180. Represented fields and score match at these boundaries. Evidence stays private in `../Captain-Majid-analysis/postgoal-third-return-choice-20261110.cmjsession`, `../Captain-Majid-analysis/postgoal-third-return-clock-v2-20261110` and `../Captain-Majid-analysis/postgoal-third-return-world-20261110`. Choice, timing and presentation samples are supplied. The encounter itself is unverified; 62 registered Windows checks passed. Overall progress is unmeasured and a complete match remains unsupported. Next compare encounter transition. Suggested model GPT-6.1 Terra High.
+
+## Current stopping point - 2026-11-10: third post-return control cycle, partial
+
+Ten further polls at clock154 match represented original state and score with supplied NMI/travel and ball-mode samples. Private evidence is in `../Captain-Majid-analysis/postgoal-third-return-polls-v2-20261110`. The eleventh reaches E1E7 with one known difference: original action.id changes from 3 to 2 at E19B/E1B2, while native retains 3. Do not continue from that partial boundary until the decision is traced and matched. Windows build and 62 registered checks passed. Timing and presentation remain supplied; a complete playable match is unsupported and overall progress unmeasured. Next trace and verify this decision. Suggested model GPT-6.1 Terra High.
+
+## Current demo checkpoint - 2026-11-10: Windows capture repaired
+
+The optional SDL shot scene builds on Windows and its headless capture now succeeds with mixed UCRT/msvcrt runtimes. `tools/check_shot_scene_capture.py` checks the bitmap and exclusive output using a private local pack and private temporary directory. All 62 registered Windows checks passed via direct execution. A real field window was observed, but keyboard shooting/reset remain unverified; a full-screen game obscured the later retry. Scene calculations reset each shot and do not constitute a match. Next verify keyboard interaction and continue the original-backed match path. Overall progress is unmeasured; suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: second post-return field round
 
 The captured startup now matches through the action3 return, two subsequent sets of eleven neutral polls, two clock ticks and two 22-player field rounds. The latest original $E145 boundary has player18 possession, clock154 and random index144. Supplied random/travel inputs and observed ball-mode samples reproduce all represented fields and score at every poll, clock and field-round boundary. Private evidence: ../Captain-Majid-analysis/postgoal-second-return-polls-20261110, ../Captain-Majid-analysis/postgoal-second-return-clock-20261110 and ../Captain-Majid-analysis/postgoal-second-return-world-20261110. Later play remains original-only. Timing/presentation and AI choices remain supplied; overall progress is unmeasured and a complete playable match unsupported. Next compare the next control cycle and opponent decision, then progress toward a complete match. Suggested model GPT-6.1 Terra High.

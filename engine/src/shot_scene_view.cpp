@@ -12,6 +12,7 @@
 #include <optional>
 #include <stdexcept>
 #include <string>
+#include <vector>
 
 namespace {
 using Result = captain::CompletePreparedShotResult;
@@ -191,11 +192,21 @@ int main(int argc, char** argv) {
                 SDL_CreateSoftwareRenderer(surface.get()), SDL_DestroyRenderer);
             if (!renderer) sdl_error("Capture renderer");
             draw(renderer.get(), options, result, 1.0, {});
+            // Serialize inside SDL before handing bytes to our own C runtime.
+            // A FILE* cannot safely cross differing Windows C runtime libraries.
+            std::vector<unsigned char> bytes(640u * 480u * 4u + 4096u);
+            std::unique_ptr<SDL_RWops, decltype(&SDL_FreeRW)> stream(
+                SDL_RWFromMem(bytes.data(), static_cast<int>(bytes.size())), SDL_FreeRW);
+            if (!stream) sdl_error("Capture stream");
+            if (SDL_SaveBMP_RW(surface.get(), stream.get(), 0) != 0) sdl_error("Save capture");
+            const auto length = SDL_RWtell(stream.get());
+            if (length < 0) sdl_error("Capture size");
             auto* output = std::fopen(capture.c_str(), "wbx");
             if (!output) throw std::runtime_error("Unable to create new capture exclusively");
-            auto* stream = SDL_RWFromFP(output, SDL_TRUE);
-            if (!stream) { std::fclose(output); sdl_error("Capture stream"); }
-            if (SDL_SaveBMP_RW(surface.get(), stream, 1) != 0) sdl_error("Save capture");
+            const auto written = std::fwrite(bytes.data(), 1, static_cast<std::size_t>(length), output);
+            const auto close_result = std::fclose(output);
+            if (written != static_cast<std::size_t>(length) || close_result != 0)
+                throw std::runtime_error("Unable to write capture");
             std::cout << "Saved development scene to " << capture << '\n';
             return 0;
         }
