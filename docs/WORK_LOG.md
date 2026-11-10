@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Third-return result2 contact clock
+
+From the classified defender result, 117 captured random/travel pairs and sampled motion0-to2-to16-to0 and facing0-to64 match the original pre-contact boundary. Shared contact/experience calculations then match original 8127: clock153-to151, elapsed1-to3, owner18 status5 and defender5 experience plus1. Three more supplied random/travel pairs match original E406 before C606 at random index240. Private evidence: `../Captain-Majid-analysis/third-return-result-wait-20261110`, `../Captain-Majid-analysis/third-return-contact-clock-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-postcontact-wait-20261110`. Tests cover sampled ordering, atomic rejection, clock/experience and snapshot roundtrip. Windows build and 62 registered checks passed. Timing/presentation remain supplied; loose-ball handoff and a complete match remain unsupported. Overall progress is unmeasured. Next compare the original C606 loose-ball position. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Third-return defender result2
 
 The pre-classification defender comparison now advances separately to original result2 at the next 8107 boundary. Native phase416 stores result2 and matches represented fields and score; the comparison state remains unchanged on rejection. Private evidence: `../Captain-Majid-analysis/verify-third-return-defender-result-20261110.py` and `../Captain-Majid-analysis/third-return-defender-result-20261110.cmjsession`. Tests cover result, atomic input, repeat rejection and extended snapshot roundtrip. Windows build and all 62 registered checks passed. Subsequent presentation/contact remains unmatched; supplied timing and presentation are not an emulated original engine. Overall progress is unmeasured and a complete playable match remains unsupported. Next compare result2 continuation. Suggested model GPT-6.1 Terra High.

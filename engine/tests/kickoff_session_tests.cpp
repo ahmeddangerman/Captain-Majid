@@ -2182,6 +2182,28 @@ int main(){try{using namespace captain;
  const auto third_result_bytes=bytes(third_defender_result);std::istringstream third_result_stream(third_result_bytes);
  check(bytes(load_phase_session(third_result_stream))==third_result_bytes,"Third return result snapshot roundtrips");
  rejects([&]{classify_third_return_defender(third_defender_result);});
+ const auto third_result_wait=advance_observed_nmi_events(third_defender_result,120,
+   {{ObservedClockEventKind::motion_sample,{},2},{ObservedClockEventKind::motion_sample,{},16},
+    {ObservedClockEventKind::motion_sample,{},0},{ObservedClockEventKind::facing_sample,{},64}});
+ check(third_result_wait.state.control->motion_requested==0 && third_result_wait.state.control->facing==64 &&
+       bytes(third_defender_result)==third_result_bytes,"Captured result2 presentation samples preserve their input");
+ rejects([&]{advance_observed_nmi_events(third_defender_result,120,{{ObservedClockEventKind::motion_sample,{},3}});});
+ ContactPreludeContent third_prelude{};third_prelude.field_elapsed[0]=2;
+ ExperienceContent third_experience{};third_experience.player_mappings[7]=5;third_experience.reward_factors[2]=64;third_experience.stage_bases.fill(4);
+ const auto third_wait_bytes=bytes(third_result_wait.state);
+ const auto third_clocked=advance_third_return_contact(third_result_wait.state,third_prelude,third_experience);
+ check(third_clocked.phase==FieldSessionPhase::third_return_contact_clocked && third_clocked.current.clock.remaining==151 &&
+       third_clocked.current.field.elapsed==3 && third_clocked.current.field.motion[field_motion_index(18)].status==5 &&
+       third_clocked.experience->totals[5]==third_result_wait.state.experience->totals[5]+1 && bytes(third_result_wait.state)==third_wait_bytes,
+       "Captured third return contact applies the elapsed clock, status and experience atomically");
+ const auto third_clocked_bytes=bytes(third_clocked);std::istringstream third_clocked_stream(third_clocked_bytes);
+ check(bytes(load_phase_session(third_clocked_stream))==third_clocked_bytes,"Third return contact snapshot roundtrips");
+ const auto third_postcontact_wait=advance_observed_nmi_events(third_clocked,237,{{ObservedClockEventKind::random,{0,0,0,true}}});
+ check(third_postcontact_wait.state.phase==FieldSessionPhase::third_return_contact_clocked &&
+       third_postcontact_wait.state.current.field.elapsed==3,"Post-contact wait preserves the clocked contact");
+ auto bad_third_prelude=third_prelude;bad_third_prelude.field_elapsed[0]=1;
+ rejects([&]{advance_third_return_contact(third_result_wait.state,bad_third_prelude,third_experience);});
+ check(bytes(third_result_wait.state)==third_wait_bytes,"Rejected third return contact preserves input");
  auto invalid_third_comparison=third_comparison;invalid_third_comparison.variation[0][0]=0;
  rejects([&]{compare_third_return_defender(third_attack_prepared,third_attack_profiles,third_defense_content,invalid_third_comparison);});
  check(bytes(third_attack_prepared)==third_defender_before,"Rejected third return comparison preserves input");

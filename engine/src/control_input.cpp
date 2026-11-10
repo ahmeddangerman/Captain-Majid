@@ -815,6 +815,21 @@ PhaseSessionState classify_third_return_defender(const PhaseSessionState& input)
  auto state=input;state.area_sequence_result=2;state.phase=FieldSessionPhase::third_return_defender_result;
  validate_phase_session(state);return state;
 }
+PhaseSessionState advance_third_return_contact(const PhaseSessionState& input, const ContactPreludeContent& prelude,
+ const ExperienceContent& experience) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::third_return_defender_result || !input.experience || !input.control ||
+    input.control->motion_requested!=0 || input.control->facing!=64)
+  throw std::invalid_argument("Third-return contact requires its observed presentation boundary");
+ const auto reward=award_player_experience(*input.experience,input.current.field.roster[5].type,2,experience);
+ if(!reward.slot || *reward.slot!=5 || reward.award!=1)throw std::invalid_argument("Unverified third-return experience");
+ const auto applied=apply_contact_prelude({input.current,5,0,false},prelude);
+ if(applied.elapsed_step!=2 || applied.clock.continuation!=ClockContinuation::ready || applied.state.clock.remaining!=151 ||
+    applied.state.field.motion[field_motion_index(18)].status!=5)
+  throw std::invalid_argument("Unverified third-return contact clock");
+ auto state=input;state.current=applied.state;state.experience=reward.state;
+ state.phase=FieldSessionPhase::third_return_contact_clocked;validate_phase_session(state);return state;
+}
 PhaseSessionState compare_sampled_mixed_defender(const PhaseSessionState& input,const FieldComparisonContent& comparison) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::sampled_mixed_defender_prepared)

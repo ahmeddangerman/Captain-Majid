@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** The third-return result2 contact now matches original clock, status and experience through the pre-C606 wait using recorded presentation events. Loose-ball continuation remains unmatched; all 62 Windows registered checks passed. Complete match unsupported, overall progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** Third-return defender comparison and subsequent result2 classification now match original at separate boundaries. Subsequent contact remains unmatched; timing/presentation are supplied. All 62 registered Windows checks passed; full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The third-return defender comparison matches original 8132: stamina400-to330 and comparison score64. Native result classification and later contact remain uncommitted; timing and presentation are supplied. All 62 registered Windows checks passed; full match unsupported, progress unmeasured.

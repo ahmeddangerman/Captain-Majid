@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: result2 contact before loose ball
+
+The third-return result2 path matches 117 sampled presentation-wait pairs, shared contact and experience at original 8127, and three more sampled pairs to E406 immediately before C606. Clock153-to151, elapsed1-to3, owner18 status5, defender5 experience plus1 and represented fields/score match; random index240. Private evidence: `../Captain-Majid-analysis/third-return-result-wait-20261110`, `../Captain-Majid-analysis/third-return-contact-clock-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-postcontact-wait-20261110`. Timing and presentation are supplied; 62 Windows checks passed, complete match unsupported and progress unmeasured. Next compare the C606 loose-ball position and handoff. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: third-return defender result2
 
 The third-return defender comparison now advances to original result2 at the following 8107 boundary, preserving a separate pre-classification state. Native phase416 matches represented fields and score and roundtrips its saved result. Private evidence: `../Captain-Majid-analysis/verify-third-return-defender-result-20261110.py` and `../Captain-Majid-analysis/third-return-defender-result-20261110.cmjsession`. Later contact/presentation remains unmatched; 62 Windows checks passed. Timing/presentation remain supplied, complete match unsupported and overall progress unmeasured. Next compare result2 continuation. Suggested model GPT-6.1 Terra High.
