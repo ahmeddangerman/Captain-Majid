@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** A controlled original right-direction poll from the third-return defender prompt matches native action0, sprite12 and represented state. The continuous timed menu sequence and confirmation remain unmatched; timing/presentation are supplied. All 62 registered Windows checks passed; full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** The third return encounter now matches the recorded defender prompt initialization, including cursor and blink/flash state. The later defender selection remains original-only; input timing and presentation are supplied. All 62 Windows registered checks passed. Overall progress is unmeasured; a complete match remains unsupported.
 
 **Latest match checkpoint (2026-11-10):** The third return encounter wait now matches through original C600 with 74 further recorded random/travel pairs. The subsequent encounter, autonomous AI/timing and a complete match remain unsupported. Overall progress is unmeasured.

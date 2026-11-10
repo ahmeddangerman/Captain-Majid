@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: controlled defender selection
+
+A controlled original right-direction poll from the third-return prompt matches native action0, sprite12, score, represented fields and defensive context. Private evidence: `../Captain-Majid-analysis/verify-third-return-defense-selection-20261110.py` and `../Captain-Majid-analysis/third-return-defense-selection-20261110.cmjsession`. This is a controlled poll at the captured prompt, not yet a continuous timed replay to the later real-time selection or confirmation. Windows build and all 62 registered checks passed. Presentation and timing remain supplied, overall progress is unmeasured, and a complete match is unsupported. Next compare timed wait and confirmation. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: third return defender prompt
 
 The original encounter now matches through recorded cursor initialization and defender prompt at frame18186: cursor0, flash192, blink13; represented fields and score match. The `Q` observed NMI sequence sample supplies the cursor change, and the prompt is a sampled acknowledgement, not a running presentation engine. Private evidence: `../Captain-Majid-analysis/third-return-menu-cursor-v2-20261110`, `../Captain-Majid-analysis/third-return-menu-preblink-20261110`, and `../Captain-Majid-analysis/third-return-defense-prompt-20261110.cmjsession`. The controlled original right-selection and confirmation remain unmatched. Windows build and 62 registered checks passed. Overall progress unmeasured; full match unsupported. Next compare defender selection. Suggested model GPT-6.1 Terra High.

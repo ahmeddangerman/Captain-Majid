@@ -2119,6 +2119,13 @@ int main(){try{using namespace captain;
        "Captured third return prompt retains observed cursor and blink state");
  auto third_prompt_bytes=bytes(third_prompt);std::istringstream third_prompt_stream(third_prompt_bytes);
  check(bytes(load_phase_session(third_prompt_stream))==third_prompt_bytes,"Third return prompt snapshot roundtrips");
+ const auto third_selection=poll_keeper_area_defense(third_prompt,1,field_menu);
+ check(third_selection.state.phase==FieldSessionPhase::sampled_field_defense_poll && third_selection.state.area_defense->actions[0]==0 &&
+       third_selection.state.area_defense->blink==13 && third_selection.state.action->flash_counter==192 &&
+       third_selection.presentation.size()==1 && third_selection.presentation[0].id==10 && bytes(third_prompt)==third_prompt_bytes,
+       "Observed third return right selection matches the captured action and sprite request");
+ rejects([&]{poll_keeper_area_defense(third_prompt,4,field_menu);});
+ check(bytes(third_prompt)==third_prompt_bytes,"Rejected unobserved defense selection is atomic");
  rejects([&]{acknowledge_sampled_field_defense_prompt(third_presented,7);});
  auto bad_third_prompt=third_prompt_input;bad_third_prompt.current.field.ball_owner=19;
  rejects([&]{acknowledge_sampled_opponent_contact_presentation(bad_third_prompt);});
