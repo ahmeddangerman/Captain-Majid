@@ -131,3 +131,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Trace the original ordered facing and motion samples before control setup.
 - [x] Test and replay those recorded samples while retaining reception context.
 - [x] Compare the last pre-setup boundary, verify and document the setup boundary.
+
+## Task 18: Compare return to control setup
+
+- [x] Identify the original pre-setup and completed setup boundaries.
+- [x] Test and connect the shared player-control setup after the captured reception.
+- [x] Compare the native state with the original setup and document the remaining polls.

@@ -630,7 +630,8 @@ void continue_recovery(captain::PhaseSessionState& state) {
               << "; frozen development inputs, no presentation/NMI emulation.\n";
 }
 void setup_control(captain::PhaseSessionState& state) {
-    const auto result = captain::prepare_session_control(state);
+    const auto result = state.phase==captain::FieldSessionPhase::postgoal_opponent_return_reception_wait
+        ? captain::prepare_postgoal_return_control(state) : captain::prepare_session_control(state);
     state = result.state;
     std::cout << "Prepared control | selected defender "
               << (result.defender ? std::to_string(result.defender->player_id) : "unchanged")

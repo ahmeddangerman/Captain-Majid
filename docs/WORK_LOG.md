@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Return to player control setup
+
+The captured action3 return now reconnects to the shared player-control setup after the sampled pre-setup presentation. At the original pre-NMI $C9C5 boundary, native represented fields and score match: owner18 at x117/y108, clock156, timer10, field side11 and nearest defender10. The original retains action3's scratch fields across setup; preserving these was necessary for parity. Old saved flight/defender contexts are retired at this transition, while original action fields remain. Private evidence: ../Captain-Majid-analysis/postgoal-return-control-final-20261110. A fresh Windows build and all 62 registered checks passed. Subsequent presentation and input polling are original-only. Timing and presentation remain supplied; a complete playable match is unsupported and overall progress unmeasured. Next compare control presentation and the first neutral poll. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Pre-control presentation samples
 
 Following original $E0DF, another 62 captured random/travel pairs and ordered facing64 to0, motion0 to1 to0 samples take phase414 to the last $E406 before field-control setup. Native represented fields, score and trajectory match at random index67. Private evidence: ../Captain-Majid-analysis/postgoal-field-entry-wait-20261110. A fresh Windows build and all 62 registered checks passed. These are supplied presentation samples, not a running original presentation engine. Original control setup and subsequent polling remain unmatched. Overall progress remains unmeasured and a complete playable match is unsupported. Next compare the control setup boundary. Suggested model GPT-6.1 Terra High.

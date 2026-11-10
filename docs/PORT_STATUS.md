@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - return to player control (2026-11-10):** One captured startup now matches through action3's return and shared player-control setup with player18 owning the ball. Subsequent polls remain original-only. Autonomous timing/AI and a complete playable match remain unsupported; overall progress is unmeasured.
+
 **Latest - pre-control presentation (2026-11-10):** One captured startup matches the observed pre-control wait after player18 receives the return, using supplied random/travel, facing and motion. Control setup remains original-only; autonomous timing/AI and a complete playable match remain unsupported. Overall progress is unmeasured.
 
 **Latest - reception field entry (2026-11-10):** One captured startup matches through player18's return reception and original $E0DF field entry using recorded timing and facing. Subsequent control setup is original-only; autonomous timing/AI and a complete playable match remain unsupported. Overall progress is unmeasured.

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: return to player control
+
+The captured action3 return now reconnects to the shared player-control setup. At the original pre-NMI setup boundary, the native state matches all represented fields and score: player18 owns the ball, nearest defender10 is selected, clock156 and timer10, while original action3 scratch remains intact. The old flight/defender session contexts are retired at the handoff. Private evidence: ../Captain-Majid-analysis/postgoal-return-control-final-20261110. Subsequent presentation samples and polls are original-only. Timing/presentation remain supplied; overall progress is unmeasured and a complete playable match unsupported. Next compare the control presentation and first neutral poll. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: pre-control presentation
 
 The action3 return replay now matches through the final observed pre-setup wait after original $E0DF: another 62 supplied random/travel pairs and facing64 to0, motion0 to1 to0, give random index67. Phase414 matches represented fields, score and trajectory at the final $E406 before setup. Private evidence: ../Captain-Majid-analysis/postgoal-field-entry-wait-20261110. Subsequent setup/control is original-only; presentation and timing remain supplied. Overall progress is unmeasured, and a complete playable match remains unsupported. Next compare control setup and the first poll. Suggested model GPT-6.1 Terra High.

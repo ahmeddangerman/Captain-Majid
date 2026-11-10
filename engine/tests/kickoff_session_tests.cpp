@@ -2034,6 +2034,18 @@ int main(){try{using namespace captain;
  check(reception_motion.state.control->facing==0 && reception_motion.state.control->motion_requested==0,
        "Field-entry presentation accepts the observed facing and motion samples in order");
  rejects([&]{advance_observed_nmi_events(reception_wait,154,{{ObservedClockEventKind::motion_sample,{},2}});});
+ auto postgoal_control_input=reception_motion.state;postgoal_control_input.current.field.random_first=82;postgoal_control_input.current.field.random_second=20;
+ postgoal_control_input.current.field.motion[field_motion_index(10)].status=0;
+ const auto postgoal_return_control=prepare_postgoal_return_control(postgoal_control_input);
+ check(postgoal_return_control.state.phase==FieldSessionPhase::control_ready && postgoal_return_control.state.current.field.ball_owner==18 &&
+       postgoal_return_control.state.current.clock.remaining==156 && postgoal_return_control.state.current.clock.script_flags==128 &&
+       postgoal_return_control.state.current.clock.ball_mode==128 && postgoal_return_control.state.recovery->ball_variant==0 &&
+       postgoal_return_control.state.control->last_carrier_cell==99 && postgoal_return_control.state.action->action==3 &&
+       postgoal_return_control.state.action->power==12,"Return reception reconnects control while preserving original action scratch");
+ const auto postgoal_control_bytes=bytes(postgoal_return_control.state);std::istringstream postgoal_control_stream(postgoal_control_bytes);
+ check(bytes(load_phase_session(postgoal_control_stream))==postgoal_control_bytes,"Post-goal return control setup snapshot roundtrips");
+ rejects([&]{prepare_postgoal_return_control(defender_received);});
+ rejects([&]{prepare_postgoal_return_control(postgoal_return_control.state);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

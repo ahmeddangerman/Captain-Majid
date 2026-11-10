@@ -3,6 +3,16 @@
 #include <stdexcept>
 
 namespace captain {
+ControlSetupResult prepare_postgoal_return_control(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_reception_wait || input.current.field.random_first!=82 ||
+    input.current.field.random_second!=20 || input.control->facing || input.control->motion_requested)
+  throw std::invalid_argument("Post-goal return control requires the observed pre-setup boundary");
+ auto state=input;state.phase=FieldSessionPhase::player_control;state.area_ai_target.reset();state.area_contact.reset();
+ state.shot_flight.reset();state.ball_trajectory.reset();
+ state.area_defender_cursor=0;state.area_sequence_result=255;
+ return prepare_session_control(state);
+}
 ControlSetupResult prepare_sampled_player5_result3_control(const PhaseSessionState& input) {
  validate_phase_session(input);
  const bool score24=input.phase==FieldSessionPhase::sampled_score24_dribble_possession;

@@ -21,6 +21,7 @@ struct ControlSetupResult {
 // Supported field-carrier E0DF..E145 setup with frozen presentation inputs.
 // Stops before live controller sampling, AI decisions and frame advancement.
 ControlSetupResult prepare_session_control(const PhaseSessionState& input);
+ControlSetupResult prepare_postgoal_return_control(const PhaseSessionState& input);
 ControlSetupResult prepare_sampled_player5_result3_control(const PhaseSessionState& input);
 ControlSetupResult prepare_session_area_action6_control(const PhaseSessionState& input);
 ControlSetupResult prepare_session_area_pass_capture_control(const PhaseSessionState& input);
