@@ -119,3 +119,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Extend the isolated original trace and verify its overlap with the prior capture.
 - [x] Test and implement the observed recipient possession and ball position change.
 - [x] Compare to the original post-arrival boundary, verify and document remaining presentation.
+
+## Task 16: Compare reception presentation wait
+
+- [x] Identify the recorded random/travel and facing events before original field entry.
+- [x] Test and implement a guarded wait retaining player18 possession.
+- [x] Compare the native state at original $E0DF, verify and document the next control transition.

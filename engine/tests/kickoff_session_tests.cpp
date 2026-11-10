@@ -2019,6 +2019,16 @@ int main(){try{using namespace captain;
  check(bytes(load_phase_session(defender_received_stream))==defender_received_bytes,"Return-flight reception snapshot roundtrips");
  rejects([&]{receive_postgoal_return_flight(defender_clock);});
  rejects([&]{receive_postgoal_return_flight(defender_received);});
+ const auto reception_wait=begin_postgoal_return_reception_wait(defender_received);
+ const auto reception_sample=advance_observed_nmi_events(reception_wait,154,{{ObservedClockEventKind::facing_sample,{},64}});
+ check(reception_sample.state.phase==FieldSessionPhase::postgoal_opponent_return_reception_wait &&
+       reception_sample.state.control->facing==64 && reception_sample.state.current.field.ball_owner==18,
+       "Return reception wait retains possession and accepts the observed facing sample");
+ const auto reception_wait_bytes=bytes(reception_sample.state);std::istringstream reception_wait_stream(reception_wait_bytes);
+ check(bytes(load_phase_session(reception_wait_stream))==reception_wait_bytes,"Return reception wait snapshot roundtrips");
+ rejects([&]{begin_postgoal_return_reception_wait(defender_done);});
+ rejects([&]{begin_postgoal_return_reception_wait(reception_wait);});
+ rejects([&]{advance_observed_nmi_events(reception_wait,154,{{ObservedClockEventKind::facing_sample,{},1}});});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

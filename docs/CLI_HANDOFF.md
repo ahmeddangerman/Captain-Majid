@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: reception field entry
+
+After player18 receives the action3 return, phase414 matches original $E0DF after 107 recorded random/travel pairs and a supplied facing change to64. Random index5, represented fields, score and trajectory match. Private evidence: ../Captain-Majid-analysis/postgoal-reception-wait-20261110. The later return to control is original-only; timing and presentation are supplied, not autonomously executed. Overall progress is unmeasured and a complete playable match unsupported. Next compare the observed field-control entry and setup. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: action3 return received
 
 The captured startup now matches original through the action3 return reception at bank26:$8107: player18 becomes owner and ball x changes from116 to117, preserving the fractional bytes and trajectory. Phase413 matches represented fields and score. A longer isolated original trace matches the earlier overlapping checkpoints and continues through presentation, field control and later decisions, all original-only after reception. Private evidence: ../Captain-Majid-analysis/postgoal-return-reception-20261110 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-continuation-20261110/trace. Timing/presentation remain supplied; overall progress is unmeasured and a complete playable match unsupported. Next compare the reception presentation and return to control. Suggested model GPT-6.1 Terra High.

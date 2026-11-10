@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Return reception field entry
+
+After player18 receives the action3 return, a guarded phase414 preserves possession and the flight context through 107 recorded random/travel pairs and one facing sample changing0 to64. Native represented fields, score and trajectory match original $E0DF at random index5. Private evidence: ../Captain-Majid-analysis/postgoal-reception-wait-20261110. A fresh Windows build and all 62 registered checks passed. This acknowledges captured presentation timing; it does not run the original presentation engine. The later field-control setup is original-only. Overall progress remains unmeasured and a complete playable match is unsupported. Next compare control setup. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Action3 return received by player18
 
 After the matched defender cleanup, the original transfers ownership from player14 to player18 and moves the ball from x116 to the receiver's x117, y108, retaining fractional bytes. Guarded phase413 uses the saved recipient's position and matches the original bank26:$8107 represented fields, score and trajectory. The extended isolated original trace agrees with the earlier capture at overlapping checkpoints and continues into presentation, control and later decisions; those later events are original-only. Private evidence: ../Captain-Majid-analysis/postgoal-return-reception-20261110 and ../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-continuation-20261110/trace. A fresh Windows build and all 62 registered checks passed. Timing and presentation remain supplied; overall progress remains unmeasured and a complete playable match is unsupported. Next compare the reception presentation and return to control. Suggested model GPT-6.1 Terra High.

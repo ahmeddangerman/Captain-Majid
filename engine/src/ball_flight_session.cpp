@@ -204,6 +204,12 @@ PhaseSessionState receive_postgoal_return_flight(const PhaseSessionState& input)
  state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(y)<<8)|(state.ball_trajectory->y&255u));
  state.phase=FieldSessionPhase::postgoal_opponent_return_received;validate_phase_session(state);return state;
 }
+PhaseSessionState begin_postgoal_return_reception_wait(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_received)
+  throw std::invalid_argument("Post-goal reception wait requires the observed recipient");
+ auto state=input;state.phase=FieldSessionPhase::postgoal_opponent_return_reception_wait;validate_phase_session(state);return state;
+}
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {
