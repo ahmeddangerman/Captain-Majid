@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - second post-return field round (2026-11-10):** One captured startup matches through action3's return, 22 further neutral polls, two clock ticks and two 22-player field rounds, with recorded inputs and presentation samples. Later play remains original-only. Autonomous timing/AI and a complete playable match remain unsupported; overall progress is unmeasured.
+
 **Latest - post-return field round (2026-11-10):** One captured startup matches through action3's return, eleven polls, the next clock tick and a 22-player field round. Recorded inputs and presentation samples are supplied; later play remains original-only. Autonomous timing/AI and a complete playable match remain unsupported. Overall progress is unmeasured.
 
 **Latest - eleven polls after return (2026-11-10):** One captured startup matches through action3's return and eleven neutral control polls to the next clock boundary, with supplied timing and ball-mode samples. The following clock and field round are original-only; autonomous timing/AI and a complete playable match remain unsupported. Overall progress is unmeasured.

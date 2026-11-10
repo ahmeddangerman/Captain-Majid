@@ -149,3 +149,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Compare the original clock tick with the shared clock and energy kernels.
 - [x] Test and replay observed field-round ball-mode samples and movement.
 - [x] Compare all represented state at the next original boundary and document coverage.
+
+## Task 21: Compare the second post-return control cycle
+
+- [x] Identify the original poll, clock and field-round boundaries.
+- [x] Test and replay the eleven recorded neutral polls and mode samples.
+- [x] Compare the subsequent clock and field round with the original and document coverage.

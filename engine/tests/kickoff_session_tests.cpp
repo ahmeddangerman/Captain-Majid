@@ -2056,6 +2056,10 @@ int main(){try{using namespace captain;
   travel_movement,travel_content,67,postgoal_mode_poll);
  check(sampled_return_poll.poll.state.current.clock.ball_mode==192 && sampled_return_poll.poll.state.control->decision_timer==9,
        "Return control poll applies the recorded ball-mode sample before polling");
+ auto next_cycle_input=postgoal_return_control.state;next_cycle_input.current.clock.remaining=155;
+ const auto next_cycle_poll=advance_observed_nmi_control_poll(next_cycle_input,mode_profile_mappings,
+  travel_movement,travel_content,67,postgoal_mode_poll);
+ check(next_cycle_poll.poll.state.current.clock.ball_mode==192,"The next observed post-return control cycle accepts its mode sample");
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});
