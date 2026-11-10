@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Corrected published Arabic progress note
+
+The earlier November10 website update had accidentally saved question marks instead of its Arabic progress text. Replaced only that daily note in the separate website checkout, accurately describing the verified blocked-shot recovery, player3 encounter and current demo limitations. Website main commit `6715103` is pushed; UTF-8 Arabic text and inline JavaScript syntax passed local checks, and the published page returned HTTP200 with the corrected note. A browser render was not checked. Engine work remains on `work`; complete match unsupported and progress unmeasured. Next continue the one-two original comparison. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player3 selects a one-two
 
 An extended isolated original capture reproduces all 14,381 earlier instruction records, then selects the one-two action at the player3 three-defender encounter. The shared encounter-menu verifier now matches 174 captured polls through action3 confirmation, random index195; the previous player7 shot scenario still matches 121 polls. Presentation facing/display changes and random/travel timing are supplied. Private evidence: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player3-encounter-action-20261110` and `../Captain-Majid-analysis/player3-second-menu-v1-20261110`. Windows build and all 62 checks passed. The one-two action outcome is not yet matched; a complete match remains unsupported and overall progress unmeasured. Next compare the selected action and defender sequence. Suggested model GPT-6.1 Terra High.
