@@ -808,6 +808,13 @@ PhaseSessionState compare_third_return_defender(const PhaseSessionState& input, 
  auto state=input;state.current.field.roster[5].stamina=energy.stamina;
  state.phase=FieldSessionPhase::third_return_defender_compared;validate_phase_session(state);return state;
 }
+PhaseSessionState classify_third_return_defender(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::third_return_defender_compared || input.area_sequence_result!=255)
+  throw std::invalid_argument("Third-return defender comparison is not awaiting classification");
+ auto state=input;state.area_sequence_result=2;state.phase=FieldSessionPhase::third_return_defender_result;
+ validate_phase_session(state);return state;
+}
 PhaseSessionState compare_sampled_mixed_defender(const PhaseSessionState& input,const FieldComparisonContent& comparison) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::sampled_mixed_defender_prepared)

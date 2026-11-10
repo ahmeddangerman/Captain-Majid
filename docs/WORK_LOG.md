@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Third-return defender result2
+
+The pre-classification defender comparison now advances separately to original result2 at the next 8107 boundary. Native phase416 stores result2 and matches represented fields and score; the comparison state remains unchanged on rejection. Private evidence: `../Captain-Majid-analysis/verify-third-return-defender-result-20261110.py` and `../Captain-Majid-analysis/third-return-defender-result-20261110.cmjsession`. Tests cover result, atomic input, repeat rejection and extended snapshot roundtrip. Windows build and all 62 registered checks passed. Subsequent presentation/contact remains unmatched; supplied timing and presentation are not an emulated original engine. Overall progress is unmeasured and a complete playable match remains unsupported. Next compare result2 continuation. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Third-return defender comparison
 
 Shared player-profile, energy and field-comparison calculations now match the original 8132 pre-classification boundary: defender5 base8, cost70, stamina400-to330, strength4, loss1 and score64 against incoming power4. Native phase415 matches represented fields and score; the original CPU comparison value A=64 is independently checked. Its calculated result2 is guarded, but the original result byte is not committed at this pre-classification boundary. Private evidence: `../Captain-Majid-analysis/third-return-defender-probe-20261110.cpp`, `../Captain-Majid-analysis/verify-third-return-defender-20261110.py` and `../Captain-Majid-analysis/third-return-defender-compared-20261110.cmjsession`. Unit tests cover calculation, rejected content and extended snapshot roundtrip. Windows build and all 62 registered checks passed. Timing/presentation remain supplied; complete match unsupported, overall progress unmeasured. Next compare the original result2 classification and subsequent contact. Suggested model GPT-6.1 Terra High.

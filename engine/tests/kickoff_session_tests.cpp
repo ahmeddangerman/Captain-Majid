@@ -2176,6 +2176,12 @@ int main(){try{using namespace captain;
        bytes(third_attack_prepared)==third_defender_before,"Third return comparison spends captured defender stamina atomically");
  const auto third_defender_bytes=bytes(third_defender_compared);std::istringstream third_defender_stream(third_defender_bytes);
  check(bytes(load_phase_session(third_defender_stream))==third_defender_bytes,"Third return defender comparison snapshot roundtrips");
+ const auto third_defender_result=classify_third_return_defender(third_defender_compared);
+ check(third_defender_result.phase==FieldSessionPhase::third_return_defender_result && third_defender_result.area_sequence_result==2 &&
+       bytes(third_defender_compared)==third_defender_bytes,"Third return classification records result2 without mutating the comparison");
+ const auto third_result_bytes=bytes(third_defender_result);std::istringstream third_result_stream(third_result_bytes);
+ check(bytes(load_phase_session(third_result_stream))==third_result_bytes,"Third return result snapshot roundtrips");
+ rejects([&]{classify_third_return_defender(third_defender_result);});
  auto invalid_third_comparison=third_comparison;invalid_third_comparison.variation[0][0]=0;
  rejects([&]{compare_third_return_defender(third_attack_prepared,third_attack_profiles,third_defense_content,invalid_third_comparison);});
  check(bytes(third_attack_prepared)==third_defender_before,"Rejected third return comparison preserves input");
