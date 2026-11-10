@@ -1,5 +1,13 @@
 # Development log
 
+## 2026-11-10 - Arabic progress publication
+
+Updated only the November 10 Arabic progress note in the separate website checkout, committed and pushed public main at `d44aa3d`. Inline JavaScript syntax and note structure passed; the live GitHub Pages HTTP response later contained the new note. This was a source/HTTP check, not a browser render verification. Overall engine progress remains unmeasured; a complete match is unsupported. Next verify the local demo's interactive input and continue the original encounter. Suggested model GPT-6.1 Terra High.
+
+## 2026-11-10 - Windows demo runtime dependencies
+
+The SDL scene initially failed to start with PATH restricted to Windows System32, because this Clang build also needs `libc++.dll` and `libunwind.dll`. Copied the matching local toolchain runtime DLLs beside the ignored `build/demo` executable. With the same restricted PATH, the private-pack capture succeeded. Updated the private-pack regression helper to use a restricted PATH on Windows and the demo runbook to list all three adjacent runtime DLLs. This verifies headless launch, not keyboard/window interaction. Overall progress is unmeasured; full match unsupported. Next verify actual interactive input when the scene can be brought forward. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Third return encounter later wait
 
 Using the existing observed sequence support, 74 additional recorded random/travel pairs carry the matched encounter from 85BF to original C600, random index19. Represented fields and score match at the boundary. Private evidence: `../Captain-Majid-analysis/third-return-contact-later-wait-20261110`. Timing and presentation remain supplied; C600 continuation remains unmatched. No further engine changes or new suite run were needed for this trace comparison. Overall progress is unmeasured and a complete playable match remains unsupported. Next inspect C600 and subsequent encounter state changes. Suggested model GPT-6.1 Terra High.

@@ -12,7 +12,7 @@ cmake --build build-ui --target captain-shot-scene
 ./build-ui/captain-shot-scene /path/to/private-analysis/japanese-shot-v1.cmjpack
 ```
 
-For a nonstandard SDK, pass `-DCMAKE_PREFIX_PATH=/path/to/SDL2`. Multi-configuration generators may put the executable in a configuration subdirectory. Windows execution and deployment remain unverified.
+For a nonstandard SDK, pass `-DCMAKE_PREFIX_PATH=/path/to/SDL2`. Multi-configuration generators may put the executable in a configuration subdirectory. A local Windows build and window launch have been observed; see [the Windows demo runbook](DEMO_RUNBOOK.md) for its runtime dependencies and remaining input checks. Public deployment remains unverified.
 
 ## Controls
 
@@ -42,4 +42,4 @@ This creates a software renderer on a surface, draws once and exits without a di
 
 An official SDL2 SDK was downloaded/built under `/tmp` in the cloud environment, with no system install or dependency source added to the repository. A separate CMake production build with warnings enabled built the scene, laboratory and prototype. Default Make production targets also built without SDL2. Software capture produced a640×480BMP, inspected through a PNG format conversion, displaying the native default result: power33, keeper79 and punch. Normal CLI usage after the shared-scene extraction preserved those values.
 
-The cloud build uses software/dummy SDL support. Real window keyboard/GPU behavior, Windows execution, frame-rate equivalence and error-path behavior have not been exercised. No automated tests or suites were added/run for this increment. Static code review and the limited production/capture observations are the available evidence.
+The cloud build used software/dummy SDL support. On Windows, the scene was subsequently built and a real window was observed; headless capture and exclusive output passed with a restricted system PATH and local runtime DLLs. Windows keyboard interaction, frame-rate equivalence and a complete graphical match remain unverified. The capture regression is `tools/check_shot_scene_capture.py` and requires a private pack and a private temporary directory.
