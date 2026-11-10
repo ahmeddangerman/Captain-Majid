@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player3 returns to a three-defender encounter
+
+Extended `tools/verify_player3_recovered_control.py` to feed five captured control cycles forward from the recovered player: 55 input polls, five clock updates and five 22-player field rounds match through the next original E4BE encounter. The resulting state is clock139, side0/owner3, ball(120,140), selected defenders16/19/20, random index125. The replay supplies original input, random, travel and presentation events. Private evidence: `../Captain-Majid-analysis/player3-recovered-five-cycles-v1-20261110` and the original trace under `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. This is a trace-verification increment; no engine code changed, so the previous full Windows build and 62-check result remains the last full suite run. Full match unsupported and progress unmeasured. Next compare the encounter menu and chosen action. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player3 control after blocked shot
 
 The recovered player3 path matches the captured presentation wait, control setup and 11 input polls through the next clock boundary, random index202. `tools/verify_player3_recovered_control.py` feeds every native result forward, including the reset of the travel accumulator at the observed setup boundary; three facing/motion samples and random/travel events are supplied. Guarded setup clears the completed contact context, rejects early setup and preserves the input. Private evidence: `../Captain-Majid-analysis/player3-recovered-control-v2-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. Windows build and all 62 checks passed. Live timing, rendering and a complete match remain unsupported; overall progress is unmeasured. Next compare the clock and following field round. Suggested model GPT-6.1 Terra High.

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player3 three-defender encounter
+
+After recovering the blocked shot, player3 now matches five captured control/clock/22-player cycles through E4BE at clock139, ball(120,140), defenders16/19/20, random index125. `tools/verify_player3_recovered_control.py` produces `../Captain-Majid-analysis/player3-recovered-five-cycles-v1-20261110/cycle-05-field.cmjsession`; input, random and presentation timing are supplied. The last full Windows build and 62 checks passed before this verifier-only change. Next compare the encounter menu and action; complete match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player3 control polls
 
 Player3's blocked-shot recovery now matches the original presentation wait, control setup and 11 polls through the next clock boundary, random index202. Private final checkpoint: `../Captain-Majid-analysis/player3-recovered-control-v2-20261110/poll-11.cmjsession`; reproducible with `tools/verify_player3_recovered_control.py`. Original frame/random/presentation events remain supplied. Windows build and 62 checks passed. Next compare the clock and 22-player round; full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.

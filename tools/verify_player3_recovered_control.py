@@ -6,7 +6,8 @@ import subprocess
 import sys
 from pathlib import Path
 
-from verify_captured_control_chain import menu_wait_events, trace_data
+from verify_captured_control_chain import clock_events, menu_wait_events, trace_data
+from verify_observed_nmi_world_round import read_nmi_trace
 from verify_player7_pass_end_to_end import compare_checkpoint, prepare_output
 
 
@@ -74,8 +75,9 @@ def main():
     if pcs[12011] != 'E145' or re.findall(r'final random index (\d+);', result) != [str(ram(last)[0xe1])]:
         raise ValueError('Control setup wait random index differs')
     compare(source, 12011, 9, 'first control poll entry')
-    previous, count, index = 12011, 0, ram(12011)[0xe1]
-    for at in range(12012, len(pcs)):
+    def poll_cycle(previous, index, cycle):
+      count = 0
+      for at in range(previous + 1, len(pcs)):
         if pcs[at] != 'E14A' or at <= previous:
             continue
         end = next(i for i in range(at + 1, len(pcs)) if pcs[i] in ('E145', 'E1E7'))
@@ -92,9 +94,9 @@ def main():
             raise ValueError('Control poll random input differs')
         row = (poll[0x1c], poll[0x1e], nmi[0x300 + index], nmi[0x700 + index],
                nmi[(0x780 + index) & 2047], int(flags.group(1), 16) & 1, 1, travel[0x1c], speed & 255, speed >> 8)
-        events = output / f'poll-{count + 1:02d}-events.txt'
+        events = output / f'cycle-{cycle:02d}-poll-{count + 1:02d}-events.txt'
         events.write_text('CMJPOLLNMI1\n' + ' '.join(map(str, row)) + '\n')
-        result = run('--advance-observed-nmi-poll', output / f'poll-{count + 1:02d}.cmjsession', events, index)
+        result = run('--advance-observed-nmi-poll', output / f'cycle-{cycle:02d}-poll-{count + 1:02d}.cmjsession', events, index)
         if re.findall(r'final random index (\d+);', result) != [str(ram(end)[0xe1])]:
             raise ValueError(f'Control poll {count + 1} random index differs')
         index = ram(end)[0xe1]
@@ -102,9 +104,34 @@ def main():
         previous, count = end, count + 1
         if pcs[end] == 'E1E7':
             break
-    if count != 11:
+      if count != 11:
         raise ValueError(f'Expected 11 captured polls, got {count}')
-    print(f'Matched player3 recovery, control setup and {count} control polls; random index {index}.')
+      return previous, index
+
+    previous, index = 12011, ram(12011)[0xe1]
+    for cycle, (round_number, clock_end, world_end) in enumerate(((9,12103,12276),(10,12369,12503),
+            (11,12595,12729),(12,12822,12956),(13,13048,13182)), 1):
+        previous, index = poll_cycle(previous, index, cycle)
+        if pcs[previous] != 'E1E7' or pcs[clock_end] != 'E407':
+            raise ValueError(f'Unexpected player3 clock boundary in cycle {cycle}')
+        rows = clock_events(lines, pcs, ram, previous, clock_end)
+        events = output / f'cycle-{cycle:02d}-clock-events.txt'
+        events.write_text('CMJCLOCKNMI1\n' + '\n'.join(rows) + '\n')
+        result = run('--advance-observed-nmi-clock', output / f'cycle-{cycle:02d}-clock.cmjsession', events, index)
+        if re.findall(r'final random index (\d+);', result) != [str(ram(clock_end)[0xe1])]:
+            raise ValueError(f'Player3 cycle {cycle} clock random index differs')
+        compare(source, clock_end, 13, f'control clock {cycle}')
+        entry, end, rows, boundary = read_nmi_trace(args.trace_directory, round_number)
+        if boundary != ('E4BE' if cycle == 5 else 'E145') or entry != ram(clock_end) or end != ram(world_end):
+            raise ValueError(f'Unexpected player3 field-round boundaries in cycle {cycle}')
+        events = output / f'cycle-{cycle:02d}-field-events.txt'
+        events.write_text('CMJWORLDNMI1\n' + ''.join(' '.join(map(str, row)) + '\n' for row in rows))
+        result = run('--advance-observed-nmi-world-file', output / f'cycle-{cycle:02d}-field.cmjsession', events, entry[0xe1])
+        if re.findall(r'final random index (\d+);', result) != [str(end[0xe1])]:
+            raise ValueError(f'Player3 cycle {cycle} field-round random index differs')
+        compare(source, world_end, 15 if boundary == 'E4BE' else 9, f'field round {cycle}')
+        previous, index = world_end, end[0xe1]
+    print(f'Matched player3 recovery and five control/clock/field cycles to the next encounter; random index {index}.')
 
 
 if __name__ == '__main__':
