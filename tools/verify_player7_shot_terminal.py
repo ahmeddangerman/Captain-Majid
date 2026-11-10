@@ -103,7 +103,40 @@ def main():
     normalized = bytearray(actual[:259] + actual[260:])
     normalized[10], normalized[258] = 133, 20
     compare_checkpoint(normalized, ram(11259), 20, 20, 'player7', 'loose-ball jitter', None, False, False)
-    print(f'Matched terminal contact and loose-ball jitter at (120, 140); random index {ram(last)[0xe1]}.')
+    if pcs[11448] != '8C10':
+        raise ValueError('Unexpected original field movement end')
+    rows, last = menu_wait_events(lines, pcs, ram, 11259, 11448)
+    if len(rows) != 44:
+        raise ValueError('Expected 22 captured random/travel pairs')
+    events = output / 'loose-ball-movement-events.txt'
+    events.write_text('CMJNMISEQ1\n' + ''.join(rows[2 * slot] + '\n' + rows[2 * slot + 1] + '\nP ' + str(slot) + '\n' for slot in range(22)))
+    moved = output / 'loose-ball-moved.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(jittered),
+                          '--advance-observed-field-movement', str(events), str(ram(11259)[0xe1]),
+                          '--capture', str(moved)], capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    actual = moved.read_bytes()
+    if len(actual) != 419 or actual[10] != 143 or int.from_bytes(actual[258:260], 'little') != 425:
+        raise ValueError('Unexpected loose-ball field movement snapshot')
+    if re.findall(r'final random index (\d+);', run.stdout) != [str(ram(11448)[0xe1])]:
+        raise ValueError('Loose-ball movement random index differs')
+    normalized = bytearray(actual[:259] + actual[260:])
+    normalized[10], normalized[258] = 133, 20
+    compare_checkpoint(normalized, ram(11448), 20, 20, 'player7', 'loose-ball field movement', None, False, False)
+    recovered = output / 'loose-ball-recovered.cmjsession'
+    run = subprocess.run([str(args.exe.resolve()), str(args.pack.resolve()), str(moved),
+                          '--recover-player7-shot-ball', '--capture', str(recovered)],
+                         capture_output=True, text=True, timeout=30)
+    if run.returncode:
+        raise RuntimeError(run.stderr.strip())
+    actual = recovered.read_bytes()
+    if len(actual) != 419 or actual[10] != 143 or int.from_bytes(actual[258:260], 'little') != 426:
+        raise ValueError('Unexpected recovered loose-ball snapshot')
+    normalized = bytearray(actual[:259] + actual[260:])
+    normalized[10], normalized[258] = 133, 20
+    compare_checkpoint(normalized, ram(11449), 20, 20, 'player7', 'loose-ball owner', None, False, False)
+    print(f'Matched terminal contact, loose-ball movement and player3 recovery; random index {ram(11448)[0xe1]}.')
 
 
 if __name__ == '__main__':

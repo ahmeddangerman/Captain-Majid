@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player3 recovers blocked shot
+
+The player7 blocked-shot replay now matches the original 22-player field movement and stationary-ball winner: player3/side0 recovers at (120,140), with his fractional coordinates retained and random index82. `tools/verify_player7_shot_terminal.py` feeds the jittered checkpoint through captured random/travel events and ordered player slots, then compares the recovered owner at original 8C31. The recovery is guarded to this observed state; invalid early recovery rejects and the saved state roundtrips. Private evidence: `../Captain-Majid-analysis/player7-loose-owner-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. Windows build and all 62 registered checks passed. Events and presentation timing remain supplied, and resumed control and a complete match remain unsupported. Overall progress is unmeasured. Next compare player3 control setup and ensuing input. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player7 shot loose-ball jitter
 
 The matched terminal contact now advances through three captured NMI random/travel events and the original loose-ball jitter: ball(120,124) to (120,140), selected-defender prefix cleared, random index60. `tools/verify_player7_shot_terminal.py` compares the resulting snapshot with the private original 8BE5 boundary. The guarded operation rejects other random inputs and preserves snapshot roundtrips and input immutability. Evidence: `../Captain-Majid-analysis/player7-loose-ball-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110`. Windows build and all 62 checks passed. Frame events remain supplied; recovery and a complete match remain unsupported, and overall progress is unmeasured. Next compare the original 22-player movement and loose-ball owner. Suggested model GPT-6.1 Terra High.

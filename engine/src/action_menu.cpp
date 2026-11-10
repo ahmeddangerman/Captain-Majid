@@ -592,6 +592,27 @@ PhaseSessionState jitter_player7_shot_ball(const PhaseSessionState& input) {
     state.current.field.selected_defenders=0; state.scheduling->selected_ids.fill(0); state.recovery->x_jitter_control=ball.x_jitter_control;
     state.phase=FieldSessionPhase::player7_shot_ball_jittered; validate_phase_session(state); return state;
 }
+PhaseSessionState recover_player7_shot_ball(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player7_shot_recovery_field_moved || input.current.field.random_first!=11 || input.current.field.random_second!=105)
+        throw std::invalid_argument("Player7 shot recovery needs the observed field boundary");
+    const auto& field=input.current.field; BallRecoveryInput choice{};
+    choice.ball_x=field.ball_x; choice.ball_y=field.ball_y; choice.ball_owner=field.ball_owner;
+    choice.opposing_player=input.recovery->opposing_player; choice.random_e2=field.random_first; choice.random_e3=field.random_second;
+    choice.ball_update_active=field.elapsed!=0;
+    for(std::size_t i=0;i<field.motion.size();++i) {
+        const auto& actor=field.motion[i]; choice.players[i]={static_cast<std::uint8_t>(actor.x>>8),static_cast<std::uint8_t>(actor.y>>8),actor.status!=0};
+    }
+    const auto result=recover_stationary_ball(choice);
+    if(result.ball_owner!=3 || result.possession_side!=0 || result.attack_subtype!=0 || result.direct_defender_capture)
+        throw std::invalid_argument("Unsupported player7 shot loose-ball winner");
+    auto state=input; state.current.field.ball_owner=result.ball_owner; state.current.field.side=result.possession_side;
+    auto& owner=state.current.field.motion[field_motion_index(result.ball_owner)];
+    owner.x=static_cast<std::uint16_t>((owner.x&255u)|(unsigned(field.ball_x)<<8));
+    owner.y=static_cast<std::uint16_t>((owner.y&255u)|(unsigned(field.ball_y)<<8));
+    state.recovery->attack_subtype=result.attack_subtype;
+    state.phase=FieldSessionPhase::player7_shot_ball_recovered; validate_phase_session(state); return state;
+}
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,
     const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);

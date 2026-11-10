@@ -192,6 +192,24 @@ int main() {
         try { jitter_player7_shot_ball(player7_contact); }
         catch (const std::invalid_argument&) { invalid_loose_random_rejected = true; }
         if (!invalid_loose_random_rejected) return 1;
+        auto player7_loose_moved = player7_loose;
+        player7_loose_moved.phase = FieldSessionPhase::player7_shot_recovery_field_moved;
+        player7_loose_moved.current.field.elapsed = 0;
+        player7_loose_moved.current.field.random_first = 11;
+        player7_loose_moved.current.field.random_second = 105;
+        for (auto& actor : player7_loose_moved.current.field.motion) { actor.x = 48u << 8; actor.y = 80u << 8; }
+        auto& player3 = player7_loose_moved.current.field.motion[field_motion_index(3)];
+        player3.x = static_cast<std::uint16_t>((120u << 8) | 17u); player3.y = static_cast<std::uint16_t>((140u << 8) | 19u);
+        const auto player7_recovered = recover_player7_shot_ball(player7_loose_moved);
+        if (player7_recovered.phase != FieldSessionPhase::player7_shot_ball_recovered || player7_recovered.current.field.ball_owner != 3 ||
+            player7_recovered.current.field.motion[field_motion_index(3)].x != player3.x ||
+            player7_recovered.current.field.motion[field_motion_index(3)].y != player3.y || player7_loose_moved.current.field.ball_owner != 7) return 1;
+        std::istringstream recovered_snapshot(bytes(player7_recovered));
+        if (bytes(load_phase_session(recovered_snapshot)) != bytes(player7_recovered)) return 1;
+        bool early_recovery_rejected = false;
+        try { recover_player7_shot_ball(player7_loose); }
+        catch (const std::invalid_argument&) { early_recovery_rejected = true; }
+        if (!early_recovery_rejected) return 1;
         bool marker_rejected = false;
         try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
         catch (const std::invalid_argument&) { marker_rejected = true; }

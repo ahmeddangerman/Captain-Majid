@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player3 recovers shot
+
+The blocked player7 shot now matches 22-player movement and player3/side0 recovery at (120,140), random index82. Private checkpoint: `../Captain-Majid-analysis/player7-loose-owner-v1-20261110/loose-ball-recovered.cmjsession`; original trace and replay are recorded in `tools/verify_player7_shot_terminal.py`. Frame and random events remain supplied. Windows build and 62 checks passed. Next compare control setup and player3 input; full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player7 shot loose ball
 
 The blocked player7 shot now matches the captured loose-ball jitter at (120,140), with the selected defender cleared and random index60. `tools/verify_player7_shot_terminal.py` produces `../Captain-Majid-analysis/player7-loose-ball-v1-20261110/loose-ball-jittered.cmjsession`; events and timing remain supplied. Windows build and 62 checks passed. Next compare the original 22-player movement and recovery; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
