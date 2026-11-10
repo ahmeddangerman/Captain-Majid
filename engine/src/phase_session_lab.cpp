@@ -2075,8 +2075,12 @@ int main(int argc, char** argv) {
         if(continue_ordinary_reception) state=captain::continue_ordinary_pass_reception(state);
         if(position_ordinary_recipient) state=captain::position_ordinary_pass_recipient(state);
         if(ordinary_control_facing) state=captain::continue_ordinary_pass_control(state,static_cast<std::uint8_t>(*ordinary_control_facing));
-        if(ordinary_return_shot_defense) state=captain::record_ordinary_return_shot_defense(state,
-            static_cast<std::uint8_t>((*ordinary_return_shot_defense)[0]),static_cast<std::uint8_t>((*ordinary_return_shot_defense)[1]),static_cast<std::uint8_t>((*ordinary_return_shot_defense)[2]));
+        if(ordinary_return_shot_defense) {
+            const auto& choice=*ordinary_return_shot_defense;
+            state=state.phase==captain::FieldSessionPhase::attack_choice_pending ?
+                captain::record_player7_shot_defender(state,choice[0],choice[1],choice[2]) :
+                captain::record_ordinary_return_shot_defense(state,choice[0],choice[1],choice[2]);
+        }
         if(prepare_ordinary_return_shot) state=captain::prepare_ordinary_return_shot(state,content.field_players,content.attack).state;
         if(ordinary_return_shot_variant) state=captain::prepare_ordinary_return_shot_defender(state,
             static_cast<std::uint8_t>(*ordinary_return_shot_variant),content.field_players,content.defense);

@@ -501,6 +501,20 @@ SessionAttackResult prepare_session_basic_shot(const PhaseSessionState& input,
     validate_phase_session(state);
     return {state, prepared};
 }
+PhaseSessionState record_player7_shot_defender(const PhaseSessionState& input,std::uint8_t defender,std::uint8_t action,std::uint8_t subtype) {
+    validate_phase_session(input);
+    if (input.phase != FieldSessionPhase::attack_choice_pending || !input.score || !input.scheduling || !input.recovery ||
+        input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
+        input.current.clock.remaining != 146 || input.current.clock.extra_time != 0 || input.current.field.side != 0 ||
+        input.current.field.ball_owner != 7 || input.current.field.ball_x != 120 || input.current.field.ball_y != 124 ||
+        input.current.field.selected_defenders != 1 || input.scheduling->selected_ids[0] != 20 ||
+        input.action->action != 0 || input.recovery->opposing_player != 5 || defender != 20 || action != 2 || subtype != 0)
+        throw std::invalid_argument("Unsupported player7 shot defender handoff");
+    auto state = input;
+    state.recovery->opposing_player = defender;
+    validate_phase_session(state);
+    return state;
+}
 PhaseSessionState record_ordinary_return_shot_defense(const PhaseSessionState& input,std::uint8_t defender,std::uint8_t action,std::uint8_t subtype) {
     validate_phase_session(input);
     if(input.phase!=FieldSessionPhase::ordinary_return_shot_choice || input.current.field.selected_defenders!=1 ||

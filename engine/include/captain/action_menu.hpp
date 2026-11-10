@@ -67,6 +67,9 @@ PhaseSessionState advance_ordinary_return_goal_area_shot_clock(const PhaseSessio
 PhaseSessionState advance_ordinary_return_goal_area_shot_dispatch(const PhaseSessionState& input,const ContactPreludeContent& content);
 PhaseSessionState handoff_ordinary_return_goal_area_shot(const PhaseSessionState& input);
 PhaseSessionState record_ordinary_return_shot_defense(const PhaseSessionState& input,std::uint8_t defender,std::uint8_t action,std::uint8_t subtype);
+// Records only the captured opposing-player handoff; the supplied choice must
+// also be supplied to the later staged defender comparison.
+PhaseSessionState record_player7_shot_defender(const PhaseSessionState& input,std::uint8_t defender,std::uint8_t action,std::uint8_t subtype);
 SessionAttackResult prepare_ordinary_return_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
 PhaseSessionState prepare_ordinary_return_shot_defender(const PhaseSessionState& input,std::uint8_t observed_variant,const FieldPlayerProfiles& players,const FieldDefenseContent& defense);
 PhaseSessionState compare_ordinary_return_shot_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison);

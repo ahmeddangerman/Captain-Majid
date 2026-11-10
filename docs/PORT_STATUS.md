@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** The player7 shot path matches the observed defender20 handoff and shot preparation, with stamina305 and power5. The defender result remains unmatched; all 62 Windows checks passed. A complete match remains unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** The player7 encounter now matches 121 original menu polls through selecting and confirming a shot. Presentation and random/travel timing remain supplied; all 62 Windows checks passed. A complete match remains unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Directed player7 movement matches through a new defender20 encounter at ball(120,124). A frame-driven stamina write is supplied at its observed original order using a guarded sample; live stamina timing remains unimplemented. All 62 Windows checks passed; complete match unsupported, progress unmeasured.

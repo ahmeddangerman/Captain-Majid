@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player7 shot preparation
+
+From the matched player7 shot confirmation, `tools/verify_player7_shot_preparation.py` matches the observed defender20 action2/subtype0 handoff and original shot preparation (stamina305, power5, random index74). The guarded handoff records the opposing player; the observed choice must also be supplied to the later comparison. Private evidence: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-shot-20261110` and `../Captain-Majid-analysis/player7-shot-preparation-replay-v2-20261110`. Windows build and 62 checks passed. Next compare the terminal defender result and loose ball; full match unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player7 shot confirmation
 
 The directed encounter now matches the original menu and 121 polls through right-selecting and confirming a shot; final random index63. `tools/verify_player7_encounter_menu.py` replays from `../Captain-Majid-analysis/third-return-player7-directed-third-world-20261110/world.cmjsession` using the private `japanese-cycle-v9.cmjpack` and trace `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player7-encounter-right-20261110/trace`. Presentation changes and random/travel events are supplied; frames are not simulated. All 62 Windows checks passed. Next compare the shot defender and outcome; a complete match remains unsupported and overall progress unmeasured. Suggested model GPT-6.1 Terra High.

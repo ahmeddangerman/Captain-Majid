@@ -1,4 +1,5 @@
 #include "captain/control_tick.hpp"
+#include "captain/action_menu.hpp"
 #include "captain/phase_session_io.hpp"
 #include <iostream>
 #include <sstream>
@@ -105,6 +106,20 @@ int main() {
         try { advance_observed_nmi_events(player7_encounter, 0, {{ObservedClockEventKind::facing_sample, {}, 1}}); }
         catch (const std::invalid_argument&) { wrong_encounter_sample_rejected = true; }
         if (!wrong_encounter_sample_rejected) return 1;
+        auto player7_shot_choice = encounter_presentation.state;
+        player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
+        player7_shot_choice.action->action = 0;
+        player7_shot_choice.recovery->opposing_player = 5;
+        const auto player7_defender = record_player7_shot_defender(player7_shot_choice, 20, 2, 0);
+        if (player7_defender.recovery->opposing_player != 20 || player7_shot_choice.recovery->opposing_player != 5) return 1;
+        bool wrong_shot_defender_rejected = false;
+        try { record_player7_shot_defender(player7_shot_choice, 20, 1, 0); }
+        catch (const std::invalid_argument&) { wrong_shot_defender_rejected = true; }
+        if (!wrong_shot_defender_rejected) return 1;
+        bool repeated_shot_defender_rejected = false;
+        try { record_player7_shot_defender(player7_defender, 20, 2, 0); }
+        catch (const std::invalid_argument&) { repeated_shot_defender_rejected = true; }
+        if (!repeated_shot_defender_rejected) return 1;
         bool marker_rejected = false;
         try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
         catch (const std::invalid_argument&) { marker_rejected = true; }
