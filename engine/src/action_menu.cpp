@@ -160,7 +160,11 @@ ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,cons
   const auto& player=input.current.field.roster[id];
   if(player.type!=23 || player.stamina!=(postgoal ? (id==3 ? 30 : id==5 ? 25 : 140) : (id==3 ? 30 : 110)))sampled_roster=false;
  }
- const bool sampled_ordinary=sampled_roster && slot==0 && action==0;
+ const bool third_return_ordinary=field && input.score && input.score->left_goals==1 && !input.score->right_goals && input.score->kickoff==4 &&
+  input.current.clock.remaining==153 && !input.current.clock.extra_time && input.current.field.side==11 && input.current.field.ball_owner==18 &&
+  input.current.field.ball_cell==87 && input.current.field.selected_defenders==1 && input.scheduling && input.scheduling->selected_ids[0]==5 &&
+  input.current.field.roster[5].type==7 && input.current.field.roster[5].level==0 && input.current.field.roster[5].stamina==400;
+ const bool sampled_ordinary=(sampled_roster || third_return_ordinary) && slot==0 && action==0;
  const bool first_supported=slot<1 || input.area_defense->actions[0]==6 ||
   (sampled_roster && input.area_defense->actions[0]==0);
  const bool sampled_skip=field && slot<=2 && action==6 && first_supported &&

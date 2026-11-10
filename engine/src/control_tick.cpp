@@ -313,7 +313,11 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.field.side == 11 && input.current.field.ball_owner == 18 && input.current.field.ball_x == 110 &&
         input.current.field.ball_y == 108 && input.current.field.ball_cell == 87 && input.current.field.selected_defenders == 1 &&
         input.scheduling->selected_ids[0] == 5 && input.action->action == 2;
-    if ((!captured_kickoff && !captured_kickoff_control && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
+    const bool captured_return_menu = (input.phase == FieldSessionPhase::sampled_field_defense_prompt || input.phase == FieldSessionPhase::sampled_field_defense_poll) && input.score && input.action && input.control && input.scheduling &&
+        input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 && input.current.clock.remaining == 153 &&
+        input.current.field.side == 11 && input.current.field.ball_owner == 18 && input.current.field.ball_cell == 87 &&
+        input.current.field.selected_defenders == 1 && input.scheduling->selected_ids[0] == 5 && input.action->action == 2;
+    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
          input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded && input.phase != FieldSessionPhase::ordinary_pass_prepared &&

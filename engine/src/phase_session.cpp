@@ -894,10 +894,10 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.score->left_goals==2 && state.score->right_goals==1 && state.score->kickoff==4 &&
        !state.control->display_parameter && !state.control->motion_requested && state.action->action==((phase==228 || phase==229) ? 1 : 2) &&
        state.action->power==((phase==207 || (phase>=216 && phase<=218) || phase==227 || phase==228 || phase==229) ? 24 : 21) && (phase<206 || state.recovery->attack_subtype==((phase==206 || phase==215 || phase==228 || phase==229) ? 0 : 128));
-    const bool third_return_contact=(phase==201 || phase==202 || phase==203) && state.action && state.recovery && state.control && state.experience && state.score && state.scheduling &&
+    const bool third_return_contact=(phase>=201 && phase<=204) && state.action && state.recovery && state.control && state.experience && state.score && state.scheduling &&
        state.current.field.side==11 && state.current.field.ball_owner==18 && state.current.field.ball_x==110 && state.current.field.ball_y==108 && state.current.field.ball_cell==87 &&
        state.current.field.elapsed==1 && state.current.field.selected_defenders==1 && state.scheduling->selected_ids==std::array<std::uint8_t,5>{5,0,0,0,0} &&
-       state.current.field.random_first==60 && state.current.field.random_second==131 && state.current.clock.remaining==153 && !state.current.clock.extra_time &&
+       (phase!=201 || (state.current.field.random_first==60 && state.current.field.random_second==131)) && state.current.clock.remaining==153 && !state.current.clock.extra_time &&
        !state.current.clock.script_flags && !state.current.clock.ball_mode && state.score->left_goals==1 && !state.score->right_goals && state.score->kickoff==4 &&
        !state.control->display_parameter && !state.control->motion_requested && state.action->action==2 && state.action->power==12;
     if(((phase>=201 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) && !postgoal_field_contact && !third_return_contact && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling ||
@@ -918,9 +918,10 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.action->flash_counter!=(third_return_contact ? 192 : postgoal_field_contact ? 13 : 128) || state.area_defense->blink!=((postgoal_field_contact || third_return_contact) ? 13 : 7) || state.area_defense->pressed || state.area_defense->actions!=std::array<std::uint8_t,4>{255,255,255,255} ||
        state.area_defense->subtypes!=std::array<std::uint8_t,4>{0,0,0,0}))
         throw std::invalid_argument("Invalid sampled field defense prompt");
-    if(phase==203 && third_return_contact && (!state.area_defense || state.action->cursor!=0 || state.action->flash_counter!=192 ||
-       state.area_defense->blink!=13 || state.area_defense->actions!=std::array<std::uint8_t,4>{0,255,255,255} ||
-       state.area_defense->subtypes!=std::array<std::uint8_t,4>{0,0,0,0}))
+    if((phase==203 || phase==204) && third_return_contact && (!state.area_defense || state.action->cursor>(phase==203 ? 1 : 0) || (state.action->flash_counter!=128 && state.action->flash_counter!=192) ||
+       (state.area_defense->actions!=std::array<std::uint8_t,4>{0,255,255,255} && state.area_defense->actions!=std::array<std::uint8_t,4>{255,255,255,255}) ||
+       state.area_defense->subtypes!=std::array<std::uint8_t,4>{0,0,0,0} ||
+       (state.action->cursor==1 && (state.area_defense->actions[0]!=0 || state.area_defense->blink!=0 || state.action->flash_counter!=128))))
         throw std::invalid_argument("Invalid third-return defense selection");
     if((phase>=203 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) {
         const auto& defense=*state.area_defense;const auto cursor=state.action->cursor;

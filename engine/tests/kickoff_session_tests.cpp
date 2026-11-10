@@ -2119,6 +2119,10 @@ int main(){try{using namespace captain;
        "Captured third return prompt retains observed cursor and blink state");
  auto third_prompt_bytes=bytes(third_prompt);std::istringstream third_prompt_stream(third_prompt_bytes);
  check(bytes(load_phase_session(third_prompt_stream))==third_prompt_bytes,"Third return prompt snapshot roundtrips");
+ const auto third_menu_wait=advance_observed_nmi_events(third_prompt,71,{{ObservedClockEventKind::random,{0,0,0,true}}});
+ const auto third_menu_neutral=poll_keeper_area_defense(third_menu_wait.state,0,field_menu);
+ check(third_menu_neutral.state.phase==FieldSessionPhase::sampled_field_defense_poll && third_menu_neutral.state.area_defense->blink==12,
+       "Third return prompt accepts captured NMI and neutral menu poll");
  const auto third_selection=poll_keeper_area_defense(third_prompt,1,field_menu);
  check(third_selection.state.phase==FieldSessionPhase::sampled_field_defense_poll && third_selection.state.area_defense->actions[0]==0 &&
        third_selection.state.area_defense->blink==13 && third_selection.state.action->flash_counter==192 &&
@@ -2126,6 +2130,21 @@ int main(){try{using namespace captain;
        "Observed third return right selection matches the captured action and sprite request");
  rejects([&]{poll_keeper_area_defense(third_prompt,4,field_menu);});
  check(bytes(third_prompt)==third_prompt_bytes,"Rejected unobserved defense selection is atomic");
+ const auto third_selection_before=bytes(third_selection.state);
+ const auto third_confirmation=poll_keeper_area_defense(third_selection.state,128,field_menu);
+ check(third_confirmation.state.phase==FieldSessionPhase::sampled_field_defense_preparation && third_confirmation.confirmed &&
+       third_confirmation.state.recovery->opposing_player==5 && third_confirmation.state.area_defense->pressed==128 &&
+       bytes(third_selection.state)==third_selection_before,"Captured third return confirmation selects defender5 atomically");
+ auto third_register_input=third_confirmation.state;third_register_input.current.field.roster[5]={7,0,400};
+ third_register_input.action->flash_counter=128;third_register_input.area_defense->blink=0;
+ const auto third_register_before=bytes(third_register_input);
+ const auto third_registered=prepare_keeper_area_defense(third_register_input,field_menu);
+ check(third_registered.state.phase==FieldSessionPhase::sampled_field_defense_poll && third_registered.state.action->cursor==1 &&
+       third_registered.state.area_defense->actions[0]==0 && !third_registered.state.area_defense->blink &&
+       third_registered.presentation.size()==1 && third_registered.presentation[0].id==10 && bytes(third_register_input)==third_register_before,
+       "Captured third return defender registration matches original and preserves input");
+ auto unobserved_registration=third_register_input;unobserved_registration.current.field.roster[5].type=8;
+ rejects([&]{prepare_keeper_area_defense(unobserved_registration,field_menu);});
  rejects([&]{acknowledge_sampled_field_defense_prompt(third_presented,7);});
  auto bad_third_prompt=third_prompt_input;bad_third_prompt.current.field.ball_owner=19;
  rejects([&]{acknowledge_sampled_opponent_contact_presentation(bad_third_prompt);});
