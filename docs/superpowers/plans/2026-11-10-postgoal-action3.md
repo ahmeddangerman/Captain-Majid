@@ -143,3 +143,9 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Identify the original ball-mode sample and recorded events before the first poll.
 - [x] Test and replay the captured presentation and neutral control poll.
 - [x] Compare against original poll boundaries, verify and document the next steps.
+
+## Task 20: Compare post-return clock and field round
+
+- [x] Compare the original clock tick with the shared clock and energy kernels.
+- [x] Test and replay observed field-round ball-mode samples and movement.
+- [x] Compare all represented state at the next original boundary and document coverage.

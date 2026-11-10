@@ -167,6 +167,10 @@ int main() {
         const auto second_world = advance_observed_nmi_field_round(second_clock_result.tick.state, profiles, movement,
             control, world, 7, second_world_events);
         if (second_world.round.state.current.clock.ball_mode != 192) return 1;
+        auto return_world_input=second_clock_result.tick.state;
+        return_world_input.current.clock.remaining=155;
+        const auto return_world=advance_observed_nmi_field_round(return_world_input,profiles,movement,control,world,7,second_world_events);
+        if (return_world.round.state.current.clock.ball_mode!=192) return 1;
         auto invalid_world_events = sampled_world_events;
         invalid_world_events[0].ball_mode_sample = 192;
         bool duplicate_mode_rejected = false;

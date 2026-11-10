@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: post-return field round
+
+After action3 returns to player18 and eleven neutral polls, the captured replay now matches the original clock156 to155, recovery/energy schedule and one 22-player field round through $E145, random index107. Six explicitly supplied ball-mode changes occur during the field round; represented fields and score match at the clock and final control boundary. Private evidence: ../Captain-Majid-analysis/postgoal-return-clock-final-20261110 and ../Captain-Majid-analysis/postgoal-return-world-20261110. Later polls and decisions remain original-only; timing/presentation remain supplied. Overall progress is unmeasured and a complete playable match unsupported. Next compare the following control polls and decision. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: eleven polls after action3 return
 
 The captured startup now matches original through action3's return to player18, player-control setup and eleven neutral polls to $E1E7, clock156 and random index82. A supplied ball-mode presentation sample precedes the first poll; three further observed mode changes occur between random and travel processing inside later polls. `CMJPOLLNMI2` supports these samples while the old `CMJPOLLNMI1` reader remains supported. Every poll matches represented fields and score. Private evidence: ../Captain-Majid-analysis/postgoal-first-return-poll-20261110 and ../Captain-Majid-analysis/postgoal-return-polls-20261110. The following clock and field round remain original-only; timing/presentation remain supplied. Overall progress unmeasured; complete playable match unsupported. Next compare the clock and field round. Suggested model GPT-6.1 Terra High.

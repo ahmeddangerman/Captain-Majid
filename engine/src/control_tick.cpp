@@ -487,7 +487,7 @@ static FieldRoundResult run_control_field_round(const PhaseSessionState& input,
             if (sample.ball_mode_sample) {
                 const auto mode = *sample.ball_mode_sample;
                 if (!input.score || input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
-                    (input.current.clock.remaining != 159 && input.current.clock.remaining != 158) || input.current.clock.extra_time != 0 ||
+                    (input.current.clock.remaining != 159 && input.current.clock.remaining != 158 && input.current.clock.remaining != 155) || input.current.clock.extra_time != 0 ||
                     input.current.field.side != 11 || input.current.field.ball_owner != 18 ||
                     !((mode == 192 && state.current.clock.ball_mode == 128) ||
                       (mode == 128 && state.current.clock.ball_mode == 192)))
