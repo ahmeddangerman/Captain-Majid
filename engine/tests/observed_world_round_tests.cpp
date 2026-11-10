@@ -127,6 +127,17 @@ int main() {
             {{ObservedClockEventKind::facing_sample,{},0},{ObservedClockEventKind::display_sample,{},0}});
         if(player2_menu_presentation.state.control->facing || player2_menu_presentation.state.control->display_parameter ||
            player2_encounter.control->facing!=64 || player2_menu_presentation.state.area_defender_cursor!=2) return 1;
+        auto player2_pass_choice=player2_menu_presentation.state;
+        player2_pass_choice.phase=FieldSessionPhase::attack_choice_pending;
+        player2_pass_choice.action->action=1; player2_pass_choice.action->move_flags=3;
+        std::istringstream player2_pass_events("CMJNMISEQ1\nG 0\nM 23\nM 0\n");
+        const auto player2_pass_wait=advance_observed_nmi_events(player2_pass_choice,0,load_observed_nmi_events(player2_pass_events));
+        if(player2_pass_wait.state.action->move_flags || player2_pass_wait.state.control->motion_requested ||
+           player2_pass_choice.action->move_flags!=3 || player2_pass_wait.state.area_defender_cursor!=2) return 1;
+        bool incomplete_player2_pass_rejected=false;
+        try { std::istringstream incomplete("CMJNMISEQ1\nG 0\nM 23\n"); advance_observed_nmi_events(player2_pass_choice,0,load_observed_nmi_events(incomplete)); }
+        catch(const std::invalid_argument&) { incomplete_player2_pass_rejected=true; }
+        if(!incomplete_player2_pass_rejected) return 1;
         auto one_two_choice = player3_menu_presentation.state;
         one_two_choice.phase = FieldSessionPhase::attack_choice_pending;
         one_two_choice.action->action = 3;

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player2 confirms an empty pass target
+
+An instrumented continuation reproduces all earlier original instruction records after excluding newly added target probes. The native path matches pass-target initialization and 37 captured cursor polls, then confirms the observed empty target/recipient255, random index251. The pass wait supplies ordered move-flag and motion samples plus original NMI/travel events. Target verification now checks the original retained defender cursor and supports its result2 residue rather than assuming a reset. Private evidence: `../Captain-Majid-analysis/player2-pass-target-v2-20261110`, `../Captain-Majid-analysis/player2-pass-polls-v2-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-target-20261110`. Windows build and all 62 registered checks passed. The following defender/pass continuation and live timing remain unsupported; full match unsupported, progress unmeasured. Next compare the pass defender sequence. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Player2 chooses a pass
 
 The extended original capture reproduces all 19,825 prior instruction records, then selects a pass at player2's defender21 encounter. The native replay matches the menu and 115 captured polls through action1 confirmation, random index191; the prior player3 one-two menu also remains matched. The original's next screen opens pass targeting, not yet matched by this increment. Private evidence: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-encounter-action-20261110` and `../Captain-Majid-analysis/player2-pass-menu-v1-20261110`. Windows build and all 62 checks passed. Presentation/random events remain supplied, full match unsupported and overall progress unmeasured. Next compare pass targeting and continuation. Suggested model GPT-6.1 Terra High.

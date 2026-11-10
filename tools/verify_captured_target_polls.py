@@ -25,6 +25,7 @@ def main():
     parser.add_argument('--end-frame', type=int, required=True)
     parser.add_argument('--expected-polls', type=int, required=True)
     parser.add_argument('--expected-moves', type=int, required=True)
+    parser.add_argument('--expected-sequence', type=int, default=255)
     parser.add_argument('--confirm', action='store_true', help='compare the next original A-only target confirmation')
     args = parser.parse_args()
     if not 0 <= args.initial_index <= 255 or args.expected_polls <= 0 or args.expected_moves < 0:
@@ -35,7 +36,7 @@ def main():
         raise ValueError(f'Expected {args.expected_polls} polls, found {max(0, len(points) - 1)}')
     source = args.source.resolve()
     try:
-        compare_target(source.read_bytes(), ram(points[0]))
+        compare_target(source.read_bytes(), ram(points[0]), args.expected_sequence)
     except ValueError as error:
         raise ValueError(str(error).replace('target.initial', 'cursor.entry')) from error
     random_index = args.initial_index
@@ -82,7 +83,7 @@ def main():
         first = next(i for i in range(start + 1, end) if pcs[i] == 'E406')
         source, random_index = events_between(source, random_index, start, first + 1)
         try:
-            compare_target(source.read_bytes(), ram(first))
+            compare_target(source.read_bytes(), ram(first), args.expected_sequence)
         except ValueError as error:
             raise ValueError(str(error).replace('target.initial', f'cursor.poll[{number}].input')) from error
         held, pressed = ram(first)[0x1c], ram(first)[0x1e]
@@ -96,7 +97,7 @@ def main():
         moves += int('changed 1' in run.stdout)
         source, random_index = events_between(destination, random_index, first, end)
         try:
-            compare_target(source.read_bytes(), ram(end))
+            compare_target(source.read_bytes(), ram(end), args.expected_sequence)
         except ValueError as error:
             raise ValueError(str(error).replace('target.initial', f'cursor.poll[{number}].result')) from error
         if random_index != ram(end)[0xe1]:
@@ -111,7 +112,7 @@ def main():
         first = next(i for i in range(last + 1, end) if pcs[i] == 'E406')
         source, random_index = events_between(source, random_index, last, first + 1)
         try:
-            compare_target(source.read_bytes(), ram(first))
+            compare_target(source.read_bytes(), ram(first), args.expected_sequence)
         except ValueError as error:
             raise ValueError(str(error).replace('target.initial', 'target.confirmation_input')) from error
         held, pressed = ram(first)[0x1c], ram(first)[0x1e]
@@ -124,7 +125,7 @@ def main():
                              capture_output=True, text=True, timeout=30)
         if run.returncode:
             raise RuntimeError(f'boundary target.confirmed: {run.stderr.strip()}')
-        compare_confirmed_target(destination.read_bytes(), ram(end))
+        compare_confirmed_target(destination.read_bytes(), ram(end), args.expected_sequence)
         if random_index != ram(end)[0xe1]:
             raise ValueError(f'boundary target.confirmed, random.index: native {random_index}, original {ram(end)[0xe1]}')
         source = destination

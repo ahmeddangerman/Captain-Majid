@@ -16,19 +16,19 @@ from verify_observed_world_round import checkpoint, compare_checkpoints
 from verify_player7_pass_end_to_end import field_name, prepare_output
 
 
-def compare_target(actual, raw):
+def compare_target(actual, raw, expected_sequence=255):
     expected = checkpoint(raw, 19)
     if actual[:10] != b'CMJSESSION' or (len(actual), actual[10]) not in ((421, 146), (428, 148)):
         raise ValueError('boundary target.initial: invalid native session format or length')
     if int.from_bytes(actual[258:260], 'little') != 331:
         raise ValueError(f'boundary target.initial, session.phase: native {int.from_bytes(actual[258:260], "little")}, expected 331')
     for index in range(11, 413):
-        if index == 258:
+        if index in (258, 412):
             continue
         native_index = index + (index > 258)
         if actual[native_index] != expected[index]:
             raise ValueError(f'boundary target.initial, {field_name(index)}: native {actual[native_index]}, original {expected[index]}')
-    trailing = ((414, 'area_sequence_result', 255), (415, 'area_pass.present', 0),
+    trailing = ((413, 'area_defender_cursor', raw[0x616]), (414, 'area_sequence_result', expected_sequence), (415, 'area_pass.present', 0),
                 (416, 'area_pass.cost.low', 0), (417, 'area_pass.cost.high', 0),
                 (418, 'ball.flight_flag', raw[0x61b]), (419, 'pass.cursor', raw[0x624]), (420, 'pass.steps', 0))
     for index, name, value in trailing:
@@ -50,7 +50,7 @@ def compare_target(actual, raw):
                     raise ValueError(f'boundary target.initial, candidates.{name}: native {native_value}, original {original_value}')
 
 
-def compare_confirmed_target(actual, raw):
+def compare_confirmed_target(actual, raw, expected_sequence=255):
     if len(actual) != 429 or actual[:10] != b'CMJSESSION' or actual[10] != 149:
         raise ValueError('boundary target.confirmed: invalid native session format or length')
     if int.from_bytes(actual[258:260], 'little') != 332:
@@ -59,7 +59,7 @@ def compare_confirmed_target(actual, raw):
     prior[10] = 148
     prior[258:260] = (331).to_bytes(2, 'little')
     try:
-        compare_target(prior, raw)
+        compare_target(prior, raw, expected_sequence)
     except ValueError as error:
         raise ValueError(str(error).replace('target.initial', 'target.confirmed')) from error
     if actual[-1] != raw[0x5fc]:

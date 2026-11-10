@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player2 empty pass target
+
+Player2's pass now matches target initialization, 37 captured cursor polls and confirmation of empty target/recipient255, random index251. The original defender cursor2/result2 residue is retained. Private checkpoint: `../Captain-Majid-analysis/player2-pass-polls-v2-20261110/076-confirmed.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-target-20261110`. Windows build and 62 checks passed. Next compare the pass defender and continuation; timing remains supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player2 pass confirmation
 
 Player2's defender21 encounter matches 115 captured menu polls through pass/action1 confirmation, random index191. The generalized menu verifier uses `--scenario player2`; private evidence is `../Captain-Majid-analysis/player2-pass-menu-v1-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-encounter-action-20261110`. Windows build and 62 checks passed. Next compare pass targeting; original timing remains supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
