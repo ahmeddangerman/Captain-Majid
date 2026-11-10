@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: directed player7 movement
+
+After player7 recovery, a second neutral cycle and a captured right-directed input match through three 11-poll groups and two clock/22-player rounds. Latest original E1E7 has ball (120,124), clock147, player7/side0 and random index27. The next original clock has an additional frame-driven player7 stamina write; native continuation stops before it pending research. Private evidence: `../Captain-Majid-analysis/third-return-player7-second-world-20261110`, `../Captain-Majid-analysis/third-return-player7-directed-third-polls-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-third-return-player7-directed-20261110`. The prior increment passed all 62 Windows checks; this trace-only comparison changed no engine code. Inputs, timing and presentation remain supplied, a full match is unsupported and overall progress unmeasured. Next trace the stamina write. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player7 control after recovery
 
 The captured result2 loose ball is recovered by player7 on side0, then matches original control setup, 11 neutral polls, the 151-to150 clock tick and a 22-player field round through E145 at random index157. Represented fields and score match; original inputs, timing and presentation samples are supplied. Private evidence: `../Captain-Majid-analysis/third-return-recovered-owner-20261110.cmjsession`, `../Captain-Majid-analysis/third-return-player7-presentation-wait-20261110`, `../Captain-Majid-analysis/third-return-player7-polls-v3-20261110`, `../Captain-Majid-analysis/third-return-player7-clock-20261110` and `../Captain-Majid-analysis/third-return-player7-world-20261110`. All 62 Windows registered checks passed. Full match unsupported and overall progress unmeasured. Next compare the following player7 input and clock cycle. Suggested model GPT-6.1 Terra High.

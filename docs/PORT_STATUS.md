@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** After player7 recovery, a captured right-directed control path matches the original through two complete clock/field rounds and reaches the following clock boundary at ball (120,124). The next frame-driven stamina change is unverified; timing and presentation remain supplied. Full match unsupported, progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** After the third-return encounter, player7 recovers the loose ball and the captured path matches through control setup, 11 neutral polls, a clock tick and a 22-player round. Timing/presentation remain supplied; all 62 Windows registered checks passed. Complete match unsupported and overall progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The third-return loose ball and the following 22-player movement match the original through E0DE using supplied events. The next owner selection is unmatched; all 62 Windows registered checks passed. Full match unsupported, overall progress unmeasured.
