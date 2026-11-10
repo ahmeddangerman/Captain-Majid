@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player2 pass defender
+
+Player2's empty-target pass matches defender21 action1 selection, attacker power6, defender preparation and result0, random index41. `tools/verify_player2_pass_defender.py` uses captured presentation/NMI events and explicit private direct-table content; private checkpoint `../Captain-Majid-analysis/player2-pass-defender-v3-20261110/008.cmjsession`. Windows build and 62 checks passed. Next compare contact and pass continuation; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player2 empty pass target
 
 Player2's pass now matches target initialization, 37 captured cursor polls and confirmation of empty target/recipient255, random index251. The original defender cursor2/result2 residue is retained. Private checkpoint: `../Captain-Majid-analysis/player2-pass-polls-v2-20261110/076-confirmed.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-target-20261110`. Windows build and 62 checks passed. Next compare the pass defender and continuation; timing remains supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.

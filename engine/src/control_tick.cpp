@@ -387,6 +387,12 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.field.selected_defenders==1 && input.scheduling->selected_ids==std::array<std::uint8_t,5>{21,0,0,0,0} &&
         input.action->action==1 && input.action->move_flags==3 && !input.control->motion_requested &&
         input.area_defender_cursor==2 && input.area_sequence_result==2 && input.saved_ball_flight_flag==1;
+    const bool captured_player2_pass_defender = input.phase==FieldSessionPhase::ordinary_pass_prepared && input.score && input.action && input.control && input.scheduling &&
+        input.score->left_goals==1 && input.score->right_goals==0 && input.score->kickoff==4 && input.current.clock.remaining==130 &&
+        input.current.clock.extra_time==0 && input.current.field.side==0 && input.current.field.ball_owner==2 &&
+        input.current.field.ball_x==104 && input.current.field.ball_y==164 && input.current.field.ball_cell==94 &&
+        input.current.field.selected_defenders==1 && input.scheduling->selected_ids==std::array<std::uint8_t,5>{21,0,0,0,0} &&
+        input.action->action==1 && input.area_defender_cursor==2 && input.area_sequence_result==2 && input.saved_ball_flight_flag==1;
     const bool captured_one_two_defender_wait = input.phase == FieldSessionPhase::attack_prepared && input.human_defense_choices &&
         input.human_defense_choices->actions == std::array<std::uint8_t,5>{1,2,2,0,0} && input.action && input.action->action==3 && !input.area_contact;
     const bool captured_one_two_first_result = input.phase == FieldSessionPhase::attack_prepared && input.human_defense_choices &&
@@ -426,6 +432,12 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
+        } else if (captured_player2_pass_defender && event.kind==ObservedClockEventKind::carrier_cell_sample) {
+            if(event.held || state.control->last_carrier_cell!=128) throw std::invalid_argument("Unsupported player2 pass carrier sample");
+            state.control->last_carrier_cell=0;
+        } else if (captured_player2_pass_defender && event.kind==ObservedClockEventKind::defender_cursor_sample) {
+            if(event.held || state.area_defender_cursor!=2) throw std::invalid_argument("Unsupported player2 pass defender cursor sample");
+            state.area_defender_cursor=0;
         } else if (captured_player2_pass && (event.kind==ObservedClockEventKind::move_flags_sample || event.kind==ObservedClockEventKind::motion_sample)) {
             if(player2_pass_stage==0 && event.kind==ObservedClockEventKind::move_flags_sample && event.held==0) state.action->move_flags=0;
             else if(player2_pass_stage==1 && event.kind==ObservedClockEventKind::motion_sample && event.held==23) state.control->motion_requested=23;

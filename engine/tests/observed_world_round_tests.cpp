@@ -138,6 +138,28 @@ int main() {
         try { std::istringstream incomplete("CMJNMISEQ1\nG 0\nM 23\n"); advance_observed_nmi_events(player2_pass_choice,0,load_observed_nmi_events(incomplete)); }
         catch(const std::invalid_argument&) { incomplete_player2_pass_rejected=true; }
         if(!incomplete_player2_pass_rejected) return 1;
+        auto player2_pass_target_input=player2_pass_wait.state;
+        auto& player2_pass_carrier=player2_pass_target_input.current.field.motion[field_motion_index(2)];
+        player2_pass_carrier.x=104u<<8; player2_pass_carrier.y=164u<<8;
+        player2_pass_target_input.current.field.roster[2].type=1; player2_pass_target_input.current.field.roster[2].stamina=100;
+        auto player2_pass_target=begin_ordinary_human_pass_target(player2_pass_target_input);
+        auto player2_pass_confirmed=confirm_ordinary_human_pass_target(player2_pass_target);
+        auto player2_pass_defenses=begin_ordinary_pass_defense_selection(player2_pass_confirmed);
+        player2_pass_defenses=record_ordinary_pass_defense(player2_pass_defenses,21,1,0);
+        FieldPlayerProfiles player2_pass_profiles{}; player2_pass_profiles.skills.resize(1);
+        FieldDefenseContent player2_pass_attack{}; player2_pass_attack.skill_selectors[1][0]=1;
+        player2_pass_attack.moves[1].push_back({0,0,20,0}); player2_pass_attack.strength_curve.fill(8);
+        auto player2_pass_prepared=prepare_ordinary_pass(player2_pass_defenses,player2_pass_profiles,player2_pass_attack);
+        player2_pass_prepared.control->last_carrier_cell=128; player2_pass_prepared.control->motion_requested=1;
+        std::istringstream player2_defender_events("CMJNMISEQ1\nL 0\nM 0\nC 0\nF 64\n");
+        const auto player2_defender_wait=advance_observed_nmi_events(player2_pass_prepared,0,load_observed_nmi_events(player2_defender_events));
+        if(player2_defender_wait.state.control->last_carrier_cell || player2_defender_wait.state.control->motion_requested ||
+           player2_defender_wait.state.area_defender_cursor || player2_defender_wait.state.control->facing!=64 ||
+           player2_pass_prepared.area_defender_cursor!=2) return 1;
+        bool wrong_player2_cursor_rejected=false;
+        try { std::istringstream wrong("CMJNMISEQ1\nC 1\n"); advance_observed_nmi_events(player2_pass_prepared,0,load_observed_nmi_events(wrong)); }
+        catch(const std::invalid_argument&) { wrong_player2_cursor_rejected=true; }
+        if(!wrong_player2_cursor_rejected) return 1;
         auto one_two_choice = player3_menu_presentation.state;
         one_two_choice.phase = FieldSessionPhase::attack_choice_pending;
         one_two_choice.action->action = 3;

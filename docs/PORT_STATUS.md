@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** Player2's empty-target pass matches defender21 selection and nonterminal result0. Contact and flight remain unmatched; all 62 Windows checks passed. Full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** Player2's pass matches target initialization, 37 captured polls and empty-target confirmation while preserving original cursor/result residue. Defender continuation remains unmatched; all 62 Windows checks passed. Full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Player2's encounter matches 115 captured polls through pass confirmation. Pass targeting is next; all 62 Windows checks passed. Complete match unsupported and progress unmeasured.
