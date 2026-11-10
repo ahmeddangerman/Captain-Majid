@@ -8,7 +8,7 @@ from pathlib import Path
 
 from export_field_state import export_state
 from export_phase_session import export_session
-from verify_captured_control_chain import trace_data
+from verify_captured_control_chain import trace_data, menu_wait_events
 from verify_player7_pass_end_to_end import compare_represented
 
 
@@ -102,7 +102,65 @@ def main():
                     '--capture', str(roundtrip_path.resolve())], capture_output=True, text=True, check=True)
     if roundtrip_path.read_bytes() != timeout:
         raise ValueError('Timeout snapshot roundtrip differs')
-    print('Matched first round, observed random event and timeout in original order; random index 70 to 71.')
+    wait_events = args.output.with_name(args.output.stem + '-wait.events.txt')
+    wait_snapshot = args.output.with_name(args.output.stem + '-wait.cmjsession')
+    if wait_events.exists() or wait_snapshot.exists():
+        raise ValueError('Wait evidence output must not exist')
+    travel = ram(21301)
+    if pcs[21301:21303] != ['E3CA', 'E406'] or travel[0x5fb] or travel[0x1c] & 15:
+        raise ValueError('Unexpected first post-timeout travel event')
+    rows, last = menu_wait_events(lines, pcs, ram, 21302, 21412)
+    if len(rows) != 48 or last != 21411:
+        raise ValueError('Unexpected timeout presentation wait')
+    wait_events.write_text('CMJNMISEQ1\nT ' + str(travel[0x1c]) + ' 0 0\n' + '\n'.join(rows) + '\n')
+    command = subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(final_path.resolve()),
+                              '--advance-observed-nmi-sequence', str(wait_events.resolve()), '71',
+                              '--capture', str(wait_snapshot.resolve())], capture_output=True, text=True, check=True)
+    if re.findall(r'final random index (\d+);', command.stdout) != ['95']:
+        raise ValueError('Timeout presentation random index differs')
+    compare_represented(wait_snapshot.read_bytes(), export_session(ram(21412)), True, 'player2', 'race.recovery_entry')
+    movement_events = args.output.with_name(args.output.stem + '-recovery.events.txt')
+    movement_snapshot = args.output.with_name(args.output.stem + '-recovery.cmjsession')
+    if movement_events.exists() or movement_snapshot.exists():
+        raise ValueError('Recovery evidence output must not exist')
+    rows, last = menu_wait_events(lines, pcs, ram, 21412, 21578)
+    if len(rows) != 44 or last != 21575:
+        raise ValueError('Unexpected recovery field movement events')
+    movement_events.write_text('CMJNMISEQ1\n' + ''.join(rows[2*slot] + '\n' + rows[2*slot+1] + '\nP ' + str(slot) + '\n' for slot in range(22)))
+    command = subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(wait_snapshot.resolve()),
+                              '--advance-observed-pass-movement', str(movement_events.resolve()), '95',
+                              '--capture', str(movement_snapshot.resolve())], capture_output=True, text=True, check=True)
+    if re.findall(r'final random index (\d+);', command.stdout) != ['117']:
+        raise ValueError('Recovery movement random index differs')
+    movement = movement_snapshot.read_bytes()
+    if int.from_bytes(movement[258:260], 'little') != 432:
+        raise ValueError('Unexpected recovery field movement phase')
+    compare_represented(movement, export_session(ram(21578)), True, 'player2', 'race.recovery_movement')
+    owner_snapshot = args.output.with_name(args.output.stem + '-owner.cmjsession')
+    if owner_snapshot.exists():
+        raise ValueError('Owner output must not exist')
+    subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(movement_snapshot.resolve()),
+                    '--recover-player2-same-cell-pass', '--capture', str(owner_snapshot.resolve())],
+                   capture_output=True, text=True, check=True)
+    owner = owner_snapshot.read_bytes()
+    if int.from_bytes(owner[258:260], 'little') != 433:
+        raise ValueError('Unexpected recovered owner phase')
+    compare_represented(owner, export_session(ram(21579)), True, 'player2', 'race.recovered_owner')
+    if owner[413] != ram(21579)[0x616] or owner[418] != ram(21579)[0x61b]:
+        raise ValueError('Recovered owner defender cursor or flight flag differs')
+    replay = subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(owner_snapshot.resolve()),
+                             '--recover-player2-same-cell-pass', '--capture', str(rejected_path.resolve())],
+                            capture_output=True, text=True)
+    if replay.returncode == 0 or rejected_path.exists() or owner_snapshot.read_bytes() != owner:
+        raise ValueError('Repeated owner recovery did not reject atomically')
+    owner_roundtrip = args.output.with_name(args.output.stem + '-owner-roundtrip.cmjsession')
+    if owner_roundtrip.exists():
+        raise ValueError('Owner roundtrip output must not exist')
+    subprocess.run([str(args.session_exe.resolve()), str(args.pack.resolve()), str(owner_snapshot.resolve()),
+                    '--capture', str(owner_roundtrip.resolve())], capture_output=True, text=True, check=True)
+    if owner_roundtrip.read_bytes() != owner:
+        raise ValueError('Owner snapshot roundtrip differs')
+    print('Matched race, timeout presentation, 22-player movement and opponent20 recovery; random index 117.')
 
 
 if __name__ == '__main__':

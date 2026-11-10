@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** After the same-cell timeout, captured presentation, 22-player movement and opponent20's recovery match the original. Opponent control remains unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** Player2's same-cell pass now matches the first race round, captured random event and second-round timeout in their original order, with saved snapshots. Timeout presentation and opponent recovery remain unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The existing numeric race reproduces player2's same-cell pass timeout, candidates and all 20 player motions. The original random event and saved timeout continuation are not yet connected. No engine behavior changed; all 62 Windows checks last passed at the preceding engine checkpoint. Full match unsupported; progress unmeasured.

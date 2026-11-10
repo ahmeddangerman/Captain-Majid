@@ -607,7 +607,8 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     const bool third_return=input.phase==FieldSessionPhase::third_return_ball_jittered;
     const bool player7_shot=input.phase==FieldSessionPhase::player7_shot_ball_jittered;
     const bool player3_one_two=input.phase==FieldSessionPhase::player3_one_two_ball_jittered;
-    if ((!shot && !recovery && !goal_shot && !postgoal && !third_return && !player7_shot && !player3_one_two && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
+    const bool player2_pass_recovery=input.phase==FieldSessionPhase::player2_same_cell_pass_timeout;
+    if ((!shot && !recovery && !goal_shot && !postgoal && !third_return && !player7_shot && !player3_one_two && !player2_pass_recovery && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
         throw std::invalid_argument("Observed field movement requires a supported dispatch and elapsed time");
     auto state=input;
     auto& field=state.current.field;
@@ -630,7 +631,7 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     }
     if (slot!=22) throw std::invalid_argument("Observed pass movement has incomplete player slots");
     field.elapsed=0;
-    state.phase=player3_one_two ? FieldSessionPhase::player3_one_two_recovery_field_moved : player7_shot ? FieldSessionPhase::player7_shot_recovery_field_moved : third_return ? FieldSessionPhase::third_return_recovery_field_moved : postgoal ? FieldSessionPhase::postgoal_opponent_field_moved : goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
+    state.phase=player2_pass_recovery ? FieldSessionPhase::player2_same_cell_pass_recovery_moved : player3_one_two ? FieldSessionPhase::player3_one_two_recovery_field_moved : player7_shot ? FieldSessionPhase::player7_shot_recovery_field_moved : third_return ? FieldSessionPhase::third_return_recovery_field_moved : postgoal ? FieldSessionPhase::postgoal_opponent_field_moved : goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
     validate_phase_session(state);
     return {std::move(state),index};
 }

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: opponent20 pass recovery
+
+After player2's same-cell pass timeout, the captured presentation wait, 22-player recovery movement and opponent20/side11 possession match the original 8C31 boundary, random index117. Private checkpoint: `../Captain-Majid-analysis/player2-pass-owner-v3-owner.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Phases432/433 save the movement and owner, `--recover-player2-same-cell-pass` applies the guarded stationary recovery, and `tools/verify_player2_pass_race.py` checks the replay, represented fields, cursor, flag, snapshot roundtrip and atomic repeated-operation rejection. Captured NMI/travel events remain supplied. Windows build and 62 checks passed. Next compare opponent20's control handoff; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: player2 saved pass timeout
 
 Player2's same-cell pass now saves phase430 after the first race round, accepts the explicitly captured random event (index70 to71), and saves phase431 after the second round times out. The verifier compares all represented session bytes at each original boundary and tests early/repeated rejection and timeout snapshot roundtrip. Latest private snapshot: `../Captain-Majid-analysis/player2-pass-race-split-v2-timeout.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Use `--advance-player2-same-cell-pass-race PRIVATE_RACE_TABLE` on phase344 or phase430; the observed random event must be supplied between the calls. Windows build and all 62 registered checks passed. Next match timeout presentation and opponent20 recovery; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

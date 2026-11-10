@@ -85,6 +85,7 @@ PhaseSessionState advance_player3_one_two_next_contact(const PhaseSessionState& 
 PhaseSessionState advance_player3_one_two_terminal_contact(const PhaseSessionState& input,const ContactPreludeContent& prelude);
 PhaseSessionState jitter_player3_one_two_ball(const PhaseSessionState& input);
 PhaseSessionState recover_player3_one_two_ball(const PhaseSessionState& input);
+PhaseSessionState recover_player2_same_cell_pass(const PhaseSessionState& input);
 PhaseSessionState prepare_player3_one_two_next_defender(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& defense);
 PhaseSessionState compare_player3_one_two_next_defender(const PhaseSessionState& input,const FieldComparisonSelection& comparison);
 SessionAttackResult prepare_ordinary_return_shot(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
