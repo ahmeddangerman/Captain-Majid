@@ -85,6 +85,26 @@ int main() {
             {{ObservedClockEventKind::random, {0, 0, 0, false}}, {ObservedClockEventKind::travel, {}, 1, 928}});
         if (event_result.random_index != 0 || event_result.state.control->travel_accumulator != 232 ||
             event_input.control->travel_accumulator != 0) return 1;
+        auto player7_encounter = event_input;
+        player7_encounter.score = MatchScoreContext{};
+        player7_encounter.score->left_goals = 1;
+        player7_encounter.score->kickoff = 4;
+        player7_encounter.current.clock.remaining = 146;
+        player7_encounter.current.field.ball_owner = 7;
+        player7_encounter.current.field.ball_x = 120;
+        player7_encounter.current.field.ball_y = 124;
+        player7_encounter.current.field.ball_cell = 113;
+        player7_encounter.scheduling->selected_ids[0] = 20;
+        player7_encounter.control->display_parameter = 2;
+        const auto encounter_presentation = advance_observed_nmi_events(player7_encounter, 0,
+            {{ObservedClockEventKind::facing_sample, {}, 0}, {ObservedClockEventKind::display_sample, {}, 0}});
+        if (encounter_presentation.state.control->facing != 0 ||
+            encounter_presentation.state.control->display_parameter != 0 ||
+            player7_encounter.control->facing != 64 || player7_encounter.control->display_parameter != 2) return 1;
+        bool wrong_encounter_sample_rejected = false;
+        try { advance_observed_nmi_events(player7_encounter, 0, {{ObservedClockEventKind::facing_sample, {}, 1}}); }
+        catch (const std::invalid_argument&) { wrong_encounter_sample_rejected = true; }
+        if (!wrong_encounter_sample_rejected) return 1;
         bool marker_rejected = false;
         try { advance_observed_nmi_events(event_input, 0, {{ObservedClockEventKind::schedule}}); }
         catch (const std::invalid_argument&) { marker_rejected = true; }
