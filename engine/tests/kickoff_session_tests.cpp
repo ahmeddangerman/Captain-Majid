@@ -2098,6 +2098,30 @@ int main(){try{using namespace captain;
        bytes(third_contact_input)==third_contact_before,"Captured contact samples preserve input");
  rejects([&]{advance_observed_nmi_events(third_contact_input,180,{{ObservedClockEventKind::motion_sample,{},2}});});
  check(bytes(third_contact_input)==third_contact_before,"Rejected contact sample is atomic");
+ third_contact_input.action->cursor=160;
+ std::istringstream cursor_event_stream("CMJNMISEQ1\nQ 0\n");
+ const auto cursor_events=load_observed_nmi_events(cursor_event_stream);
+ const auto cursor_start=bytes(third_contact_input);
+ const auto third_contact_cursor=advance_observed_nmi_events(third_contact_input,19,cursor_events);
+ check(third_contact_cursor.state.action->cursor==0 && bytes(third_contact_input)==cursor_start,
+       "Captured contact cursor initializes without changing its input");
+ rejects([&]{advance_observed_nmi_events(third_contact_input,19,{{ObservedClockEventKind::action_cursor_sample,{},1}});});
+ check(bytes(third_contact_input)==cursor_start,"Rejected contact cursor sample is atomic");
+ auto third_prompt_input=third_contact_cursor.state;
+ third_prompt_input.current.field.random_first=60;third_prompt_input.current.field.random_second=131;
+ third_prompt_input.control->display_parameter=0;third_prompt_input.control->motion_requested=0;
+ third_prompt_input.current.clock.script_flags=0;third_prompt_input.current.clock.ball_mode=0;
+ const auto third_prompt_before=bytes(third_prompt_input);
+ const auto third_presented=acknowledge_sampled_opponent_contact_presentation(third_prompt_input);
+ const auto third_prompt=acknowledge_sampled_field_defense_prompt(third_presented,13);
+ check(third_prompt.phase==FieldSessionPhase::sampled_field_defense_prompt && third_prompt.area_defense &&
+       third_prompt.area_defense->blink==13 && third_prompt.action->flash_counter==192 && bytes(third_prompt_input)==third_prompt_before,
+       "Captured third return prompt retains observed cursor and blink state");
+ auto third_prompt_bytes=bytes(third_prompt);std::istringstream third_prompt_stream(third_prompt_bytes);
+ check(bytes(load_phase_session(third_prompt_stream))==third_prompt_bytes,"Third return prompt snapshot roundtrips");
+ rejects([&]{acknowledge_sampled_field_defense_prompt(third_presented,7);});
+ auto bad_third_prompt=third_prompt_input;bad_third_prompt.current.field.ball_owner=19;
+ rejects([&]{acknowledge_sampled_opponent_contact_presentation(bad_third_prompt);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: third return defender prompt
+
+The original encounter now matches through recorded cursor initialization and defender prompt at frame18186: cursor0, flash192, blink13; represented fields and score match. The `Q` observed NMI sequence sample supplies the cursor change, and the prompt is a sampled acknowledgement, not a running presentation engine. Private evidence: `../Captain-Majid-analysis/third-return-menu-cursor-v2-20261110`, `../Captain-Majid-analysis/third-return-menu-preblink-20261110`, and `../Captain-Majid-analysis/third-return-defense-prompt-20261110.cmjsession`. The controlled original right-selection and confirmation remain unmatched. Windows build and 62 registered checks passed. Overall progress unmeasured; full match unsupported. Next compare defender selection. Suggested model GPT-6.1 Terra High.
+
 ## Research update - 2026-11-10: longer encounter trace
 
 The private original emulator trace now extends to frame18850, with all 3,436 overlapping instruction records and RAM snapshots matching the prior capture. A separate controlled right-direction selection and repeated A inputs advanced the original encounter to a block selection and later action presentation; the first observed defender-action boundary is 8132 at frame18490. This later segment is original-only. Private evidence: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-extended-20261110` and `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-postgoal-extended-choice-repeat-20261110`. The native matched boundary remains C600 as described below. Next compare menu initialization and selection using these controlled observations. Overall progress remains unmeasured; full match unsupported. Suggested model GPT-6.1 Terra High.

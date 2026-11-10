@@ -977,6 +977,13 @@ PhaseSessionState capture_sampled_field_pass_target(const PhaseSessionState& inp
 }
 PhaseSessionState acknowledge_sampled_opponent_contact_presentation(const PhaseSessionState& input) {
  validate_phase_session(input);
+ const bool third_return=input.phase==FieldSessionPhase::field_contact_pending && input.score && input.action && input.control && input.scheduling &&
+    input.current.field.side==11 && input.current.field.ball_owner==18 && input.current.field.ball_x==110 && input.current.field.ball_y==108 &&
+    input.current.field.ball_cell==87 && input.current.field.elapsed==1 && input.current.field.selected_defenders==1 &&
+    input.scheduling->selected_ids==std::array<std::uint8_t,5>{5,0,0,0,0} && input.current.field.random_first==60 && input.current.field.random_second==131 &&
+    input.current.clock.remaining==153 && !input.current.clock.extra_time && !input.current.clock.script_flags && !input.current.clock.ball_mode &&
+    input.score->left_goals==1 && input.score->right_goals==0 && input.score->kickoff==4 &&
+    !input.control->display_parameter && !input.control->motion_requested && input.action->action==2 && input.action->power==12 && !input.action->cursor;
  const bool postgoal=input.phase==FieldSessionPhase::field_contact_pending && input.score && input.action && input.kickoff_formation &&
     input.experience && input.scheduling && input.control && input.saved_ball_flight_flag==1 &&
     input.current.field.side==11 && input.current.field.ball_owner==19 && input.current.field.ball_x==111 &&
@@ -986,7 +993,7 @@ PhaseSessionState acknowledge_sampled_opponent_contact_presentation(const PhaseS
     input.current.clock.remaining==403 && input.current.clock.extra_time==9 && !input.current.clock.script_flags && !input.current.clock.ball_mode &&
     input.score->left_goals==2 && input.score->right_goals==1 && input.score->kickoff==4 &&
     input.control->display_parameter==2 && input.control->motion_requested==1 && input.action->action==2 && input.action->power==21;
- if(!postgoal && (input.phase!=FieldSessionPhase::field_contact_pending || !input.score || !input.action || !input.kickoff_formation ||
+ if(!third_return && !postgoal && (input.phase!=FieldSessionPhase::field_contact_pending || !input.score || !input.action || !input.kickoff_formation ||
     input.saved_ball_flight_flag!=1 || input.current.field.side!=11 || input.current.field.ball_owner!=19 ||
     input.current.field.ball_x!=112 || input.current.field.ball_y!=140 || input.current.field.ball_cell!=103 || input.current.field.elapsed!=1 ||
     input.current.field.selected_defenders!=3 || input.scheduling->selected_ids!=std::array<std::uint8_t,5>{3,7,8,0,0} ||
@@ -1001,9 +1008,11 @@ PhaseSessionState acknowledge_sampled_opponent_contact_presentation(const PhaseS
 PhaseSessionState acknowledge_sampled_field_defense_prompt(const PhaseSessionState& input, std::uint8_t captured_blink) {
  validate_phase_session(input);
  const bool postgoal=input.score && input.score->left_goals==2 && input.score->right_goals==1 && input.current.clock.remaining==403;
- if(input.phase!=FieldSessionPhase::sampled_opponent_contact_presented || captured_blink!=(postgoal ? 13 : 7) || input.action->menu_route || input.action->auxiliary)
+ const bool third_return=input.score && input.score->left_goals==1 && !input.score->right_goals && input.current.clock.remaining==153 && input.current.field.ball_owner==18 && input.current.field.ball_cell==87 && input.action && input.action->action==2;
+ if(input.phase!=FieldSessionPhase::sampled_opponent_contact_presented || captured_blink!=((postgoal || third_return) ? 13 : 7) || input.action->menu_route || input.action->auxiliary)
   throw std::invalid_argument("Unsupported sampled field defense prompt");
  auto state=input;state.action->cursor=0;state.area_defense=KeeperAreaDefenseContext{};state.area_defense->blink=captured_blink;
+ if(third_return)state.action->flash_counter=192;
  state.phase=FieldSessionPhase::sampled_field_defense_prompt;validate_phase_session(state);return state;
 }
 ControlPollResult poll_session_area_action4_control(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed,

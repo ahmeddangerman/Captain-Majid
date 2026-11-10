@@ -276,10 +276,10 @@ static std::vector<ObservedClockEvent> read_observed_events(std::istream& input,
                 throw std::invalid_argument("Invalid observed clock travel event");
             events.push_back({ObservedClockEventKind::travel, {}, static_cast<std::uint8_t>(held),
                               static_cast<std::uint16_t>(low | (high << 8))});
-        } else if (((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "U" || token == "P") && !milestones) || token == "B") {
+        } else if (((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "U" || token == "P" || token == "Q") && !milestones) || token == "B") {
             unsigned value;
             if (!(input >> value) || value > 255) throw std::invalid_argument("Invalid observed presentation sample");
-            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : token == "D" ? ObservedClockEventKind::display_sample : token == "L" ? ObservedClockEventKind::carrier_cell_sample : token == "C" ? ObservedClockEventKind::defender_cursor_sample : token == "U" ? ObservedClockEventKind::attack_subtype_sample : token == "B" ? ObservedClockEventKind::ball_mode_sample : ObservedClockEventKind::field_player,
+            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : token == "D" ? ObservedClockEventKind::display_sample : token == "L" ? ObservedClockEventKind::carrier_cell_sample : token == "C" ? ObservedClockEventKind::defender_cursor_sample : token == "U" ? ObservedClockEventKind::attack_subtype_sample : token == "B" ? ObservedClockEventKind::ball_mode_sample : token == "Q" ? ObservedClockEventKind::action_cursor_sample : ObservedClockEventKind::field_player,
                               {}, static_cast<std::uint8_t>(value)});
         } else if (token == "S" && milestones) events.push_back({ObservedClockEventKind::schedule});
         else if (token == "E" && milestones) events.push_back({ObservedClockEventKind::energy});
@@ -347,6 +347,9 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::facing_sample && input.phase == FieldSessionPhase::postgoal_opponent_field_moved) {
             if (event.held != 64) throw std::invalid_argument("Only the observed opponent action facing is supported");
             state.control->facing = event.held;
+        } else if (event.kind == ObservedClockEventKind::action_cursor_sample && captured_return_contact) {
+            if (event.held != 0 || state.action->cursor != 160) throw std::invalid_argument("Unsupported return contact cursor sample");
+            state.action->cursor = 0;
         } else if (event.kind == ObservedClockEventKind::motion_sample && captured_return_contact) {
             if (event.held != 0 || state.control->motion_requested != 1) throw std::invalid_argument("Unsupported return contact motion sample");
             state.control->motion_requested = 0;
