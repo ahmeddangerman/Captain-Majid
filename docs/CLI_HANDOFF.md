@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player2 recovers one-two
+
+After the stopped player3 one-two, the native replay matches 22-player movement and player2/side0 recovery at (104,164), random index141. Private checkpoint: `../Captain-Majid-analysis/player3-one-two-recovery-v1-20261110/terminal-loose-ball-recovered.cmjsession`. Event timing and direct table inputs remain supplied. Windows build and 62 checks passed. Next trace player2 control; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: one-two loose ball
 
 The stopped one-two matches the original loose-ball jitter at (104,164), with selected defenders cleared, cursor/result preserved and random index119. Private checkpoint: `../Captain-Majid-analysis/player3-one-two-loose-v1-20261110/terminal-loose-ball-jittered.cmjsession`. Windows build and 62 checks passed. A corrupt newly staged work-log object was preserved privately and recreated from its exact-hash working file; Git integrity check then passed. Next compare 22-player movement and recovery; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

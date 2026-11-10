@@ -257,6 +257,23 @@ int main() {
         try { jitter_player3_one_two_ball(terminal_contact); }
         catch (const std::invalid_argument&) { wrong_one_two_loose_rejected = true; }
         if (!wrong_one_two_loose_rejected) return 1;
+        auto one_two_loose_moved = one_two_loose;
+        one_two_loose_moved.phase = FieldSessionPhase::player3_one_two_recovery_field_moved;
+        one_two_loose_moved.current.field.elapsed = 0;
+        one_two_loose_moved.current.field.random_first = 89; one_two_loose_moved.current.field.random_second = 37;
+        for(auto& actor:one_two_loose_moved.current.field.motion) { actor.x=48u<<8; actor.y=80u<<8; }
+        auto& player2=one_two_loose_moved.current.field.motion[field_motion_index(2)];
+        player2.x=static_cast<std::uint16_t>((104u<<8)|9u); player2.y=static_cast<std::uint16_t>((164u<<8)|11u);
+        const auto one_two_recovered = recover_player3_one_two_ball(one_two_loose_moved);
+        if(one_two_recovered.phase!=FieldSessionPhase::player3_one_two_ball_recovered || one_two_recovered.current.field.ball_owner!=2 ||
+           one_two_recovered.current.field.motion[field_motion_index(2)].x!=player2.x || one_two_recovered.current.field.motion[field_motion_index(2)].y!=player2.y ||
+           one_two_loose_moved.current.field.ball_owner!=3) return 1;
+        std::istringstream one_two_recovered_snapshot(bytes(one_two_recovered));
+        if(bytes(load_phase_session(one_two_recovered_snapshot))!=bytes(one_two_recovered)) return 1;
+        bool early_one_two_recovery_rejected=false;
+        try { recover_player3_one_two_ball(one_two_loose); }
+        catch(const std::invalid_argument&) { early_one_two_recovery_rejected=true; }
+        if(!early_one_two_recovery_rejected) return 1;
         auto player7_shot_choice = encounter_presentation.state;
         player7_shot_choice.phase = FieldSessionPhase::attack_choice_pending;
         player7_shot_choice.action->action = 0;

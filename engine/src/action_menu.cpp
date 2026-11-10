@@ -737,6 +737,27 @@ PhaseSessionState jitter_player3_one_two_ball(const PhaseSessionState& input) {
     state.human_defense_choices.reset(); state.area_contact.reset(); state.phase=FieldSessionPhase::player3_one_two_ball_jittered;
     validate_phase_session(state); return state;
 }
+PhaseSessionState recover_player3_one_two_ball(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player3_one_two_recovery_field_moved || input.current.field.random_first!=89 || input.current.field.random_second!=37)
+        throw std::invalid_argument("Player3 one-two recovery needs the captured field boundary");
+    const auto& field=input.current.field; BallRecoveryInput choice{};
+    choice.ball_x=field.ball_x; choice.ball_y=field.ball_y; choice.ball_owner=field.ball_owner;
+    choice.opposing_player=input.recovery->opposing_player; choice.random_e2=field.random_first; choice.random_e3=field.random_second;
+    choice.ball_update_active=field.elapsed!=0;
+    for(std::size_t i=0;i<field.motion.size();++i) {
+        const auto& actor=field.motion[i]; choice.players[i]={static_cast<std::uint8_t>(actor.x>>8),static_cast<std::uint8_t>(actor.y>>8),actor.status!=0};
+    }
+    const auto result=recover_stationary_ball(choice);
+    if(result.ball_owner!=2 || result.possession_side!=0 || result.attack_subtype!=0 || result.direct_defender_capture)
+        throw std::invalid_argument("Unsupported player3 one-two loose-ball winner");
+    auto state=input; state.current.field.ball_owner=result.ball_owner; state.current.field.side=result.possession_side;
+    auto& owner=state.current.field.motion[field_motion_index(result.ball_owner)];
+    owner.x=static_cast<std::uint16_t>((owner.x&255u)|(unsigned(field.ball_x)<<8));
+    owner.y=static_cast<std::uint16_t>((owner.y&255u)|(unsigned(field.ball_y)<<8));
+    state.recovery->attack_subtype=result.attack_subtype;
+    state.phase=FieldSessionPhase::player3_one_two_ball_recovered; validate_phase_session(state); return state;
+}
 PhaseSessionState prepare_player3_one_two_next_defender(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& defense) {
     validate_phase_session(input);
     if(input.phase!=FieldSessionPhase::attack_prepared || !input.human_defense_choices || !input.area_contact || !input.action || !input.recovery || !input.control || input.action->action!=3)

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-10 - Player2 recovers the stopped one-two
+
+The stopped player3 one-two now matches the captured 22-player recovery movement and stationary-ball selection: player2/side0 recovers at (104,164), retaining fractional coordinates, random index141. `tools/verify_player3_one_two.py` feeds the jittered state through ordered captured NMI/travel/player events and checks the original 8C10/8C31 boundaries. The guarded recovery rejects early calls, leaves its input unchanged and roundtrips the extended snapshot. Private evidence: `../Captain-Majid-analysis/player3-one-two-recovery-v1-20261110`. Windows build and all 62 registered checks passed. Resumed control, live timing and a complete match remain unsupported; overall progress unmeasured. Next compare player2 control setup. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - One-two loose-ball jitter
 
 The stopped one-two now matches the captured loose-ball jitter: ball(120,140) to (104,164), selected defenders cleared, original cursor/result retained, random index119. The guarded transition removes completed native-only defender metadata, rejects unsupported random inputs and preserves snapshot roundtrips. Private evidence: `../Captain-Majid-analysis/player3-one-two-loose-v1-20261110`; replay remains in `tools/verify_player3_one_two.py`. Windows build and all 62 checks passed. During the previous commit, Git detected a corrupt newly staged work-log object; the unchanged working file had its exact expected hash, so the damaged object was preserved privately and recreated from that file. `git fsck --full --no-reflogs` then reported no missing or corrupt objects. Events remain supplied, recovery and full match unsupported, progress unmeasured. Next compare the 22-player recovery movement. Suggested model GPT-6.1 Terra High.
