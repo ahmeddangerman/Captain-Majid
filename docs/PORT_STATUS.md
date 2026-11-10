@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-10):** After the third-return encounter, player7 recovers the loose ball and the captured path matches through control setup, 11 neutral polls, a clock tick and a 22-player round. Timing/presentation remain supplied; all 62 Windows registered checks passed. Complete match unsupported and overall progress unmeasured.
+
 **Latest match checkpoint (2026-11-10):** The third-return loose ball and the following 22-player movement match the original through E0DE using supplied events. The next owner selection is unmatched; all 62 Windows registered checks passed. Full match unsupported, overall progress unmeasured.
 
 **Latest match checkpoint (2026-11-10):** The third-return result2 contact now matches original clock, status and experience through the pre-C606 wait using recorded presentation events. Loose-ball continuation remains unmatched; all 62 Windows registered checks passed. Complete match unsupported, overall progress unmeasured.

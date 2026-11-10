@@ -318,7 +318,7 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         input.current.field.side == 11 && input.current.field.ball_owner == 18 && input.current.field.ball_cell == 87 &&
         input.current.field.selected_defenders == 1 && input.scheduling->selected_ids[0] == 5 && input.action->action == 2;
     const bool captured_return_result=input.phase==FieldSessionPhase::third_return_defender_result;
-    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
+    if ((!captured_kickoff && !captured_kickoff_control && !captured_return_menu && !captured_return_result && input.phase != FieldSessionPhase::third_return_contact_clocked && input.phase != FieldSessionPhase::third_return_ball_recovered && input.phase != FieldSessionPhase::field_contact_pending && input.phase != FieldSessionPhase::human_action_menu &&
          input.phase != FieldSessionPhase::attack_choice_pending && input.phase != FieldSessionPhase::ordinary_human_pass_target &&
          input.phase != FieldSessionPhase::ordinary_human_pass_confirmed && input.phase != FieldSessionPhase::ordinary_pass_defense_selection &&
          input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded && input.phase != FieldSessionPhase::ordinary_pass_prepared &&
@@ -352,6 +352,11 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::facing_sample && input.phase == FieldSessionPhase::postgoal_opponent_field_moved) {
             if (event.held != 64) throw std::invalid_argument("Only the observed opponent action facing is supported");
             state.control->facing = event.held;
+        } else if (event.kind == ObservedClockEventKind::motion_sample && input.phase==FieldSessionPhase::third_return_ball_recovered) {
+            const auto previous=state.control->motion_requested;
+            if (!((previous==0 && event.held==1) || (previous==1 && event.held==0)))
+                throw std::invalid_argument("Unsupported third-return recovery motion sample");
+            state.control->motion_requested=event.held;
         } else if (event.kind == ObservedClockEventKind::motion_sample && captured_return_result) {
             const auto previous=state.control->motion_requested;
             if (!((previous==0 && event.held==2) || (previous==2 && event.held==16) || (previous==16 && event.held==0)))

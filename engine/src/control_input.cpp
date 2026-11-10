@@ -844,6 +844,28 @@ PhaseSessionState jitter_third_return_ball(const PhaseSessionState& input) {
  state.recovery->x_jitter_control=ball.x_jitter_control;state.phase=FieldSessionPhase::third_return_ball_jittered;
  validate_phase_session(state);return state;
 }
+PhaseSessionState recover_third_return_ball(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::third_return_recovery_field_moved || !input.recovery ||
+    input.current.field.random_first!=77 || input.current.field.random_second!=250)
+  throw std::invalid_argument("Third-return recovery needs the captured field boundary");
+ const auto& field=input.current.field;BallRecoveryInput choice{};
+ choice.ball_x=field.ball_x;choice.ball_y=field.ball_y;choice.ball_owner=field.ball_owner;
+ choice.opposing_player=input.recovery->opposing_player;choice.random_e2=field.random_first;choice.random_e3=field.random_second;
+ choice.ball_update_active=field.elapsed!=0;
+ for(std::size_t i=0;i<field.motion.size();++i) {
+  const auto& actor=field.motion[i];choice.players[i]={static_cast<std::uint8_t>(actor.x>>8),static_cast<std::uint8_t>(actor.y>>8),actor.status!=0};
+ }
+ const auto result=recover_stationary_ball(choice);
+ if(result.ball_owner!=7 || result.possession_side!=0 || result.attack_subtype!=0 || result.direct_defender_capture)
+  throw std::invalid_argument("Unverified third-return loose-ball winner");
+ auto state=input;state.current.field.ball_owner=result.ball_owner;state.current.field.side=result.possession_side;
+ auto& owner=state.current.field.motion[field_motion_index(result.ball_owner)];
+ owner.x=static_cast<std::uint16_t>((owner.x&255u)|(unsigned(field.ball_x)<<8));
+ owner.y=static_cast<std::uint16_t>((owner.y&255u)|(unsigned(field.ball_y)<<8));
+ state.recovery->attack_subtype=result.attack_subtype;state.recovery->ball_variant=2;
+ state.phase=FieldSessionPhase::third_return_ball_recovered;validate_phase_session(state);return state;
+}
 PhaseSessionState compare_sampled_mixed_defender(const PhaseSessionState& input,const FieldComparisonContent& comparison) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::sampled_mixed_defender_prepared)

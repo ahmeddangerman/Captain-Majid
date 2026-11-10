@@ -45,6 +45,7 @@ PhaseSessionState classify_third_return_defender(const PhaseSessionState& input)
 PhaseSessionState advance_third_return_contact(const PhaseSessionState& input, const ContactPreludeContent& prelude,
     const ExperienceContent& experience);
 PhaseSessionState jitter_third_return_ball(const PhaseSessionState& input);
+PhaseSessionState recover_third_return_ball(const PhaseSessionState& input);
 PhaseSessionState prepare_sampled_mixed_defender(const PhaseSessionState& input, const FieldPlayerProfiles& profiles, const FieldDefenseContent& defense);
 PhaseSessionState compare_sampled_mixed_defender(const PhaseSessionState& input, const FieldComparisonContent& comparison);
 PhaseSessionState capture_sampled_home_shot_defender(const PhaseSessionState& input, std::uint8_t action, std::uint8_t subtype);

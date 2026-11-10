@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: player7 control after recovery
+
+The captured result2 loose ball is recovered by player7 on side0, then matches original control setup, 11 neutral polls, the 151-to150 clock tick and a 22-player field round through E145 at random index157. Represented fields and score match; original inputs, timing and presentation samples are supplied. Private evidence: `../Captain-Majid-analysis/third-return-recovered-owner-20261110.cmjsession`, `../Captain-Majid-analysis/third-return-player7-presentation-wait-20261110`, `../Captain-Majid-analysis/third-return-player7-polls-v3-20261110`, `../Captain-Majid-analysis/third-return-player7-clock-20261110` and `../Captain-Majid-analysis/third-return-player7-world-20261110`. All 62 Windows registered checks passed. Full match unsupported and overall progress unmeasured. Next compare the following player7 input and clock cycle. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: loose-ball field movement
 
 The third-return result2 path now matches loose-ball jitter at C606 and the subsequent 22-player field movement to E0DE, random index6. Ball is (110,124), selected defenders cleared and elapsed0. Private evidence: `../Captain-Majid-analysis/third-return-jitter-20261110.cmjsession` and `../Captain-Majid-analysis/third-return-recovery-movement-v2-20261110`. The original next chooses player7; that session transition is not yet matched. Timing/presentation remain supplied; 62 Windows checks passed, complete match unsupported and progress unmeasured. Next compare owner selection. Suggested model GPT-6.1 Terra High.

@@ -2222,6 +2222,37 @@ int main(){try{using namespace captain;
  check(bytes(third_movement_input)==third_movement_before,"Rejected third return movement is atomic");
  const auto third_movement_bytes=bytes(third_movement.state);std::istringstream third_movement_stream(third_movement_bytes);
  check(bytes(load_phase_session(third_movement_stream))==third_movement_bytes,"Third return recovery movement snapshot roundtrips");
+ auto third_recover_input=third_movement.state;third_recover_input.current.field.random_first=77;third_recover_input.current.field.random_second=250;
+ for(auto& actor:third_recover_input.current.field.motion){actor.x=static_cast<std::uint16_t>(30u<<8);actor.y=static_cast<std::uint16_t>(30u<<8);actor.status=0;}
+ third_recover_input.current.field.motion[field_motion_index(18)].status=5;
+ auto& third_candidate=third_recover_input.current.field.motion[field_motion_index(7)];
+ third_candidate.x=static_cast<std::uint16_t>((109u<<8)|17u);third_candidate.y=static_cast<std::uint16_t>((123u<<8)|29u);
+ const auto third_recover_before=bytes(third_recover_input);const auto third_recovered=recover_third_return_ball(third_recover_input);
+ const auto& third_recovered_actor=third_recovered.current.field.motion[field_motion_index(7)];
+ check(third_recovered.phase==FieldSessionPhase::third_return_ball_recovered && third_recovered.current.field.side==0 &&
+       third_recovered.current.field.ball_owner==7 && third_recovered.recovery->ball_variant==2 &&
+       third_recovered_actor.x==static_cast<std::uint16_t>((110u<<8)|17u) && third_recovered_actor.y==static_cast<std::uint16_t>((124u<<8)|29u) &&
+       bytes(third_recover_input)==third_recover_before,"Captured loose ball recovery preserves fractional coordinates and input");
+ const auto third_recovered_bytes=bytes(third_recovered);std::istringstream third_recovered_stream(third_recovered_bytes);
+ check(bytes(load_phase_session(third_recovered_stream))==third_recovered_bytes,"Third return recovered owner snapshot roundtrips");
+ auto bad_third_recover=third_recover_input;bad_third_recover.current.field.random_first=76;
+ rejects([&]{recover_third_return_ball(bad_third_recover);});
+ const auto third_recovery_wait=advance_observed_nmi_events(third_recovered,6,{{ObservedClockEventKind::random,{0,0,0,true}}});
+ check(third_recovery_wait.state.phase==FieldSessionPhase::third_return_ball_recovered && third_recovery_wait.state.current.field.ball_owner==7,
+       "Recovered player remains owner through the captured wait");
+ const auto third_recovery_motion=advance_observed_nmi_events(third_recovered,6,
+  {{ObservedClockEventKind::motion_sample,{},1},{ObservedClockEventKind::motion_sample,{},0}});
+ check(third_recovery_motion.state.control->motion_requested==0 && bytes(third_recovered)==third_recovered_bytes,
+       "Recovered player presentation records the observed motion changes without mutating input");
+ rejects([&]{advance_observed_nmi_events(third_recovered,6,{{ObservedClockEventKind::motion_sample,{},2}});});
+ auto third_control_input=third_recovered;third_control_input.current.field.random_first=174;third_control_input.current.field.random_second=34;
+ const auto third_control_before=bytes(third_control_input);const auto third_control=prepare_third_return_control(third_control_input);
+ check(third_control.state.phase==FieldSessionPhase::control_ready && third_control.state.current.field.ball_owner==7 &&
+       third_control.state.current.field.ball_cell==89 && third_control.state.recovery->ball_variant==0 && !third_control.state.area_defense &&
+       third_control.state.area_sequence_result==255 && bytes(third_control_input)==third_control_before,
+       "Recovered player7 resumes control and retires the completed defense context");
+ auto bad_third_control=third_control_input;bad_third_control.current.field.random_first=173;
+ rejects([&]{prepare_third_return_control(bad_third_control);});
  auto bad_third_prelude=third_prelude;bad_third_prelude.field_elapsed[0]=1;
  rejects([&]{advance_third_return_contact(third_result_wait.state,bad_third_prelude,third_experience);});
  check(bytes(third_result_wait.state)==third_wait_bytes,"Rejected third return contact preserves input");
