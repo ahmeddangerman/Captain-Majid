@@ -14,6 +14,12 @@ PhaseSessionState begin_postgoal_opponent_first_flight(const PhaseSessionState& 
  const MovementGeometryContent& geometry,const BallVelocityContent& velocity);
 SessionBallStepResult advance_postgoal_opponent_first_flight(const PhaseSessionState& input);
 PhaseSessionState resolve_postgoal_opponent_first_flight_cell(const PhaseSessionState& input);
+PhaseSessionState move_postgoal_opponent_runner(const PhaseSessionState& input);
+PhaseSessionState exchange_postgoal_opponent_carrier(const PhaseSessionState& input);
+PhaseSessionState begin_postgoal_opponent_return_flight(const PhaseSessionState& input,
+ const MovementGeometryContent& geometry,const BallVelocityContent& velocity);
+SessionBallStepResult advance_postgoal_opponent_return_flight(const PhaseSessionState& input);
+PhaseSessionState resolve_postgoal_opponent_return_flight_cell(const PhaseSessionState& input);
 PhaseSessionState begin_session_area_action4_restart_flight(const PhaseSessionState& input,std::uint8_t captured_recipient,std::uint8_t captured_x_fraction,std::uint8_t captured_y_fraction,std::uint8_t captured_distance,const MovementGeometryContent& geometry,const BallVelocityContent& velocity);
 PhaseSessionState begin_prepared_area_action_flight(const PhaseSessionState& input,
  const AreaFlightAcknowledgement& acknowledgement,const MovementGeometryContent& geometry,

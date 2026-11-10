@@ -68,3 +68,23 @@ Preserve old snapshots and atomic failure. Keep original-derived data and observ
 - [x] Reuse shared numeric ball stepping and defender selection while retaining the saved action context.
 - [x] Compare each original flight boundary and snapshot roundtrip before handling the recipient exchange.
 - [x] Verify and document the completed scope.
+
+## Task 8: Compare the inter-flight exchange
+
+- [x] Test recorded waits, the observed player displacement, owner/recipient exchange and invalid or replayed transitions.
+- [x] Implement guarded saved boundaries while preserving original byte arithmetic and low coordinate bytes.
+- [x] Compare the original pre-movement, post-movement and exchanged-owner states with supplied timing events.
+- [x] Verify and document the checkpoint before preparing the return flight.
+
+## Task 9: Compare return-flight setup
+
+- [x] Test recalculated target, retained fractions and stale distance, direction and velocity, guards and snapshot roundtrip.
+- [x] Reuse the shared trajectory calculations and compare the original return-flight entry.
+- [x] Verify and document the checkpoint before proceeding to defender callbacks.
+
+## Task 10: Compare return flight up to the defender encounter
+
+- [x] Test the observed cell crossings, defender selection, unsnapped arrival and invalid continuations.
+- [x] Reuse shared trajectory stepping and defender selection while preserving original pre-presentation coordinates.
+- [x] Compare each original callback and the arrival boundary with captured timing.
+- [x] Run all checks and document the evidence and remaining encounter work.

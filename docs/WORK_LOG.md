@@ -1,5 +1,17 @@
 # Development log
 
+## 2026-11-10 - Action3 return flight reaches defender8
+
+After the matched first arrival, 151 recorded random/travel pairs lead to the original inter-flight boundary. Shared byte arithmetic moves player18 from x141 to117 while preserving the low byte; carrier and recipient then exchange, with player14 owning the ball and player18 selected. The return target derives from the moved recipient as cell99. Shared geometry/velocity reproduce direction137, velocity -246/-49 and the first flight's retained coordinate fractions. The original's stale distance18 remains explicitly preserved.
+
+Five further recorded random/travel pairs carry the return flight through cells136,124,112,111 and99. Shared defender selection adds player8 at cell112 and retains that single prefix. Phase407 matches original E7C0 with unsnapped x119/y110 and selected defender8; original snaps to the cell center before the later defender handler, which is not yet native-compared. All represented fields and trajectory bytes matched at the exchange, return setup, four callbacks and arrival. Private evidence: ../Captain-Majid-analysis/post-kickoff-exchange-final-20261110, ../Captain-Majid-analysis/post-kickoff-returnflight-final-20261110 and ../Captain-Majid-analysis/post-kickoff-returnflight-steps-final-20261110. Full Windows build and all62 registered checks passed. The recorded timing/presentation is supplied; autonomous AI and a complete playable match remain unsupported. Overall progress unmeasured; next compare the arrival snap and defender8 confrontation. Suggested model GPT-6.1 Terra High.
+
+
+## 2026-11-10 - Recovered damaged local Git object
+
+The first-flight commit initially could not be pushed because its kickoff test blob had a corrupt loose Git object. The working file, after the repository's configured CRLF normalization, hashed to the exact missing object ID. Preserved the corrupt compressed bytes privately at ../Captain-Majid-analysis/corrupt-git-object-59afe42d-20261110.bin, restored the exact verified blob, and ran `git fsck --full --no-reflogs` successfully (only dangling trees were reported). Commit f28402f then pushed successfully to the authorized work branch. No user files were removed. Next continue the action3 inter-flight exchange; overall progress remains unmeasured. Suggested model GPT-6.1 Terra High.
+
+
 ## 2026-11-10 - Action3 first flight reaches player14
 
 The captured opponent action3 now matches original first-flight setup, intermediate callback and arrival. From saved player14, the shared cell calculation changes target161 to148 after field movement; shared direction and velocity calculations reproduce direction34, velocity162/185 and zero fractions. The preserved distance18 is explicitly supplied stale original scratch, not a new distance calculation. With two captured random/travel pairs, shared numeric stepping reaches cell147, an original-backed defender scan finds no defenders, and the next step reaches cell148; represented fields and trajectory bytes match the original at E773, E7B4, the resumed E773 and snapped E7CF. Final random index109. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-firstflight-final-20261110 and ../Captain-Majid-analysis/post-kickoff-firstflight-steps-final-20261110.

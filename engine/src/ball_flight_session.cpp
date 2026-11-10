@@ -52,6 +52,86 @@ PhaseSessionState resolve_postgoal_opponent_first_flight_cell(const PhaseSession
  if(!select_flight_defenders(selection).empty())throw std::invalid_argument("Unobserved post-goal first flight defender");
  auto state=input;state.phase=FieldSessionPhase::postgoal_opponent_first_flight_ready;validate_phase_session(state);return state;
 }
+PhaseSessionState move_postgoal_opponent_runner(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ const auto& runner=input.current.field.motion[field_motion_index(18)];
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_first_flight_arrived || input.current.field.random_first!=236 ||
+    input.current.field.random_second!=69 || (runner.x>>8)!=141 || input.action->move_flags!=3)
+  throw std::invalid_argument("Post-goal runner movement requires the observed inter-flight wait");
+ auto state=input;auto& moved=state.current.field.motion[field_motion_index(18)];
+ auto delta=static_cast<std::uint8_t>(unsigned(state.action->move_flags)<<3);
+ if(state.current.field.side==11)delta=static_cast<std::uint8_t>(0u-unsigned(delta));
+ auto x=static_cast<std::uint8_t>(unsigned(moved.x>>8)+delta);
+ if(x>=208)x=207;
+ if(x<48)x=48;
+ moved.x=static_cast<std::uint16_t>((unsigned(x)<<8)|(moved.x&255u));
+ state.phase=FieldSessionPhase::postgoal_opponent_runner_moved;validate_phase_session(state);return state;
+}
+PhaseSessionState exchange_postgoal_opponent_carrier(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_runner_moved || input.area_ai_target->recipient!=14 || input.current.field.ball_owner!=18)
+  throw std::invalid_argument("Post-goal carrier exchange requires the observed runner movement");
+ auto state=input;state.current.field.ball_owner=input.area_ai_target->recipient;state.area_ai_target->recipient=input.current.field.ball_owner;
+ state.phase=FieldSessionPhase::postgoal_opponent_carrier_exchanged;validate_phase_session(state);return state;
+}
+PhaseSessionState begin_postgoal_opponent_return_flight(const PhaseSessionState& input,
+ const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_carrier_exchanged)
+  throw std::invalid_argument("Post-goal return flight requires the observed carrier exchange");
+ const auto& field=input.current.field;const auto& recipient=field.motion[field_motion_index(input.area_ai_target->recipient)];
+ const auto destination=field_cell_at(static_cast<std::uint8_t>(recipient.x>>8),static_cast<std::uint8_t>(recipient.y>>8));
+ if(destination!=99 || field.ball_cell==destination)throw std::invalid_argument("Unobserved post-goal return-flight target");
+ auto state=input;state.area_ai_target->cell=destination;state.shot_flight->destination=destination;
+ auto& trajectory=*state.ball_trajectory;
+ trajectory.direction=calculate_player_direction({trajectory.x,trajectory.y,destination,0},field.ball_cell,geometry);
+ const auto projected=calculate_ball_velocity(trajectory.direction,velocity);trajectory.vx=projected.x;trajectory.vy=projected.y;
+ if(trajectory.direction!=137 || trajectory.vx!=65290 || trajectory.vy!=65487)
+  throw std::invalid_argument("Unverified post-goal return flight projection");
+ state.recovery->x_jitter_control=trajectory.direction;state.phase=FieldSessionPhase::postgoal_opponent_return_flight_ready;
+ validate_phase_session(state);return state;
+}
+SessionBallStepResult advance_postgoal_opponent_return_flight(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ const auto& field=input.current.field;
+ const bool observed=(field.ball_cell==148 && field.random_first==176 && field.random_second==179 && !field.selected_defenders) ||
+  (field.ball_cell==136 && field.random_first==191 && field.random_second==31 && !field.selected_defenders) ||
+  (field.ball_cell==124 && field.random_first==217 && field.random_second==206 && !field.selected_defenders) ||
+  (field.ball_cell==112 && field.random_first==100 && field.random_second==41 && field.selected_defenders==1) ||
+  (field.ball_cell==111 && field.random_first==19 && field.random_second==116 && field.selected_defenders==1);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_flight_ready || !observed)
+  throw std::invalid_argument("Post-goal return flight requires the observed frame boundary");
+ auto state=input;auto& t=*state.ball_trajectory;
+ auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},field.ball_cell,state.shot_flight->destination});
+ const auto expected=field.ball_cell==148 ? 136 : field.ball_cell==136 ? 124 : field.ball_cell==124 ? 112 : field.ball_cell==112 ? 111 : 99;
+ if(step.cell!=expected || step.event!=(expected==99 ? BallStepEvent::arrived : BallStepEvent::cell_changed) || step.forced_destination)
+  throw std::invalid_argument("Unobserved post-goal return flight step");
+ if(step.event==BallStepEvent::arrived) {
+  // E7C0 enters defender handling before E7CF snaps to the destination center.
+  step.x=static_cast<std::uint16_t>(std::uint32_t(t.x)+std::uint32_t(t.vx)*step.additions);
+  step.y=static_cast<std::uint16_t>(std::uint32_t(t.y)+std::uint32_t(t.vy)*step.additions);
+ }
+ t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;state.current.field.ball_cell=step.cell;
+ state.phase=step.event==BallStepEvent::arrived ? FieldSessionPhase::postgoal_opponent_return_flight_arrived : FieldSessionPhase::postgoal_opponent_return_flight_callback;
+ validate_phase_session(state);return {std::move(state),step};
+}
+PhaseSessionState resolve_postgoal_opponent_return_flight_cell(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::postgoal_opponent_return_flight_callback)
+  throw std::invalid_argument("Post-goal return flight requires a defender callback");
+ const auto& field=input.current.field;FlightDefenderSelectionInput selection{};
+ selection.possession_side=field.side;selection.ball_cell=field.ball_cell;selection.random_first=field.random_first;
+ selection.random_second=field.random_second;selection.threshold=input.shot_flight->counter;
+ for(unsigned i=0;i<field.motion.size();++i) { const auto& m=field.motion[i];
+  selection.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0}; }
+ const auto selected=select_flight_defenders(selection);
+ if((field.ball_cell==112 && (field.selected_defenders || selected!=std::vector<std::uint8_t>{8})) ||
+    (field.ball_cell!=112 && !selected.empty()))
+  throw std::invalid_argument("Unobserved post-goal return flight defender selection");
+ auto state=input;
+ if(field.ball_cell==112) {state.current.field.selected_defenders=1;state.scheduling->selected_ids[0]=8;}
+ state.phase=FieldSessionPhase::postgoal_opponent_return_flight_ready;validate_phase_session(state);return state;
+}
 PhaseSessionState enter_area_pass_blocked_recovery(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase==FieldSessionPhase::ordinary_return_shot_blocked_clocked) {

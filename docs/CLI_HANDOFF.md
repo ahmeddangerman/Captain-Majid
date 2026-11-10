@@ -1,5 +1,10 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-10: action3 return flight defender entry
+
+The captured 1-0 startup now matches both action3 flights through original E7C0. After151 recorded random/travel pairs, player18 moves x141 to117, carrier switches to player14 and recipient18, and shared geometry prepares return target99, direction137 and velocity -246/-49. Five further event pairs and shared ball/defender kernels match cells136,124,112,111 and99, with defender8 selected at112. Phase407 retains unsnapped x119/y110 and random index9, as at E7C0 before original center snapping and defender handling. The original later reaches E7CF after defender processing, not yet native-compared. Evidence: ../Captain-Majid-analysis/post-kickoff-exchange-final-20261110, ../Captain-Majid-analysis/post-kickoff-returnflight-final-20261110 and ../Captain-Majid-analysis/post-kickoff-returnflight-steps-final-20261110. Full Windows build/all62 checks passed; overall progress unmeasured. Timing/presentation and AI remain supplied, and complete match is unsupported. Next compare the arrival snap and defender8 confrontation. Suggested model GPT-6.1 Terra High.
+
+
 ## Current stopping point - 2026-11-10: action3 first flight arrived
 
 Captured startup now matches action3's first flight: moved player14 gives target148, direction34 and velocity162/185; preserved distance18 is explicitly supplied stale original scratch. Two recorded random/travel pairs lead through empty defender callback at147 and snapped arrival148, random index109. Phase402 retains the original action and target. Private evidence: ../Captain-Majid-analysis/post-kickoff-action3-firstflight-final-20261110 and ../Captain-Majid-analysis/post-kickoff-firstflight-steps-final-20261110. Original-only continuation moves player18, switches owner to14, sends a return flight to99 and later selects defender8; no native parity is claimed for it. Full Windows build/all62 checks passed. Timing/presentation and AI remain supplied; complete match unsupported and overall progress unmeasured. Next compare the inter-flight exchange. Suggested model GPT-6.1 Terra High.

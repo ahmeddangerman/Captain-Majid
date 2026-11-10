@@ -1884,6 +1884,67 @@ int main(){try{using namespace captain;
  rejects([&]{advance_postgoal_opponent_first_flight(postgoal_first_flight);});
  rejects([&]{resolve_postgoal_opponent_first_flight_cell(postgoal_first_flight);});
  rejects([&]{advance_postgoal_opponent_first_flight(postgoal_first_arrival.state);});
+ auto postgoal_exchange_input=postgoal_first_arrival.state;
+ postgoal_exchange_input.current.field.motion[field_motion_index(18)].x=(141u<<8)|7u;
+ postgoal_exchange_input.current.field.motion[field_motion_index(18)].y=108u<<8;
+ const auto postgoal_exchange_wait=advance_observed_nmi_events(postgoal_exchange_input,109,{});
+ auto postgoal_runner_input=postgoal_exchange_wait.state;postgoal_runner_input.current.field.random_first=236;
+ postgoal_runner_input.current.field.random_second=69;
+ const auto postgoal_runner=move_postgoal_opponent_runner(postgoal_runner_input);
+ check(postgoal_runner.phase==FieldSessionPhase::postgoal_opponent_runner_moved &&
+       postgoal_runner.current.field.motion[field_motion_index(18)].x==((117u<<8)|7u) &&
+       postgoal_runner.current.field.ball_owner==18,"Observed action3 moves the runner while preserving its low coordinate byte");
+ const auto postgoal_exchange=exchange_postgoal_opponent_carrier(postgoal_runner);
+ check(postgoal_exchange.phase==FieldSessionPhase::postgoal_opponent_carrier_exchanged &&
+       postgoal_exchange.current.field.ball_owner==14 && postgoal_exchange.area_ai_target->recipient==18 &&
+       postgoal_exchange.area_ai_target->cell==148,"Observed action3 exchanges carrier and recipient before the return target");
+ const auto postgoal_exchange_bytes=bytes(postgoal_exchange);std::istringstream postgoal_exchange_stream(postgoal_exchange_bytes);
+ check(bytes(load_phase_session(postgoal_exchange_stream))==postgoal_exchange_bytes,"Post-goal carrier exchange snapshot roundtrips");
+ rejects([&]{move_postgoal_opponent_runner(postgoal_first_arrival.state);});
+ rejects([&]{move_postgoal_opponent_runner(postgoal_runner);});
+ rejects([&]{exchange_postgoal_opponent_carrier(postgoal_exchange);});
+ auto return_geometry=postgoal_geometry;return_geometry.direction_thresholds.fill(65535);
+ for(unsigned i=0;i<9;++i)return_geometry.direction_thresholds[i]=0;
+ BallVelocityContent return_velocity{};return_velocity.quarter_wave[9]=49;return_velocity.quarter_wave[54]=246;
+ auto postgoal_return_input=postgoal_exchange;
+ auto& returning_defender=postgoal_return_input.current.field.motion[field_motion_index(8)];
+ returning_defender.x=124u<<8;returning_defender.y=116u<<8;returning_defender.status=0;
+ const auto postgoal_return=begin_postgoal_opponent_return_flight(postgoal_return_input,return_geometry,return_velocity);
+ check(postgoal_return.phase==FieldSessionPhase::postgoal_opponent_return_flight_ready &&
+       postgoal_return.area_ai_target->recipient==18 && postgoal_return.area_ai_target->cell==99 &&
+       postgoal_return.shot_flight->distance==18 && postgoal_return.shot_flight->destination==99 &&
+       postgoal_return.ball_trajectory->direction==137 && postgoal_return.ball_trajectory->vx==static_cast<std::uint16_t>(-246) &&
+       postgoal_return.ball_trajectory->vy==static_cast<std::uint16_t>(-49) &&
+       postgoal_return.ball_trajectory->x==postgoal_exchange.ball_trajectory->x &&
+       postgoal_return.ball_trajectory->y==postgoal_exchange.ball_trajectory->y,
+       "Return flight recalculates the moved runner target while preserving first-flight fractions");
+ const auto postgoal_return_bytes=bytes(postgoal_return);std::istringstream postgoal_return_stream(postgoal_return_bytes);
+ check(bytes(load_phase_session(postgoal_return_stream))==postgoal_return_bytes,"Post-goal return flight snapshot roundtrips");
+ rejects([&]{begin_postgoal_opponent_return_flight(postgoal_runner,return_geometry,return_velocity);});
+ rejects([&]{begin_postgoal_opponent_return_flight(postgoal_return,return_geometry,return_velocity);});
+ auto return_cursor=postgoal_return;
+ const std::array<std::array<std::uint8_t,2>,5> return_random{{{{176,179}},{{191,31}},{{217,206}},{{100,41}},{{19,116}}}};
+ const std::array<std::uint8_t,5> return_cells{136,124,112,111,99};
+ for(unsigned i=0;i<5;++i) {
+  return_cursor=advance_observed_nmi_events(return_cursor,static_cast<std::uint8_t>(4+i),{}).state;
+  return_cursor.current.field.random_first=return_random[i][0];return_cursor.current.field.random_second=return_random[i][1];
+  const auto next=advance_postgoal_opponent_return_flight(return_cursor);
+  check(next.state.current.field.ball_cell==return_cells[i],"Return flight crosses the observed cell");
+  if(i<4) {
+   check(next.state.phase==FieldSessionPhase::postgoal_opponent_return_flight_callback,"Intermediate return flight requires its defender callback");
+   return_cursor=resolve_postgoal_opponent_return_flight_cell(next.state);
+   check(return_cursor.current.field.selected_defenders==(i>=2 ? 1 : 0),"Return flight retains the observed defender prefix");
+  } else {
+   return_cursor=next.state;
+   check(return_cursor.phase==FieldSessionPhase::postgoal_opponent_return_flight_arrived &&
+         return_cursor.current.field.ball_x==119 && return_cursor.current.field.ball_y==110 &&
+         return_cursor.scheduling->selected_ids[0]==8,"Return flight retains unsnapped arrival coordinates for the defender encounter");
+  }
+ }
+ const auto return_arrival_bytes=bytes(return_cursor);std::istringstream return_arrival_stream(return_arrival_bytes);
+ check(bytes(load_phase_session(return_arrival_stream))==return_arrival_bytes,"Return-flight defender arrival snapshot roundtrips");
+ rejects([&]{advance_postgoal_opponent_return_flight(postgoal_return);});
+ rejects([&]{resolve_postgoal_opponent_return_flight_cell(postgoal_return);});
  rejects([&]{continue_prepared_goal_restart(returned_goal);});
  rejects([&]{prepare_session_scored_goal(returned_keeper_result,*returned_keeper_result.score,returned_keeper_content);});
  rejects([&]{prepare_session_scored_goal(returned_goal,*returned_goal.score,returned_keeper_content);});
