@@ -46,6 +46,7 @@ void validate_runtime(const MatchRuntimeState& s) {
   const bool goal=f.side==0 && (phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending);
   const bool kickoff=f.side==11 && phase>=FieldSessionPhase::goal_kickoff_pending && phase<=FieldSessionPhase::kickoff_control_pending;
   const bool control=!f.selected_defenders && (phase==FieldSessionPhase::control_ready || phase==FieldSessionPhase::control_clock_pending || phase==FieldSessionPhase::field_round_pending ||
+   (f.side==11 && phase==FieldSessionPhase::ai_cell_decision) ||
    (f.side==0 && phase==FieldSessionPhase::player_control) ||
    (f.side==0 && (phase==FieldSessionPhase::action_menu_pending || phase==FieldSessionPhase::human_action_menu || phase==FieldSessionPhase::attack_choice_pending)));
   const bool pass=f.side==0 && !f.selected_defenders && s.session.action && s.session.action->action==1 && !s.target_chooser &&

@@ -40,6 +40,7 @@ struct AiFieldChoiceContent {
  std::array<std::array<std::uint8_t,2>,128> low_x_categories{};
  std::vector<std::array<std::uint8_t,48>> rows;
  std::optional<std::array<std::uint8_t,118>> empty_pass_options{};
+ std::optional<std::array<std::uint8_t,118>> empty_action2_options{};
 };
 // Field-contact route0; unsupported profiles and absent cell categories reject.
 AiAreaChoice choose_ai_field_candidate(std::uint8_t type,std::uint8_t flags,

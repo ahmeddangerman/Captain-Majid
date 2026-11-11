@@ -48,7 +48,7 @@ struct ShotContent {
     std::optional<AreaDefenseMenuContent> area_defense_menu{};
 };
 
-// Development CMJSHOT1..9/A..Q content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..9/A..R content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

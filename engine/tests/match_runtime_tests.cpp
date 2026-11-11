@@ -8,6 +8,7 @@
 #include <cassert>
 #include <stdexcept>
 #include <fstream>
+#include <iostream>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -50,7 +51,7 @@ static int shot_comparisons(int argc,char** argv) {
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Keeper recovery differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Keeper recovery session lengths differ");}
   return 0;
  }
- if((argc==11 || argc==13 || argc==15) && std::string(argv[1])=="--compare-human-shot-end-to-end") {
+ if((argc==11 || argc==13 || argc==15 || argc==16) && std::string(argv[1])=="--compare-human-shot-end-to-end") {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary),raw_file(argv[6],std::ios::binary),velocity_file(argv[7]);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);content.ball_velocity=read_ball_velocity_content(velocity_file);
   const bool kickoff=argc>=13 && std::string(argv[11])=="control";
@@ -62,22 +63,40 @@ static int shot_comparisons(int argc,char** argv) {
   const auto final_phase=kickoff ? FieldSessionPhase::control_ready : FieldSessionPhase::goal_kickoff_pending;
   for(unsigned turn=0;turn<200 && state->session.phase!=final_phase;++turn){
    const auto phase=state->session.phase;
-   if(argc==15 && (phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending)){
+   if(argc>=15 && (phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending)){
     state->ball_fraction=MatchBallFraction{0,0};MatchContentIdentity identity{};identity[0]=42;std::ostringstream old(std::ios::binary);write_match_save(old,*state,identity);std::istringstream in(old.str(),std::ios::binary);*state=load_match_save(in,identity);
    }
    const auto input=client_input(*state,0,0);
    *result=step_match(*state,input,content);
    if(result->unsupported)throw std::runtime_error(std::string("End-to-end shot unsupported: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(phase)));
-   if(argc==15 && result->state.session.ball_trajectory){const auto& trajectory=*result->state.session.ball_trajectory;
+   if(argc>=15 && result->state.session.ball_trajectory){const auto& trajectory=*result->state.session.ball_trajectory;
     if(!result->state.ball_fraction || result->state.ball_fraction->x!=static_cast<std::uint8_t>(trajectory.x) || result->state.ball_fraction->y!=static_cast<std::uint8_t>(trajectory.y))throw std::runtime_error("Shot trajectory fractions are not tracked");}
    if(result->state.retained_defense_action){MatchContentIdentity identity{};identity[0]=42;std::ostringstream saved(std::ios::binary);write_match_save(saved,result->state,identity);std::istringstream in(saved.str(),std::ios::binary);auto restored=std::make_unique<MatchRuntimeState>(load_match_save(in,identity));if(restored->retained_defense_action!=result->state.retained_defense_action)throw std::runtime_error("Retained action lost across runtime save");}
    *state=result->state;
   }
   if(state->session.phase!=final_phase)throw std::runtime_error("End-to-end shot did not reach requested continuation");
   if(kickoff && (!state->retained_defense_action || *state->retained_defense_action!=std::stoul(argv[12])))throw std::runtime_error("Goalkeeper action was not retained through kickoff");
-  if(argc==15 && (!state->ball_fraction || state->ball_fraction->x!=std::stoul(argv[13]) || state->ball_fraction->y!=std::stoul(argv[14])))throw std::runtime_error("Goal kickoff lost the original flight fractions");
+  if(argc>=15 && (!state->ball_fraction || state->ball_fraction->x!=std::stoul(argv[13]) || state->ball_fraction->y!=std::stoul(argv[14])))throw std::runtime_error("Goal kickoff lost the original flight fractions");
   std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,state->session);write_phase_session(expected_bytes,expected);
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("End-to-end shot differs at byte "+std::to_string(i));throw std::runtime_error("End-to-end shot session lengths differ");}
+  if(argc==16 && std::string(argv[15])=="post"){
+   unsigned decisions=0;
+   for(unsigned turn=0;turn<1200;++turn){
+    const auto phase=state->session.phase;*result=step_match(*state,client_input(*state,0,0),content);
+    if(result->unsupported){
+     std::cout<<"post: unsupported "<<capability_name(*result->unsupported)<<" phase "<<static_cast<unsigned>(phase)<<" after "<<decisions<<" fallbacks";
+     if(phase==FieldSessionPhase::ai_cell_decision && content.data->ai_field_choice){
+      auto random=state->demo_rng;random^=random<<13;random^=random>>17;random^=random<<5;
+      const auto& field=state->session.current.field;const auto& actor=field.roster[field.ball_owner];
+      try{const auto choice=choose_ai_field_candidate(actor.type,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),field.ball_x,field.ball_y,static_cast<std::uint8_t>(random),*content.data->ai_field_choice);std::cout<<" candidate "<<static_cast<unsigned>(choice.candidate);}catch(const std::invalid_argument&){std::cout<<" candidate unavailable";}
+     }
+     std::cout<<'\n';return 0;
+    }
+    *state=result->state;
+    if(phase==FieldSessionPhase::ai_cell_decision && state->session.phase==FieldSessionPhase::control_clock_pending && ++decisions==3){std::cout<<"post: three fallbacks\n";return 0;}
+   }
+   std::cout<<"post: no cell decision within bound\n";
+  }
   return 0;
  }
  if(argc==8 && std::string(argv[1])=="--compare-human-shot-goal-restart") {
@@ -252,6 +271,34 @@ static int shot_comparisons(int argc,char** argv) {
 }
 static int comparisons(int argc,char** argv) {
  using namespace captain;
+ if(argc==7 && (std::string(argv[1])=="--compare-ai-cell" || std::string(argv[1])=="--compare-ai-cell-unsupported" || std::string(argv[1])=="--compare-ai-cell-poll")) {
+  const bool poll=std::string(argv[1])=="--compare-ai-cell-poll";
+  std::ifstream source_file(argv[2],std::ios::binary),expected_file(argv[3],std::ios::binary),raw_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
+  auto source=load_phase_session(source_file),expected=load_phase_session(expected_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  std::array<unsigned char,2048> raw{};if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing AI cell metadata");
+  auto state=std::make_unique<MatchRuntimeState>();state->session=source;state->mode=MatchTimingMode::provisional_demo;state->demo_rng=std::stoul(argv[6]);
+  state->ball_fraction=MatchBallFraction{raw[0x634],raw[0x636]};state->retained_defense_action=raw[0x43d];
+  MatchContentIdentity identity{};identity[0]=42;std::ostringstream before(std::ios::binary);write_match_save(before,*state,identity);std::istringstream saved(before.str(),std::ios::binary);*state=load_match_save(saved,identity);
+  auto result=std::make_unique<MatchStepResult>(step_match(*state,{MatchInputKind::tick,1},content));
+  if(std::string(argv[1])=="--compare-ai-cell-unsupported"){
+   if(result->unsupported!=UnsupportedCapability::opponent_action || result->state.last_sequence!=state->last_sequence || result->state.demo_rng!=state->demo_rng)throw std::runtime_error("Unsupported AI cell choice was not atomic");
+   std::ostringstream unchanged(std::ios::binary);write_match_save(unchanged,result->state,identity);if(unchanged.str()!=before.str())throw std::runtime_error("Unsupported AI cell changed state");
+   return 0;
+  }
+  if(result->unsupported || result->state.session.phase!=(poll?FieldSessionPhase::ai_cell_decision:FieldSessionPhase::control_clock_pending))throw std::runtime_error("AI cell fallback or poll unsupported");
+  if(!result->state.ball_fraction || result->state.ball_fraction->x!=raw[0x634] || result->state.ball_fraction->y!=raw[0x636] || result->state.retained_defense_action!=raw[0x43d])throw std::runtime_error("AI cell fallback lost known metadata");
+  if(!poll){
+   auto unknown=std::make_unique<MatchRuntimeState>(*state);unknown->ball_fraction.reset();unknown->retained_defense_action.reset();
+   auto next=std::make_unique<MatchStepResult>(step_match(*unknown,{MatchInputKind::tick,1},content));
+   if(next->unsupported || next->state.ball_fraction || next->state.retained_defense_action)throw std::runtime_error("AI fallback invented unknown metadata");
+   auto missing=std::make_unique<MatchContent>(content);missing->data->ai_field_choice.reset();
+   *next=step_match(*state,{MatchInputKind::tick,1},*missing);
+   if(next->unsupported!=UnsupportedCapability::content || next->state.last_sequence!=state->last_sequence)throw std::runtime_error("Missing AI content was not atomic");
+  }
+  std::ostringstream actual(std::ios::binary),wanted(std::ios::binary);write_phase_session(actual,result->state.session);write_phase_session(wanted,expected);
+  if(actual.str()!=wanted.str()){for(std::size_t i=0;i<actual.str().size() && i<wanted.str().size();++i)if(actual.str()[i]!=wanted.str()[i])throw std::runtime_error("Original AI cell fallback differs at byte "+std::to_string(i));throw std::runtime_error("Original AI cell session lengths differ");}
+  return 0;
+ }
  if(argc==6 && std::string(argv[1])=="--compare-pass-field-handoff") {
   std::ifstream source_file(argv[2],std::ios::binary),expected_file(argv[3],std::ios::binary),raw_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
   auto source=load_phase_session(source_file),expected=load_phase_session(expected_file);MatchContent content{};content.data=load_shot_content(pack_file);
