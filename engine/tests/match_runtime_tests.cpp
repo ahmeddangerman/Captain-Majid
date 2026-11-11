@@ -10,6 +10,47 @@
 #include <string>
 int main(int argc,char** argv) {
  using namespace captain;
+ if((argc==5 || argc==7) && std::string(argv[1])=="--compare-defense-register") {
+  std::ifstream source_file(argv[2],std::ios::binary),original_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto source=load_phase_session(source_file);std::array<unsigned char,2048> original{};
+  if(!original_file.read(reinterpret_cast<char*>(original.data()),original.size()))throw std::runtime_error("Missing original registration RAM");
+  MatchContent content{};content.data=load_shot_content(pack_file);
+  if(!source.action || !source.area_defense || !source.scheduling || !content.data->area_defense_menu)throw std::runtime_error("Missing defense registration context");
+  if(argc==7){const auto count=std::stoul(argv[5]),slot=std::stoul(argv[6]);
+   if((count!=1 && count!=4) || slot>=count || (slot!=0 && slot!=3))throw std::runtime_error("Unsupported constructed defense comparison");
+   source.current.field.selected_defenders=static_cast<std::uint8_t>(count);
+   if(count==1)for(unsigned i=1;i<5;++i)source.scheduling->selected_ids[i]=0;
+   if(count==4)source.scheduling->selected_ids[3]=5;
+   source.action->cursor=static_cast<std::uint8_t>(slot);source.area_defense->actions[slot]=6;
+  }
+  MatchRuntimeState state{};state.session=source;state.session.phase=FieldSessionPhase::field_contact_pending;state.session.area_defense.reset();
+  state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;state.defense_menu=MatchDefenseMenu{};
+  state.defense_menu->stage=MatchDefenseStage::choice_confirmed;
+  state.defense_menu->poll={source.action->cursor,source.action->flash_counter,*source.area_defense};
+  const auto result=step_match(state,{MatchInputKind::tick,1},content);
+  if(result.unsupported || !result.state.defense_menu)throw std::runtime_error("Runtime defensive registration unsupported");
+  const auto& m=result.state.defense_menu->poll;
+  if(m.cursor!=original[0x61e] || m.flash_counter!=original[0x61f] || m.defense.blink!=original[0x620])throw std::runtime_error("Original registration menu differs");
+  for(unsigned slot=0;slot<4;++slot)if(m.defense.actions[slot]!=original[0x60b+slot])throw std::runtime_error("Original registered defensive actions differ");
+  return 0;
+ }
+ if(argc==6 && std::string(argv[1])=="--compare-defense-poll") {
+  std::ifstream source_file(argv[2],std::ios::binary),expected_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  const auto source=load_phase_session(source_file),expected=load_phase_session(expected_file);const auto pack=load_shot_content(pack_file);
+  if(!source.action || !source.area_defense || !source.scheduling || !expected.action || !expected.area_defense || !pack.area_defense_menu)
+   throw std::runtime_error("Missing defensive comparison context");
+  const auto pressed=static_cast<std::uint8_t>(std::stoul(argv[5]));
+  const DefenseMenuPollState state{source.action->cursor,source.action->flash_counter,*source.area_defense};
+  const auto actual=poll_defense_menu(state,source.current.field.selected_defenders,source.scheduling->selected_ids,true,pressed,*pack.area_defense_menu);
+  const auto& a=actual.state.defense;const auto& e=*expected.area_defense;
+  if(actual.state.cursor!=expected.action->cursor || actual.state.flash_counter!=expected.action->flash_counter ||
+     a.actions!=e.actions || a.subtypes!=e.subtypes || a.blink!=e.blink || a.pressed!=e.pressed)
+   throw std::runtime_error("Original field defense poll differs");
+  const bool confirmed=expected.phase==FieldSessionPhase::sampled_field_defense_preparation;
+  if((actual.boundary==DefenseMenuBoundary::choice_confirmed)!=confirmed || (confirmed && actual.opposing_player!=expected.recovery->opposing_player))
+   throw std::runtime_error("Original field defense boundary differs");
+  return 0;
+ }
  if(argc==6 && std::string(argv[1])=="--compare-callback") {
   std::ifstream session_file(argv[2],std::ios::binary),before_file(argv[3],std::ios::binary),original_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
   auto source=load_phase_session(session_file);std::array<unsigned char,2048> before{},original{};
@@ -389,6 +430,58 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  opponent_contact.session.control->controlled_player=1;
  auto opponent_prompt=step_match(opponent_contact,{MatchInputKind::tick,2},content);
  assert(opponent_prompt.unsupported==UnsupportedCapability::defensive_prompt && opponent_prompt.state.last_sequence==1);
+ AreaDefenseMenuContent defense_content{};defense_content.directions[0].fill(255);defense_content.directions[0][0]=6;defense_content.directions[0][1]=0;
+ defense_content.field_icons=std::array<std::uint8_t,7>{10,11,12,13,14,15,16};
+ DefenseMenuPollState defense_input{};const std::array<std::uint8_t,5> selected_defenders{{1,0,0,0,0}};
+ auto defense_selection=poll_defense_menu(defense_input,1,selected_defenders,true,1,defense_content);
+ assert(defense_selection.boundary==DefenseMenuBoundary::polling && defense_selection.state.defense.actions[0]==6);
+ assert(defense_selection.state.flash_counter==192 && defense_selection.state.defense.blink==13);
+ auto defense_confirmation=poll_defense_menu(defense_selection.state,1,selected_defenders,true,128,defense_content);
+ assert(defense_confirmation.boundary==DefenseMenuBoundary::choice_confirmed && defense_confirmation.opposing_player==1);
+ assert(defense_confirmation.state.defense.pressed==128 && defense_input.defense.actions[0]==255);
+ bool reject_defense_count=false;try {poll_defense_menu(defense_input,5,selected_defenders,true,0,defense_content);}catch(const std::invalid_argument&){reject_defense_count=true;}assert(reject_defense_count);
+ content.data->area_defense_menu=defense_content;
+ auto defense_open=step_match(opponent_contact,{MatchInputKind::presentation_complete,2},content);
+ assert(!defense_open.unsupported && defense_open.state.defense_menu && defense_open.state.defense_menu->stage==MatchDefenseStage::polling);
+ assert(verify_checkpoint(defense_open.state).defense_menu->stage==MatchDefenseStage::polling);
+ MatchInput defense_choose{MatchInputKind::tick,3};defense_choose.pressed=1;
+ auto defense_choice=step_match(defense_open.state,defense_choose,content);
+ assert(!defense_choice.unsupported && defense_choice.state.defense_menu->poll.defense.actions[0]==6);
+ MatchInput defense_confirm{MatchInputKind::tick,4};defense_confirm.pressed=128;
+ auto defense_pending=step_match(defense_choice.state,defense_confirm,content);
+ assert(!defense_pending.unsupported && defense_pending.state.defense_menu->stage==MatchDefenseStage::choice_confirmed);
+ assert(verify_checkpoint(defense_pending.state).defense_menu->stage==MatchDefenseStage::choice_confirmed);
+ auto defense_registered=step_match(defense_pending.state,{MatchInputKind::tick,5},content);
+ assert(!defense_registered.unsupported && defense_registered.state.defense_menu->poll.cursor==1);
+ MatchInput full_direction{MatchInputKind::tick,6};full_direction.pressed=1;
+ auto full_rejected=step_match(defense_registered.state,full_direction,content);
+ assert(full_rejected.unsupported==UnsupportedCapability::action && full_rejected.state.last_sequence==5 && full_rejected.state.demo_rng==defense_registered.state.demo_rng);
+ defense_confirm.sequence=6;auto defense_complete=step_match(defense_registered.state,defense_confirm,content);
+ assert(!defense_complete.unsupported && defense_complete.state.defense_menu->stage==MatchDefenseStage::complete);
+ auto defense_ai=step_match(defense_complete.state,{MatchInputKind::tick,7},content);
+ assert(defense_ai.unsupported==UnsupportedCapability::opponent_action && defense_ai.state.last_sequence==6);
+ assert(verify_checkpoint(defense_complete.state).defense_menu->stage==MatchDefenseStage::complete);
+ MatchInput unsupported_choice{MatchInputKind::tick,3};unsupported_choice.pressed=2;
+ auto other_choice=step_match(defense_open.state,unsupported_choice,content);
+ auto other_pending=step_match(other_choice.state,defense_confirm,content);
+ auto unsupported_register=step_match(other_pending.state,{MatchInputKind::tick,7},content);
+ assert(unsupported_register.unsupported==UnsupportedCapability::action && unsupported_register.state.last_sequence==6);
+ auto three_defenders=opponent_contact;three_defenders.session.current.field.selected_defenders=3;
+ three_defenders.session.scheduling->selected_ids={1,2,3,0,0};
+ auto three_open=step_match(three_defenders,{MatchInputKind::presentation_complete,2},content);
+ assert(!three_open.unsupported);auto defense_state=three_open.state;std::uint64_t defense_sequence=3;
+ for(unsigned slot=0;slot<3;++slot) {
+  MatchInput direction{MatchInputKind::tick,defense_sequence++};direction.pressed=1;
+  auto pick=step_match(defense_state,direction,content);assert(!pick.unsupported);
+  MatchInput confirm_skip{MatchInputKind::tick,defense_sequence++};confirm_skip.pressed=128;
+  auto pending=step_match(pick.state,confirm_skip,content);assert(!pending.unsupported);
+  auto register_skip=step_match(pending.state,{MatchInputKind::tick,defense_sequence++},content);
+  assert(!register_skip.unsupported && register_skip.state.defense_menu->poll.cursor==slot+1);
+  defense_state=verify_checkpoint(register_skip.state);
+ }
+ MatchInput final_confirm{MatchInputKind::tick,defense_sequence++};final_confirm.pressed=128;
+ auto all_defended=step_match(defense_state,final_confirm,content);
+ assert(!all_defended.unsupported && all_defended.state.defense_menu->stage==MatchDefenseStage::complete);
  auto incomplete=content;incomplete.data->movement.reset();
  auto denied=step_match(c1.state,{MatchInputKind::tick,2},incomplete);
  assert(denied.unsupported==UnsupportedCapability::content && denied.state.last_sequence==1 && denied.state.demo_rng==c1.state.demo_rng);

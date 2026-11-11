@@ -8,7 +8,8 @@
 
 namespace captain {
 namespace {
-constexpr char magic[]="CMJMATCH\1";
+constexpr char magic[]="CMJMATCH";
+constexpr std::uint8_t current_version=2;
 constexpr std::uint32_t max_payload=1024*1024;
 void put(std::string& out,std::uint64_t n,unsigned bytes) {
  for(unsigned i=0;i<bytes;++i)out.push_back(static_cast<char>((n>>(8*i))&255));
@@ -48,6 +49,20 @@ void validate_runtime(const MatchRuntimeState& s) {
   throw std::invalid_argument("Invalid match pass target");
  if(flight && (*s.pass_cell>=240 || s.pass_trajectory->flags!=1 || !s.session.saved_ball_flight_flag))
   throw std::invalid_argument("Invalid match flight state");
+ if(s.defense_menu) {
+  const auto& m=*s.defense_menu;const auto count=s.session.current.field.selected_defenders;
+  if(s.mode!=MatchTimingMode::provisional_demo || s.session.phase!=FieldSessionPhase::field_contact_pending ||
+     s.session.current.field.side!=11 || s.pass_stage!=MatchPassStage::none || !s.session.scheduling || !count || count>4 ||
+     static_cast<unsigned>(m.stage)>static_cast<unsigned>(MatchDefenseStage::complete) || m.poll.cursor>count ||
+     (m.stage==MatchDefenseStage::complete && m.poll.cursor!=count) ||
+     (m.stage==MatchDefenseStage::choice_confirmed && (m.poll.cursor>=count || m.poll.defense.actions[m.poll.cursor]==255 || !(m.poll.defense.pressed&128u))) ||
+     (m.stage!=MatchDefenseStage::choice_confirmed && m.poll.defense.pressed))
+   throw std::invalid_argument("Invalid match defensive menu state");
+  for(unsigned slot=0;slot<count;++slot)
+   if(m.poll.defense.actions[slot]!=255 && m.poll.defense.actions[slot]>6)throw std::invalid_argument("Invalid saved defensive action");
+  for(unsigned slot=0;slot<m.poll.cursor;++slot)
+   if(m.poll.defense.actions[slot]!=6)throw std::invalid_argument("Unregistered saved defensive choice");
+ }
 }
 std::uint32_t rotate(std::uint32_t value,unsigned bits) {return (value>>bits)|(value<<(32-bits));}
 MatchContentIdentity sha256(std::string data) {
@@ -95,17 +110,19 @@ void write_match_save(std::ostream& output,const MatchRuntimeState& s,const Matc
  put(payload,s.ball_fraction.has_value(),1);if(s.ball_fraction){put(payload,s.ball_fraction->x,1);put(payload,s.ball_fraction->y,1);}
  put(payload,s.pass_trajectory.has_value(),1);if(s.pass_trajectory){const auto& t=*s.pass_trajectory;for(auto n:{t.x,t.y,t.vx,t.vy})put(payload,n,2);put(payload,t.direction,1);put(payload,t.flags,1);}
  put(payload,s.pass_cell.has_value(),1);if(s.pass_cell)put(payload,*s.pass_cell,1);
+ put(payload,s.defense_menu.has_value(),1);if(s.defense_menu){const auto& m=*s.defense_menu;put(payload,static_cast<unsigned>(m.stage),1);put(payload,m.poll.cursor,1);put(payload,m.poll.flash_counter,1);for(auto n:m.poll.defense.actions)put(payload,n,1);for(auto n:m.poll.defense.subtypes)put(payload,n,1);put(payload,m.poll.defense.blink,1);put(payload,m.poll.defense.pressed,1);}
  if(payload.size()>max_payload)throw std::invalid_argument("Match save is too large");
- std::string header(magic,sizeof(magic)-1);put(header,payload.size(),4);put(header,checksum(payload),4);
+ std::string header(magic,sizeof(magic)-1);put(header,current_version,1);put(header,payload.size(),4);put(header,checksum(payload),4);
  output.write(header.data(),header.size());output.write(payload.data(),payload.size());
  if(!output)throw std::invalid_argument("Unable to write match save");
 }
 MatchRuntimeState load_match_save(std::istream& input,const MatchContentIdentity& identity) {
  validate_identity(identity);
- std::string header(sizeof(magic)-1+8,'\0');input.read(&header[0],header.size());
+ std::string header(sizeof(magic)+8,'\0');input.read(&header[0],header.size());
  if(input.gcount()!=static_cast<std::streamsize>(header.size()) || header.compare(0,sizeof(magic)-1,magic,sizeof(magic)-1))
   throw std::invalid_argument("Unsupported or truncated match save");
- Reader head{header,sizeof(magic)-1};auto size=head.get(4);auto expected=head.get(4);
+ Reader head{header,sizeof(magic)-1};const auto version=head.get(1);if(version<1 || version>current_version)throw std::invalid_argument("Unsupported match save version");
+ auto size=head.get(4);auto expected=head.get(4);
  if(size>max_payload)throw std::invalid_argument("Match save is too large");
  std::string payload(size,'\0');input.read(payload.data(),size);
  if(input.gcount()!=static_cast<std::streamsize>(size) || input.peek()!=std::char_traits<char>::eof() || checksum(payload)!=expected)
@@ -123,6 +140,7 @@ MatchRuntimeState load_match_save(std::istream& input,const MatchContentIdentity
  if(r.flag()){MatchBallFraction f{};f.x=r.get(1);f.y=r.get(1);s.ball_fraction=f;}
  if(r.flag()){BallTrajectoryContext t{};t.x=r.get(2);t.y=r.get(2);t.vx=r.get(2);t.vy=r.get(2);t.direction=r.get(1);t.flags=r.get(1);s.pass_trajectory=t;}
  if(r.flag())s.pass_cell=static_cast<std::uint8_t>(r.get(1));
+ if(version>=2 && r.flag()){MatchDefenseMenu m{};m.stage=static_cast<MatchDefenseStage>(r.get(1));m.poll.cursor=r.get(1);m.poll.flash_counter=r.get(1);for(auto& n:m.poll.defense.actions)n=r.get(1);for(auto& n:m.poll.defense.subtypes)n=r.get(1);m.poll.defense.blink=r.get(1);m.poll.defense.pressed=r.get(1);s.defense_menu=m;}
  if(r.pos!=payload.size())throw std::invalid_argument("Unexpected match save data");
  validate_runtime(s);return s;
 }

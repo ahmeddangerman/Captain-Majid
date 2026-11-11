@@ -12,7 +12,7 @@ void advance_demo_random(MatchRuntimeState& state) {
 }
 }
 const char* capability_name(UnsupportedCapability c) {
- switch(c) {case UnsupportedCapability::content:return "content";case UnsupportedCapability::initialization:return "match initialization";case UnsupportedCapability::input_sequence:return "input sequence";case UnsupportedCapability::ball_fraction:return "ball fractional position is unknown";case UnsupportedCapability::random_state:return "random index is not present in development snapshot";case UnsupportedCapability::timing:return "live timing and random scheduling";case UnsupportedCapability::action:return "action routing";case UnsupportedCapability::defender_contact:return "pass-flight defender contact";case UnsupportedCapability::defensive_prompt:return "opponent contact defensive prompt";case UnsupportedCapability::presentation:return "presentation completion";case UnsupportedCapability::phase:return "session phase";} return "unknown";
+ switch(c) {case UnsupportedCapability::content:return "content";case UnsupportedCapability::initialization:return "match initialization";case UnsupportedCapability::input_sequence:return "input sequence";case UnsupportedCapability::ball_fraction:return "ball fractional position is unknown";case UnsupportedCapability::random_state:return "random index is not present in development snapshot";case UnsupportedCapability::timing:return "live timing and random scheduling";case UnsupportedCapability::action:return "action routing";case UnsupportedCapability::defender_contact:return "pass-flight defender contact";case UnsupportedCapability::defensive_prompt:return "opponent contact defensive prompt";case UnsupportedCapability::opponent_action:return "opponent attack choice and defensive resolution";case UnsupportedCapability::presentation:return "presentation completion";case UnsupportedCapability::phase:return "session phase";} return "unknown";
 }
 MatchBallView match_ball_view(const MatchRuntimeState& state) {
  const bool flight=state.pass_stage==MatchPassStage::flight_ready || state.pass_stage==MatchPassStage::flight_cell || state.pass_stage==MatchPassStage::flight_arrived;
@@ -37,6 +37,40 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::field_contact_pending && input.session.current.field.side==11) {
+  const auto count=input.session.current.field.selected_defenders;
+  if(input.defense_menu && input.defense_menu->stage==MatchDefenseStage::complete){result.unsupported=UnsupportedCapability::opponent_action;return result;}
+  if(!input.defense_menu) {
+   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::defensive_prompt;return result;}
+   if(!content.data->area_defense_menu || !content.data->area_defense_menu->field_icons){result.unsupported=UnsupportedCapability::content;return result;}
+   if(!input.demo_rng || !input.session.scheduling || !input.session.action || !input.session.recovery || !count || count>4){result.unsupported=UnsupportedCapability::phase;return result;}
+   result.state.defense_menu=MatchDefenseMenu{};result.state.defense_menu->poll.flash_counter=128;
+   result.state.defense_menu->poll.defense.blink=13;result.state.last_sequence=event.sequence;return result;
+  }
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  if(!content.data->area_defense_menu || !content.data->area_defense_menu->field_icons){result.unsupported=UnsupportedCapability::content;return result;}
+  if(!input.demo_rng || !input.session.scheduling || !count || count>4){result.unsupported=UnsupportedCapability::phase;return result;}
+  const auto& menu=*input.defense_menu;
+  if(menu.stage==MatchDefenseStage::choice_confirmed) {
+   if(menu.poll.cursor>=count || menu.poll.defense.actions[menu.poll.cursor]!=6 || menu.poll.defense.pressed!=128){result.unsupported=UnsupportedCapability::action;return result;}
+   auto& next=*result.state.defense_menu;const auto slot=next.poll.cursor;
+   next.poll.defense.subtypes[slot]=0;next.poll.defense.pressed=0;++next.poll.cursor;
+   next.stage=MatchDefenseStage::polling;
+   result.events.push_back({{ControlPresentationKind::sprite,(*content.data->area_defense_menu->field_icons)[6],slot}});
+   if(next.poll.cursor<count){next.poll.flash_counter|=64;next.poll.defense.blink=0;result.events.push_back({{ControlPresentationKind::display,content.data->area_defense_menu->titles[0]}});}
+   result.state.last_sequence=event.sequence;return result;
+  }
+  if(menu.stage!=MatchDefenseStage::polling){result.unsupported=UnsupportedCapability::phase;return result;}
+  if(menu.poll.cursor==count && !(event.pressed&192u) && (event.pressed&15u)){result.unsupported=UnsupportedCapability::action;return result;}
+  auto next=input;advance_demo_random(next);
+  const auto poll=poll_defense_menu(menu.poll,count,input.session.scheduling->selected_ids,true,event.pressed,*content.data->area_defense_menu);
+  next.defense_menu->poll=poll.state;
+  if(poll.boundary==DefenseMenuBoundary::choice_confirmed)next.defense_menu->stage=MatchDefenseStage::choice_confirmed;
+  else if(poll.boundary==DefenseMenuBoundary::complete)next.defense_menu->stage=MatchDefenseStage::complete;
+  next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);
+  for(const auto& request:poll.presentation)result.events.push_back({request});
+  return result;
+ }
  if(input.session.phase==FieldSessionPhase::player_control && event.kind==MatchInputKind::tick) {
   auto prepared=prepare_session_control(input.session);
   result.state.session=prepared.state;result.state.last_sequence=event.sequence;

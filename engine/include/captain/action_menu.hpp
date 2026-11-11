@@ -33,6 +33,21 @@ struct ActionMenuResult {
     std::optional<SpecialCursorPresentation> special_cursor{};
     std::optional<std::uint8_t> special_cursor_y{};
 };
+enum class DefenseMenuBoundary { polling, choice_confirmed, complete };
+struct DefenseMenuPollState {
+    std::uint8_t cursor=0,flash_counter=0;
+    KeeperAreaDefenseContext defense{};
+};
+struct DefenseMenuPollResult {
+    DefenseMenuPollState state{};
+    DefenseMenuBoundary boundary=DefenseMenuBoundary::polling;
+    std::optional<std::uint8_t> opposing_player{};
+    std::vector<ControlPresentationRequest> presentation{};
+};
+// Pure D3AB menu polling: callers own the encounter and subsequent preparation.
+DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState&,std::uint8_t count,
+ const std::array<std::uint8_t,5>& selected_ids,bool field,std::uint8_t pressed,
+ const AreaDefenseMenuContent&);
 ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
 ActionMenuResult open_ordinary_return_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
 ActionMenuResult poll_ordinary_return_action_menu(const PhaseSessionState& input, std::uint8_t pressed,const ActionMenuContent& content);

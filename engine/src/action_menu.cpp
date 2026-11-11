@@ -189,37 +189,36 @@ ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,cons
  }
  validate_phase_session(state);return result;
 }
-ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
- validate_phase_session(input);
- const bool field=input.phase==FieldSessionPhase::sampled_field_defense_prompt || input.phase==FieldSessionPhase::sampled_field_defense_poll;
- if(input.phase!=FieldSessionPhase::keeper_area_defense_ready && input.phase!=FieldSessionPhase::keeper_area_defense_poll && !field)
-  throw std::invalid_argument("Defensive input requires prompt/poll state");
- ActionMenuResult result{input};auto& state=result.state;auto& menu=*state.action;auto& defense=*state.area_defense;
- state.phase=field ? FieldSessionPhase::sampled_field_defense_poll : FieldSessionPhase::keeper_area_defense_poll;
+DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState& input,std::uint8_t count,
+ const std::array<std::uint8_t,5>& selected_ids,bool field,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
+ if(!count || count>4 || input.cursor>count)throw std::invalid_argument("Invalid defensive menu count or cursor");
+ for(unsigned slot=0;slot<count;++slot)
+  if(input.defense.actions[slot]!=255 && input.defense.actions[slot]>6)
+   throw std::invalid_argument("Invalid defensive menu action");
+ DefenseMenuPollResult result{input};auto& menu=result.state;auto& defense=menu.defense;
  defense.pressed=0;
  const auto icon=[&](unsigned slot) {return defense_icon(defense,slot,content);};
- const auto count=state.current.field.selected_defenders;
  if((pressed&128u) && menu.cursor==count) {
-  state.phase=field ? FieldSessionPhase::sampled_field_defense_complete : FieldSessionPhase::keeper_area_defense_complete;result.confirmed=true;
+  result.boundary=DefenseMenuBoundary::complete;
   result.presentation.push_back({ControlPresentationKind::clear_overlay,0});
-  validate_phase_session(state);return result;
+  return result;
  }
  if((pressed&128u) && defense.actions[menu.cursor]!=255) {
-  state.recovery->opposing_player=state.scheduling->selected_ids[menu.cursor];
+  result.opposing_player=selected_ids[menu.cursor];
   defense.pressed=pressed;
-  state.phase=field ? FieldSessionPhase::sampled_field_defense_preparation : FieldSessionPhase::keeper_area_defense_preparation;result.confirmed=true;
-  validate_phase_session(state);return result;
+  result.boundary=DefenseMenuBoundary::choice_confirmed;
+  return result;
  }
  if((pressed&64u) && menu.cursor) {
   if(menu.cursor<count)result.presentation.push_back({ControlPresentationKind::sprite,icon(menu.cursor),menu.cursor});
   --menu.cursor;menu.flash_counter|=64u;defense.blink=0;
   result.presentation.push_back({ControlPresentationKind::display,content.titles[field ? 0 : 2]});
-  validate_phase_session(state);return result;
+  return result;
  }
  auto directions=static_cast<unsigned>(pressed&15u);
  if(menu.cursor==count) {
   if(directions)throw std::invalid_argument("Full defensive prefix direction scratch slots are not represented");
-  validate_phase_session(state);return result;
+  return result;
  }
  if(directions) {
   unsigned direction=0;while(!(directions&(1u<<direction)))++direction;
@@ -238,6 +237,21 @@ ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::ui
   result.presentation.push_back({ControlPresentationKind::sprite,
    static_cast<std::uint8_t>(icon(menu.cursor)|((menu.flash_counter&64u)?0u:128u)),menu.cursor});
  }
+ return result;
+}
+ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
+ validate_phase_session(input);
+ const bool field=input.phase==FieldSessionPhase::sampled_field_defense_prompt || input.phase==FieldSessionPhase::sampled_field_defense_poll;
+ if(input.phase!=FieldSessionPhase::keeper_area_defense_ready && input.phase!=FieldSessionPhase::keeper_area_defense_poll && !field)
+  throw std::invalid_argument("Defensive input requires prompt/poll state");
+ const DefenseMenuPollState menu{input.action->cursor,input.action->flash_counter,*input.area_defense};
+ const auto poll=poll_defense_menu(menu,input.current.field.selected_defenders,input.scheduling->selected_ids,field,pressed,content);
+ ActionMenuResult result{input};auto& state=result.state;
+ state.action->cursor=poll.state.cursor;state.action->flash_counter=poll.state.flash_counter;state.area_defense=poll.state.defense;
+ result.presentation=poll.presentation;
+ if(poll.boundary==DefenseMenuBoundary::complete){state.phase=field ? FieldSessionPhase::sampled_field_defense_complete : FieldSessionPhase::keeper_area_defense_complete;result.confirmed=true;}
+ else if(poll.boundary==DefenseMenuBoundary::choice_confirmed){state.recovery->opposing_player=*poll.opposing_player;state.phase=field ? FieldSessionPhase::sampled_field_defense_preparation : FieldSessionPhase::keeper_area_defense_preparation;result.confirmed=true;}
+ else state.phase=field ? FieldSessionPhase::sampled_field_defense_poll : FieldSessionPhase::keeper_area_defense_poll;
  validate_phase_session(state);return result;
 }
 ActionMenuResult open_keeper_area_defense_prompt(const PhaseSessionState& input,const AreaDefenseMenuContent& content) {
