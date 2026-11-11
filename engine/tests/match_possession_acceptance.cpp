@@ -12,7 +12,7 @@ int main(int argc,char** argv) {
  if(demo)std::cerr<<"PROVISIONAL DEMO: simplified timing and random values; synthetic content.\n";
  using namespace captain;
  unsigned failures=0;
- bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false,interception_checked=false,interception_unfinished=false;
+ bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false,interception_checked=false,interception_unfinished=false,deflection_checked=false,deflection_unfinished=false;
  const std::array<std::uint8_t,3> owners{{3,7,15}};
  const std::array<std::uint8_t,3> targets{{7,3,19}};
  unsigned fixture=0;
@@ -78,11 +78,16 @@ int main(int argc,char** argv) {
        contested.session.action->power=30;contested.session.current.field.random_first=1;contested.session.current.field.random_second=0;
        content.data->pass_flight_comparison=PassFlightComparisonContent{1,255,0,{154,96,68,0}};
        content.data->defense.skill_selectors[2][0]=1;content.data->defense.moves[2].push_back({0,0,50,0});content.data->defense.strength_curve.fill(20);
-       content.data->contact=ContactPreludeContent{};content.data->contact->field_elapsed[5]=1;content.data->contact->defender_status[2]=6;
+       content.data->contact=ContactPreludeContent{};content.data->contact->field_elapsed[4]=2;content.data->contact->field_elapsed[5]=1;content.data->contact->defender_status[2]=6;
        content.data->experience=ExperienceContent{};
        auto blocked=contested;blocked.session.action->power=1;
        auto interception=step_match(blocked,{MatchInputKind::presentation_complete,blocked.last_sequence+1},content);
-       interception_checked=true;interception_unfinished=bool(interception.unsupported);
+       interception_checked=true;
+       if(!interception.unsupported)interception=step_match(interception.state,{MatchInputKind::tick,interception.state.last_sequence+1},content);
+       interception_unfinished=bool(interception.unsupported) || interception.state.session.phase!=FieldSessionPhase::control_ready || interception.state.session.current.field.ball_owner!=1 || interception.state.session.current.field.side!=0;
+       if(!interception_unfinished)std::cout<<"owner "<<unsigned(owner)<<": provisional defender interception reached player 1 control\n";
+       blocked.session.action->power=23;auto deflection=step_match(blocked,{MatchInputKind::presentation_complete,blocked.last_sequence+1},content);
+       deflection_checked=true;deflection_unfinished=bool(deflection.unsupported);
        result=step_match(contested,{MatchInputKind::presentation_complete,contested.last_sequence+1},content);
        if(!result.unsupported && result.state.flight_defenders.empty()){
         contested=result.state;result=step_match(contested,{MatchInputKind::presentation_complete,contested.last_sequence+1},content);
@@ -177,6 +182,7 @@ int main(int argc,char** argv) {
  if(demo && multi_unfinished){std::cerr<<"M1 still incomplete: multi-teammate pass selection is unsupported\n";++failures;}
  if(demo && (!contested_checked || contested_unfinished)){std::cerr<<"M1 still incomplete: pass-flight defender contact is unsupported or unverified\n";++failures;}
  if(demo && (!interception_checked || interception_unfinished)){std::cerr<<"M1 still incomplete: pass-flight interception is unsupported or unverified\n";++failures;}
+ if(demo && (!deflection_checked || deflection_unfinished)){std::cerr<<"M1 still incomplete: pass-flight loose-ball deflection is unsupported or unverified\n";++failures;}
  std::cerr<<failures<<" exercised checks incomplete; other match routes remain unverified\n";
  return failures?1:0;
 }

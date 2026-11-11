@@ -12,7 +12,7 @@
 #include <string>
 static int comparisons(int argc,char** argv) {
  using namespace captain;
- if(argc==5 && std::string(argv[1])=="--compare-flight-contact-clock") {
+ if(argc==5 && (std::string(argv[1])=="--compare-flight-contact-clock" || std::string(argv[1])=="--compare-flight-interception")) {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
   auto source=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
   const auto count=source.current.field.selected_defenders;
@@ -24,6 +24,9 @@ static int comparisons(int argc,char** argv) {
   MatchStepResult result{};
   for(unsigned i=0;i<count;++i){result=step_match(state,{MatchInputKind::presentation_complete,i+1},content);if(result.unsupported)throw std::runtime_error("Opponent flight contact unsupported");state=result.state;}
   if(!result.state.flight_defenders.empty())throw std::runtime_error("Opponent flight contact prefix was not cleared");
+  if(std::string(argv[1])=="--compare-flight-interception" && (result.state.session.phase!=FieldSessionPhase::player_control || result.state.defense_menu))throw std::runtime_error("Interception did not return player control");
+  if(std::string(argv[1])=="--compare-flight-interception")for(unsigned i=0;i<expected.current.field.selected_defenders;++i)
+   if(result.state.session.scheduling->selected_ids[i]!=expected.scheduling->selected_ids[i])throw std::runtime_error("Original intercepted defender prefix differs");
   std::ostringstream actual_field(std::ios::binary),expected_field(std::ios::binary);
   write_field_state(actual_field,result.state.session.current.field);write_field_state(expected_field,expected.current.field);
   if(actual_field.str()!=expected_field.str()) {for(std::size_t i=0;i<actual_field.str().size();++i)if(actual_field.str()[i]!=expected_field.str()[i])throw std::runtime_error("Original field differs at byte "+std::to_string(i));}
@@ -434,7 +437,7 @@ static void test_defended_arrival(const captain::MatchRuntimeState& base,const c
  arrival.session.current.field.random_first=1;arrival.session.current.field.random_second=0;
  content.data->pass_flight_comparison=PassFlightComparisonContent{1,255,0,{154,96,68,0}};
  content.data->defense.skill_selectors[2][0]=1;content.data->defense.moves[2].push_back({0,0,50,0});content.data->defense.strength_curve.fill(20);
- content.data->contact=ContactPreludeContent{};content.data->contact->field_elapsed[5]=1;content.data->contact->defender_status[2]=6;
+ content.data->contact=ContactPreludeContent{};content.data->contact->field_elapsed[4]=2;content.data->contact->field_elapsed[5]=1;content.data->contact->defender_status[2]=6;
  content.data->experience=ExperienceContent{};
  const auto checkpoint=[&](const MatchRuntimeState& state){std::ostringstream bytes(std::ios::binary);write_match_save(bytes,state,identity);std::istringstream in(bytes.str(),std::ios::binary);return load_match_save(in,identity);};
  static MatchStepResult survived,first,second,blocked,received,control;
@@ -447,10 +450,17 @@ static void test_defended_arrival(const captain::MatchRuntimeState& base,const c
  assert(!blocked.unsupported && blocked.state.flight_defenders.empty() && blocked.state.session.action->power==255 && blocked.state.session.current.field.motion[field_motion_index(1)].status==6);
  first=step_match(repeated,{MatchInputKind::presentation_complete,seq},content);
  assert(!first.unsupported && first.state.flight_defenders.size()==1 && first.state.session.current.field.elapsed==1);
+ stopped=first.state;stopped.session.action->power=1;blocked=step_match(stopped,{MatchInputKind::presentation_complete,seq+1},content);
+ assert(blocked.unsupported==UnsupportedCapability::defender_contact && blocked.state.last_sequence==stopped.last_sequence && blocked.state.flight_defenders==stopped.flight_defenders);
  saved=checkpoint(first.state);second=step_match(saved,{MatchInputKind::presentation_complete,seq+1},content);
  assert(!second.unsupported && second.state.flight_defenders.empty() && second.state.session.current.field.elapsed==0 && second.state.session.action->power==26);
  stopped=arrival;stopped.session.action->power=1;blocked=step_match(stopped,{MatchInputKind::presentation_complete,seq},content);
- assert(blocked.unsupported==UnsupportedCapability::defender_contact && blocked.state.last_sequence==stopped.last_sequence && blocked.state.flight_defenders==stopped.flight_defenders && blocked.state.session.action->power==1);
+ assert(!blocked.unsupported && blocked.state.session.phase==FieldSessionPhase::player_control && blocked.state.session.current.field.side==0 && blocked.state.session.current.field.ball_owner==1 && blocked.state.flight_defenders.empty());
+ assert(checkpoint(blocked.state).session.current.field.ball_owner==1);
+ auto intercepted_control=step_match(blocked.state,{MatchInputKind::tick,seq+1},content);
+ assert(!intercepted_control.unsupported && intercepted_control.state.session.phase==FieldSessionPhase::control_ready);
+ stopped=arrival;stopped.session.action->power=23;blocked=step_match(stopped,{MatchInputKind::presentation_complete,seq},content);
+ assert(blocked.unsupported==UnsupportedCapability::defender_contact && blocked.state.last_sequence==stopped.last_sequence && blocked.state.flight_defenders==stopped.flight_defenders && blocked.state.session.action->power==23);
  received=step_match(survived.state,{MatchInputKind::presentation_complete,seq+1},content);
  assert(!received.unsupported && received.state.session.current.field.ball_owner==20);
  control=step_match(received.state,{MatchInputKind::tick,seq+2},content);

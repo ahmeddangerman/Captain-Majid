@@ -81,7 +81,23 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
      const auto& player=field.roster[id];const FieldPlayerRecord record{id,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level};
      const auto prep=prepare_profiled_field_defender(record,data.field_players,2,0,0,data.defense);const auto& rules=*data.pass_flight_comparison;
      const auto contact=compare_defender_contact({input.session.action->power,prep.base_strength,field.random_first,field.random_second,rules.range,rules.offset,false,bool(rules.eligibility&128u),0,id,0,rules.thresholds});
-     if(prep.move_effect || contact.result_code>1 || contact.subtype){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+     if(prep.move_effect || contact.subtype || contact.result_code==2){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+     if(contact.result_code==3){
+      if(!data.movement){result.unsupported=UnsupportedCapability::content;return result;}
+      if(field.elapsed || data.contact->field_elapsed[5]!=1 || !input.session.scheduling){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+      auto next=input;auto& session=next.session;const auto trajectory=*next.defense_menu->ai_trajectory;
+      session.current.field.ball_x=static_cast<std::uint8_t>(trajectory.x>>8);session.current.field.ball_y=static_cast<std::uint8_t>(trajectory.y>>8);session.current.field.ball_cell=*next.defense_menu->ai_ball_cell;
+      session.current.field.selected_defenders=static_cast<std::uint8_t>(next.flight_defenders.size());session.scheduling->selected_ids.fill(0);
+      for(unsigned i=0;i<next.flight_defenders.size();++i)session.scheduling->selected_ids[i]=next.flight_defenders[i];
+      session.recovery->opposing_player=id;session.experience=award_player_experience(*session.experience,player.type,2,*data.experience).state;
+      auto clock=apply_contact_prelude({session.current,id,2,false},*data.contact);
+      if(clock.clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+      session.current=clock.state;session.current.field.side=0;session.current.field.ball_owner=id;
+      session.current.field=advance_field_phase(session.current.field,data.field_players,*data.movement).state;
+      session.phase=FieldSessionPhase::player_control;next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(trajectory.x),static_cast<std::uint8_t>(trajectory.y)};
+      next.defense_menu.reset();next.flight_defenders.clear();next.last_sequence=event.sequence;validate_phase_session(session);
+      project_field_random_memory(session.current.field,next.random_memory);result.state=std::move(next);return result;
+     }
      auto next=input;auto& session=next.session;const auto& trajectory=*next.defense_menu->ai_trajectory;
      session.current.field.ball_x=static_cast<std::uint8_t>(trajectory.x>>8);session.current.field.ball_y=static_cast<std::uint8_t>(trajectory.y>>8);session.current.field.ball_cell=*next.defense_menu->ai_ball_cell;
      session.recovery->opposing_player=id;
