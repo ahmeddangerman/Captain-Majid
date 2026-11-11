@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 third-cycle polls
+
+Ten observed opponent20 polls after the waited field round now match the original, random index57 to67, while retaining cursor and flight flag. The next original decision changes the ball to (97,158)/cell81 and retains action2; it remains guarded pending a separate comparison. The verifier checks represented fields for all ten polls and atomic rejection of the unmodeled next decision. Evidence: `../Captain-Majid-analysis/opponent20-third-polls-v2-20261111`; Windows build, original replay and all 62 checks passed. Timing/AI remain supplied, a complete match unsupported, overall progress unmeasured. Next compare the third-cycle cell decision. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 field round with interleaved waits
 
 The original action2 field round now matches all 22 player updates, including four captured NMI/travel waits inside player slot7 after a controlled-defender switch. The first player poll follows a random event already consumed by the preceding clock, so it does not advance random again. The new `CMJWORLDNMI3` input records these ordered events; the scenario guard requires this observed structure. Phase441 matches represented original session fields at E145, including cursor and flight flag, random index57. The verifier checks the original ordering, snapshot roundtrip, atomic rejection of a repeated field round and invalid random ordering. Earlier `CMJWORLDNMI2` replay still matches. Evidence: `../Captain-Majid-analysis/opponent20-wait-field-v2-20261111`; Windows build, both original replays and all 62 checks passed. Timing and the action choice remain supplied, further opponent play and a complete match unsupported; overall progress unmeasured. Next compare subsequent opponent polls. Suggested model GPT-6.1 Terra High.

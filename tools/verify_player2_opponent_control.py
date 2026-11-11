@@ -17,14 +17,17 @@ def main():
     for name in ('trace-directory', 'source', 'pack', 'exe', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--second-cycle-polls',action='store_true')
+    parser.add_argument('--third-cycle-polls',action='store_true')
     args = parser.parse_args()
     lines, pcs, ram = trace_data(args.trace_directory)
-    first = 22566 if args.second_cycle_polls else 22273
+    if args.second_cycle_polls and args.third_cycle_polls:raise ValueError('Choose one later cycle')
+    later=args.second_cycle_polls or args.third_cycle_polls
+    first = 22848 if args.third_cycle_polls else 22566 if args.second_cycle_polls else 22273
     if pcs[first] != 'E145':
         raise ValueError('Unexpected initial opponent control boundary')
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
     source = args.source.resolve(); previous = first; index = ram(previous)[0xe1]
-    for count in range(1, 11 if args.second_cycle_polls else 12):
+    for count in range(1, 11 if later else 12):
         at = next(i for i in range(previous+1, len(pcs)) if pcs[i]=='E14A')
         end = next(i for i in range(at+1, len(pcs)) if pcs[i] in ('E145', 'E1E7'))
         points = {pcs[i]:i for i in range(previous+1, at) if pcs[i] in ('C9C5','C9E8','E3CA','E3DE','E406')}
@@ -50,14 +53,18 @@ def main():
         index=ram(end)[0xe1]
         if re.findall(r'final random index (\d+);',result.stdout)!=[str(index)]:
             raise ValueError(f'Poll {count}: random index differs')
-        data=target.read_bytes();expected_phase=437 if args.second_cycle_polls else (435 if pcs[end]=='E1E7' else 434)
+        data=target.read_bytes();expected_phase=441 if args.third_cycle_polls else 437 if args.second_cycle_polls else (435 if pcs[end]=='E1E7' else 434)
         if int.from_bytes(data[258:260],'little')!=expected_phase or data[413]!=ram(end)[0x616] or data[418]!=ram(end)[0x61b]:
             raise ValueError(f'Poll {count}: phase, cursor or flight flag differs')
         compare_represented(data,export_session(ram(end)),True,'opponent20',f'poll {count}')
         source,previous=target,end
-    if args.second_cycle_polls:
-        if previous!=22636: raise ValueError('Unexpected second-cycle decision boundary')
-        print(f'Matched 10 opponent20 second-cycle polls before the captured AI decision; random index {index}.')
+    if later:
+        if previous!=(22918 if args.third_cycle_polls else 22636): raise ValueError('Unexpected later-cycle decision boundary')
+        if args.third_cycle_polls:
+            rejected=output/'decision-rejected.cmjsession';before=source.read_bytes()
+            attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-poll',str(events),str(index),'--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+            if attempt.returncode==0 or rejected.exists() or source.read_bytes()!=before:raise ValueError('Unmodeled third-cycle decision did not reject atomically')
+        print(f'Matched 10 opponent20 later-cycle polls before the captured AI decision; random index {index}.')
         return
     if pcs[previous]!='E1E7': raise ValueError('Expected control-clock entry')
     rows=clock_events(lines,pcs,ram,previous,22373)

@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Ten further opponent20 polls match after the field round with interleaved waits. The next cell decision remains unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Opponent20's action2 field round matches all 22 updates and four captured waits during a defender switch. Subsequent play and autonomous timing remain unsupported; all 62 Windows checks passed, full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Opponent20's explicitly captured action2 now matches through its control clock. The next field round includes four extra wait frames that remain unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.

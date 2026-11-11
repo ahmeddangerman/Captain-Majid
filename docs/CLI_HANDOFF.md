@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 third-cycle decision
+
+Ten opponent20 polls after the waited field round match, random index67. Private checkpoint: `../Captain-Majid-analysis/opponent20-third-polls-v2-20261111/10.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The next original poll refreshes the ball to (97,158)/cell81 and retains action2; it remains guarded until separately compared. Replay: `tools/verify_player2_opponent_control.py --third-cycle-polls`; invalid next-decision execution rejects atomically. Windows build and 62 checks passed. Timing/AI remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 waited field round
 
 Opponent20's action2 field round matches the original E145 after 22 player updates and four NMI/travel waits interleaved within slot7 after a defender switch. The first slot uses the random state already advanced by the preceding clock. `CMJWORLDNMI3` records this ordering; `tools/verify_opponent20_wait_round.py` checks represented fields, retained cursor/flag, snapshot roundtrip and invalid ordering/replay rejection. Phase441 snapshot: `../Captain-Majid-analysis/opponent20-wait-field-v2-20261111/field.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Windows build, both old/new original replays and all 62 checks passed. Next compare subsequent opponent polls; timing and action selection remain supplied, a full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
