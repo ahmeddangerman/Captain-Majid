@@ -60,10 +60,6 @@ def main():
         source,previous=target,end
     if later:
         if previous!=(22918 if args.third_cycle_polls else 22636): raise ValueError('Unexpected later-cycle decision boundary')
-        if args.third_cycle_polls:
-            rejected=output/'decision-rejected.cmjsession';before=source.read_bytes()
-            attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-poll',str(events),str(index),'--capture',str(rejected)],capture_output=True,text=True,timeout=30)
-            if attempt.returncode==0 or rejected.exists() or source.read_bytes()!=before:raise ValueError('Unmodeled third-cycle decision did not reject atomically')
         print(f'Matched 10 opponent20 later-cycle polls before the captured AI decision; random index {index}.')
         return
     if pcs[previous]!='E1E7': raise ValueError('Expected control-clock entry')

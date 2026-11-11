@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 third decision clock
+
+Opponent20's third cell refresh to (97,158)/cell81, explicitly captured action2 and control clock match the original E407, clock125/random index72. Phase444 snapshot: `../Captain-Majid-analysis/opponent20-third-decision-v2-20261111/clock.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. `tools/verify_opponent20_third_decision.py` checks represented fields, atomic invalid choice rejection and snapshot roundtrip. Windows build, both decision replays and 62 checks passed. Next compare the following field round; AI choice/timing remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 third-cycle decision
 
 Ten opponent20 polls after the waited field round match, random index67. Private checkpoint: `../Captain-Majid-analysis/opponent20-third-polls-v2-20261111/10.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The next original poll refreshes the ball to (97,158)/cell81 and retains action2; it remains guarded until separately compared. Replay: `tools/verify_player2_opponent_control.py --third-cycle-polls`; invalid next-decision execution rejects atomically. Windows build and 62 checks passed. Timing/AI remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

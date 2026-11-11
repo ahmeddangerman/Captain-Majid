@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 third cell decision and clock
+
+The next opponent20 poll matches the original cell refresh to (97,158)/cell81, followed by the explicitly captured action2 and the control clock through E407: clock125, random index72. Phases442-444 preserve the cell decision, captured choice and pending field round; represented session fields, cursor and flight flag match. Unsupported action3 rejects atomically and the clock snapshot roundtrips. Evidence: `../Captain-Majid-analysis/opponent20-third-decision-v2-20261111`; Windows build, both decision replays and all 62 checks passed. The choice and event timing remain supplied; subsequent field movement and a full playable match are unsupported, overall progress unmeasured. Next compare the next original field round. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 third-cycle polls
 
 Ten observed opponent20 polls after the waited field round now match the original, random index57 to67, while retaining cursor and flight flag. The next original decision changes the ball to (97,158)/cell81 and retains action2; it remains guarded pending a separate comparison. The verifier checks represented fields for all ten polls and atomic rejection of the unmodeled next decision. Evidence: `../Captain-Majid-analysis/opponent20-third-polls-v2-20261111`; Windows build, original replay and all 62 checks passed. Timing/AI remain supplied, a complete match unsupported, overall progress unmeasured. Next compare the third-cycle cell decision. Suggested model GPT-6.1 Terra High.

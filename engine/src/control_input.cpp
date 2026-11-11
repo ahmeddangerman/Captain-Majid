@@ -1193,10 +1193,11 @@ ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::u
 
 PhaseSessionState capture_player2_opponent_action(const PhaseSessionState& input,std::uint8_t action) {
     validate_phase_session(input);
-    if(input.phase!=FieldSessionPhase::player2_opponent_cell_decision || action!=2 ||
-       input.current.field.random_first!=59 || input.current.field.random_second!=202)
+    const bool first=input.phase==FieldSessionPhase::player2_opponent_cell_decision && input.current.field.random_first==59 && input.current.field.random_second==202;
+    const bool next=input.phase==FieldSessionPhase::player2_opponent_next_cell_decision && input.current.field.random_first==67 && input.current.field.random_second==6;
+    if((!first && !next) || action!=2)
         throw std::invalid_argument("Only the observed opponent20 action2 choice is supported");
-    auto state=input;state.action->action=action;state.phase=FieldSessionPhase::player2_opponent_action_captured;
+    auto state=input;state.action->action=action;state.phase=next ? FieldSessionPhase::player2_opponent_next_action_captured : FieldSessionPhase::player2_opponent_action_captured;
     validate_phase_session(state);return state;
 }
 ControlPollResult poll_session_control(const PhaseSessionState& input,
