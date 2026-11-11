@@ -16,6 +16,7 @@
 namespace captain {
 struct ShotContent {
     std::optional<AiAreaChoiceContent> ai_area_choice{};
+    std::optional<AiFieldChoiceContent> ai_field_choice{};
     std::optional<FieldDefenseContent> area_attack6{};
     std::optional<AreaComparisonContent> area_comparison{};
     std::optional<std::array<std::uint8_t,7>> area_prefix_elapsed{};
@@ -39,7 +40,7 @@ struct ShotContent {
     std::optional<AreaDefenseMenuContent> area_defense_menu{};
 };
 
-// Development CMJSHOT1..9/A/B/C/D/E/F/G/H/I/J/K content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..9/A/B/C/D/E/F/G/H/I/J/K/L content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

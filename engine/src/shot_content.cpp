@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -221,6 +221,14 @@ ShotContent load_shot_content(std::istream& input) {
             select_area_comparison(attack,defense,area,content.field_comparison.eligibility);
     }
     if(version>='K') {content.area_prefix_elapsed=std::array<std::uint8_t,7>{};reader.bytes(*content.area_prefix_elapsed);}
+    if(version>='L') {
+        content.ai_field_choice=AiFieldChoiceContent{};auto& ai=*content.ai_field_choice;
+        reader.bytes(ai.profile_rows);
+        reader.bytes(ai.recipient_profile_rows);
+        for(auto& cell:ai.low_x_categories)reader.bytes(cell);
+        ai.rows.resize(reader.count(1,64));
+        for(auto& row:ai.rows)reader.bytes(row);
+    }
     reader.end();
     return content;
 }

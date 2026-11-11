@@ -10,14 +10,14 @@
 #include <vector>
 
 namespace captain {
-enum class UnsupportedCapability { content, initialization, input_sequence, random_state, ball_fraction, timing, action, defender_contact, defensive_prompt, opponent_action, presentation, phase };
+enum class UnsupportedCapability { content, initialization, input_sequence, random_state, ball_fraction, timing, action, defender_contact, defensive_prompt, opponent_action, opponent_execution, presentation, phase };
 enum class MatchTimingMode { original_backed, provisional_demo };
 enum class MatchInputKind { tick, action, presentation_complete };
 enum class MatchAction { none, pass };
 enum class MatchPassStage { none, awaiting_presentation, handoff, target_ready, flight_ready, flight_cell, flight_arrived };
 struct MatchBallFraction { std::uint8_t x=0,y=0; };
 struct MatchPassTarget { std::uint8_t recipient=0,destination=0,counter=255,distance=0; };
-enum class MatchDefenseStage { polling, choice_confirmed, complete };
+enum class MatchDefenseStage { polling, choice_confirmed, complete, ai_chosen };
 struct MatchDefenseMenu { MatchDefenseStage stage=MatchDefenseStage::polling; DefenseMenuPollState poll{}; };
 // Inputs express intent only; action outcomes and random samples are never supplied.
 struct MatchInput { MatchInputKind kind; std::uint64_t sequence; std::uint8_t held=0, pressed=0; MatchAction action=MatchAction::none; std::optional<std::uint8_t> target{}; };

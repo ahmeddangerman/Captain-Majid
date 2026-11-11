@@ -10,6 +10,27 @@
 #include <string>
 int main(int argc,char** argv) {
  using namespace captain;
+ if(argc==6 && std::string(argv[1])=="--compare-field-ai-runtime") {
+  std::ifstream source_file(argv[2],std::ios::binary),original_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto source=load_phase_session(source_file);std::array<unsigned char,2048> original{};
+  if(!original_file.read(reinterpret_cast<char*>(original.data()),original.size()))throw std::runtime_error("Missing original field AI RAM");
+  MatchContent content{};content.data=load_shot_content(pack_file);
+  if(!source.action || !source.area_defense || !source.scheduling || !source.recovery)throw std::runtime_error("Missing original field AI context");
+  MatchRuntimeState state{};state.session=source;state.session.phase=FieldSessionPhase::field_contact_pending;state.session.area_defense.reset();
+  state.mode=MatchTimingMode::provisional_demo;state.demo_rng=static_cast<std::uint32_t>(std::stoul(argv[5]));state.defense_menu=MatchDefenseMenu{};
+  state.defense_menu->stage=MatchDefenseStage::complete;
+  state.defense_menu->poll={source.action->cursor,source.action->flash_counter,*source.area_defense};
+  const auto result=step_match(state,{MatchInputKind::tick,1},content);
+  if(result.unsupported || result.state.defense_menu->stage!=MatchDefenseStage::ai_chosen ||
+     result.state.session.action->action!=original[0x43b] || result.state.session.recovery->attack_subtype!=original[0x43c] ||
+     result.state.session.current.field.random_first!=original[0xe2] || result.state.session.current.field.random_second!=original[0xe3])
+   throw std::runtime_error("Runtime field AI fallback differs from original");
+  auto expected_field=source.current.field;expected_field.random_first=original[0xe2];expected_field.random_second=original[0xe3];
+  std::ostringstream actual(std::ios::binary),expected(std::ios::binary);
+  write_field_state(actual,result.state.session.current.field);write_field_state(expected,expected_field);
+  if(actual.str()!=expected.str())throw std::runtime_error("Runtime field AI changed unrelated field state");
+  return 0;
+ }
  if((argc==5 || argc==7) && std::string(argv[1])=="--compare-defense-register") {
   std::ifstream source_file(argv[2],std::ios::binary),original_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
   auto source=load_phase_session(source_file);std::array<unsigned char,2048> original{};
@@ -459,8 +480,28 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  defense_confirm.sequence=6;auto defense_complete=step_match(defense_registered.state,defense_confirm,content);
  assert(!defense_complete.unsupported && defense_complete.state.defense_menu->stage==MatchDefenseStage::complete);
  auto defense_ai=step_match(defense_complete.state,{MatchInputKind::tick,7},content);
- assert(defense_ai.unsupported==UnsupportedCapability::opponent_action && defense_ai.state.last_sequence==6);
+ assert(defense_ai.unsupported==UnsupportedCapability::content && defense_ai.state.last_sequence==6);
  assert(verify_checkpoint(defense_complete.state).defense_menu->stage==MatchDefenseStage::complete);
+ std::ostringstream saved_v2_source(std::ios::binary);write_match_save(saved_v2_source,defense_complete.state,identity);
+ auto saved_v2=saved_v2_source.str();saved_v2[8]=2;std::istringstream saved_v2_stream(saved_v2,std::ios::binary);
+ assert(load_match_save(saved_v2_stream,identity).defense_menu->stage==MatchDefenseStage::complete);
+ auto ai_input=defense_complete.state;ai_input.session.current.field.roster[15].type=23;
+ for(unsigned id=12;id<=21;++id)ai_input.session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))].x=200u<<8;
+ content.data->ai_field_choice=AiFieldChoiceContent{};auto& field_ai=*content.data->ai_field_choice;
+ field_ai.profile_rows.fill(255);field_ai.profile_rows[23]=0;field_ai.recipient_profile_rows.fill(255);field_ai.recipient_profile_rows[23]=0;
+ field_ai.rows.resize(1);for(auto& n:field_ai.rows[0])n=0x22;
+ content.data->ai_area_choice=AiAreaChoiceContent{};content.data->ai_area_choice->recipient_rows.resize(1);
+ content.data->ai_area_choice->recipient_rows[0].fill(41);
+ auto ai_selected=step_match(ai_input,{MatchInputKind::tick,7},content);
+ assert(!ai_selected.unsupported && ai_selected.state.session.action->action==2 && ai_selected.state.defense_menu->stage==MatchDefenseStage::ai_chosen);
+ assert(verify_checkpoint(ai_selected.state).defense_menu->stage==MatchDefenseStage::ai_chosen);
+ std::ostringstream future_save(std::ios::binary);write_match_save(future_save,ai_selected.state,identity);
+ auto invalid_v2=future_save.str();invalid_v2[8]=2;bool reject_v2_stage=false;
+ try {std::istringstream old_stage(invalid_v2,std::ios::binary);load_match_save(old_stage,identity);}catch(const std::invalid_argument&){reject_v2_stage=true;}assert(reject_v2_stage);
+ auto ai_execution=step_match(ai_selected.state,{MatchInputKind::tick,8},content);
+ assert(ai_execution.unsupported==UnsupportedCapability::opponent_execution && ai_execution.state.last_sequence==7);
+ field_ai.rows[0].fill(0);auto unsupported_ai=step_match(ai_input,{MatchInputKind::tick,7},content);
+ assert(unsupported_ai.unsupported==UnsupportedCapability::opponent_action && unsupported_ai.state.last_sequence==6 && unsupported_ai.state.demo_rng==ai_input.demo_rng);
  MatchInput unsupported_choice{MatchInputKind::tick,3};unsupported_choice.pressed=2;
  auto other_choice=step_match(defense_open.state,unsupported_choice,content);
  auto other_pending=step_match(other_choice.state,defense_confirm,content);

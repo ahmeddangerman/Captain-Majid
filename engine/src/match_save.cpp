@@ -9,7 +9,7 @@
 namespace captain {
 namespace {
 constexpr char magic[]="CMJMATCH";
-constexpr std::uint8_t current_version=2;
+constexpr std::uint8_t current_version=3;
 constexpr std::uint32_t max_payload=1024*1024;
 void put(std::string& out,std::uint64_t n,unsigned bytes) {
  for(unsigned i=0;i<bytes;++i)out.push_back(static_cast<char>((n>>(8*i))&255));
@@ -53,8 +53,9 @@ void validate_runtime(const MatchRuntimeState& s) {
   const auto& m=*s.defense_menu;const auto count=s.session.current.field.selected_defenders;
   if(s.mode!=MatchTimingMode::provisional_demo || s.session.phase!=FieldSessionPhase::field_contact_pending ||
      s.session.current.field.side!=11 || s.pass_stage!=MatchPassStage::none || !s.session.scheduling || !count || count>4 ||
-     static_cast<unsigned>(m.stage)>static_cast<unsigned>(MatchDefenseStage::complete) || m.poll.cursor>count ||
-     (m.stage==MatchDefenseStage::complete && m.poll.cursor!=count) ||
+     static_cast<unsigned>(m.stage)>static_cast<unsigned>(MatchDefenseStage::ai_chosen) || m.poll.cursor>count ||
+     ((m.stage==MatchDefenseStage::complete || m.stage==MatchDefenseStage::ai_chosen) && m.poll.cursor!=count) ||
+     (m.stage==MatchDefenseStage::ai_chosen && (!s.session.action || !s.session.recovery || s.session.action->action!=2 || s.session.recovery->attack_subtype!=0)) ||
      (m.stage==MatchDefenseStage::choice_confirmed && (m.poll.cursor>=count || m.poll.defense.actions[m.poll.cursor]==255 || !(m.poll.defense.pressed&128u))) ||
      (m.stage!=MatchDefenseStage::choice_confirmed && m.poll.defense.pressed))
    throw std::invalid_argument("Invalid match defensive menu state");
@@ -141,6 +142,7 @@ MatchRuntimeState load_match_save(std::istream& input,const MatchContentIdentity
  if(r.flag()){BallTrajectoryContext t{};t.x=r.get(2);t.y=r.get(2);t.vx=r.get(2);t.vy=r.get(2);t.direction=r.get(1);t.flags=r.get(1);s.pass_trajectory=t;}
  if(r.flag())s.pass_cell=static_cast<std::uint8_t>(r.get(1));
  if(version>=2 && r.flag()){MatchDefenseMenu m{};m.stage=static_cast<MatchDefenseStage>(r.get(1));m.poll.cursor=r.get(1);m.poll.flash_counter=r.get(1);for(auto& n:m.poll.defense.actions)n=r.get(1);for(auto& n:m.poll.defense.subtypes)n=r.get(1);m.poll.defense.blink=r.get(1);m.poll.defense.pressed=r.get(1);s.defense_menu=m;}
+ if(version<3 && s.defense_menu && s.defense_menu->stage==MatchDefenseStage::ai_chosen)throw std::invalid_argument("Unsupported saved defense stage");
  if(r.pos!=payload.size())throw std::invalid_argument("Unexpected match save data");
  validate_runtime(s);return s;
 }

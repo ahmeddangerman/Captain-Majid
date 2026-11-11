@@ -5,6 +5,32 @@
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) {
+ if(argc==3 && std::string(argv[1])=="--field-plan") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  if(!content.ai_field_choice || !content.ai_area_choice)return 2;
+  unsigned type,flags,alt,carrier,x,y,first,second;
+  while(std::cin>>type>>flags>>alt>>carrier>>x>>y>>first>>second) {
+   std::array<std::array<std::uint8_t,2>,10> positions{};
+   for(auto& p:positions)for(auto& v:p){unsigned n;if(!(std::cin>>n)||n>255)return 2;v=n;}
+   if(type>255||flags>255||alt>255||carrier>255||x>255||y>255||first>255||second>255)return 2;
+   try {const auto r=captain::plan_ai_field_pass_candidate(type,flags,alt,carrier,x,y,first,second,positions,*content.ai_field_choice,*content.ai_area_choice);
+    std::cout<<unsigned(r.action)<<' '<<unsigned(r.subtype)<<' '<<unsigned(r.random_first)<<' '<<(r.recipient?int(*r.recipient):-1)<<' '<<(r.cell?int(*r.cell):-1)<<'\n';
+   }catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
+ if(argc==3 && std::string(argv[1])=="--field") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  if(!content.ai_field_choice)return 2;
+  unsigned type,flags,alt,x,y,r;
+  while(std::cin>>type>>flags>>alt>>x>>y>>r) {
+   if(type>255 || flags>255 || alt>255 || x>255 || y>255 || r>255)return 2;
+   try {const auto result=captain::choose_ai_field_candidate(type,flags,alt,x,y,r,*content.ai_field_choice);
+    std::cout<<unsigned(result.category)<<' '<<unsigned(result.row)<<' '<<unsigned(result.candidate)<<'\n';
+   }catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--contact") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   unsigned id,type,flags,alt,level,attack,attack_subtype,variant,defense,subtype,incoming,first,second;
@@ -105,8 +131,22 @@ int main(int argc,char** argv) {
   return std::cin.eof()?0:2;
  }
  if(argc!=1)return 2;
+ captain::AiFieldChoiceContent field{};field.profile_rows.fill(255);field.profile_rows[23]=0;field.rows.resize(1);
+ for(auto& pair:field.low_x_categories)pair={255,255};
+ field.low_x_categories[0]={0,4};
+ field.rows[0][16]=0x23;field.rows[0][4]=0x56;
+ const auto middle=captain::choose_ai_field_candidate(23,0,0,112,124,0,field);
+ const auto left=captain::choose_ai_field_candidate(23,0,0,52,84,1,field);
+ if(middle.category!=16 || middle.row!=0 || middle.candidate!=2 || left.category!=4 || left.candidate!=6)return 1;
+ try {captain::choose_ai_field_candidate(0,0,0,112,124,0,field);return 1;}catch(const std::invalid_argument&){}
  std::array<std::array<std::uint8_t,2>,10> teammates{};
  for(unsigned i=0;i<10;++i)teammates[i]={{static_cast<std::uint8_t>(60+10*i),static_cast<std::uint8_t>(80+8*i)}};
+ captain::AiAreaChoiceContent field_shared{};field_shared.recipient_rows.resize(1);field_shared.recipient_rows[0].fill(41);
+ field.recipient_profile_rows.fill(255);field.recipient_profile_rows[23]=0;
+ field.rows[0][16]=field.rows[0][20]=0x22;
+ const auto field_retry=captain::plan_ai_field_pass_candidate(23,0,0,19,112,124,1,0,teammates,field,field_shared);
+ if(field_retry.action!=2 || field_retry.random_first!=128 || field_retry.recipient)return 1;
+ try {captain::plan_ai_field_pass_candidate(23,0,0,19,160,124,1,0,teammates,field,field_shared);return 1;}catch(const std::invalid_argument&){}
  const auto retry=captain::choose_ai_area_recipient(41,19,120,1,0,teammates);
  if(retry.action!=4 || retry.random_first!=128 || retry.recipient)return 1;
  const std::array<std::uint8_t,4> candidates{{0x01,0x23,0x45,0x67}};

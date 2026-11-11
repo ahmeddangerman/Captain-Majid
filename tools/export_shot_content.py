@@ -23,14 +23,14 @@ def selected_team_bytes(stats, team_id):
     return bytes(stats[pointer:pointer + size])
 
 
-def export_data(rom, team_id=None):
+def export_data(rom, team_id=None, include_field_ai=False):
     if len(rom) != 393232 or rom[:4] != b'NES\x1a' or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
         raise ValueError('ROM does not match verified Japanese reference')
     prg = rom[16:262160]
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
-    data = bytearray(b'CMJSHOTK' + hashlib.sha256(rom[16:]).digest())
+    data = bytearray((b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -184,6 +184,16 @@ def export_data(rom, team_id=None):
     data.extend(gameplay[area_variation:area_variation+20])
     data.extend(gameplay[0x8AAC:0x8AB0])
     data.extend(gameplay[0x908E:0x9095])
+    if include_field_ai:
+        # Selector wraps the type-minus-35 index to a byte before multiplying by 12.
+        field_rows=[stats[0x9662+12*((kind-35)&255)+4] for kind in range(256)]
+        data.extend(field_rows)
+        data.extend(stats[0x9662+12*((kind-35)&255)+10] for kind in range(256))
+        data.extend(stats[0x8BBE:0x8CBE])
+        rows=max(field_rows[1:118])+1
+        if rows>64 or 0xB12E+48*rows>0xC000:raise ValueError('Unsupported field AI row bounds')
+        data.extend(struct.pack('<H',rows))
+        data.extend(stats[0xB12E:0xB12E+48*rows])
     return bytes(data)
 
 
@@ -192,11 +202,12 @@ def main():
     parser.add_argument('rom', type=Path)
     parser.add_argument('output', type=Path)
     parser.add_argument('--team-id', type=int, help='Explicit observed opposing team ID (3..6)')
+    parser.add_argument('--include-field-ai', action='store_true', help='Include provisional-runtime field AI selector tables (CMJSHOTL)')
     args = parser.parse_args()
     if args.output.suffix != '.cmjpack':
         parser.error('Output must use the .cmjpack extension (ignored by Git)')
     try:
-        data = export_data(args.rom.read_bytes(), args.team_id)
+        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError) as error:

@@ -24,8 +24,23 @@ AiRecipientResult choose_profiled_ai_area_recipient(std::uint8_t type,std::uint8
  std::uint8_t random_first,std::uint8_t random_second,
  const std::array<std::array<std::uint8_t,2>,10>& teammates,const AiAreaChoiceContent& content);
 struct AiAreaChoice { std::uint8_t category,row,candidate; };
+struct AiFieldChoiceContent {
+ std::array<std::uint8_t,256> profile_rows{};
+ std::array<std::uint8_t,256> recipient_profile_rows{};
+ std::array<std::array<std::uint8_t,2>,128> low_x_categories{};
+ std::vector<std::array<std::uint8_t,48>> rows;
+};
+// Field-contact route0; unsupported profiles and absent cell categories reject.
+AiAreaChoice choose_ai_field_candidate(std::uint8_t type,std::uint8_t flags,
+ std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
+ const AiFieldChoiceContent& content);
 struct AiAreaAction { AiAreaChoice choice; std::uint8_t action,subtype; };
 struct AiAreaPlan { std::uint8_t action,subtype,random_first; std::optional<std::uint8_t> recipient{},cell{}; };
+// Field route candidate2 fallback only; an actual pass needs its special-option rules.
+AiAreaPlan plan_ai_field_pass_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t carrier,std::uint8_t ball_x,std::uint8_t ball_y,std::uint8_t first,std::uint8_t second,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates,
+ const AiFieldChoiceContent& field,const AiAreaChoiceContent& shared);
 AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t carrier,std::uint8_t ball_x,std::uint8_t ball_y,std::uint8_t first,
  std::uint8_t second,std::uint8_t variant,const std::array<std::array<std::uint8_t,2>,10>& teammates,
