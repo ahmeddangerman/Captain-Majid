@@ -18,7 +18,7 @@ from trace_field_script import ObservedCartridge
 from export_shot_content import PAYLOAD_SHA256
 
 
-def original_target(prg, seed, x, y):
+def original_target(prg, seed, x, y, include_fractions=False):
     raw = bytearray(seed)
     owner = raw[0x441]
     if owner not in range(1, 11):
@@ -45,7 +45,9 @@ def original_target(prg, seed, x, y):
             raise RuntimeError('Original pass target trace left PRG')
         bank = memory.bank_at(cpu.pc)
         if bank == 30 and cpu.pc == 0xd80a:
-            return tuple(memory[address] for address in (0x635, 0x637, 0x5fe, 0x624, 0x62d, 0x43c))
+            addresses = (0x635, 0x637, 0x5fe, 0x624, 0x62d, 0x43c)
+            if include_fractions: addresses += (0x634, 0x636)
+            return tuple(memory[address] for address in addresses)
         if cpu.pc == 0xcaae:
             memory.instruction = None
             memory[0x1b] |= 128

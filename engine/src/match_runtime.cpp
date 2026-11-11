@@ -15,6 +15,7 @@
 #include "captain/keeper_save_session.hpp"
 #include "captain/recovery_session.hpp"
 #include "captain/kickoff_session.hpp"
+#include "captain/match_clock.hpp"
 #include <stdexcept>
 namespace captain {
 namespace {
@@ -505,7 +506,6 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.session.phase==FieldSessionPhase::player_control && event.kind==MatchInputKind::tick) {
   auto prepared=prepare_session_control(input.session);
   result.state.session=prepared.state;result.state.last_sequence=event.sequence;
-  if(result.state.session.current.field.ball_x!=input.session.current.field.ball_x || result.state.session.current.field.ball_y!=input.session.current.field.ball_y)result.state.ball_fraction.reset();
   project_field_random_memory(result.state.session.current.field,result.state.random_memory);
   for(const auto& request:prepared.presentation) result.events.push_back({request});
   return result;
@@ -531,7 +531,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto poll=poll_session_control(next.session,event.held,event.pressed,content.data->field_players,*content.data->movement,*content.data->control_movement);
   next.session=poll.state;next.last_sequence=event.sequence;
   if(next.session.current.field.selected_defenders || (next.session.phase!=FieldSessionPhase::control_ready && next.session.phase!=FieldSessionPhase::control_clock_pending && next.session.phase!=FieldSessionPhase::action_menu_pending))next.retained_defense_action.reset();
-  if((poll.moved_player && *poll.moved_player==input.session.current.field.ball_owner) || next.session.current.field.ball_x!=input.session.current.field.ball_x || next.session.current.field.ball_y!=input.session.current.field.ball_y)next.ball_fraction.reset();
+  if(next.session.phase!=FieldSessionPhase::control_ready && next.session.phase!=FieldSessionPhase::control_clock_pending && next.session.phase!=FieldSessionPhase::action_menu_pending)next.ball_fraction.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);
   result.state=std::move(next);
   for(const auto& request:poll.presentation)result.events.push_back({request});
@@ -542,7 +542,6 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     input.session.action->menu_route==0 && event.kind==MatchInputKind::action && event.action==MatchAction::pass && !event.target) {
   result.state.session=begin_ordinary_human_pass_target(input.session);
   if(input.session.current.field.selected_defenders)result.state.retained_defense_action.reset();
-  if(result.state.session.current.field.ball_x!=input.session.current.field.ball_x || result.state.session.current.field.ball_y!=input.session.current.field.ball_y)result.state.ball_fraction.reset();
   result.state.last_sequence=event.sequence;
   project_field_random_memory(result.state.session.current.field,result.state.random_memory);
   return result;
@@ -650,9 +649,19 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   if(!input.session.recovery || input.session.recovery->ball_variant || input.session.current.field.selected_defenders) {
    result.unsupported=UnsupportedCapability::phase;return result;
   }
+  if(input.session.current.field.elapsed){
+   if(!content.data->movement){result.unsupported=UnsupportedCapability::content;return result;}
+   const auto clock=advance_match_clock(input.session.current.clock,0,input.session.current.field.random_first);
+   if(clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+   try {
+    result.state.session.current.field=advance_field_phase(input.session.current.field,content.data->field_players,*content.data->movement).state;
+    result.state.session.current.clock=clock.state;
+   } catch(const std::invalid_argument&){result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
+  }
   result.state.session.recovery->ball_variant=1;
   validate_phase_session(result.state.session);
   result.state.pass_stage=MatchPassStage::handoff;result.state.last_sequence=event.sequence;
+  project_field_random_memory(result.state.session.current.field,result.state.random_memory);
   return result;
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_prepared &&
@@ -750,6 +759,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto clock=advance_control_tick(next.session,content.data->field_players,content.data->goalkeepers,*content.data->world_step);
   next.session=clock.state;next.last_sequence=event.sequence;
   if(next.session.phase!=FieldSessionPhase::field_round_pending && next.session.phase!=FieldSessionPhase::control_ready)next.retained_defense_action.reset();
+  if(next.session.phase!=FieldSessionPhase::field_round_pending && next.session.phase!=FieldSessionPhase::control_ready)next.ball_fraction.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);
   for(const auto& request:clock.presentation)result.events.push_back({request});
   return result;
@@ -760,8 +770,9 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto next=input;advance_demo_random(next);
   std::array<LogicalButtons,22> buttons{};for(auto& item:buttons)item.held=event.held;buttons[0].pressed=event.pressed;
   auto round=advance_control_field_round(next.session,content.data->field_players,*content.data->movement,*content.data->control_movement,*content.data->world_step,buttons);
-  next.session=round.state;next.last_sequence=event.sequence;next.ball_fraction.reset();
+  next.session=round.state;next.last_sequence=event.sequence;
   if(next.session.phase!=FieldSessionPhase::control_ready || next.session.current.field.selected_defenders)next.retained_defense_action.reset();
+  if(next.session.phase!=FieldSessionPhase::control_ready || next.session.current.field.selected_defenders)next.ball_fraction.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);
   for(const auto& request:round.presentation)result.events.push_back({request});
   return result;

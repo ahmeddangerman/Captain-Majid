@@ -13,9 +13,9 @@ from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def observe(prg, ready, home_x, opposing_x, timeout=False, long_timeout=False, late_winner=False, same_cell=False, direction=1):
+def observe(prg, ready, home_x, opposing_x, timeout=False, long_timeout=False, late_winner=False, same_cell=False, direction=1, write_log=None, checkpoints=None):
     _, raw = trace_recovery(prg, ready, control_input=(64, 0))
-    memory = ObservedCartridge(prg, raw, None, set());memory.ram[:0x1a] = bytes(0x1a)
+    memory = ObservedCartridge(prg, raw, None, {0x5ff,0x5f7,0x5f8,0x634,0x636} if write_log is not None else set());memory.ram[:0x1a] = bytes(0x1a)
     for address,value in ((0,5),(1,255),(2,0x90),(3,26),(4,27),(5,1),(6,0x50),(7,26),(8,27),(0x191,0x85),(0x192,0xeb),(0x24,26),(0x25,27)):
         memory[address]=value
     memory[0x23]=memory[0x22]|7;memory.select=memory[0x23];memory.registers[6:8]=[26,27]
@@ -47,16 +47,21 @@ def observe(prg, ready, home_x, opposing_x, timeout=False, long_timeout=False, l
         if bank==30 and cpu.pc==0xd84b and stage==8:
             if memory[0x5fc]!=255:raise RuntimeError('Constructed target was not empty')
             stage=9;held=pressed=0
+        if checkpoints is not None and stage==9 and ((bank==30 and cpu.pc==0xd193) or (bank==31 and cpu.pc in (0xe074,0xe0d9))):
+            checkpoints.append((bank,cpu.pc,cpu.a,bytes(memory.ram[:2048])))
         if stage==9 and bank==30 and cpu.pc==0xc612 and handoff is None:handoff=bytes(memory.ram[:2048])
         if stage==9 and bank==30 and cpu.pc==0xde64 and target is None:target=bytes(memory.ram[:2048])
         if stage==9 and bank==31 and cpu.pc in (0xe7cc,0xe7cf):
             arrival=bytes(memory.ram[:2048]);stage=10
         if stage==10 and bank==30 and cpu.pc==0xdeb5:rounds+=1
         if stage==10 and timeout and bank==30 and cpu.pc==0xded4:timeout_seen=True;stage=11
-        if stage==10 and timeout and bank==30 and cpu.pc==0xdf0d:return handoff,target,arrival,bytes(memory.ram[:2048]),cpu.pc,rounds
+        if stage==10 and timeout and bank==30 and cpu.pc==0xdf0d:
+            if write_log is not None:write_log.extend(memory.writes)
+            return handoff,target,arrival,bytes(memory.ram[:2048]),cpu.pc,rounds
         if ((stage==10 and not timeout and bank==30 and cpu.pc in (0xdf0d,0xded4)) or
             (stage==11 and bank==30 and cpu.pc==0xc60f)):
             if handoff is None or target is None or arrival is None:raise RuntimeError('Missing original pass boundary')
+            if write_log is not None:write_log.extend(memory.writes)
             return handoff,target,arrival,bytes(memory.ram[:2048]),0xded4 if timeout_seen else cpu.pc,rounds
         if cpu.pc<0x8000:raise RuntimeError(f'Original empty pass left PRG at {cpu.pc:04x}')
         if cpu.pc==0xcaae:
