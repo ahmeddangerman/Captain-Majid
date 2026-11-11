@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 pass prepared
+
+Opponent20's captured pass to player21 matches original E1CB using the shared profiled attack kernel: base10, cost20, stamina0 and power6. Phase452 snapshot: `../Captain-Majid-analysis/opponent20-pass-prep-v2-20261111/prepared.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent20_pass_choice.py` compares represented state and scratch, rejection and roundtrip. Windows build and 62 checks passed. Next compare pass presentation/dispatch; timing/AI supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 pass choice
 
 Opponent20's cell refresh to (90,151)/cell68 and explicitly captured action1 pass to player21 match original E19B/E1B2, random index144; target scratch94 is retained as captured context. Phase451 snapshot: `../Captain-Majid-analysis/opponent20-pass-choice-v1-20261111/choice.cmjsession`. The longer original trace at `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace` reproduces all 23,572 prior instruction records exactly. `tools/verify_opponent20_pass_choice.py` checks state, context, invalid-recipient rejection and snapshot roundtrip. Windows build, previous decision replay and 62 checks passed. Next compare pass preparation and presentation; AI/timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

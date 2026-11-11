@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Opponent20's explicitly captured pass to player21 matches original preparation using the shared attack kernel. Pass presentation and flight remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Opponent20's cell refresh and explicitly captured pass to player21 match the original. Pass preparation and autonomous AI remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Ten more opponent20 polls match; the original's next action1 pass/recipient21 decision is not yet native-matched. All 62 Windows checks passed; full match unsupported and progress unmeasured.

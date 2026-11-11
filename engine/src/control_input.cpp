@@ -1191,6 +1191,21 @@ ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::u
     return result;
 }
 
+PhaseSessionState prepare_player2_opponent_pass(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& content) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_opponent_pass_choice)throw std::invalid_argument("Opponent20 pass preparation requires its captured choice");
+    const auto& player=input.current.field.roster[20];
+    const auto result=prepare_attacking_action({{20,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level},
+        1,0,0,11,0,input.current.field.random_first,input.current.field.random_second,false},profiles,content);
+    if(result.preparation.base_strength!=10 || result.preparation.stamina_cost!=20 || result.energy.stamina ||
+       result.preparation.move_effect || result.move_flags || result.action_power.power!=6 || result.action_power.subtype)
+        throw std::invalid_argument("Unobserved opponent20 pass preparation content");
+    auto state=input;state.current.field.roster[20].stamina=result.energy.stamina;
+    state.action->move_effect=result.preparation.move_effect;state.action->move_flags=result.move_flags;
+    state.action->power=result.action_power.power;state.recovery->attack_subtype=result.action_power.subtype;
+    state.area_ai_target->cost=result.preparation.stamina_cost;state.phase=FieldSessionPhase::player2_opponent_pass_prepared;
+    validate_phase_session(state);return state;
+}
 PhaseSessionState capture_player2_opponent_pass(const PhaseSessionState& input,std::uint8_t recipient,std::uint8_t target) {
     validate_phase_session(input);
     if(input.phase!=FieldSessionPhase::player2_opponent_pass_cell_decision || recipient!=21 || target!=94 ||

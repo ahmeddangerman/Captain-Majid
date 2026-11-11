@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 pass preparation
+
+The captured opponent20 pass to player21 now uses the shared profiled attack kernel and matches original E1CB: base strength10, cost20, stamina0 and power6. Phase452 retains the observed recipient, target scratch and cost. The verifier compares represented fields and original scratch, rejects repeated preparation atomically and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-pass-prep-v2-20261111`; Windows build, original replay and all 62 registered checks passed. Original timing and pass choice remain supplied; pass presentation/flight and a full playable match remain unsupported, overall progress unmeasured. Next compare the pass presentation and dispatch. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 pass choice
 
 The next opponent20 poll matches the original E19B ball refresh to (90,151)/cell68; the separately captured action1 pass/recipient21 and retained target scratch94 match E1B2, random index144. Phases450/451 preserve the decision and supplied choice without claiming autonomous AI. The verifier compares represented session fields, recipient/target scratch, cursor and flight flag, rejects an invalid recipient atomically and roundtrips the snapshot. The extended private original trace through frame22400 reproduces all 23,572 earlier records exactly: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`; native evidence: `../Captain-Majid-analysis/opponent20-pass-choice-v1-20261111`. Windows build, previous decision replay and all 62 checks passed. Pass preparation/continuation and live AI/timing remain unmatched; a complete match unsupported, progress unmeasured. Next compare pass preparation and presentation. Suggested model GPT-6.1 Terra High.

@@ -39,7 +39,18 @@ def main():
     if run.returncode==0 or rejected.exists() or decision.read_bytes()!=before:raise ValueError('Invalid pass choice did not reject atomically')
     roundtrip=out/'roundtrip.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(selected),'--capture',str(roundtrip)],capture_output=True,text=True,timeout=30)
     if run.returncode or roundtrip.read_bytes()!=data:raise ValueError('Pass choice snapshot roundtrip differs')
-    print('Matched opponent20 cell refresh and explicitly captured pass to player21; random index 144.')
+    prepared=out/'prepared.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(selected),'--prepare-player2-opponent-pass','--capture',str(prepared)],capture_output=True,text=True,timeout=30)
+    if run.returncode:raise RuntimeError(run.stderr.strip())
+    actual=prepared.read_bytes()
+    if int.from_bytes(actual[258:260],'little')!=452:raise ValueError('Unexpected pass preparation phase')
+    compare_represented(actual,export_session(ram(23461)),True,'opponent20','pass preparation')
+    original=ram(23461)
+    if actual[394:399]!=bytes((1,original[0x5fc],original[0x638],original[0x43f],original[0x440])):raise ValueError('Prepared pass recipient, target or cost differs')
+    run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(prepared),'--prepare-player2-opponent-pass','--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if run.returncode==0 or rejected.exists() or prepared.read_bytes()!=actual:raise ValueError('Repeated preparation did not reject atomically')
+    prepared_roundtrip=out/'prepared-roundtrip.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(prepared),'--capture',str(prepared_roundtrip)],capture_output=True,text=True,timeout=30)
+    if run.returncode or prepared_roundtrip.read_bytes()!=actual:raise ValueError('Prepared pass snapshot roundtrip differs')
+    print('Matched opponent20 cell refresh, captured pass to player21 and pass preparation; random index 144.')
 
 
 if __name__=='__main__':
