@@ -435,6 +435,25 @@ PhaseSessionState restore_player2_opponent_pass_variant(const PhaseSessionState&
  auto state=input;state.recovery->ball_variant=state.area_pass_contact->saved_ball_variant;
  state.phase=FieldSessionPhase::player2_opponent_pass_defender_variant_restored;validate_phase_session(state);return state;
 }
+PhaseSessionState advance_player2_opponent_defender_clock(const PhaseSessionState& input,const ContactPreludeContent& content,const ExperienceContent& experience) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_defender_variant_restored || !input.experience || input.current.field.random_first!=45 || input.current.field.random_second!=3 || content.field_elapsed[5]!=1 || content.defender_status[2]!=6)
+  throw std::invalid_argument("Opponent20 defender clock requires the observed presentation wait");
+ auto state=input;
+ state.experience=award_player_experience(*input.experience,input.current.field.roster[input.current.field.ball_owner].type,1,experience).state;
+ state.action->power=reduce_action_strength(input.action->power,input.area_contact->loss);
+ const auto applied=apply_contact_prelude({state.current,2,2,true},content);
+ if(applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Unobserved defender clock continuation");
+ state.current=applied.state;state.phase=FieldSessionPhase::player2_opponent_pass_defender_clocked;validate_phase_session(state);return state;
+}
+PhaseSessionState finish_player2_opponent_defender(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_defender_clocked || input.current.field.random_first!=28 || input.current.field.random_second!=207)
+  throw std::invalid_argument("Opponent20 defender cleanup requires the observed clock wait");
+ auto state=input;state.area_defender_cursor=1;state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);state.current.field.elapsed=0;
+ state.phase=FieldSessionPhase::player2_opponent_pass_defender_finished;validate_phase_session(state);return state;
+}
+
 PhaseSessionState compare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_power,
  std::uint8_t captured_context,const AreaPassComparisonContent& content) {
  validate_phase_session(input);

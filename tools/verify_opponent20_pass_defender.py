@@ -62,10 +62,20 @@ def main():
     result_text=run('--advance-observed-nmi-sequence',out/'presentation.cmjsession',events,216)
     if re.findall(r'final random index (\d+);',result_text)!=[str(ram(last)[0xe1])]:raise ValueError('Presentation wait random index differs')
     compare(25313,463,'defender presentation wait')
+    run('--advance-player2-opponent-defender-clock',out/'clock.cmjsession');compare(25314,464,'defender contact clock')
+    reject('--finish-player2-opponent-defender')
+    reject('--advance-player2-opponent-defender-clock')
+    rows,last=menu_wait_events(lines,pcs,ram,25313,25329)
+    if len(rows)!=6:raise ValueError('Expected three defender clock NMI/travel pairs')
+    events=out/'clock.events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+    result_text=run('--advance-observed-nmi-sequence',out/'clock-wait.cmjsession',events,179)
+    if re.findall(r'final random index (\d+);',result_text)!=[str(ram(last)[0xe1])]:raise ValueError('Contact clock wait random index differs')
+    run('--finish-player2-opponent-defender',out/'finished.cmjsession');compare(25330,465,'defender cleanup')
+    reject('--finish-player2-opponent-defender')
     before=source.read_bytes();roundtrip=out/'roundtrip.cmjsession'
     attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--capture',str(roundtrip)],capture_output=True,text=True,timeout=30)
     if attempt.returncode or roundtrip.read_bytes()!=before:raise ValueError('Defender snapshot roundtrip differs')
-    print(f'Matched opponent pass defender2 result {result} and 219 presentation waits; random index {ram(last)[0xe1]}.')
+    print(f'Matched opponent pass defender2 result {result}, presentation wait and contact cleanup; random index {ram(last)[0xe1]}.')
 
 
 if __name__=='__main__':
