@@ -13,17 +13,24 @@
 #include <string>
 static int shot_comparisons(int argc,char** argv) {
  using namespace captain;
- if(argc==6 && std::string(argv[1])=="--compare-goal-kickoff") {
+ if((argc==6 || argc==8) && std::string(argv[1])=="--compare-goal-kickoff") {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
   auto state=std::make_unique<MatchRuntimeState>();state->session=before;state->mode=MatchTimingMode::provisional_demo;state->demo_rng=1;
+  std::array<unsigned char,2048> initial_raw{},expected_raw{};
+  if(argc==8){std::ifstream initial_file(argv[6],std::ios::binary),expected_raw_file(argv[7],std::ios::binary);
+   if(!initial_file.read(reinterpret_cast<char*>(initial_raw.data()),initial_raw.size()) || !expected_raw_file.read(reinterpret_cast<char*>(expected_raw.data()),expected_raw.size()))throw std::runtime_error("Missing original kickoff fractions");
+   state->ball_fraction=MatchBallFraction{initial_raw[0x634],initial_raw[0x636]};
+  }
   auto result=std::make_unique<MatchStepResult>();const auto steps=std::stoul(argv[5]);
   for(unsigned i=0;i<steps;++i){
    const auto kind=state->session.phase==FieldSessionPhase::kickoff_ball_placed ? MatchInputKind::presentation_complete : MatchInputKind::tick;
    *result=step_match(*state,{kind,state->last_sequence+1},content);
    if(result->unsupported)throw std::runtime_error(std::string("Goal kickoff unsupported: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(state->session.phase)));
    *state=result->state;
+   if(argc==8){MatchContentIdentity identity{};identity[0]=42;std::ostringstream out(std::ios::binary);write_match_save(out,*state,identity);std::istringstream in(out.str(),std::ios::binary);*state=load_match_save(in,identity);}
   }
+  if(argc==8 && (!state->ball_fraction || state->ball_fraction->x!=expected_raw[0x634] || state->ball_fraction->y!=expected_raw[0x636]))throw std::runtime_error("Original kickoff fractions differ");
   std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,state->session);write_phase_session(expected_bytes,expected);
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Goal kickoff differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Goal kickoff session lengths differ");}
   return 0;
@@ -43,10 +50,10 @@ static int shot_comparisons(int argc,char** argv) {
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Keeper recovery differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Keeper recovery session lengths differ");}
   return 0;
  }
- if((argc==11 || argc==13) && std::string(argv[1])=="--compare-human-shot-end-to-end") {
+ if((argc==11 || argc==13 || argc==15) && std::string(argv[1])=="--compare-human-shot-end-to-end") {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary),raw_file(argv[6],std::ios::binary),velocity_file(argv[7]);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);content.ball_velocity=read_ball_velocity_content(velocity_file);
-  const bool kickoff=argc==13 && std::string(argv[11])=="control";
+  const bool kickoff=argc>=13 && std::string(argv[11])=="control";
   if(!kickoff)expected.kickoff_formation.reset(); // Before kickoff the starting session has no formation metadata.
   std::array<unsigned char,2048> raw{};if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing original flight metadata");
   before.score=MatchScoreContext{static_cast<std::uint8_t>(std::stoul(argv[8])),static_cast<std::uint8_t>(std::stoul(argv[9])),static_cast<std::uint8_t>(std::stoul(argv[10]))};
@@ -55,14 +62,20 @@ static int shot_comparisons(int argc,char** argv) {
   const auto final_phase=kickoff ? FieldSessionPhase::control_ready : FieldSessionPhase::goal_kickoff_pending;
   for(unsigned turn=0;turn<200 && state->session.phase!=final_phase;++turn){
    const auto phase=state->session.phase;
+   if(argc==15 && (phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending)){
+    state->ball_fraction=MatchBallFraction{0,0};MatchContentIdentity identity{};identity[0]=42;std::ostringstream old(std::ios::binary);write_match_save(old,*state,identity);std::istringstream in(old.str(),std::ios::binary);*state=load_match_save(in,identity);
+   }
    const auto input=client_input(*state,0,0);
    *result=step_match(*state,input,content);
    if(result->unsupported)throw std::runtime_error(std::string("End-to-end shot unsupported: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(phase)));
+   if(argc==15 && result->state.session.ball_trajectory){const auto& trajectory=*result->state.session.ball_trajectory;
+    if(!result->state.ball_fraction || result->state.ball_fraction->x!=static_cast<std::uint8_t>(trajectory.x) || result->state.ball_fraction->y!=static_cast<std::uint8_t>(trajectory.y))throw std::runtime_error("Shot trajectory fractions are not tracked");}
    if(result->state.retained_defense_action){MatchContentIdentity identity{};identity[0]=42;std::ostringstream saved(std::ios::binary);write_match_save(saved,result->state,identity);std::istringstream in(saved.str(),std::ios::binary);auto restored=std::make_unique<MatchRuntimeState>(load_match_save(in,identity));if(restored->retained_defense_action!=result->state.retained_defense_action)throw std::runtime_error("Retained action lost across runtime save");}
    *state=result->state;
   }
   if(state->session.phase!=final_phase)throw std::runtime_error("End-to-end shot did not reach requested continuation");
   if(kickoff && (!state->retained_defense_action || *state->retained_defense_action!=std::stoul(argv[12])))throw std::runtime_error("Goalkeeper action was not retained through kickoff");
+  if(argc==15 && (!state->ball_fraction || state->ball_fraction->x!=std::stoul(argv[13]) || state->ball_fraction->y!=std::stoul(argv[14])))throw std::runtime_error("Goal kickoff lost the original flight fractions");
   std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,state->session);write_phase_session(expected_bytes,expected);
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("End-to-end shot differs at byte "+std::to_string(i));throw std::runtime_error("End-to-end shot session lengths differ");}
   return 0;
@@ -930,15 +943,16 @@ static void test_goal_kickoff(const captain::MatchRuntimeState& base,const capta
  auto result=std::make_unique<MatchStepResult>(step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content));
  assert(result->unsupported==UnsupportedCapability::content && result->state.session.current.field.motion[0].status==5 && result->state.ball_fraction);
  auto kickoff=std::make_shared<RuntimeKickoffContent>();kickoff->formation.on_ball.fill(87);kickoff->formation.off_ball.fill(87);kickoff->receivers={{5,6,7,9,10}};content->data->kickoff=kickoff;
+ {auto unknown=std::make_unique<MatchRuntimeState>(*state);unknown->ball_fraction.reset();auto unknown_result=std::make_unique<MatchStepResult>(step_match(*unknown,{MatchInputKind::tick,unknown->last_sequence+1},*content));assert(!unknown_result->unsupported && !unknown_result->state.ball_fraction);}
  *result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);
  if(result->unsupported)throw std::runtime_error(std::string("Synthetic kickoff: ")+capability_name(*result->unsupported));
- assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::kickoff_formation_placed && !result->state.session.current.field.motion[0].status && !result->state.session.current.field.keepers[0].penalty && !result->state.ball_fraction);
+ assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::kickoff_formation_placed && !result->state.session.current.field.motion[0].status && !result->state.session.current.field.keepers[0].penalty && result->state.ball_fraction && result->state.ball_fraction->x==3 && result->state.ball_fraction->y==7);
  *state=result->state;*result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::kickoff_receiver_selected);
  std::ostringstream saved(std::ios::binary);write_match_save(saved,result->state,identity);std::istringstream in(saved.str(),std::ios::binary);*state=load_match_save(in,identity);
  *result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::kickoff_ball_placed);
  *state=result->state;*result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(result->unsupported==UnsupportedCapability::presentation && result->state.last_sequence==state->last_sequence);
  *result=step_match(*state,{MatchInputKind::presentation_complete,state->last_sequence+1},*content);assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::kickoff_control_pending);
- *state=result->state;*result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::control_ready && !result->events.empty());
+ *state=result->state;*result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::control_ready && !result->events.empty() && result->state.ball_fraction && result->state.ball_fraction->x==3 && result->state.ball_fraction->y==7);
 }
 static void test_human_shot(const captain::MatchRuntimeState& base,const captain::MatchContent& original,const captain::MatchContentIdentity& identity) {
  using namespace captain;

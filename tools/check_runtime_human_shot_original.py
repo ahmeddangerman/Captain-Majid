@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import subprocess
 import tempfile
+from collections import Counter
 from pathlib import Path
 
 from export_phase_session import export_session
@@ -31,8 +32,10 @@ def main():
     parser.add_argument('--keeper', action='store_true', help='Compare unopposed arrival and normal keeper entry')
     parser.add_argument('--end-to-end', action='store_true', help='Compare uninterrupted shot through an AI keeper and goal')
     parser.add_argument('--kickoff-end-to-end', action='store_true', help='Continue uninterrupted shot through opponent kickoff control')
+    parser.add_argument('--fraction-survey', action='store_true', help='Observe original fractional ball bytes through goal/kickoff')
     parser.add_argument('--velocity', type=Path, help='Private ball velocity table for --flight')
     args = parser.parse_args()
+    if args.fraction_survey and not args.kickoff_end_to_end: parser.error('--fraction-survey requires --kickoff-end-to-end')
     if args.kickoff_end_to_end: args.end_to_end = True
     if args.end_to_end: args.keeper = True
     if args.defenders and args.keeper: parser.error('Keeper survey needs an unopposed arrival')
@@ -47,6 +50,7 @@ def main():
         parser.error('Private temporary data must stay outside the checkout')
     prg = rom[16:262160]
     matched = flight_boundaries = defended_arrivals = goals = 0
+    fraction_counts = Counter()
     with tempfile.TemporaryDirectory(prefix='human-shot-', dir=args.private_temp) as temp:
         before_file, after_file, raw_file, records_file = Path(temp) / 'before.cmjsession', Path(temp) / 'after.cmjsession', Path(temp) / 'approach.bin', Path(temp) / 'flight-records.bin'
         for fixture in range(4):
@@ -129,6 +133,7 @@ def main():
                             if cpu.pc == 0xe7cc: break
                             until(cpu,{0xe773});records.append(2);records.extend(memory.ram[:2048]);boundaries += 1
                         else: raise RuntimeError('Original shot flight did not arrive')
+                        arrival_fractions=(memory[0x634],memory[0x636])
                         defended_at_arrival = memory[0x600] != 0
                         if args.keeper:
                             if memory[0x600]: raise RuntimeError('Keeper survey reached a field defender')
@@ -171,9 +176,14 @@ def main():
                                 kickoff_cpu.pc=0xdb13;until(kickoff_cpu,{0xdb1e})
                                 _,ready=trace_recovery(prg,bytes(kickoff_memory.ram[:2048]),prepare_control=True);after_file.write_bytes(kickoff_capture(ready,9))
                                 if ready[0x43d]!=keeper_result[0x43d]:raise RuntimeError('Original keeper action was not retained through kickoff')
+                                if args.fraction_survey:
+                                    previous=arrival_fractions
+                                    for name,raw in (('keeper',keeper_result),('goal',goal),('restart',restart),('kickoff-control',ready)):
+                                        current=(raw[0x634],raw[0x636]);fraction_counts[name+(':same' if current==previous else ':changed')]+=1;previous=current
                             else:after_file.write_bytes(flight_snapshot(restart,60,False))
                             command=[str(args.exe.resolve()),'--compare-human-shot-end-to-end',str(before_file),str(after_file),str(args.pack.resolve()),str(action),str(raw_file),str(args.velocity.resolve()),str(keeper_result[0x28]),str(keeper_result[0x29]),str(keeper_result[0x629])]
                             if args.kickoff_end_to_end:command.extend(('control',str(keeper_result[0x43d])))
+                            if args.fraction_survey:command.extend((str(ready[0x634]),str(ready[0x636])))
                             result=subprocess.run(command,capture_output=True,text=True)
                             if result.returncode:raise RuntimeError(f'fixture={fixture}, stamina={stamina}, action={action} end-to-end: {result.stderr}')
                             goals+=1
@@ -181,6 +191,7 @@ def main():
     print(f'{matched} constructed original unopposed shot preparations, dispatch clocks and field movements' + (', attack tails and approaches' if args.tail else '') + (', and flight setups' if args.flight and not args.defenders else '') + ' matched')
     if args.flight: print(f'{flight_boundaries} numeric flight/callback boundaries matched; {defended_arrivals} arrivals had defenders')
     if args.end_to_end: print(f'{goals} uninterrupted native shot-to-'+('kickoff-control' if args.kickoff_end_to_end else 'restart')+' sequences matched the original boundary')
+    if args.fraction_survey: print(f'Original goal/kickoff fraction survey: {dict(sorted(fraction_counts.items()))}')
 
 
 if __name__ == '__main__':

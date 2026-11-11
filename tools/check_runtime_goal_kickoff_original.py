@@ -35,13 +35,15 @@ def main():
     count=0
     with tempfile.TemporaryDirectory(prefix='goal-kickoff-',dir=args.private_temp) as tmp:
         before_file,after_file=Path(tmp)/'before.cmjsession',Path(tmp)/'after.cmjsession'
+        before_raw,after_raw=Path(tmp)/'before.bin',Path(tmp)/'after.bin'
         for left in range(4):
             for right in range(4):
                 for random in (0,2,5,7):
                     raw=bytearray(restart);raw[0x2c],raw[0x2e],raw[0xe2]=left,right,random
+                    raw[0x634],raw[0x636]={0:(0,255),2:(1,127),5:(127,1),7:(255,0)}[random]
                     for player in range(22):raw[0x30a+12*player]=(player*3+1)&255
                     raw[0x307],raw[0x38b],raw[0x38e]=37,0,0
-                    before_file.write_bytes(capture(raw,60))
+                    before_file.write_bytes(capture(raw,60));before_raw.write_bytes(raw)
                     memory=ObservedCartridge(prg,raw,None,set());memory.registers[6:8]=[26,27]
                     memory[0x24],memory[0x25]=26,27;memory[0x23]=memory[0x22]|7;memory.select=memory[0x23]
                     cpu=MPU(memory=memory);cpu.pc,cpu.sp,cpu.p=0x85dd,0xfd,cpu.UNUSED
@@ -55,8 +57,9 @@ def main():
                             memory.instruction=(memory.bank_at(cpu.pc),cpu.pc);cpu.step()
                         raise RuntimeError(f'Original kickoff did not reach {target:04x}')
                     def compare(phase,steps,raw_after=None):
-                        after_file.write_bytes(capture(bytes(memory.ram[:2048]) if raw_after is None else raw_after,phase))
-                        result=subprocess.run([str(args.exe.resolve()),'--compare-goal-kickoff',str(before_file),str(after_file),str(args.pack.resolve()),str(steps)],capture_output=True,text=True)
+                        snapshot=bytes(memory.ram[:2048]) if raw_after is None else raw_after
+                        after_file.write_bytes(capture(snapshot,phase));after_raw.write_bytes(snapshot)
+                        result=subprocess.run([str(args.exe.resolve()),'--compare-goal-kickoff',str(before_file),str(after_file),str(args.pack.resolve()),str(steps),str(before_raw),str(after_raw)],capture_output=True,text=True)
                         if result.returncode:raise RuntimeError(f'formations={left}/{right}, random={random}, phase={phase}: {result.stderr}')
                     run_until(0xdae9);run_until(0xdaf5);compare(61,1)
                     run_until(0xdb0b);compare(62,2)
