@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 ? Runtime boundary and capability map (partial task 1)
+
+Added MatchRuntimeState, typed input, capability diagnostics and captain-match-lab with explicit private pack/development snapshot loading. The boundary uses existing control setup for validated player-control states, carries its presentation requests, and reports missing initialization, timing, action routing or presentation rather than supplying gameplay outcomes. Unsupported/repeated inputs preserve state/sequence; nonzero seed/clock reject until supported. Public synthetic test verifies the boundary; local pack/control-ready snapshot reports live timing and random scheduling unsupported. docs/MATCH_CAPABILITIES.md maps exact existing kernels and known gaps. Windows build and all 63 registered checks passed. No playable possession, fresh initialization, live scheduling or graphical match claimed. Task 1 remains partial: next create the possession acceptance test and establish required general random/timing behavior. Ruling: use validated development snapshots only as fixtures, not as evidence of original startup. Overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 ? Progress audit and runtime-first plan
 
 Audited recent commits, integration/control/AI interfaces, executable entry points and SDL/build configuration. Found substantial reusable kernels but scenario-specific integration and externally supplied timing/choices; no demonstrated full-match client. Added ENGINE_PROGRESS_AUDIT_2026-11-11.md and the playable-match-engine plan, with possession/runtime acceptance before further trace continuation. Updated active handoff to supersede the old queue. Documentation only; no new engine functionality or fresh graphical validation claimed. Overall progress unmeasured. Suggested implementer GPT-6.1 Terra High.

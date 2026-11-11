@@ -27,6 +27,10 @@ target_sources(captain_core PRIVATE engine/src/action_menu.cpp engine/src/sessio
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
 
+target_sources(captain_core PRIVATE engine/src/match_runtime.cpp)
+add_executable(captain-match-lab engine/src/match_lab.cpp)
+target_link_libraries(captain-match-lab PRIVATE captain_core)
+
 add_executable(captain-prototype engine/src/main.cpp engine/src/research_protocol.cpp)
 target_link_libraries(captain-prototype PRIVATE captain_core)
 
@@ -48,6 +52,9 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(match-runtime-tests engine/tests/match_runtime_tests.cpp)
+    target_link_libraries(match-runtime-tests PRIVATE captain_core)
+    add_test(NAME match_runtime COMMAND match-runtime-tests)
     add_executable(pass-target-tests engine/tests/pass_target_tests.cpp)
     target_link_libraries(pass-target-tests PRIVATE captain_core)
     add_test(NAME pass_target COMMAND pass-target-tests)

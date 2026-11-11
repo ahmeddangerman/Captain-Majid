@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active runtime checkpoint ? 2026-11-11
+
+Runtime-first plan task 1 is in progress. `captain-match-lab CONTENT_PACK DEVELOPMENT_SESSION` loads explicit private inputs, can invoke shared control setup for a validated player_control state, and reports live timing/random scheduling unsupported for control_ready. `docs/MATCH_CAPABILITIES.md` maps current functions and blockers. The driver does not initialize a match or implement a possession cycle. Nonzero seed/clock options reject; synthetic test content and development snapshots are not original initialization evidence. Next build an executable possession acceptance test and investigate the minimum general scheduling/random semantics before connecting control polls. Windows CMake build and 63 registered checks passed; no graphical playthrough. Overall progress unmeasured; complete match unsupported. Suggested model GPT-6.1 Terra High.
+
 ## Active priority ? engine runtime plan (2026-11-11)
 
 Read docs/ENGINE_PROGRESS_AUDIT_2026-11-11.md and docs/superpowers/plans/2026-11-11-playable-match-engine.md. User requested a progress audit and a plan prioritizing reusable engine progress. Next resume starts task 1: capability map, runnable match controller and possession acceptance test. Older trace continuation instructions below are historical, not the active queue. Do not continue opponent21 stamina ordering unless the capability map establishes it as a playable-runtime blocker. Overall progress unmeasured; full match unverified. Suggested implementer GPT-6.1 Terra High.
