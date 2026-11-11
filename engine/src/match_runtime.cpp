@@ -437,15 +437,21 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_prepared &&
     input.pass_stage==MatchPassStage::target_ready && event.kind==MatchInputKind::tick) {
   validate_phase_session(input.session);
-  if(!content.data->movement || !content.ball_velocity){result.unsupported=UnsupportedCapability::content;return result;}
+  if((!input.pass_target || input.session.current.field.ball_cell!=input.pass_target->destination) && (!content.data->movement || !content.ball_velocity)){result.unsupported=UnsupportedCapability::content;return result;}
   if(!input.ball_fraction){result.unsupported=UnsupportedCapability::ball_fraction;return result;}
-  if(!input.pass_target || !input.session.ordinary_pass_recipient || input.pass_target->recipient!=*input.session.ordinary_pass_recipient ||
-     input.pass_target->destination>=240 || input.pass_target->counter!=255 || input.session.current.field.ball_cell==input.pass_target->destination){
+  if(!input.pass_target || !input.session.ordinary_pass_recipient || !input.session.recovery || input.pass_target->recipient!=*input.session.ordinary_pass_recipient ||
+     input.pass_target->destination>=240 || input.pass_target->counter!=255){
    result.unsupported=UnsupportedCapability::phase;return result;
   }
   const auto& field=input.session.current.field;
   BallTrajectoryContext trajectory{static_cast<std::uint16_t>((unsigned(field.ball_x)<<8)|input.ball_fraction->x),
     static_cast<std::uint16_t>((unsigned(field.ball_y)<<8)|input.ball_fraction->y),0,0,0,1};
+  if(field.ball_cell==input.pass_target->destination){
+   if(input.pass_target->recipient!=255){result.unsupported=UnsupportedCapability::phase;return result;}
+   trajectory.direction=input.session.recovery->x_jitter_control;
+   result.state.pass_trajectory=trajectory;result.state.pass_cell=field.ball_cell;result.state.session.saved_ball_flight_flag=1;
+   result.state.pass_stage=MatchPassStage::flight_arrived;result.state.last_sequence=event.sequence;return result;
+  }
   trajectory.direction=calculate_player_direction({trajectory.x,trajectory.y,input.pass_target->destination,0},field.ball_cell,content.data->movement->geometry);
   const auto velocity=calculate_ball_velocity(trajectory.direction,*content.ball_velocity);
   trajectory.vx=velocity.x;trajectory.vy=velocity.y;

@@ -139,11 +139,19 @@ int main(int argc,char** argv) {
     if(!blocked && !same_cell_checked){
      auto same=state;MatchInput confirm_same{MatchInputKind::tick,seq};confirm_same.pressed=128;auto result=step_match(same,confirm_same,content);
      const bool empty_confirmed=!result.unsupported && result.state.session.ordinary_pass_recipient && *result.state.session.ordinary_pass_recipient==255;
+     if(empty_confirmed){
+      for(unsigned id=1;id<=21;++id)if(id!=11 && id!=owner){auto& p=result.state.session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];p.x=52u<<8;p.y=84u<<8;result.state.session.current.field.roster[id].type=1;}
+      auto& candidate=result.state.session.current.field.motion[field_motion_index(1)];candidate.x=unsigned(result.state.session.current.field.ball_x)<<8;candidate.y=unsigned(result.state.session.current.field.ball_y)<<8;candidate.status=0;
+      content.data->movement->profiles.speeds.resize(1);content.data->pass_race=std::make_shared<ClearanceRaceContent>();
+     }
      if(empty_confirmed)result=step_match(result.state,{MatchInputKind::tick,seq+1},content);
      if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::presentation_complete,seq+2},content);
      if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::tick,seq+3},content);
      if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::tick,seq+4},content);
+     if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::presentation_complete,seq+5},content);
+     if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::tick,seq+6},content);
      same_cell_checked=true;same_cell_unfinished=!empty_confirmed || bool(result.unsupported) || result.state.session.phase!=FieldSessionPhase::control_ready;
+     if(!same_cell_unfinished)std::cout<<"owner "<<unsigned(owner)<<": provisional same-cell pass reached recovered control\n";
     }
     if(!blocked && !free_target_checked){
      auto free=state;for(unsigned id=1;id<=21;++id)if(id!=11 && id!=owner){auto& p=free.session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];p.x=52u<<8;p.y=84u<<8;}

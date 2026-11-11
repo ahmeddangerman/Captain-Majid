@@ -1,5 +1,7 @@
 ﻿# Match runtime capability map — 2026-11-11
 
+**Current checkpoint:** The explicitly provisional runtime handles several human and opponent pass, contact and loose-ball routes; its synthetic possession acceptance now passes its selected fixtures, including same-cell empty passes. It does not cover every reachable branch and does not establish M1 completion. Human shot routing, fresh match initialization, graphical interaction, goal/restart and period lifecycle remain unfinished. Original-backed live timing remains unsupported. See the latest CLI handoff and work log for current evidence; earlier dated checkpoints below describe historical limitations.
+
 This is an engineering map, not a claim of a complete match. `captain-match-lab CONTENT_PACK DEVELOPMENT_SESSION` loads explicit local inputs, prepares existing player-control handoffs, or identifies the first unsupported runtime operation. The snapshot is a development fixture; the executable does not initialize a match or loop autonomously. A control-ready snapshot currently stops at live timing and random scheduling.
 
 | Stage | Existing entry point | Classification | Next evidence or integration needed |

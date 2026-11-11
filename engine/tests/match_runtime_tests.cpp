@@ -12,7 +12,7 @@
 #include <string>
 static int comparisons(int argc,char** argv) {
  using namespace captain;
- if(argc==6 && std::string(argv[1])=="--compare-free-arrival") {
+ if(argc==6 && (std::string(argv[1])=="--compare-free-arrival" || std::string(argv[1])=="--compare-same-arrival")) {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),raw_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);std::array<unsigned char,2048> raw{};
   if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing original free-pass arrival");
@@ -26,7 +26,21 @@ static int comparisons(int argc,char** argv) {
   MatchRuntimeState state{};state.session=session;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;state.pass_stage=MatchPassStage::flight_arrived;
   state.pass_target=MatchPassTarget{255,raw[0x638],raw[0x61a],raw[0x62b]};state.pass_cell=raw[0x5fe];
   state.pass_trajectory=BallTrajectoryContext{word(0x634),word(0x636),word(0x639),word(0x63b),raw[0x62c],raw[0x61b]};
-  auto result=step_match(state,{MatchInputKind::presentation_complete,1},content);
+  std::uint64_t sequence=1;
+  if(std::string(argv[1])=="--compare-same-arrival") {
+   state.pass_stage=MatchPassStage::target_ready;state.pass_trajectory.reset();state.pass_cell.reset();
+   state.session.saved_ball_flight_flag=0;
+   state.ball_fraction=MatchBallFraction{raw[0x634],raw[0x636]};
+   auto setup=step_match(state,{MatchInputKind::tick,sequence++},content);
+   if(setup.unsupported || setup.state.pass_stage!=MatchPassStage::flight_arrived || !setup.state.pass_trajectory || !setup.state.pass_cell)
+    throw std::runtime_error("Same-cell pass setup unsupported");
+   if(setup.state.pass_trajectory->x!=word(0x634) || setup.state.pass_trajectory->y!=word(0x636) ||
+      *setup.state.pass_cell!=raw[0x5fe] || setup.state.session.saved_ball_flight_flag!=raw[0x61b] ||
+      setup.state.session.recovery->x_jitter_control!=before.recovery->x_jitter_control)
+    throw std::runtime_error("Same-cell pass setup differs from original arrival");
+   state=std::move(setup.state);
+  }
+  auto result=step_match(state,{MatchInputKind::presentation_complete,sequence},content);
   if(result.unsupported)throw std::runtime_error(std::string("Original free-pass contest unsupported: ")+capability_name(*result.unsupported));
   if(result.state.session.phase!=FieldSessionPhase::player_control)throw std::runtime_error("Original free-pass contest did not return control");
   std::ostringstream actual_field(std::ios::binary),expected_field(std::ios::binary);write_field_state(actual_field,result.state.session.current.field);write_field_state(expected_field,expected.current.field);

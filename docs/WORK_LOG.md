@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-11 - Same-cell empty pass
+
+The provisional human pass runtime now handles an empty target at the ball's current cell: it preserves the ball position and recovery direction, sets the flight flag and proceeds directly to the existing loose-ball race without inventing movement. Same-cell teammate reception, unsupported race lengths, goal-area/story paths and full presentation remain outside this change. Original-backed timing remains unchanged.
+
+Constructed original CPU comparisons matched 12 home-winner contests and 12 timeouts from four ready snapshots, including the target handoff, represented arrival position/flight flag and final field/motion, clock, power and experience. An opponent-winner survey matched four of 12 cases; eight took other paths and were excluded. Original execution used cooperative waits without live NMI/audio/PPU. Reproduce using `tools/check_empty_pass_original.py --same-cell` and optionally `--timeout` or `--opponent-winner` with private inputs. The synthetic `match-possession-acceptance --demo` now completes all its exercised checks, including same-cell recovery; this is selected synthetic coverage, not M1 completion or a playable match. Windows build/all 64 registered checks and Linux warnings-as-errors syntax passed; earlier full Linux Make attempts hit unrelated GCC/linker failures. Overall progress is unmeasured. Next address match-essential action and lifecycle routes, beginning with human shots. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-11 - Empty-pass race timeout and longer winners
 
 The provisional human empty-target pass now continues through winning races of up to five rounds and through timeout recovery of up to five rounds. On timeout, it advances the field and applies the existing stationary-ball recovery without adding another jitter or owner cleanup. Unsupported longer races, goal-area and story paths still stop atomically. Numeric timing/random are provisional and presentation remains acknowledged rather than emulated.
