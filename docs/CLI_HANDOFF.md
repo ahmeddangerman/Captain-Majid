@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active priority ? engine runtime plan (2026-11-11)
+
+Read docs/ENGINE_PROGRESS_AUDIT_2026-11-11.md and docs/superpowers/plans/2026-11-11-playable-match-engine.md. User requested a progress audit and a plan prioritizing reusable engine progress. Next resume starts task 1: capability map, runnable match controller and possession acceptance test. Older trace continuation instructions below are historical, not the active queue. Do not continue opponent21 stamina ordering unless the capability map establishes it as a playable-runtime blocker. Overall progress unmeasured; full match unverified. Suggested implementer GPT-6.1 Terra High.
+
 ## Current observation - 2026-11-11: opponent21 clock stamina ordering
 
 After the matched phase10 entry, original-only evidence shows stamina changes in two groups on opposite sides of the final NMI; the existing `clock_events` extractor rejects the split as ambiguous. No native parity is claimed after E1E7. Next capture and implement both groups and random ordering, then compare the field round. Starting snapshot remains `../Captain-Majid-analysis/opponent21-polls-v2-20261111/11.cmjsession`. Overall progress unmeasured; full match unsupported. Suggested model GPT-6.1 Terra High.

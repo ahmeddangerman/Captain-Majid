@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 ? Progress audit and runtime-first plan
+
+Audited recent commits, integration/control/AI interfaces, executable entry points and SDL/build configuration. Found substantial reusable kernels but scenario-specific integration and externally supplied timing/choices; no demonstrated full-match client. Added ENGINE_PROGRESS_AUDIT_2026-11-11.md and the playable-match-engine plan, with possession/runtime acceptance before further trace continuation. Updated active handoff to supersede the old queue. Documentation only; no new engine functionality or fresh graphical validation claimed. Overall progress unmeasured. Suggested implementer GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent21 clock observation
 
 Original-only trace inspection after the 11 matched polls found a ball-mode192 to128 change and stamina updates split across two capture intervals: player2, player3 and player5 change before the final NMI, while player7 and player8 change after it. The existing clock evidence extractor rejects the two observed stamina boundaries as ambiguous, so no native clock parity or code change is claimed for this segment. Next preserve and compare the ordering of both groups and the interleaved random event before extending the field round; do not collapse the original writes into one assumed instant. Trace remains private under `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. Overall progress remains unmeasured; a complete playable match remains unsupported. Suggested model GPT-6.1 Terra High.
