@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 ? Cross-platform checks and NMI diagnostic
+
+WSL Ubuntu `make -j2 check` and `make -j2 all build/match-possession-acceptance` passed, in addition to the prior Windows 64/64 checks. The Linux possession acceptance was run separately and correctly exits 1 for all three scenarios at the unimplemented live timing/random scheduler. A bounded CPU diagnostic using a captured original NMI entry reached a PPU status read at $2002 before random entry; the bounded bus cannot supply that hardware state, so the experiment does not establish the live scheduler or sound effects. Diagnostic-only tolerated writes do not constitute hardware emulation. No gameplay behavior changed. Asked the user whether a clearly labeled provisional timing/random demo mode is acceptable; no unambiguous answer received at this checkpoint. Continue independent evidence and integration work without assuming approval. Overall progress unmeasured; playable match unsupported. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 ? Runtime-owned partial random memory
 
 Integrated guarded player-memory projection into MatchRuntimeState, refreshing it after snapshot initialization and successful control setup. Synthetic tests check that stale unrepresented player bytes become unknown while external bytes are preserved; no sound RAM, carry, random advance or scheduler is invented. Possession acceptance remains intentionally red at timing for all three synthetic fixtures. Windows build and 64 registered checks passed. The previous checkpoint compared projection at three original boundaries and 11 original random states; this increment changes ownership/refresh, not original rules. Next trace general sound/memory and interrupt dependencies needed for control polling. No playable match; overall progress unmeasured. Suggested model GPT-6.1 Terra High.

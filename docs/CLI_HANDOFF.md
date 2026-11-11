@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active checkpoint ? Linux verification and timing mode clarification (2026-11-11)
+
+WSL Ubuntu Make `check`, `all` and acceptance target build passed. Running possession acceptance separately still exits 1 for all three scenarios at live timing/random scheduling. A bounded original NMI diagnostic requires actual $2002 PPU status before reaching random; no live scheduler inferred. The user was asked whether a clearly labeled provisional timing/random demo mode is acceptable; their reply was ambiguous, clarification pending. Do not assume approval or silently change classic behavior. Continue independent runtime/evidence work. Overall progress unmeasured; full match unsupported. Suggested model GPT-6.1 Terra High.
+
 ## Active checkpoint ? runtime owns partial random memory (2026-11-11)
 
 The runtime now retains partial random memory and refreshes 210 represented player bytes on snapshot initialization and control setup; omitted player bytes are invalidated and externally owned memory remains untouched. No sound memory, carry, interrupt scheduler or original random inputs are generated. Possession acceptance remains red for all three synthetic cases at timing. Windows build and 64 registered checks passed. Next identify and compare the general sound/memory and interrupt sources needed by the first poll; implement only evidence-supported behavior. Complete match unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.
