@@ -1083,7 +1083,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool kickoff_placed=phase>=61 && phase<=64;
     const bool kickoff_shot=(phase>=415 && phase<=466) || phase==350 || phase==352 || phase==353 || phase==354 || phase==355 || phase==356 || phase==357 || phase==358 || phase==359 || phase==360 || phase==361 || phase==362 || phase==363 || phase==364 || (phase>=365 && phase<=391) || score25_shot || extended_opponent || score23_human_pass || score24_dribble || score25_human_pass || (phase==111 || phase==112) || (phase>=194 && phase<=255) || phase==15 || phase==1 || phase==2 || phase==6 || phase==7 || (phase==8 && state.current.field.selected_defenders) || phase==27 || phase==43 || (phase>=45 && phase<=53) || (phase>=56 && phase<=60) || phase==95 || (phase>=150 && phase<=159) || phase==188 || phase==189 || area_flight || area_action4 || area_action6 || area_state;
     if((kickoff_placed && !state.kickoff_formation) ||
-       (!kickoff_placed && !(phase>=9 && phase<=13) && !(phase>=18 && phase<=20) && !ordinary_human_target && !kickoff_shot && state.kickoff_formation))
+       (!kickoff_placed && phase!=0 && !(phase>=9 && phase<=13) && !(phase>=18 && phase<=20) && !ordinary_human_target && !kickoff_shot && state.kickoff_formation))
         throw std::invalid_argument("Kickoff formation phase needs captured keeper positions");
     if (bool(state.kickoff_receiver)!=(phase>=62 && phase<=64) ||
         (state.kickoff_receiver && (*state.kickoff_receiver<=state.current.field.side ||

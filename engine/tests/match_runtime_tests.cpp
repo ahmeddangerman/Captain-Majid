@@ -51,9 +51,10 @@ static int shot_comparisons(int argc,char** argv) {
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Keeper recovery differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Keeper recovery session lengths differ");}
   return 0;
  }
- if((argc==11 || argc==13 || argc==15 || argc==16) && std::string(argv[1])=="--compare-human-shot-end-to-end") {
+ if((argc==11 || argc==13 || argc==15 || argc==16 || argc==17) && std::string(argv[1])=="--compare-human-shot-end-to-end") {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary),raw_file(argv[6],std::ios::binary),velocity_file(argv[7]);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);content.ball_velocity=read_ball_velocity_content(velocity_file);
+  if(argc==17){std::ifstream distance_file(argv[16],std::ios::binary);content.pass_distance=read_pass_distance_content(distance_file);}
   const bool kickoff=argc>=13 && std::string(argv[11])=="control";
   if(!kickoff)expected.kickoff_formation.reset(); // Before kickoff the starting session has no formation metadata.
   std::array<unsigned char,2048> raw{};if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing original flight metadata");
@@ -79,8 +80,8 @@ static int shot_comparisons(int argc,char** argv) {
   if(argc>=15 && (!state->ball_fraction || state->ball_fraction->x!=std::stoul(argv[13]) || state->ball_fraction->y!=std::stoul(argv[14])))throw std::runtime_error("Goal kickoff lost the original flight fractions");
   std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,state->session);write_phase_session(expected_bytes,expected);
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("End-to-end shot differs at byte "+std::to_string(i));throw std::runtime_error("End-to-end shot session lengths differ");}
-  if(argc==16 && std::string(argv[15])=="post"){
-   unsigned decisions=0;
+  if(argc>=16 && std::string(argv[15])=="post"){
+   unsigned decisions=0;bool passed=false;
    for(unsigned turn=0;turn<1200;++turn){
     const auto phase=state->session.phase;*result=step_match(*state,client_input(*state,0,0),content);
     if(result->unsupported){
@@ -88,11 +89,14 @@ static int shot_comparisons(int argc,char** argv) {
      if(phase==FieldSessionPhase::ai_cell_decision && content.data->ai_field_choice){
       auto random=state->demo_rng;random^=random<<13;random^=random>>17;random^=random<<5;
       const auto& field=state->session.current.field;const auto& actor=field.roster[field.ball_owner];
-      try{const auto choice=choose_ai_field_candidate(actor.type,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),field.ball_x,field.ball_y,static_cast<std::uint8_t>(random),*content.data->ai_field_choice);std::cout<<" candidate "<<static_cast<unsigned>(choice.candidate);}catch(const std::invalid_argument&){std::cout<<" candidate unavailable";}
+      try{const auto choice=choose_ai_field_candidate(actor.type,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),field.ball_x,field.ball_y,static_cast<std::uint8_t>(random),*content.data->ai_field_choice);std::cout<<" candidate "<<static_cast<unsigned>(choice.candidate)<<" actor "<<static_cast<unsigned>(actor.type)<<" variant "<<static_cast<unsigned>(state->session.recovery->ball_variant)<<" position "<<static_cast<unsigned>(field.ball_x)<<","<<static_cast<unsigned>(field.ball_y);}catch(const std::invalid_argument&){std::cout<<" candidate unavailable";}
      }
      std::cout<<'\n';return 0;
     }
+    if(phase==FieldSessionPhase::ai_cell_decision && result->state.defense_menu && !result->state.defense_menu->defender_count)passed=true;
     *state=result->state;
+    if(argc==17){MatchContentIdentity identity{};identity[0]=42;std::ostringstream saved(std::ios::binary);write_match_save(saved,*state,identity);std::istringstream in(saved.str(),std::ios::binary);*state=load_match_save(in,identity);}
+    if(passed && phase==FieldSessionPhase::player_control && state->session.phase==FieldSessionPhase::control_ready){std::cout<<"post: pass received after "<<decisions<<" fallbacks\n";return 0;}
     if(phase==FieldSessionPhase::ai_cell_decision && state->session.phase==FieldSessionPhase::control_clock_pending && ++decisions==3){std::cout<<"post: three fallbacks\n";return 0;}
    }
    std::cout<<"post: no cell decision within bound\n";
@@ -271,8 +275,46 @@ static int shot_comparisons(int argc,char** argv) {
 }
 static int comparisons(int argc,char** argv) {
  using namespace captain;
- if(argc==7 && (std::string(argv[1])=="--compare-ai-cell" || std::string(argv[1])=="--compare-ai-cell-unsupported" || std::string(argv[1])=="--compare-ai-cell-poll")) {
+ if(argc==9 && std::string(argv[1])=="--compare-unopposed-ai-pass") {
+  std::ifstream source_file(argv[2],std::ios::binary),records_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary),distance_file(argv[5],std::ios::binary),velocity_file(argv[6]);
+  auto source=load_phase_session(source_file);MatchContent content{};content.data=load_shot_content(pack_file);content.pass_distance=read_pass_distance_content(distance_file);content.ball_velocity=read_ball_velocity_content(velocity_file);
+  std::array<std::array<unsigned char,2048>,9> raw{};for(auto& item:raw)if(!records_file.read(reinterpret_cast<char*>(item.data()),item.size()))throw std::runtime_error("Missing original unopposed AI pass checkpoints");
+  auto state=std::make_unique<MatchRuntimeState>();state->session=source;state->session.saved_ball_flight_flag=raw[0][0x61b];state->mode=MatchTimingMode::provisional_demo;state->demo_rng=std::stoul(argv[7]);
+  state->ball_fraction=MatchBallFraction{raw[0][0x634],raw[0][0x636]};state->retained_defense_action=raw[0][0x43d];
+  const std::string names[]={"choice","prepared","preclock","handoff","target","flight","arrival","control","ready"};
+  auto result=std::make_unique<MatchStepResult>();MatchContentIdentity identity{};identity[0]=42;
+  const auto advance=[&](){
+   *result=step_match(*state,client_input(*state,0,0),content);
+   if(result->unsupported)throw std::runtime_error(std::string("Unopposed AI pass stopped: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(state->session.phase)));
+   *state=result->state;std::ostringstream out(std::ios::binary);write_match_save(out,*state,identity);std::istringstream in(out.str(),std::ios::binary);*state=load_match_save(in,identity);
+  };
+  const auto compare=[&](unsigned index,bool flight_arrival=false){
+   std::ifstream expected_file(std::string(argv[8])+"/"+names[index]+".cmjsession",std::ios::binary);auto wanted=load_phase_session(expected_file);auto actual=state->session;
+   wanted.saved_ball_flight_flag=raw[index][0x61b];
+   // The script parser writes facing during visual acknowledgements. The demo
+   // does not execute that presentation engine; control-ready resets it.
+   if(index>=3 && index<=7 && wanted.control && actual.control)wanted.control->facing=actual.control->facing;
+   if(flight_arrival){actual.current.field.ball_x=raw[index][0x635];actual.current.field.ball_y=raw[index][0x637];actual.current.field.ball_cell=raw[index][0x5fe];}
+   std::ostringstream a(std::ios::binary),b(std::ios::binary);write_phase_session(a,actual);write_phase_session(b,wanted);
+   if(a.str()!=b.str()){for(std::size_t i=0;i<a.str().size() && i<b.str().size();++i)if(a.str()[i]!=b.str()[i])throw std::runtime_error("Unopposed AI "+names[index]+" differs at byte "+std::to_string(i)+" actual "+std::to_string(static_cast<unsigned char>(a.str()[i]))+" expected "+std::to_string(static_cast<unsigned char>(b.str()[i])));throw std::runtime_error("Unopposed AI session lengths differ");}
+   if(state->retained_defense_action!=raw[index][0x43d])throw std::runtime_error("Unopposed AI pass lost retained action");
+  };
+  advance();compare(0);if(!state->defense_menu || !state->defense_menu->ai_pass_target || state->defense_menu->ai_pass_target->recipient!=raw[0][0x5fc] || state->defense_menu->ai_pass_target->cell!=raw[0][0x638])throw std::runtime_error("Unopposed AI chose wrong target");
+  advance();compare(1);advance();compare(2);advance();advance();compare(3);
+  advance();compare(4);if(state->defense_menu->ai_pass_distance!=raw[4][0x62b])throw std::runtime_error("Unopposed AI pass distance differs");
+  advance();compare(5);const auto word=[&](unsigned at){return static_cast<std::uint16_t>(raw[5][at]|(unsigned(raw[5][at+1])<<8));};
+  if(!state->defense_menu->ai_trajectory || state->defense_menu->ai_trajectory->x!=word(0x634) || state->defense_menu->ai_trajectory->y!=word(0x636) || state->defense_menu->ai_trajectory->vx!=word(0x639) || state->defense_menu->ai_trajectory->vy!=word(0x63b))throw std::runtime_error("Unopposed AI flight setup differs");
+  for(unsigned turn=0;turn<300 && state->defense_menu->stage!=MatchDefenseStage::ai_flight_arrived;++turn)advance();
+  if(state->defense_menu->stage!=MatchDefenseStage::ai_flight_arrived || !state->flight_defenders.empty())throw std::runtime_error("Unopposed AI pass did not arrive unopposed");
+  const auto arrival_word=[&](unsigned at){return static_cast<std::uint16_t>(raw[6][at]|(unsigned(raw[6][at+1])<<8));};
+  if(!state->defense_menu->ai_trajectory || !state->defense_menu->ai_ball_cell || state->defense_menu->ai_trajectory->x!=arrival_word(0x634) || state->defense_menu->ai_trajectory->y!=arrival_word(0x636) || *state->defense_menu->ai_ball_cell!=raw[6][0x5fe])throw std::runtime_error("Unopposed AI arrival trajectory differs");
+  compare(6,true);advance();compare(7);advance();compare(8);
+  if(!state->ball_fraction || state->ball_fraction->x!=raw[8][0x634] || state->ball_fraction->y!=raw[8][0x636])throw std::runtime_error("Unopposed AI reception fractions differ");
+  return 0;
+ }
+ if(argc==7 && (std::string(argv[1])=="--compare-ai-cell" || std::string(argv[1])=="--compare-ai-cell-pass" || std::string(argv[1])=="--compare-ai-cell-unsupported" || std::string(argv[1])=="--compare-ai-cell-poll")) {
   const bool poll=std::string(argv[1])=="--compare-ai-cell-poll";
+  const bool pass=std::string(argv[1])=="--compare-ai-cell-pass";
   std::ifstream source_file(argv[2],std::ios::binary),expected_file(argv[3],std::ios::binary),raw_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
   auto source=load_phase_session(source_file),expected=load_phase_session(expected_file);MatchContent content{};content.data=load_shot_content(pack_file);
   std::array<unsigned char,2048> raw{};if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing AI cell metadata");
@@ -285,7 +327,8 @@ static int comparisons(int argc,char** argv) {
    std::ostringstream unchanged(std::ios::binary);write_match_save(unchanged,result->state,identity);if(unchanged.str()!=before.str())throw std::runtime_error("Unsupported AI cell changed state");
    return 0;
   }
-  if(result->unsupported || result->state.session.phase!=(poll?FieldSessionPhase::ai_cell_decision:FieldSessionPhase::control_clock_pending))throw std::runtime_error("AI cell fallback or poll unsupported");
+  if(result->unsupported || result->state.session.phase!=(poll?FieldSessionPhase::ai_cell_decision:pass?FieldSessionPhase::field:FieldSessionPhase::control_clock_pending))throw std::runtime_error("AI cell fallback, pass, or poll unsupported");
+  if(pass && (!result->state.defense_menu || result->state.defense_menu->defender_count || result->state.defense_menu->stage!=MatchDefenseStage::ai_chosen || !result->state.defense_menu->ai_pass_target || result->state.defense_menu->ai_pass_target->recipient!=raw[0x5fc] || result->state.defense_menu->ai_pass_target->cell!=raw[0x638]))throw std::runtime_error("AI cell chose incorrect pass recipient");
   if(!result->state.ball_fraction || result->state.ball_fraction->x!=raw[0x634] || result->state.ball_fraction->y!=raw[0x636] || result->state.retained_defense_action!=raw[0x43d])throw std::runtime_error("AI cell fallback lost known metadata");
   if(!poll){
    auto unknown=std::make_unique<MatchRuntimeState>(*state);unknown->ball_fraction.reset();unknown->retained_defense_action.reset();
@@ -906,6 +949,32 @@ static std::unique_ptr<DeferredDefendedTest> deferred_free_pass_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_human_shot_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_retained_control_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_pass_prepared_test;
+static std::unique_ptr<DeferredDefendedTest> deferred_unopposed_ai_pass_test;
+static void test_unopposed_ai_pass(const captain::MatchRuntimeState& base,const captain::MatchContent& original,const captain::MatchContentIdentity& identity) {
+ using namespace captain;
+ auto state=std::make_unique<MatchRuntimeState>(base);auto content=std::make_unique<MatchContent>(original);auto result=std::make_unique<MatchStepResult>();
+ state->session.phase=FieldSessionPhase::field;state->session.current.field.selected_defenders=0;state->session.scheduling->selected_ids.fill(0);
+ state->session.kickoff_formation=KickoffFormationContext{{124,124}};state->session.recovery->ball_variant=0;
+ state->defense_menu->defender_count=0;state->defense_menu->poll=DefenseMenuPollState{};state->ball_fraction=MatchBallFraction{5,9};state->retained_defense_action=3;
+ const auto bytes=[&](const MatchRuntimeState& s){std::ostringstream out(std::ios::binary);write_match_save(out,s,identity);return out.str();};
+ const auto reject_save=[&](const MatchRuntimeState& s){bool rejected=false;try{bytes(s);}catch(const std::invalid_argument&){rejected=true;}assert(rejected);};
+ const auto checkpoint=[&](){const auto saved=bytes(*state);std::istringstream in(saved,std::ios::binary);*state=load_match_save(in,identity);};
+ const auto atomic=[&](const MatchContent& c,UnsupportedCapability why){const auto before=bytes(*state);*result=step_match(*state,client_input(*state,0,0),c);assert(result->unsupported==why && bytes(result->state)==before);};
+ const auto next=[&](){*result=step_match(*state,client_input(*state,0,0),*content);assert(!result->unsupported);*state=result->state;checkpoint();};
+ checkpoint();auto invalid=std::make_unique<MatchRuntimeState>(*state);invalid->session.action->action=2;reject_save(*invalid);
+ *invalid=*state;invalid->defense_menu->stage=MatchDefenseStage::polling;reject_save(*invalid);
+ *invalid=*state;invalid->session.current.field.selected_defenders=1;reject_save(*invalid);
+ auto missing=std::make_unique<MatchContent>(*content);missing->data->attack.moves[1].clear();atomic(*missing,UnsupportedCapability::content);
+ next();assert(state->defense_menu->stage==MatchDefenseStage::attack_prepared);next();assert(state->defense_menu->stage==MatchDefenseStage::clock_pending);
+ content->data->area_prefix_elapsed.reset();const auto elapsed=state->session.current.field.elapsed;const auto remaining=state->session.current.clock.remaining;
+ next();assert(state->defense_menu->stage==MatchDefenseStage::dispatch_pending && state->session.current.field.elapsed==elapsed && state->session.current.clock.remaining==remaining);
+ *missing=*content;missing->data->movement.reset();atomic(*missing,UnsupportedCapability::content);
+ next();assert(state->defense_menu->stage==MatchDefenseStage::ai_pass_handoff && state->session.control->last_carrier_cell==128);
+ *missing=*content;missing->pass_distance.reset();atomic(*missing,UnsupportedCapability::content);
+ next();assert(state->defense_menu->stage==MatchDefenseStage::ai_pass_target_ready);
+ auto unknown=std::make_unique<MatchRuntimeState>(*state);unknown->ball_fraction.reset();const auto before=bytes(*unknown);
+ *result=step_match(*unknown,client_input(*unknown,0,0),*content);assert(result->unsupported==UnsupportedCapability::ball_fraction && bytes(result->state)==before);
+}
 static void test_pass_field_handoff(const captain::MatchRuntimeState& input,const captain::MatchContent& original) {
  using namespace captain;
  auto state=std::make_unique<MatchRuntimeState>(input);auto content=std::make_unique<MatchContent>(original);
@@ -1510,6 +1579,8 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  field_ai.empty_pass_options=std::array<std::uint8_t,118>{};(*field_ai.empty_pass_options)[23]=1;
  auto ai_pass=step_match(pass_ai_input,{MatchInputKind::tick,7},content);
  assert(!ai_pass.unsupported && ai_pass.state.session.action->action==1 && ai_pass.state.defense_menu->ai_pass_target->recipient==20);
+ deferred_unopposed_ai_pass_test=std::make_unique<DeferredDefendedTest>();deferred_unopposed_ai_pass_test->state=ai_pass.state;
+ deferred_unopposed_ai_pass_test->content=content;deferred_unopposed_ai_pass_test->identity=identity;
  assert(verify_checkpoint(ai_pass.state).defense_menu->ai_pass_target->recipient==20);
  auto ai_pass_prepared=step_match(ai_pass.state,{MatchInputKind::tick,8},content);
  assert(!ai_pass_prepared.unsupported && ai_pass_prepared.state.defense_menu->stage==MatchDefenseStage::attack_prepared);
@@ -1669,5 +1740,6 @@ int main(int argc,char** argv) {
  test_control_motion_fraction(deferred_retained_control_test->state,deferred_retained_control_test->content);
  test_pass_field_handoff(deferred_pass_prepared_test->state,deferred_pass_prepared_test->content);
  test_goal_kickoff(deferred_human_shot_test->state,deferred_human_shot_test->content,deferred_human_shot_test->identity);
+ test_unopposed_ai_pass(deferred_unopposed_ai_pass_test->state,deferred_unopposed_ai_pass_test->content,deferred_unopposed_ai_pass_test->identity);
  return result;
 }

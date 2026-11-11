@@ -78,15 +78,17 @@ def main():
                     boundary, after, writes = original_decision(prg, intervened)
                     group=stats[0x8e1b+2*kind] | (stats[0x8e1c+2*kind]<<8)
                     empty_action2=stats[group+4] == 0 and stats[group+5] == 0
+                    empty_pass=stats[group+2] == 0 and stats[group+3] == 0
                     fallback = boundary == 0xe1e7 and after[0x43b] == 2 and (candidate == 2 or (candidate == 3 and (variant or (empty_action2 and not args.legacy_pack))))
-                    if fallback and (writes or any(after[address] != raw[address] for address in (0x43d, 0x634, 0x636))):
+                    passing = boundary == 0xe1b9 and after[0x43b] == 1 and candidate == 2 and variant == 0 and empty_pass
+                    if (fallback or passing) and (writes or any(after[address] != raw[address] for address in (0x43d, 0x634, 0x636))):
                         raise RuntimeError('Original fallback changed known metadata')
-                    source.write_bytes(export_session(raw, 12));expected.write_bytes(export_session(after, 10));metadata.write_bytes(after)
-                    command = [str(args.exe.resolve()), '--compare-ai-cell' if fallback else '--compare-ai-cell-unsupported',
+                    source.write_bytes(export_session(raw, 12));expected.write_bytes(export_session(after, 0 if passing else 10));metadata.write_bytes(after)
+                    command = [str(args.exe.resolve()), '--compare-ai-cell' if fallback else '--compare-ai-cell-pass' if passing else '--compare-ai-cell-unsupported',
                                str(source), str(expected), str(metadata), str(args.pack.resolve()), str(seed)]
                     result = subprocess.run(command, capture_output=True, text=True)
                     if result.returncode:raise RuntimeError(f'fixture={fixture}, x={x}, type={kind}, variant={variant}, flags={flags}, seed={seed}: {result.stderr}')
-                    counts['fallback' if fallback else 'unsupported'] += 1
+                    counts['fallback' if fallback else 'pass' if passing else 'unsupported'] += 1
     if not counts['fallback']:raise RuntimeError('Survey did not exercise a supported fallback')
     print(f'Constructed original opponent cell decisions: {dict(sorted(counts.items()))}')
 

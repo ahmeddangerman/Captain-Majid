@@ -35,9 +35,12 @@ def main():
     parser.add_argument('--fraction-survey', action='store_true', help='Observe original fractional ball bytes through goal/kickoff')
     parser.add_argument('--post-kickoff', action='store_true', help='Also exercise native neutral control until an opponent decision or named stop')
     parser.add_argument('--velocity', type=Path, help='Private ball velocity table for --flight')
+    parser.add_argument('--distance', type=Path, help='Private pass distance table for post-kickoff passing')
+    parser.add_argument('--limit', type=int, default=0, help='Stop after this many constructed cases (zero means all)')
     args = parser.parse_args()
     if args.fraction_survey and not args.kickoff_end_to_end: parser.error('--fraction-survey requires --kickoff-end-to-end')
     if args.post_kickoff and not args.fraction_survey: parser.error('--post-kickoff requires --fraction-survey')
+    if args.distance and not args.post_kickoff: parser.error('--distance requires --post-kickoff')
     if args.kickoff_end_to_end: args.end_to_end = True
     if args.end_to_end: args.keeper = True
     if args.defenders and args.keeper: parser.error('Keeper survey needs an unopposed arrival')
@@ -57,8 +60,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix='human-shot-', dir=args.private_temp) as temp:
         before_file, after_file, raw_file, records_file = Path(temp) / 'before.cmjsession', Path(temp) / 'after.cmjsession', Path(temp) / 'approach.bin', Path(temp) / 'flight-records.bin'
         for fixture in range(4):
+            if args.limit and matched >= args.limit: break
             cases = ((stamina, action) for stamina in (80, 400) for action in range(7)) if args.tail else ((stamina, 0) for stamina in (80, 81, 100, 255, 400, 900))
             for stamina, action in cases:
+                if args.limit and matched >= args.limit: break
                 ready = bytearray((args.ready_dir / f'{fixture}-ready.bin').read_bytes())
                 owner = ready[0x441]
                 ready[0x301 + 12 * owner:0x303 + 12 * owner] = stamina.to_bytes(2, 'little')
@@ -188,6 +193,7 @@ def main():
                             if args.kickoff_end_to_end:command.extend(('control',str(keeper_result[0x43d])))
                             if args.fraction_survey:command.extend((str(ready[0x634]),str(ready[0x636])))
                             if args.post_kickoff:command.append('post')
+                            if args.distance:command.append(str(args.distance.resolve()))
                             result=subprocess.run(command,capture_output=True,text=True)
                             if result.returncode:raise RuntimeError(f'fixture={fixture}, stamina={stamina}, action={action} end-to-end: {result.stderr}')
                             if args.post_kickoff:

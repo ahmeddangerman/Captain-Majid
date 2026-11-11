@@ -47,13 +47,15 @@ void validate_runtime(const MatchRuntimeState& s) {
   const bool kickoff=f.side==11 && phase>=FieldSessionPhase::goal_kickoff_pending && phase<=FieldSessionPhase::kickoff_control_pending;
   const bool control=!f.selected_defenders && (phase==FieldSessionPhase::control_ready || phase==FieldSessionPhase::control_clock_pending || phase==FieldSessionPhase::field_round_pending ||
    (f.side==11 && phase==FieldSessionPhase::ai_cell_decision) ||
-   (f.side==0 && phase==FieldSessionPhase::player_control) ||
+   phase==FieldSessionPhase::player_control ||
    (f.side==0 && (phase==FieldSessionPhase::action_menu_pending || phase==FieldSessionPhase::human_action_menu || phase==FieldSessionPhase::attack_choice_pending)));
+  const bool ai_pass=f.side==11 && !f.selected_defenders && phase==FieldSessionPhase::field && s.defense_menu && !s.defense_menu->defender_count &&
+   static_cast<unsigned>(s.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen) && s.flight_defenders.empty() && s.processed_flight_defenders.empty();
   const bool pass=f.side==0 && !f.selected_defenders && s.session.action && s.session.action->action==1 && !s.target_chooser &&
    s.flight_defenders.empty() && s.processed_flight_defenders.empty() &&
    (phase==FieldSessionPhase::ordinary_human_pass_target || ((phase==FieldSessionPhase::ordinary_human_pass_confirmed || phase==FieldSessionPhase::ordinary_pass_prepared) &&
     s.session.ordinary_pass_recipient && *s.session.ordinary_pass_recipient==255));
-  if(s.mode!=MatchTimingMode::provisional_demo || *s.retained_defense_action>6 || !(shot || goal || kickoff || control || pass))throw std::invalid_argument("Invalid retained defensive action provenance");
+  if(s.mode!=MatchTimingMode::provisional_demo || *s.retained_defense_action>6 || !(shot || goal || kickoff || control || pass || ai_pass))throw std::invalid_argument("Invalid retained defensive action provenance");
  }
  const bool target=static_cast<unsigned>(s.pass_stage)>=static_cast<unsigned>(MatchPassStage::target_ready);
  const bool flight=static_cast<unsigned>(s.pass_stage)>=static_cast<unsigned>(MatchPassStage::flight_ready);
@@ -83,13 +85,15 @@ void validate_runtime(const MatchRuntimeState& s) {
  if(s.defense_menu) {
   const auto& m=*s.defense_menu;const auto count=m.defender_count;
   const bool flight=static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_flight_ready);
-  if(s.mode!=MatchTimingMode::provisional_demo || (flight ? s.session.phase!=FieldSessionPhase::field : s.session.phase!=FieldSessionPhase::field_contact_pending) ||
-     s.session.current.field.side!=11 || s.pass_stage!=MatchPassStage::none || !s.session.scheduling || !count || count>4 ||
-     (flight ? s.session.current.field.selected_defenders!=0 : s.session.current.field.selected_defenders!=count) ||
+  const bool unopposed=!count && s.session.phase==FieldSessionPhase::field && static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen);
+  if(s.mode!=MatchTimingMode::provisional_demo || (!unopposed && (flight ? s.session.phase!=FieldSessionPhase::field : s.session.phase!=FieldSessionPhase::field_contact_pending)) ||
+     s.session.current.field.side!=11 || s.pass_stage!=MatchPassStage::none || !s.session.scheduling || (!count && !unopposed) || count>4 ||
+     (unopposed || flight ? s.session.current.field.selected_defenders!=0 : s.session.current.field.selected_defenders!=count) ||
      static_cast<unsigned>(m.stage)>static_cast<unsigned>(MatchDefenseStage::ai_flight_arrived) || m.poll.cursor>count ||
      (static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::complete) && m.poll.cursor!=count) ||
      (m.stage==MatchDefenseStage::ai_chosen && (!s.session.action || !s.session.recovery || s.session.recovery->attack_subtype!=0)) ||
      (static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen) && (!s.session.action || !s.session.recovery || (s.session.action->action!=1 && s.session.action->action!=2))) ||
+     (unopposed && (!s.session.action || s.session.action->action!=1)) ||
      (bool(m.ai_pass_target)!=(static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen) && s.session.action && s.session.action->action==1)) ||
      (m.ai_pass_target && (m.ai_pass_target->recipient<12 || m.ai_pass_target->recipient>21 || m.ai_pass_target->cell>=240)) ||
      (static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_pass_handoff) && (!s.session.action || s.session.action->action!=1)) ||
