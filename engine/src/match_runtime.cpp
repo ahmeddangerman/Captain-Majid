@@ -4,6 +4,7 @@
 #include "captain/defender_selection.hpp"
 #include "captain/field_player_profile.hpp"
 #include "captain/action_strength.hpp"
+#include "captain/ball_recovery.hpp"
 #include <stdexcept>
 namespace captain {
 namespace {
@@ -81,7 +82,34 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
      const auto& player=field.roster[id];const FieldPlayerRecord record{id,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level};
      const auto prep=prepare_profiled_field_defender(record,data.field_players,2,0,0,data.defense);const auto& rules=*data.pass_flight_comparison;
      const auto contact=compare_defender_contact({input.session.action->power,prep.base_strength,field.random_first,field.random_second,rules.range,rules.offset,false,bool(rules.eligibility&128u),0,id,0,rules.thresholds});
-     if(prep.move_effect || contact.subtype || contact.result_code==2){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+     if(prep.move_effect || contact.subtype){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+     if(contact.result_code==2){
+      if(!data.movement){result.unsupported=UnsupportedCapability::content;return result;}
+      if(field.elapsed || data.contact->field_elapsed[5]!=1 || !input.session.scheduling){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+      if((input.session.recovery->special_owner_flags&128u) && field.ball_owner==20){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+      auto next=input;auto& session=next.session;const auto trajectory=*next.defense_menu->ai_trajectory;
+      const auto& defender=field.motion[field_motion_index(id)];session.current.field.ball_x=static_cast<std::uint8_t>(defender.x>>8);session.current.field.ball_y=static_cast<std::uint8_t>(defender.y>>8);
+      session.current.field.ball_cell=*next.defense_menu->ai_ball_cell;session.recovery->opposing_player=id;
+      for(unsigned i=0;i<2;++i)session.experience=award_player_experience(*session.experience,player.type,2,*data.experience).state;
+      auto clock=apply_contact_prelude({session.current,id,2,false},*data.contact);
+      if(clock.clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+      session.current=clock.state;session.current.field.selected_defenders=0;session.scheduling->selected_ids.fill(0);
+      const auto ball=jitter_loose_ball(session.current.field.ball_x,session.current.field.ball_y,session.current.field.random_first,session.current.field.random_second);
+      if(!ball.inside_field){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+      session.current.field.ball_x=ball.x;session.current.field.ball_y=ball.y;session.recovery->x_jitter_control=ball.x_jitter_control;
+      session.current.field=advance_field_phase(session.current.field,data.field_players,*data.movement).state;
+      const auto& moved=session.current.field;BallRecoveryInput recovery{};
+      recovery.ball_x=moved.ball_x;recovery.ball_y=moved.ball_y;recovery.ball_owner=moved.ball_owner;recovery.opposing_player=id;
+      recovery.random_e2=moved.random_first;recovery.random_e3=moved.random_second;recovery.ball_update_active=moved.elapsed!=0;
+      for(unsigned i=0;i<moved.motion.size();++i){const auto& p=moved.motion[i];recovery.players[i]={static_cast<std::uint8_t>(p.x>>8),static_cast<std::uint8_t>(p.y>>8),p.status!=0};}
+      const auto recovered=recover_stationary_ball(recovery);
+      if((ball.y>=96 && ball.y<160 && (ball.x<80 || ball.x>=176)) || (session.recovery->game_mode==4 && recovered.possession_side==0 && moved.roster[recovered.ball_owner].type!=1 && ball.x>=128)) {result.unsupported=UnsupportedCapability::defender_contact;return result;}
+      session.current.field.side=recovered.possession_side;session.current.field.ball_owner=recovered.ball_owner;session.recovery->attack_subtype=recovered.attack_subtype;
+      auto& owner=session.current.field.motion[field_motion_index(recovered.ball_owner)];owner.x=static_cast<std::uint16_t>((owner.x&255u)|(unsigned(ball.x)<<8));owner.y=static_cast<std::uint16_t>((owner.y&255u)|(unsigned(ball.y)<<8));
+      session.phase=FieldSessionPhase::player_control;next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(trajectory.x),static_cast<std::uint8_t>(trajectory.y)};
+      next.defense_menu.reset();next.flight_defenders.clear();next.last_sequence=event.sequence;validate_phase_session(session);
+      project_field_random_memory(session.current.field,next.random_memory);result.state=std::move(next);return result;
+     }
      if(contact.result_code==3){
       if(!data.movement){result.unsupported=UnsupportedCapability::content;return result;}
       if(field.elapsed || data.contact->field_elapsed[5]!=1 || !input.session.scheduling){result.unsupported=UnsupportedCapability::defender_contact;return result;}
