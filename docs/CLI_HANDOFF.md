@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 pass target
+
+The pass to player21 calculates original target cell94 and distance3 at DE64, random index211. Phase455 snapshot: `../Captain-Majid-analysis/opponent20-pass-target-v2-20261111/target.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent20_pass_movement.py` now requires `--distance-table`; it checks original state, malformed table/replay rejection and roundtrip. The distance table remains private. Windows build and 62 checks passed. Next compare flight setup/crossings; timing/AI supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 pass movement
 
 Opponent20's captured pass matches through original C612 after 22 player updates and 57 supplied NMI/travel pairs, random index211. Phase454 snapshot: `../Captain-Majid-analysis/opponent20-pass-movement-v5-20261111/movement.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent20_pass_movement.py` checks represented fields, presentation samples, recipient context, retained flags, invalid sample/replay rejection and roundtrip. Variant2 and carrier-cell128 are sampled together at C612; their internal write order remains unknown. Windows build and 62 checks passed. Next compare target/flight setup; timing/AI supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

@@ -1129,6 +1129,17 @@ PhaseSessionState advance_ordinary_pass_dispatch_clock(const PhaseSessionState& 
     validate_phase_session(state);
     return state;
 }
+PhaseSessionState resolve_player2_opponent_pass_target(const PhaseSessionState& input,const PassDistanceContent& distance) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_opponent_pass_field_moved || !input.area_ai_target)
+        throw std::invalid_argument("Opponent20 pass target requires its observed field movement");
+    const auto recipient=input.area_ai_target->recipient;const auto& player=input.current.field.motion[field_motion_index(recipient)];
+    const auto destination=resolve_pass_target_cell(recipient,input.area_ai_target->cell,static_cast<std::uint8_t>(player.x>>8),static_cast<std::uint8_t>(player.y>>8));
+    const auto length=calculate_pass_distance(input.current.field.ball_x,input.current.field.ball_y,destination,distance);
+    if(recipient!=21 || destination!=94 || length!=3)throw std::invalid_argument("Unobserved opponent20 pass target or distance");
+    auto state=input;state.area_ai_target->cell=destination;state.shot_flight=ShotFlightContext{length,destination,255,false};
+    state.phase=FieldSessionPhase::player2_opponent_pass_target;validate_phase_session(state);return state;
+}
 PhaseSessionState resolve_ordinary_pass_flight_target(const PhaseSessionState& input,const PassDistanceContent& distance) {
     validate_phase_session(input);
     if (input.phase!=FieldSessionPhase::ordinary_pass_field_moved || !input.ordinary_pass_recipient || !input.human_pass_cursor)

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 pass target
+
+The captured opponent20 pass to player21 now calculates the original target cell94 and distance3 at DE64 using the shared target and private distance-table kernels. Phase455 preserves the target, counter255 and distance in the existing extended snapshot layout. The original comparison checks represented state and calculated flight fields; malformed distance input and repeated target resolution reject atomically, and the snapshot roundtrips. Evidence: `../Captain-Majid-analysis/opponent20-pass-target-v2-20261111`; Windows build and all 62 checks passed. Ball flight and autonomous AI/timing remain unmatched; a complete match is unsupported, overall progress unmeasured. Next compare flight setup and crossings. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 pass field movement
 
 The opponent20 pass matches the original C612 handoff after 22 ordered player updates and 57 captured NMI/travel pairs, random index154 to211. Observed motion, facing and display samples are applied during the replay. At C612, ball variant2 and carrier-cell128 are supplied together as observed values; their internal write order was not captured and is not claimed. Phase454 matches represented original state, recipient/target/cost context and retained cursor/flag. The verifier rejects missing samples and repeated movement atomically and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-pass-movement-v5-20261111`; Windows build, prior field replay and all 62 checks passed. Target/flight and autonomous timing remain unsupported; full match unfinished, progress unmeasured. Next compare the original pass target and flight setup. Suggested model GPT-6.1 Terra High.

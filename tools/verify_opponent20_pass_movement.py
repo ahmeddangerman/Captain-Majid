@@ -12,7 +12,7 @@ from verify_player7_pass_end_to_end import compare_represented,prepare_output
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    for name in ('trace-directory','source','pack','exe','output'):parser.add_argument('--'+name,type=Path,required=True)
+    for name in ('trace-directory','source','pack','exe','output','distance-table'):parser.add_argument('--'+name,type=Path,required=True)
     args=parser.parse_args();lines,pcs,ram=trace_data(args.trace_directory);start,end=23515,24037
     if (pcs[start],pcs[end])!=('C606','C612'):raise ValueError('Unexpected pass field boundaries')
     mode={'F':ram(start)[0x517],'M':ram(start)[0x532],'D':ram(start)[0x8e]};samples=[];rows=[];slot=0
@@ -52,7 +52,20 @@ def main():
     if run.returncode==0 or rejected.exists() or target.read_bytes()!=data:raise ValueError('Repeated movement did not reject atomically')
     roundtrip=out/'roundtrip.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(target),'--capture',str(roundtrip)],capture_output=True,text=True,timeout=30)
     if run.returncode or roundtrip.read_bytes()!=data:raise ValueError('Movement snapshot roundtrip differs')
-    print('Matched opponent20 pass field movement and captured presentation samples; random index 211.')
+    destination=out/'target.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(target),'--resolve-player2-opponent-pass-target',str(args.distance_table.resolve()),'--capture',str(destination)],capture_output=True,text=True,timeout=30)
+    if run.returncode:raise RuntimeError(run.stderr.strip())
+    resolved=destination.read_bytes();original=ram(24040)
+    if int.from_bytes(resolved[258:260],'little')!=455 or resolved[340:345]!=bytes((1,original[0x62b],original[0x638],original[0x61a],0)):
+        raise ValueError('Pass target or distance differs')
+    compare_represented(resolved,export_session(original),True,'opponent20','pass target')
+    malformed=out/'invalid-distance.bin';malformed.write_bytes(b'bad')
+    run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(target),'--resolve-player2-opponent-pass-target',str(malformed),'--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if run.returncode==0 or rejected.exists() or target.read_bytes()!=data:raise ValueError('Malformed distance did not reject atomically')
+    run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(destination),'--resolve-player2-opponent-pass-target',str(args.distance_table.resolve()),'--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if run.returncode==0 or rejected.exists() or destination.read_bytes()!=resolved:raise ValueError('Repeated target did not reject atomically')
+    target_roundtrip=out/'target-roundtrip.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(destination),'--capture',str(target_roundtrip)],capture_output=True,text=True,timeout=30)
+    if run.returncode or target_roundtrip.read_bytes()!=resolved:raise ValueError('Target snapshot roundtrip differs')
+    print('Matched opponent20 pass field movement and calculated target; random index 211.')
 
 
 if __name__=='__main__':
