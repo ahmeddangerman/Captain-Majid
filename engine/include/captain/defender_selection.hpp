@@ -43,4 +43,6 @@ struct FlightDefenderSelectionInput {
 };
 // Empty-list original87E1 selection. No movement or random-state consumption.
 std::vector<std::uint8_t> select_flight_defenders(const FlightDefenderSelectionInput& input);
+// Retains the prior prefix, including duplicate IDs, up to the original side capacity.
+std::vector<std::uint8_t> accumulate_flight_defenders(const FlightDefenderSelectionInput& input,const std::vector<std::uint8_t>& prior);
 }

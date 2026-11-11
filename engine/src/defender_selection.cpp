@@ -84,4 +84,14 @@ std::vector<std::uint8_t> select_flight_defenders(const FlightDefenderSelectionI
     }
     return selected;
 }
+std::vector<std::uint8_t> accumulate_flight_defenders(const FlightDefenderSelectionInput& input,const std::vector<std::uint8_t>& prior) {
+    if(input.possession_side!=0 && input.possession_side!=11)throw std::invalid_argument("Invalid flight side");
+    const auto capacity=input.possession_side==0 ? 5u : 4u;
+    if(prior.size()>capacity)throw std::invalid_argument("Invalid flight defender prefix");
+    for(const auto id:prior)if((input.possession_side==0 && (id<12 || id>21)) || (input.possession_side==11 && (id<1 || id>10)))
+        throw std::invalid_argument("Invalid flight defender ID");
+    auto result=prior;
+    for(const auto id:select_flight_defenders(input)) {if(result.size()==capacity)break;result.push_back(id);}
+    return result;
+}
 }

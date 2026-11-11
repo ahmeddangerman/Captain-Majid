@@ -10,6 +10,16 @@
 #include <string>
 static int comparisons(int argc,char** argv) {
  using namespace captain;
+ if(argc==4 && std::string(argv[1])=="--compare-flight-prefix") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary);std::array<unsigned char,2048> before{},after{};
+  if(!before_file.read(reinterpret_cast<char*>(before.data()),before.size()) || !after_file.read(reinterpret_cast<char*>(after.data()),after.size()))throw std::runtime_error("Missing original callback RAM");
+  FlightDefenderSelectionInput selection{};selection.possession_side=before[0x5fb];selection.ball_cell=before[0x5fe];selection.random_first=before[0xe2];selection.random_second=before[0xe3];selection.threshold=before[0x61a];
+  for(unsigned id=1;id<=21;++id)if(id!=11){const unsigned record=0x300+12*id;selection.players[field_motion_index(static_cast<std::uint8_t>(id))]={before[record+6],before[record+8],before[record+10]!=0};}
+  std::vector<std::uint8_t> prior(before.begin()+0x601,before.begin()+0x601+before[0x600]);const auto selected=accumulate_flight_defenders(selection,prior);
+  if(selected.size()!=after[0x600])throw std::runtime_error("Original flight defender count differs");
+  for(unsigned i=0;i<selected.size();++i)if(selected[i]!=after[0x601+i])throw std::runtime_error("Original flight defender prefix differs");
+  return 0;
+ }
  if(argc==8 && std::string(argv[1])=="--compare-multi-chooser") {
   std::ifstream source_file(argv[2],std::ios::binary),before_file(argv[3],std::ios::binary),after_file(argv[4],std::ios::binary),expected_file(argv[5],std::ios::binary);
   auto source=load_phase_session(source_file);auto expected=load_phase_session(expected_file);std::array<unsigned char,2048> before{},after{};
@@ -245,7 +255,7 @@ static int comparisons(int argc,char** argv) {
   const auto selected=select_flight_defenders(selection);if(selected.size()!=original[0x600])throw std::runtime_error("Original defender count differs");
   for(unsigned i=0;i<selected.size();++i)if(selected[i]!=original[0x601+i])throw std::runtime_error("Original defender IDs differ");
   const auto result=step_match(state,{MatchInputKind::tick,1},content);
-  if(selected.empty() ? (result.unsupported || result.state.pass_stage!=MatchPassStage::flight_ready) : (result.unsupported!=UnsupportedCapability::defender_contact))
+  if(result.unsupported || result.state.pass_stage!=MatchPassStage::flight_ready || result.state.flight_defenders!=selected)
    throw std::runtime_error("Flight callback handling differs");
   return 0;
  }
@@ -533,8 +543,21 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
   auto contested=crossing.state;auto& defender=contested.session.current.field.motion[field_motion_index(12)];
   defender.x=contested.pass_trajectory->x;defender.y=contested.pass_trajectory->y;defender.status=0;
   contested.session.current.field.random_first=1;contested.session.current.field.random_second=0;
-  auto blocked=step_match(contested,{MatchInputKind::tick,14},content);
-  assert(blocked.unsupported==UnsupportedCapability::defender_contact && blocked.state.last_sequence==13);
+  auto captured=step_match(contested,{MatchInputKind::tick,14},content);
+  assert(!captured.unsupported && captured.state.pass_stage==MatchPassStage::flight_ready);
+  assert(!captured.state.flight_defenders.empty() && captured.state.flight_defenders.front()==12);
+  assert(verify_checkpoint(captured.state).flight_defenders==captured.state.flight_defenders);
+  auto invalid_prefix=captured.state;invalid_prefix.flight_defenders={1};bool reject_prefix=false;
+  try {std::ostringstream bad(std::ios::binary);write_match_save(bad,invalid_prefix,identity);}catch(const std::invalid_argument&){reject_prefix=true;}assert(reject_prefix);
+  contested.flight_defenders={12,12,12,12};auto capped=step_match(contested,{MatchInputKind::tick,14},content);
+  assert(!capped.unsupported && capped.state.flight_defenders==std::vector<std::uint8_t>({12,12,12,12,12}));
+  auto defended=verify_checkpoint(captured.state);
+  for(std::uint64_t turn=15;defended.pass_stage!=MatchPassStage::flight_arrived && turn<150;++turn){
+   auto next=step_match(defended,{MatchInputKind::tick,turn},content);assert(!next.unsupported);defended=next.state;
+  }
+  assert(defended.pass_stage==MatchPassStage::flight_arrived);
+  auto blocked=step_match(defended,{MatchInputKind::presentation_complete,defended.last_sequence+1},content);
+  assert(blocked.unsupported==UnsupportedCapability::defender_contact && blocked.state.last_sequence==defended.last_sequence);
  }
  auto flight_state=crossing.state;std::uint64_t seq=14;
  auto resumed_flight=restored_match;
@@ -666,6 +689,7 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  assert(defense_ai.unsupported==UnsupportedCapability::content && defense_ai.state.last_sequence==6);
  assert(verify_checkpoint(defense_complete.state).defense_menu->stage==MatchDefenseStage::complete);
  auto legacy_menu_save=[](std::string bytes,std::uint8_t version) {
+  assert(bytes.back()==0);bytes.pop_back(); // Version12 flight defender count.
   assert(bytes.back()==0);bytes.pop_back(); // Version11 target chooser flag.
   assert(bytes.back()==0);bytes.pop_back();
   assert(bytes.back()==0);bytes.pop_back();
@@ -733,7 +757,7 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  auto ai_flight_restored=verify_checkpoint(ai_flight.state);
  assert(ai_flight_restored.defense_menu->ai_trajectory->x==ai_flight.state.defense_menu->ai_trajectory->x);
  std::ostringstream save_v9_source(std::ios::binary);write_match_save(save_v9_source,ai_flight.state,identity);
- auto save_v9=save_v9_source.str();assert(save_v9.back()==0);save_v9.pop_back();save_v9[8]=9;
+ auto save_v9=save_v9_source.str();assert(save_v9.back()==0);save_v9.pop_back();assert(save_v9.back()==0);save_v9.pop_back();save_v9[8]=9;
  const auto v9_length=static_cast<std::uint32_t>(save_v9.size()-17);std::uint32_t v9_crc=0xffffffffu;
  for(std::size_t i=17;i<save_v9.size();++i){v9_crc^=static_cast<unsigned char>(save_v9[i]);for(unsigned j=0;j<8;++j)v9_crc=(v9_crc>>1)^(0xedb88320u&static_cast<std::uint32_t>(-static_cast<std::int32_t>(v9_crc&1)));}
  v9_crc=~v9_crc;for(unsigned i=0;i<4;++i){save_v9[9+i]=static_cast<char>(v9_length>>(8*i));save_v9[13+i]=static_cast<char>(v9_crc>>(8*i));}
@@ -744,8 +768,15 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
   auto contested=ai_first_crossing.state;auto& defender=contested.session.current.field.motion[field_motion_index(1)];
   defender.x=contested.defense_menu->ai_trajectory->x;defender.y=contested.defense_menu->ai_trajectory->y;defender.status=0;
   contested.session.current.field.random_first=1;contested.session.current.field.random_second=0;
-  auto denied_flight=step_match(contested,{MatchInputKind::tick,15},content);
-  assert(denied_flight.unsupported==UnsupportedCapability::defender_contact && denied_flight.state.last_sequence==14);
+  auto collected=step_match(contested,{MatchInputKind::tick,15},content);
+  assert(!collected.unsupported && !collected.state.flight_defenders.empty() && collected.state.flight_defenders.front()==1);
+  auto accumulated=verify_checkpoint(collected.state);
+  for(std::uint64_t turn=16;accumulated.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived && turn<150;++turn){
+   auto next=step_match(accumulated,{MatchInputKind::tick,turn},content);assert(!next.unsupported);accumulated=next.state;
+  }
+  assert(accumulated.defense_menu->stage==MatchDefenseStage::ai_flight_arrived);
+  auto denied_flight=step_match(accumulated,{MatchInputKind::presentation_complete,accumulated.last_sequence+1},content);
+  assert(denied_flight.unsupported==UnsupportedCapability::defender_contact && denied_flight.state.last_sequence==accumulated.last_sequence);
  }
  auto ai_flight_state=ai_flight.state;std::uint64_t ai_seq=14;
  for(;ai_flight_state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived && ai_seq<150;++ai_seq){

@@ -70,7 +70,14 @@ int main(int argc,char** argv) {
       auto contested=state;auto& defender=contested.session.current.field.motion[field_motion_index(1)];
       defender.x=contested.defense_menu->ai_trajectory->x;defender.y=contested.defense_menu->ai_trajectory->y;defender.status=0;
       contested.session.current.field.random_first=1;contested.session.current.field.random_second=0;
-      auto result=step_match(contested,{MatchInputKind::tick,seq},content);contested_checked=true;contested_unfinished=bool(result.unsupported);
+      auto result=step_match(contested,{MatchInputKind::tick,seq},content);contested_checked=true;
+      if(!result.unsupported){contested=result.state;for(unsigned turn=0;turn<128 && contested.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived;++turn){
+       result=step_match(contested,{MatchInputKind::tick,contested.last_sequence+1},content);if(result.unsupported)break;contested=result.state;
+      }
+      if(!result.unsupported && contested.defense_menu->stage==MatchDefenseStage::ai_flight_arrived)
+       result=step_match(contested,{MatchInputKind::presentation_complete,contested.last_sequence+1},content);
+      }
+      contested_unfinished=bool(result.unsupported) || !result.state.flight_defenders.empty();
      }
     }
     if(!blocked && state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived){std::cerr<<"owner "<<unsigned(owner)<<": opponent pass did not arrive\n";blocked=true;}

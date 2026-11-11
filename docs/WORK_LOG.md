@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-11 - Contested pass flight accumulation
+
+Both human and opponent provisional ordinary passes now retain opposing field defenders encountered at cell crossings and continue the flight to arrival. The stored prefix retains duplicate IDs and respects the original side capacities of five and four. Arrival with a nonempty prefix stops atomically at the still-unimplemented defender encounter; it does not award the pass to the recipient. Runtime checkpoint version 12 preserves this prefix and reads earlier versions. The prefix is runtime-owned while the older scenario session remains unchanged.
+
+Ninety-nine constructed original CPU callbacks matched the shared accumulation kernel across both sides, all prefix lengths, three random pairs and three placement/status patterns; the preexisting empty or retained prefix can include a defender selected again. Reproduce with `tools/check_flight_prefix_original.py` and private ROM/RAM. These are intervened callback cases, not real NMI, presentation or interception outcomes. Synthetic runtime tests exercise both sides, save/reload, capacity and the atomic arrival blocker. The manual possession acceptance still exits 1 at the contested arrival, although two human and one opponent unopposed pass cycles finish. Windows build and 64 registered checks passed; Linux syntax passed with warnings as errors. Complete match and graphical client remain unfinished; overall progress unmeasured. Next trace the original arrival defender decisions and resolution. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Multi-teammate pass chooser
 
 The opt-in provisional runtime now opens a recipient chooser when an ordinary pass target contains two to four teammates. It exposes the selected index, clamps up/down movement, confirms the chosen teammate, and returns to targeting on cancel; cancel takes precedence over simultaneous confirm. The chosen recipient can proceed through pass preparation. Checkpoint version 11 preserves an open chooser and reads earlier versions. Chooser rendering and original opening presentation remain unimplemented; opening while holding a movement direction and confirming simultaneously is explicitly unsupported.
