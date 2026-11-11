@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 fifth-cycle polls
+
+Ten further opponent20 polls match the original after the fourth field round, random index133 to143, including represented fields and retained cursor/flight flag. The next original poll refreshes the ball to (90,151)/cell68 and chooses an action1 pass with recipient21; that AI decision remains guarded. The verifier rejects that unmodeled decision atomically. Evidence: `../Captain-Majid-analysis/opponent20-fifth-polls-v2-20261111`; Windows build, original replay and all 62 checks passed. AI/timing remain supplied, full match unsupported and overall progress unmeasured. Next compare the new pass decision and extend its original trace. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 fourth field round
 
 Opponent20's following action2 field round matches all 22 original player updates to E145, random index112 to133. As in the previous round, the first slot shares the already-consumed clock random event and has no interleaved switch waits. Phase449 preserves the checkpoint; `tools/verify_opponent20_wait_round.py --fourth-round` compares represented fields, retained cursor/flag and checks snapshot roundtrip plus atomic invalid-order/replay rejection. Evidence: `../Captain-Majid-analysis/opponent20-fourth-field-v1-20261111`; earlier shared-random replay also matches. Windows build and all 62 checks passed. Captured AI/timing are supplied; full match unsupported, overall progress unmeasured. Next inspect the remaining original trace and extend it if necessary. Suggested model GPT-6.1 Terra High.

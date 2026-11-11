@@ -928,7 +928,7 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
     if (sample.ball_mode_sample) {
         const auto mode=*sample.ball_mode_sample;
         const bool player18=input.current.field.ball_owner==18 && (input.current.clock.remaining==156 || input.current.clock.remaining==155 || input.current.clock.remaining==154);
-        const bool player20=input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127 || input.current.clock.remaining==126 || input.current.clock.remaining==125);
+        const bool player20=input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127 || input.current.clock.remaining==126 || input.current.clock.remaining==125 || input.current.clock.remaining==124);
         if (!input.score || input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 ||
             (!player18 && !player20) || input.current.clock.extra_time || input.current.field.side!=11 ||
             !((mode==192 && state.current.clock.ball_mode==128) || (mode==128 && state.current.clock.ball_mode==192)))
@@ -982,9 +982,10 @@ NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionSt
     const bool later=input.phase==FieldSessionPhase::player2_opponent_field_complete;
     const bool action_round=input.phase==FieldSessionPhase::player2_opponent_action_field_complete;
     const bool next_round=input.phase==FieldSessionPhase::player2_opponent_next_field_complete;
+    const bool fourth_round=input.phase==FieldSessionPhase::player2_opponent_fourth_field_complete;
     const bool observed_switch=next_round && input.control->controlled_player==3 && input.control->decision_timer==5 &&
         sample.buttons.held==128 && sample.buttons.pressed==128 && sample.interleaved_waits.size()==4;
-    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later && !action_round && !next_round) ||
+    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later && !action_round && !next_round && !fourth_round) || (fourth_round && !input.control->decision_timer) ||
        (sample.buttons.held!=0 && sample.buttons.held!=128) || (sample.buttons.pressed && !observed_switch))
         throw std::invalid_argument("Opponent20 poll requires the observed neutral or held-A input");
     auto normalized=input;normalized.phase=FieldSessionPhase::control_ready;normalized.area_defender_cursor=0;
@@ -998,7 +999,7 @@ NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionSt
     else if(result.poll.state.phase==FieldSessionPhase::control_clock_pending && !later)
         result.poll.state.phase=FieldSessionPhase::player2_opponent_clock_pending;
     else if(result.poll.state.phase==FieldSessionPhase::control_ready)
-        result.poll.state.phase=next_round ? FieldSessionPhase::player2_opponent_next_field_complete : action_round ? FieldSessionPhase::player2_opponent_action_field_complete : later ? FieldSessionPhase::player2_opponent_field_complete : FieldSessionPhase::player2_opponent_control_ready;
+        result.poll.state.phase=fourth_round ? FieldSessionPhase::player2_opponent_fourth_field_complete : next_round ? FieldSessionPhase::player2_opponent_next_field_complete : action_round ? FieldSessionPhase::player2_opponent_action_field_complete : later ? FieldSessionPhase::player2_opponent_field_complete : FieldSessionPhase::player2_opponent_control_ready;
     else throw std::invalid_argument("Unobserved opponent20 control continuation");
     result.poll.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.poll.state);return result;

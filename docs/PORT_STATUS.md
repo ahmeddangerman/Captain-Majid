@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Ten more opponent20 polls match; the original's next action1 pass/recipient21 decision is not yet native-matched. All 62 Windows checks passed; full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Opponent20's fourth action2 field round matches 22 original updates with shared clock/random ordering. Further play remains unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Opponent20's fourth cell refresh, explicitly supplied action2 and control clock match the original. The next field round and autonomous AI remain unmatched. All 62 Windows checks passed; full match unsupported and progress unmeasured.

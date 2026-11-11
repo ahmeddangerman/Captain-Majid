@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 pass decision
+
+Ten opponent20 polls after the fourth field round match, random index143. Snapshot: `../Captain-Majid-analysis/opponent20-fifth-polls-v2-20261111/10.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The next original poll refreshes ball to (90,151)/cell68 and chooses action1/recipient21; this remains guarded and the current trace ends during its presentation. `tools/verify_player2_opponent_control.py --fifth-cycle-polls` checks state and atomic rejection. Windows build and all 62 checks passed. Next compare this pass decision and extend original capture; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 fourth field round
 
 Opponent20's fourth action2 field round matches all 22 original updates to E145, random index133. Phase449 snapshot: `../Captain-Majid-analysis/opponent20-fourth-field-v1-20261111/field.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. `tools/verify_opponent20_wait_round.py --fourth-round` checks state, cursor/flag, roundtrip and atomic invalid-order/replay rejection. The first slot shares the clock random event; no extra waits. Windows build, prior round replay and 62 checks passed. Next inspect remaining trace and continue; AI/timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
