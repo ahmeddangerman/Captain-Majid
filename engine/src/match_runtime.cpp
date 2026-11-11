@@ -99,10 +99,10 @@ MatchStepResult resolve_free_pass_arrival(const MatchRuntimeState& input,const M
     auto next=input;auto& session=next.session;const auto trajectory=*next.pass_trajectory;
     session.current.field.ball_x=static_cast<std::uint8_t>(trajectory.x>>8);session.current.field.ball_y=static_cast<std::uint8_t>(trajectory.y>>8);session.current.field.ball_cell=*next.pass_cell;
     auto race=resolve_field_loose_ball_race(session.current.field,session.recovery->opposing_player,next.pass_target->distance,content.data->field_players,*content.data->movement,*content.data->pass_race);
-    if(race.rounds>3 || !race.winner || *race.winner<1 || *race.winner>10){result.unsupported=UnsupportedCapability::action;return result;}
-    session.current.field=std::move(race.field);auto& field=session.current.field;field.ball_owner=*race.winner;
+    if(race.rounds>3 || !race.winner || *race.winner<1 || *race.winner==11 || *race.winner>21){result.unsupported=UnsupportedCapability::action;return result;}
+    session.current.field=std::move(race.field);auto& field=session.current.field;field.ball_owner=*race.winner;field.side=*race.winner<11 ? 0 : 11;
     auto& player=field.motion[field_motion_index(*race.winner)];player.x=static_cast<std::uint16_t>((player.x&255u)|(unsigned(field.ball_x)<<8));player.y=static_cast<std::uint16_t>((player.y&255u)|(unsigned(field.ball_y)<<8));
-    if((field.ball_y>=96 && field.ball_y<160 && (field.ball_x<80 || field.ball_x>=176)) || (session.recovery->game_mode==4 && field.roster[field.ball_owner].type!=1 && field.ball_x>=128)){result.unsupported=UnsupportedCapability::action;return result;}
+    if((field.ball_y>=96 && field.ball_y<160 && (field.ball_x<80 || field.ball_x>=176)) || (session.recovery->game_mode==4 && field.side==0 && field.roster[field.ball_owner].type!=1 && field.ball_x>=128)){result.unsupported=UnsupportedCapability::action;return result;}
     session.phase=FieldSessionPhase::player_control;session.human_pass_cursor.reset();session.human_pass_steps=0;
     session.ordinary_pass_candidates.reset();session.ordinary_pass_recipient.reset();session.ordinary_pass_defenses.reset();
     next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(trajectory.x),static_cast<std::uint8_t>(trajectory.y)};

@@ -13,7 +13,7 @@ from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def observe(prg, ready, home_x):
+def observe(prg, ready, home_x, opposing_x):
     _, raw = trace_recovery(prg, ready, control_input=(64, 0))
     memory = ObservedCartridge(prg, raw, None, set());memory.ram[:0x1a] = bytes(0x1a)
     for address,value in ((0,5),(1,255),(2,0x90),(3,26),(4,27),(5,1),(6,0x50),(7,26),(8,27),(0x191,0x85),(0x192,0xeb),(0x24,26),(0x25,27)):
@@ -37,7 +37,7 @@ def observe(prg, ready, home_x):
                     if player!=11 and player!=memory[0x441]:
                         memory[0x306+12*player]=52;memory[0x308+12*player]=84;memory[0x30a+12*player]=0
                 memory[0x306+12*3],memory[0x308+12*3]=home_x,108
-                memory[0x306+12*16],memory[0x308+12*16]=100,108
+                memory[0x306+12*16],memory[0x308+12*16]=opposing_x,108
                 held=pressed=1;stage=7
             elif stage==7:held=pressed=128;stage=8
         if bank==30 and cpu.pc==0xd84b and stage==8:
@@ -62,6 +62,7 @@ def observe(prg, ready, home_x):
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','ready-dir','pack','distance','exe','private-temp'):p.add_argument('--'+name,type=Path,required=True)
+    p.add_argument('--opponent-winner',action='store_true',help='Construct races favoring the opponent')
     args=p.parse_args();rom=args.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected verified Japanese ROM')
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private temporary data must stay outside the checkout')
@@ -70,14 +71,15 @@ def main():
         tmp=Path(temp);before=tmp/'before.cmjsession';after=tmp/'after.cmjsession';raw_file=tmp/'raw.bin';target_file=tmp/'target.bin'
         for fixture in range(4):
             ready=(args.ready_dir/f'{fixture}-ready.bin').read_bytes()
-            for home_x in (104,108,110):
-                handoff,target,arrival,final,boundary,rounds=observe(rom[16:262160],ready,home_x)
+            for home_x in ((96,100,104) if args.opponent_winner else (104,108,110)):
+                handoff,target,arrival,final,boundary,rounds=observe(rom[16:262160],ready,home_x,108 if args.opponent_winner else 100)
                 before.write_bytes(export_session(handoff));target_file.write_bytes(target)
                 result=subprocess.run([str(args.exe.resolve()),'--compare-target',str(before),str(target_file),str(args.distance.resolve())],capture_output=True,text=True)
                 if result.returncode:raise RuntimeError(f'target fixture={fixture}, x={home_x}: {result.stderr}')
                 target_count+=1
-                if arrival[0x600] or boundary!=0xdf0d or final[0x5fb]!=0:
-                    skipped.append((fixture,home_x,'defended, timeout or opposing winner'));continue
+                expected_side=11 if args.opponent_winner else 0
+                if arrival[0x600] or boundary!=0xdf0d or final[0x5fb]!=expected_side:
+                    skipped.append((fixture,home_x,'defended, timeout or different winner'));continue
                 before.write_bytes(export_session(arrival));after.write_bytes(export_session(final));raw_file.write_bytes(arrival)
                 result=subprocess.run([str(args.exe.resolve()),'--compare-free-arrival',str(before),str(after),str(raw_file),str(args.pack.resolve())],capture_output=True,text=True)
                 if result.returncode:

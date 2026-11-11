@@ -13,7 +13,7 @@ int main(int argc,char** argv) {
  if(demo)std::cerr<<"PROVISIONAL DEMO: simplified timing and random values; synthetic content.\n";
  using namespace captain;
  unsigned failures=0;
- bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false,interception_checked=false,interception_unfinished=false,deflection_checked=false,deflection_unfinished=false,human_defender_checked=false,human_defender_unfinished=false,later_checked=false,later_unfinished=false,special_checked=false,special_unfinished=false,free_target_checked=false,free_target_unfinished=false,free_opponent_checked=false,free_opponent_unfinished=false;
+ bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false,interception_checked=false,interception_unfinished=false,deflection_checked=false,deflection_unfinished=false,human_defender_checked=false,human_defender_unfinished=false,later_checked=false,later_unfinished=false,special_checked=false,special_unfinished=false,free_target_checked=false,free_target_unfinished=false,free_opponent_checked=false,free_opponent_unfinished=false,free_timeout_checked=false,free_timeout_unfinished=false;
  const std::array<std::uint8_t,3> owners{{3,7,15}};
  const std::array<std::uint8_t,3> targets{{7,3,19}};
  unsigned fixture=0;
@@ -156,8 +156,12 @@ int main(int argc,char** argv) {
       result=step_match(result.state,{MatchInputKind::tick,result.state.last_sequence+1},content);
      if(empty_confirmed && !result.unsupported && result.state.pass_stage==MatchPassStage::flight_arrived){
       auto opposing=result.state;auto& home=opposing.session.current.field.motion[field_motion_index(1)];home.x=52u<<8;home.y=84u<<8;
+      auto timeout=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);free_timeout_checked=true;free_timeout_unfinished=bool(timeout.unsupported);
       auto& away=opposing.session.current.field.motion[field_motion_index(12)];away.x=opposing.pass_trajectory->x;away.y=opposing.pass_trajectory->y;away.status=0;
-      auto other=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);free_opponent_checked=true;free_opponent_unfinished=bool(other.unsupported);
+      auto other=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);free_opponent_checked=true;
+      if(!other.unsupported)other=step_match(other.state,{MatchInputKind::tick,other.state.last_sequence+1},content);
+      free_opponent_unfinished=bool(other.unsupported) || other.state.session.phase!=FieldSessionPhase::control_ready || other.state.session.current.field.side!=11 || other.state.session.current.field.ball_owner!=12;
+      if(!free_opponent_unfinished)std::cout<<"owner "<<unsigned(owner)<<": provisional empty-target pass reached opposing control\n";
       result=step_match(result.state,{MatchInputKind::presentation_complete,result.state.last_sequence+1},content);
       if(!result.unsupported)result=step_match(result.state,{MatchInputKind::tick,result.state.last_sequence+1},content);
      }
@@ -253,6 +257,7 @@ int main(int argc,char** argv) {
  if(demo && (!special_checked || special_unfinished)){std::cerr<<"M1 still incomplete: special flight defender outcomes are unsupported or unverified\n";++failures;}
  if(demo && (!free_target_checked || free_target_unfinished)){std::cerr<<"M1 still incomplete: passing to an empty target is unsupported or unverified\n";++failures;}
  if(demo && (!free_opponent_checked || free_opponent_unfinished)){std::cerr<<"M1 still incomplete: opponent wins in empty-target races are unsupported or unverified\n";++failures;}
+ if(demo && (!free_timeout_checked || free_timeout_unfinished)){std::cerr<<"M1 still incomplete: empty-target race timeout is unsupported or unverified\n";++failures;}
  std::cerr<<failures<<" exercised checks incomplete; other match routes remain unverified\n";
  return failures?1:0;
 }

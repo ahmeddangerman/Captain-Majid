@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-11 - Opposing winner of an empty-pass race
+
+The provisional runtime now accepts an opposing field player winning a human empty-target pass race within the existing three-round bound. It switches possession side, places the winner at the ball and enters player-control setup; the existing opponent control setup can then run. Goal-area and side-zero story branches remain explicitly guarded. Timeout and longer races remain unsupported.
+
+Twelve constructed original CPU handoffs and opposing-winner races matched represented field/motion, clock, power and experience at the winner handoff, using four ready snapshots and three intervened home-player positions. `tools/check_empty_pass_original.py --opponent-winner` reproduces them with private inputs; the original CPU uses cooperative waits without live NMI/audio/PPU, and the comparison stops at the original winner boundary. A synthetic acceptance fixture proceeds to opponent control but still exits 1 on the unsupported race timeout. Windows build/all 64 checks and Linux warnings-as-errors syntax passed; prior isolated full Linux Make attempts hit GCC/linker failures. Complete match, graphical client and other routes remain unfinished. Overall progress is unmeasured. Next compare and implement empty-pass race timeout recovery. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Empty-target pass to a home race winner
 
 The provisional runtime now carries a human ordinary pass aimed at an empty cell through target/distance setup, numeric flight, original loose-ball race and a home player's control handoff when that player wins within three rounds. The original sentinel recipient 255 is preserved in runtime checkpoints. Missing race content, timeouts, longer races, opposing winners, same-cell flight and unsupported goal-area/story cases still reject atomically. Numeric timing/random remain provisional and presentation is acknowledged. Optional private `tools/export_shot_content.py ROM PRIVATE_PACK --team-id 3 --include-pass-race` produces CMJSHOTO with the original race speed table; K through N packs remain readable. The O table matched the existing independent private race exporter; truncated/trailing O packs rejected.
