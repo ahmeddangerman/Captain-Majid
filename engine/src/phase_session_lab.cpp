@@ -57,6 +57,9 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::player2_same_cell_pass_recovery_moved: return "player2 same-cell pass recovery movement complete";
     case captain::FieldSessionPhase::player2_same_cell_pass_recovered_owner: return "player2 same-cell pass recovered by opponent";
     case captain::FieldSessionPhase::player2_opponent_control_ready: return "opponent20 control prepared";
+    case captain::FieldSessionPhase::player2_opponent_clock_pending: return "opponent20 control clock pending";
+    case captain::FieldSessionPhase::player2_opponent_field_pending: return "opponent20 field round pending";
+    case captain::FieldSessionPhase::player2_opponent_field_complete: return "opponent20 field round complete";
     case captain::FieldSessionPhase::third_return_defender_compared: return "third return defender comparison pending result";
     case captain::FieldSessionPhase::third_return_defender_result: return "third return defender result2 pending contact";
     case captain::FieldSessionPhase::third_return_contact_clocked: return "third return result2 contact clock complete";
@@ -758,7 +761,8 @@ void advance_observed_nmi_world_file(captain::PhaseSessionState& state, const ca
     std::ifstream input(path);
     if (!input) throw std::invalid_argument("Unable to open observed NMI world file");
     const auto samples = captain::load_observed_nmi_field_polls(input);
-    const auto result = ordinary_return ? captain::advance_observed_ordinary_return_field_round(
+    const auto result = state.phase==captain::FieldSessionPhase::player2_opponent_field_pending ? captain::advance_observed_player2_opponent_field_round(
+        state, content.field_players, *content.movement, *content.control_movement, *content.world_step, initial_index, samples) : ordinary_return ? captain::advance_observed_ordinary_return_field_round(
         state, content.field_players, *content.movement, *content.control_movement, *content.world_step, initial_index, samples) :
         captain::advance_observed_nmi_field_round(state, content.field_players, *content.movement,
         *content.control_movement, *content.world_step, initial_index, samples);
@@ -776,7 +780,8 @@ void advance_observed_nmi_poll_file(captain::PhaseSessionState& state, const cap
     std::ifstream input(path);
     if (!input) throw std::invalid_argument("Unable to open observed NMI poll file");
     const auto sample = captain::load_observed_nmi_poll(input);
-    const auto result = ordinary_return ? captain::advance_observed_ordinary_return_poll(
+    const auto result = state.phase==captain::FieldSessionPhase::player2_opponent_control_ready ? captain::advance_observed_player2_opponent_poll(
+        state, content.field_players, *content.movement, *content.control_movement, initial_index, sample) : ordinary_return ? captain::advance_observed_ordinary_return_poll(
         state, content.field_players, *content.movement, *content.control_movement, initial_index, sample) :
         captain::advance_observed_nmi_control_poll(state, content.field_players, *content.movement, *content.control_movement, initial_index, sample);
     state = result.poll.state;
@@ -791,7 +796,8 @@ void advance_observed_nmi_clock_file(captain::PhaseSessionState& state, const ca
     std::ifstream input(path);
     if (!input) throw std::invalid_argument("Unable to open observed NMI clock file");
     const auto events = captain::load_observed_clock_events(input);
-    const auto result = ordinary_return ? captain::advance_observed_ordinary_return_clock(
+    const auto result = state.phase==captain::FieldSessionPhase::player2_opponent_clock_pending ? captain::advance_observed_player2_opponent_clock(
+        state, content.field_players, content.goalkeepers, *content.world_step, initial_index, events) : ordinary_return ? captain::advance_observed_ordinary_return_clock(
         state, content.field_players, content.goalkeepers, *content.world_step, initial_index, events) :
         captain::advance_observed_nmi_control_clock(state, content.field_players, content.goalkeepers, *content.world_step, initial_index, events);
     state = result.tick.state;

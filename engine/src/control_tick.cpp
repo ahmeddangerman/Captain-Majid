@@ -233,8 +233,9 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
             break;
         case ObservedClockEventKind::ball_mode_sample:
             if (!input.score || input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
-                (input.current.clock.remaining != 160 && input.current.clock.remaining != 159 && input.current.clock.remaining != 155 && input.current.clock.remaining != 154) || input.current.clock.extra_time != 0 ||
-                input.current.field.side != 11 || input.current.field.ball_owner != 18 ||
+                !((input.current.field.ball_owner==18 && (input.current.clock.remaining==160 || input.current.clock.remaining==159 || input.current.clock.remaining==155 || input.current.clock.remaining==154)) ||
+                  (input.current.field.ball_owner==20 && input.current.clock.remaining==128)) || input.current.clock.extra_time != 0 ||
+                input.current.field.side != 11 ||
                 !((event.held == 192 && state.current.clock.ball_mode == 128) ||
                   (event.held == 128 && state.current.clock.ball_mode == 192)))
                 throw std::invalid_argument("Only the observed kickoff clock ball-mode change is supported");
@@ -696,8 +697,9 @@ static FieldRoundResult run_control_field_round(const PhaseSessionState& input,
             if (sample.ball_mode_sample) {
                 const auto mode = *sample.ball_mode_sample;
                 if (!input.score || input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
-                    (input.current.clock.remaining != 159 && input.current.clock.remaining != 158 && input.current.clock.remaining != 155 && input.current.clock.remaining != 154 && input.current.clock.remaining != 153) || input.current.clock.extra_time != 0 ||
-                    input.current.field.side != 11 || input.current.field.ball_owner != 18 ||
+                    !((input.current.field.ball_owner==18 && (input.current.clock.remaining==159 || input.current.clock.remaining==158 || input.current.clock.remaining==155 || input.current.clock.remaining==154 || input.current.clock.remaining==153)) ||
+                      (input.current.field.ball_owner==20 && input.current.clock.remaining==127)) || input.current.clock.extra_time != 0 ||
+                    input.current.field.side != 11 ||
                     !((mode == 192 && state.current.clock.ball_mode == 128) ||
                       (mode == 128 && state.current.clock.ball_mode == 192)))
                     throw std::invalid_argument("Only the observed kickoff field-round ball-mode change is supported");
@@ -876,8 +878,10 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
     state.current.field.random_second = random.state.second;
     if (sample.ball_mode_sample) {
         const auto mode=*sample.ball_mode_sample;
+        const bool player18=input.current.field.ball_owner==18 && (input.current.clock.remaining==156 || input.current.clock.remaining==155 || input.current.clock.remaining==154);
+        const bool player20=input.current.field.ball_owner==20 && input.current.clock.remaining==128;
         if (!input.score || input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 ||
-            (input.current.clock.remaining!=156 && input.current.clock.remaining!=155 && input.current.clock.remaining!=154) || input.current.clock.extra_time || input.current.field.side!=11 || input.current.field.ball_owner!=18 ||
+            (!player18 && !player20) || input.current.clock.extra_time || input.current.field.side!=11 ||
             !((mode==192 && state.current.clock.ball_mode==128) || (mode==128 && state.current.clock.ball_mode==192)))
             throw std::invalid_argument("Unsupported observed control-poll ball-mode sample");
         state.current.clock.ball_mode=mode;
@@ -902,6 +906,23 @@ NmiFieldRoundResult advance_observed_nmi_field_round(const PhaseSessionState& in
     auto result = run_control_field_round(input, primary, movement, control, world, buttons, nullptr, &inputs, &index);
     return {std::move(result), index};
 }
+NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
+    std::uint8_t initial_random_index,const ObservedNmiFieldPoll& sample) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_opponent_control_ready || (sample.buttons.held!=0 && sample.buttons.held!=128) ||
+       sample.buttons.pressed)
+        throw std::invalid_argument("Opponent20 poll requires the observed neutral or held-A input");
+    auto normalized=input;normalized.phase=FieldSessionPhase::control_ready;normalized.area_defender_cursor=0;
+    auto result=advance_observed_nmi_control_poll(normalized,primary,movement,control,initial_random_index,sample);
+    if(result.poll.state.phase==FieldSessionPhase::control_clock_pending)
+        result.poll.state.phase=FieldSessionPhase::player2_opponent_clock_pending;
+    else if(result.poll.state.phase==FieldSessionPhase::control_ready)
+        result.poll.state.phase=FieldSessionPhase::player2_opponent_control_ready;
+    else throw std::invalid_argument("Unobserved opponent20 control continuation");
+    result.poll.state.area_defender_cursor=input.area_defender_cursor;
+    validate_phase_session(result.poll.state);return result;
+}
 NmiControlPollResult advance_observed_ordinary_return_poll(const PhaseSessionState& input,
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
     std::uint8_t initial_random_index,const ObservedNmiFieldPoll& sample) {
@@ -918,6 +939,20 @@ NmiControlPollResult advance_observed_ordinary_return_poll(const PhaseSessionSta
     result.poll.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.poll.state);return result;
 }
+NmiClockResult advance_observed_player2_opponent_clock(const PhaseSessionState& input,
+    const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content,
+    std::uint8_t initial_random_index,const std::vector<ObservedClockEvent>& events) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_opponent_clock_pending)
+        throw std::invalid_argument("Opponent20 control clock requires its pending phase");
+    auto normalized=input;normalized.phase=FieldSessionPhase::control_clock_pending;normalized.area_defender_cursor=0;
+    auto result=advance_observed_nmi_control_clock(normalized,field,keepers,content,initial_random_index,events);
+    if(result.tick.state.phase!=FieldSessionPhase::field_round_pending)
+        throw std::invalid_argument("Unobserved opponent20 clock continuation");
+    result.tick.state.phase=FieldSessionPhase::player2_opponent_field_pending;
+    result.tick.state.area_defender_cursor=input.area_defender_cursor;
+    validate_phase_session(result.tick.state);return result;
+}
 NmiClockResult advance_observed_ordinary_return_clock(const PhaseSessionState& input,
     const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content,
     std::uint8_t initial_random_index,const std::vector<ObservedClockEvent>& events) {
@@ -930,6 +965,20 @@ NmiClockResult advance_observed_ordinary_return_clock(const PhaseSessionState& i
     result.tick.state.phase=FieldSessionPhase::ordinary_return_field_round;
     result.tick.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.tick.state);return result;
+}
+NmiFieldRoundResult advance_observed_player2_opponent_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
+    const WorldStepContent& world,std::uint8_t initial_random_index,const std::array<ObservedNmiFieldPoll,22>& inputs) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_opponent_field_pending)
+        throw std::invalid_argument("Opponent20 field round requires its pending phase");
+    auto normalized=input;normalized.phase=FieldSessionPhase::field_round_pending;normalized.area_defender_cursor=0;
+    auto result=advance_observed_nmi_field_round(normalized,primary,movement,control,world,initial_random_index,inputs);
+    if(result.round.state.phase!=FieldSessionPhase::control_ready)
+        throw std::invalid_argument("Unobserved opponent20 field-round continuation");
+    result.round.state.phase=FieldSessionPhase::player2_opponent_field_complete;
+    result.round.state.area_defender_cursor=input.area_defender_cursor;
+    validate_phase_session(result.round.state);return result;
 }
 NmiFieldRoundResult advance_observed_ordinary_return_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,

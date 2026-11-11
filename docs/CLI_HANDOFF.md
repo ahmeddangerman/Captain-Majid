@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 first field cycle
+
+Opponent20's recovered possession now matches 11 observed input polls, the control clock and one 22-player field round, clock127 and random index16. Phase437 snapshot: `../Captain-Majid-analysis/opponent20-field-v2-20261111/field.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Replay: `tools/verify_player2_opponent_control.py`; original random/travel/ball-mode events and inputs remain supplied. The snapshot roundtrips and repeated field-round execution rejects atomically. Windows CMake build and 62 registered checks passed. Next compare the next opponent control cycle and decision; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-10: opponent20 control ready
 
 Opponent20's post-recovery setup now matches through the original E145 control-ready boundary, including four supplied NMI/travel pairs and a captured ball-mode sample; random index236. Private checkpoint: `../Captain-Majid-analysis/player2-opponent-ready-v2-ready.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Original replay and all 62 registered Windows checks passed. Next compare opponent20's control polls and first field cycle; presentation/timing remain supplied, full match unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.

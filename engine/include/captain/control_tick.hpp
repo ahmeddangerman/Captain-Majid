@@ -87,10 +87,19 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
 NmiControlPollResult advance_observed_ordinary_return_poll(const PhaseSessionState& input,
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
     std::uint8_t initial_random_index,const ObservedNmiFieldPoll& sample);
+NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
+    std::uint8_t initial_random_index,const ObservedNmiFieldPoll& sample);
 NmiClockResult advance_observed_ordinary_return_clock(const PhaseSessionState& input,
     const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content,
     std::uint8_t initial_random_index,const std::vector<ObservedClockEvent>& events);
+NmiClockResult advance_observed_player2_opponent_clock(const PhaseSessionState& input,
+    const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content,
+    std::uint8_t initial_random_index,const std::vector<ObservedClockEvent>& events);
 NmiFieldRoundResult advance_observed_ordinary_return_field_round(const PhaseSessionState& input,
+    const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
+    const WorldStepContent& world,std::uint8_t initial_random_index,const std::array<ObservedNmiFieldPoll,22>& inputs);
+NmiFieldRoundResult advance_observed_player2_opponent_field_round(const PhaseSessionState& input,
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
     const WorldStepContent& world,std::uint8_t initial_random_index,const std::array<ObservedNmiFieldPoll,22>& inputs);
 std::array<ObservedNmiFieldPoll, 22> load_observed_nmi_field_polls(std::istream& input);

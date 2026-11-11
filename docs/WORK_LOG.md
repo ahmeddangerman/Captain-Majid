@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 first control cycle
+
+Opponent20's recovered possession now matches the original through 11 captured input polls, a clock/energy update and one 22-player field round. The replay supplies captured random, travel and ball-mode samples in their observed order; random index advances from236 to16 and the clock from128 to127. Phases435-437 preserve the pending clock, field round and completed round; the existing cursor and flight flag match the original. `tools/verify_player2_opponent_control.py` compares all represented session bytes at each poll and at clock/field boundaries, and checks snapshot roundtrip and atomic rejection of a repeated field round. Evidence: `../Captain-Majid-analysis/opponent20-field-v2-20261111`; original trace remains private. Windows CMake build, original replay and all 62 registered checks passed. Further opponent cycles and autonomous match timing remain unsupported; a complete playable match is still unfinished, and progress is unmeasured. Next trace the next control cycle and opponent decision. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-10 - Opponent20 control ready
 
 The captured opponent20 control setup now continues through four observed NMI/travel pairs and the original ball-mode sample to the E145 control-ready boundary, random index236. The replay compares all represented session bytes; event timing and presentation remain explicitly supplied. Evidence: `../Captain-Majid-analysis/player2-opponent-ready-v2-ready.cmjsession` and the private instrumented race trace. The original comparison and all 62 registered Windows checks passed. Opponent control cycles and decisions remain unmatched; a complete playable match is unsupported and overall progress is unmeasured. Next compare opponent20's first control polls and field cycle. Suggested model GPT-6.1 Terra High.
