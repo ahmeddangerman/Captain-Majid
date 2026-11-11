@@ -21,6 +21,7 @@ def main():
     parser.add_argument('--interception', action='store_true', help='Also compare result-three possession changes through field movement')
     parser.add_argument('--deflection', action='store_true', help='Also compare result-two loose-ball recovery through field movement')
     parser.add_argument('--later-defenders', action='store_true', help='Compare terminal outcomes after a first non-stopping defender')
+    parser.add_argument('--special', action='store_true', help='Compare special defender rolls through their full outcomes')
     args = parser.parse_args()
     rom = args.rom.read_bytes()
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
@@ -31,9 +32,9 @@ def main():
     if pcs[24084] != '8845':
         raise ValueError('Unexpected captured opponent defender entry')
     original = snapshots(24084)
-    if (args.interception or args.deflection or args.later_defenders) and not args.clock_pack:
+    if (args.interception or args.deflection or args.later_defenders or args.special) and not args.clock_pack:
         parser.error('Continuation comparisons require --clock-pack')
-    cases = {}; clock_cases = 0; interception_cases = 0; deflection_cases = 0; later_cases = {}
+    cases = {}; clock_cases = 0; interception_cases = 0; deflection_cases = 0; later_cases = {}; special_cases = {}
     with tempfile.TemporaryDirectory(prefix='pass-flight-contact-', dir=args.private_temp) as temp:
         before_path, prep_path, after_path = (Path(temp) / name for name in ('before.bin', 'prep.bin', 'after.bin'))
         for kind in (1, 7, 23, 35, 70):
@@ -113,7 +114,7 @@ def main():
                             raise RuntimeError(f'interception profile={kind}, level={level}, random={(first, second)}: {result.stderr}')
                         interception_cases += 1
                         continue
-                    if args.clock_pack and cpu.y in (0, 1) and memory[0x43e] == 0:
+                    if args.clock_pack and not args.special and cpu.y in (0, 1) and memory[0x43e] == 0:
                         for _ in range(1500000):
                             bank = memory.bank_at(cpu.pc)
                             if bank == 26 and cpu.pc == 0x888a:
@@ -135,7 +136,7 @@ def main():
                         if result.returncode:
                             raise RuntimeError(f'clock profile={kind}, level={level}, random={(first, second)}: {result.stderr}')
                         clock_cases += 1
-        if args.clock_pack:
+        if args.clock_pack and not args.special:
             raw = bytearray(original)
             raw[0x600], raw[0x601], raw[0x602] = 2, 2, 2
             raw[0x61c], raw[0x61d] = 7, 0
@@ -163,9 +164,14 @@ def main():
                 raise RuntimeError(f'duplicate multi-contact: {result.stderr}')
             clock_cases += 1
         if args.later_defenders:
-            for kind in (1, 7, 23, 35, 70):
+            for kind in ((1,70) if args.special else (1, 7, 23, 35, 70)):
                 raw = bytearray(original);raw[0x600],raw[0x601],raw[0x602] = 2,2,3
                 raw[0x61c],raw[0x61d] = 6,0;raw[0x300+12*3],raw[0x303+12*3] = kind,0
+                if args.special:
+                    raw[0x300+12*2],raw[0x303+12*2]=23,0
+                    raw[0x306+12*2],raw[0x308+12*2]=128,124
+                    raw[0x306+12*3],raw[0x308+12*3]=132,124
+                    raw[0xe2],raw[0xe3],raw[0x61c]=0,255,20
                 memory = ObservedCartridge(rom[16:262160], bytes(raw), None, set())
                 memory.select = memory[0x23]; memory.registers[6:8] = [26, 27]
                 cpu = MPU(memory=memory);cpu.pc,cpu.sp,cpu.p,cpu.a,cpu.x,cpu.y = 0x8845,0x4c,0x31,0x6c,0x6c,0xa4
@@ -173,7 +179,7 @@ def main():
                 for _ in range(3000000):
                     bank = memory.bank_at(cpu.pc)
                     if bank == 26 and cpu.pc == 0x8870:
-                        if memory[0x43e]: raise RuntimeError('Later defender unexpectedly used a special subtype')
+                        if memory[0x43e]!=(128 if args.special else 0): raise RuntimeError('Unexpected later defender subtype')
                         results.append(cpu.y)
                     if bank == 30 and cpu.pc == 0xc60f: break
                     if cpu.pc < 0x8000: raise RuntimeError(f'Original later defender left PRG at {cpu.pc:04x}')
@@ -190,8 +196,40 @@ def main():
                 result = subprocess.run([str(args.exe.resolve()),mode,str(before_session),str(after_session),str(args.clock_pack.resolve())],capture_output=True,text=True)
                 if result.returncode: raise RuntimeError(f'later defender profile={kind}, results={results}: {result.stderr}')
                 later_cases[results[1]] = later_cases.get(results[1],0)+1
+        if args.special:
+            for kind in (1,23,70):
+                for power in (4,8,21,80):
+                    for first in (0,128):
+                        raw=bytearray(original);raw[0x300+12*2],raw[0x303+12*2]=kind,0
+                        raw[0x306+12*2],raw[0x308+12*2],raw[0x30a+12*2]=128,124,0
+                        raw[0xe2],raw[0xe3],raw[0x61c],raw[0x61d]=first,255,power,0
+                        memory=ObservedCartridge(rom[16:262160],bytes(raw),None,set());memory.select=memory[0x23];memory.registers[6:8]=[26,27]
+                        cpu=MPU(memory=memory);cpu.pc,cpu.sp,cpu.p,cpu.a,cpu.x,cpu.y=0x8845,0x4c,0x31,0x6c,0x6c,0xa4
+                        for _ in range(10000):
+                            bank=memory.bank_at(cpu.pc)
+                            if bank==26 and cpu.pc==0x8870:break
+                            if cpu.pc<0x8000:raise RuntimeError(f'Original special comparison left PRG at {cpu.pc:04x}')
+                            memory.instruction=(bank,cpu.pc);cpu.step()
+                        else:raise RuntimeError('Original special comparison exceeded instruction limit')
+                        code=cpu.y
+                        if code>3 or memory[0x43e]!=128:raise RuntimeError('Expected special defender subtype')
+                        for _ in range(1800000):
+                            bank=memory.bank_at(cpu.pc)
+                            if (code<2 and bank==26 and cpu.pc==0x888a) or (code>=2 and bank==30 and cpu.pc==0xc60f):break
+                            if cpu.pc<0x8000:raise RuntimeError(f'Original special outcome left PRG at {cpu.pc:04x}')
+                            if cpu.pc==0xcaae:
+                                memory.instruction=None;memory[0x1b]|=128;memory[0x515]=0;memory[0x1c]=memory[0x1e]=128
+                                if memory[0x498]:memory[0x498]-=1
+                            memory.instruction=(bank,cpu.pc);cpu.step()
+                        else:raise RuntimeError('Original special outcome exceeded instruction limit')
+                        before_session,after_session=Path(temp)/'special-before.cmjsession',Path(temp)/'special-after.cmjsession'
+                        before_session.write_bytes(export_session(raw));after_session.write_bytes(export_session(bytes(memory.ram[:2048])))
+                        mode='--compare-flight-contact-clock' if code<2 else '--compare-flight-deflection' if code==2 else '--compare-flight-interception'
+                        result=subprocess.run([str(args.exe.resolve()),mode,str(before_session),str(after_session),str(args.clock_pack.resolve())],capture_output=True,text=True)
+                        if result.returncode:raise RuntimeError(f'special profile={kind}, power={power}, first={first}, result={code}: {result.stderr}')
+                        special_cases[code]=special_cases.get(code,0)+1
     print(f'{sum(cases.values())} constructed opponent pass defender comparisons matched; result counts {cases}')
-    if args.clock_pack:
+    if args.clock_pack and not args.special:
         print(f'{clock_cases} non-stopping cases matched through contact-clock cleanup, including one with two defenders')
     if args.interception:
         print(f'{interception_cases} result-three cases matched through possession change and field movement')
@@ -199,6 +237,8 @@ def main():
         print(f'{deflection_cases} result-two cases matched through loose-ball recovery and control handoff')
     if args.later_defenders:
         print(f'{sum(later_cases.values())} later-defender outcomes matched original; result counts {later_cases}')
+    if args.special:
+        print(f'{sum(special_cases.values())} special defender outcomes matched original; result counts {special_cases}')
 
 
 if __name__ == '__main__':

@@ -12,7 +12,7 @@ int main(int argc,char** argv) {
  if(demo)std::cerr<<"PROVISIONAL DEMO: simplified timing and random values; synthetic content.\n";
  using namespace captain;
  unsigned failures=0;
- bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false,interception_checked=false,interception_unfinished=false,deflection_checked=false,deflection_unfinished=false,human_defender_checked=false,human_defender_unfinished=false,later_checked=false,later_unfinished=false,special_checked=false,special_unfinished=false;
+ bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false,interception_checked=false,interception_unfinished=false,deflection_checked=false,deflection_unfinished=false,human_defender_checked=false,human_defender_unfinished=false,later_checked=false,later_unfinished=false,special_checked=false,special_unfinished=false,free_target_checked=false,free_target_unfinished=false;
  const std::array<std::uint8_t,3> owners{{3,7,15}};
  const std::array<std::uint8_t,3> targets{{7,3,19}};
  unsigned fixture=0;
@@ -96,9 +96,11 @@ int main(int argc,char** argv) {
        if(!first_contact.unsupported)first_contact=step_match(first_contact.state,{MatchInputKind::tick,first_contact.state.last_sequence+1},content);
        later_unfinished=bool(first_contact.unsupported) || first_contact.state.session.phase!=FieldSessionPhase::control_ready || first_contact.state.session.current.field.ball_owner!=1;
        if(!later_unfinished)std::cout<<"owner "<<unsigned(owner)<<": provisional later defender interception reached control\n";
-       auto special=contested;special.session.current.field.random_second=255;auto special_content=content;special_content.data->pass_flight_comparison->eligibility=128;
+       auto special=contested;special.session.action->power=1;special.session.current.field.random_second=255;auto special_content=content;special_content.data->pass_flight_comparison->eligibility=128;
        auto special_result=step_match(special,{MatchInputKind::presentation_complete,special.last_sequence+1},special_content);
-       special_checked=true;special_unfinished=bool(special_result.unsupported);
+       special_checked=true;if(!special_result.unsupported)special_result=step_match(special_result.state,{MatchInputKind::tick,special_result.state.last_sequence+1},special_content);
+       special_unfinished=bool(special_result.unsupported) || special_result.state.session.phase!=FieldSessionPhase::control_ready || special_result.state.session.current.field.ball_owner!=1;
+       if(!special_unfinished)std::cout<<"owner "<<unsigned(owner)<<": provisional special defender roll reached control\n";
        result=step_match(contested,{MatchInputKind::presentation_complete,contested.last_sequence+1},content);
        if(!result.unsupported && result.state.flight_defenders.empty()){
         contested=result.state;result=step_match(contested,{MatchInputKind::presentation_complete,contested.last_sequence+1},content);
@@ -133,6 +135,19 @@ int main(int argc,char** argv) {
     MatchInput choose{MatchInputKind::tick,0};choose.pressed=1;if(!blocked)advance(choose);
     MatchInput confirm{MatchInputKind::tick,0};confirm.pressed=128;if(!blocked)advance(confirm);
     MatchInput ordinary{MatchInputKind::action,0};ordinary.action=MatchAction::pass;if(!blocked)advance(ordinary);
+    if(!blocked && !free_target_checked){
+     auto free=state;for(unsigned id=1;id<=21;++id)if(id!=11 && id!=owner){auto& p=free.session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];p.x=52u<<8;p.y=84u<<8;}
+     MatchInput move{MatchInputKind::tick,seq};move.held=1;auto result=step_match(free,move,content);
+     MatchInput choose_empty{MatchInputKind::tick,seq+1};choose_empty.pressed=128;
+     if(!result.unsupported)result=step_match(result.state,choose_empty,content);
+     const bool empty_confirmed=!result.unsupported && result.state.session.ordinary_pass_recipient && *result.state.session.ordinary_pass_recipient==255;
+     if(empty_confirmed)result=step_match(result.state,{MatchInputKind::tick,seq+2},content);
+     if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::presentation_complete,seq+3},content);
+     if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::tick,seq+4},content);
+     if(!empty_confirmed)std::cerr<<"empty-target fixture did not confirm an empty cell\n";
+     else if(result.unsupported)std::cerr<<"empty-target continuation stopped at "<<capability_name(*result.unsupported)<<'\n';
+     free_target_checked=true;free_target_unfinished=!empty_confirmed || bool(result.unsupported) || result.state.session.phase!=FieldSessionPhase::control_ready;
+    }
     if(!blocked && !cancellation_checked){MatchInput cancel{MatchInputKind::tick,seq};cancel.pressed=64;auto result=step_match(state,cancel,content);cancellation_checked=true;cancellation_unfinished=bool(result.unsupported);}
     if(!blocked && !multi_checked){
      auto multi=state;const auto extra=static_cast<std::uint8_t>(owner==3 ? 8 : 4);
@@ -218,6 +233,7 @@ int main(int argc,char** argv) {
  if(demo && (!human_defender_checked || human_defender_unfinished)){std::cerr<<"M1 still incomplete: human-pass flight defender outcomes are unsupported or unverified\n";++failures;}
  if(demo && (!later_checked || later_unfinished)){std::cerr<<"M1 still incomplete: later-defender interception is unsupported or unverified\n";++failures;}
  if(demo && (!special_checked || special_unfinished)){std::cerr<<"M1 still incomplete: special flight defender outcomes are unsupported or unverified\n";++failures;}
+ if(demo && (!free_target_checked || free_target_unfinished)){std::cerr<<"M1 still incomplete: passing to an empty target is unsupported or unverified\n";++failures;}
  std::cerr<<failures<<" exercised checks incomplete; other match routes remain unverified\n";
  return failures?1:0;
 }

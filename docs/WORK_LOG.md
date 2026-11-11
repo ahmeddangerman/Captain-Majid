@@ -1,5 +1,13 @@
 # Development log
 
+## 2026-11-11 - Special automatic flight defender roll
+
+The provisional pass runtime now continues the original automatic defender roll when its special-strength subtype bit is set; it reuses the same original-compared pass-survival, interception and deflection continuations, including later defenders. This covers the numeric special roll, not every selectable special move or move effect. Original presentation remains acknowledged rather than rendered; special move effects, goal-area/story/boundary branches and period transitions still reject where unsupported.
+
+Forty-eight constructed original CPU special-roll cases matched across both passing sides: 24 per side, each covering all four result classes using three defender profiles, four pass powers and two random pairs. Four additional constructed two-defender cases (two per side) matched when a special first defender was followed by a special interception. These comparisons use one captured arrival fixture per side, intervened player/profile/power/random values, and cooperative waits. Reproduce with `tools/check_human_pass_flight_original.py --special --later-defenders` and `tools/check_opponent_pass_flight_contact_original.py --special --later-defenders`, supplying the documented private inputs. Results cover represented field, clock, power, recovery and experience, not live NMI/audio/PPU.
+
+The synthetic acceptance now reaches control after the special roll but still exits 1: a confirmed empty target reaches prepared pass handoff and stops at unsupported session phase. Windows build/all 64 registered checks and Linux warnings-as-errors syntax passed; earlier isolated full Linux Make attempts hit GCC/linker failures. Complete match, graphical interaction, startup and other routes remain unfinished. Overall progress is unmeasured. Next connect the empty-target flight and original loose-ball contest. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Later flight defenders and checkpoint history
 
 The provisional runtime now retains already-processed ordinary pass flight defenders, allowing a later defender's supported interception or deflection after earlier non-stopping contacts on either side. The original full defender prefix is restored on interception, contact elapsed time accumulates across defenders, and runtime checkpoint version 13 preserves the processed prefix. Earlier versions still load; when an older in-progress checkpoint lacks required defender history, the runtime rejects further contact atomically rather than inventing it. Invalid IDs, over-capacity prefixes and inconsistent elapsed state are rejected.

@@ -56,6 +56,7 @@ def main():
     for name in ('rom', 'ready', 'pack', 'exe', 'private-temp'):
         p.add_argument('--' + name, type=Path, required=True)
     p.add_argument('--later-defenders', action='store_true', help='Also compare terminal outcomes after an earlier defender')
+    p.add_argument('--special', action='store_true', help='Compare special defender rolls instead of the ordinary sample')
     args = p.parse_args(); rom, ready = args.rom.read_bytes(), args.ready.read_bytes()
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256 or len(ready) != 2048:
         p.error('Expected verified ROM and private 2048-byte ready RAM')
@@ -65,10 +66,10 @@ def main():
     with tempfile.TemporaryDirectory(prefix='human-pass-flight-', dir=args.private_temp) as temp:
         before_raw, before_session, after_session = (Path(temp) / name for name in ('before.bin', 'before.cmjsession', 'after.cmjsession'))
         for kind in (1, 23, 70):
-            for power in (4, 8, 21):
-                for first, second in ((1, 0), (122, 176), (255, 0)):
+            for power in ((4, 8, 21, 80) if args.special else (4, 8, 21)):
+                for first, second in (((0, 255), (128, 255)) if args.special else ((1, 0), (122, 176), (255, 0))):
                     raw = bytearray(base); raw[0x390] = kind; raw[0x393] = 0
-                    raw[0x396], raw[0x398], raw[0x39a] = 100, 124, 0
+                    raw[0x396], raw[0x398], raw[0x39a] = (128 if args.special else 100), 124, 0
                     raw[0xe2], raw[0xe3], raw[0x61c], raw[0x61d] = first, second, power, 0
                     memory = ObservedCartridge(prg, bytes(raw), None, set())
                     memory.select = memory[0x23]; memory.registers[6:8] = [26, 27]
@@ -81,7 +82,7 @@ def main():
                         memory.instruction = (bank, cpu.pc); cpu.step()
                     else: raise RuntimeError('Human comparison exceeded instruction limit')
                     code = cpu.y
-                    if code > 3 or memory[0x43e]: raise RuntimeError('Unexpected special defender result')
+                    if code > 3 or memory[0x43e] != (128 if args.special else 0): raise RuntimeError('Unexpected defender subtype or result')
                     for _ in range(1800000):
                         bank = memory.bank_at(cpu.pc)
                         if (code < 2 and bank == 26 and cpu.pc == 0x888a) or (code >= 2 and bank == 30 and cpu.pc == 0xc60f): break
@@ -100,19 +101,19 @@ def main():
                         raise RuntimeError(f'profile={kind}, power={power}, random={(first, second)}, result={code}: {result.stderr}')
                     cases[code] = cases.get(code, 0) + 1
         if args.later_defenders:
-            for kind in (1, 7, 23, 35, 70):
+            for kind in ((1,70) if args.special else (1, 7, 23, 35, 70)):
                 raw = bytearray(base);raw[0x600],raw[0x601],raw[0x602] = 2,12,13
                 raw[0x300+12*12],raw[0x303+12*12] = 23,0
                 raw[0x300+12*13],raw[0x303+12*13] = kind,0
                 raw[0x306+12*12],raw[0x308+12*12],raw[0x30a+12*12] = 100,124,0
                 raw[0x306+12*13],raw[0x308+12*13],raw[0x30a+12*13] = 104,124,0
-                raw[0xe2],raw[0xe3],raw[0x61c],raw[0x61d] = 122,176,6,0
+                raw[0xe2],raw[0xe3],raw[0x61c],raw[0x61d] = (0,255,20,0) if args.special else (122,176,6,0)
                 memory = ObservedCartridge(prg,bytes(raw),None,set());memory.select=memory[0x23];memory.registers[6:8]=[26,27]
                 cpu = MPU(memory=memory);cpu.pc=0x8845;cpu.sp,cpu.p,cpu.a,cpu.x,cpu.y=registers;results=[]
                 for _ in range(3000000):
                     bank = memory.bank_at(cpu.pc)
                     if bank==26 and cpu.pc==0x8870:
-                        if memory[0x43e]:raise RuntimeError('Later human defender unexpectedly used a special subtype')
+                        if memory[0x43e]!=(128 if args.special else 0):raise RuntimeError('Unexpected later human defender subtype')
                         results.append(cpu.y)
                     if bank==30 and cpu.pc==0xc60f:break
                     if cpu.pc<0x8000:raise RuntimeError(f'Original later human defender left PRG at {cpu.pc:04x}')
@@ -127,7 +128,7 @@ def main():
                 result=subprocess.run(command,capture_output=True,text=True)
                 if result.returncode:raise RuntimeError(f'later human defender profile={kind}, results={results}: {result.stderr}')
                 later_cases[results[1]]=later_cases.get(results[1],0)+1
-    print(f'{sum(cases.values())} constructed human-pass defender outcomes matched original; result counts {cases}')
+    print(f'{sum(cases.values())} constructed human-pass {"special" if args.special else "ordinary"} defender outcomes matched original; result counts {cases}')
     if args.later_defenders:
         print(f'{sum(later_cases.values())} later human-pass defender outcomes matched original; result counts {later_cases}')
 

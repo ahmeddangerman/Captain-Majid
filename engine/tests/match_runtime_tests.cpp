@@ -86,7 +86,7 @@ static int comparisons(int argc,char** argv) {
   const auto prep=prepare_profiled_field_defender(player,content.field_players,2,0,0,content.defense);
   if(prep.base_strength!=(prepared[0x32]|(unsigned(prepared[0x33])<<8)) || prep.stamina_cost!=(prepared[0x43f]|(unsigned(prepared[0x440])<<8)) || prep.move_effect!=prepared[0x444])throw std::runtime_error("Flight defender preparation differs");
   auto contact=compare_defender_contact({static_cast<std::uint16_t>(before[0x61c]|(unsigned(before[0x61d])<<8)),prep.base_strength,before[0xe2],before[0xe3],static_cast<std::uint8_t>(range),static_cast<std::uint8_t>(offset),false,bool(eligible&128),0,id,0,{static_cast<std::uint8_t>(t0),static_cast<std::uint8_t>(t1),static_cast<std::uint8_t>(t2),static_cast<std::uint8_t>(t3)}});
-  if(contact.strength!=after[0x71] || contact.loss!=after[0x619] || contact.score!=std::stoul(argv[6]) || contact.result_code!=std::stoul(argv[7]))throw std::runtime_error("Flight defender comparison differs");
+  if(contact.strength!=after[0x71] || contact.loss!=after[0x619] || contact.score!=std::stoul(argv[6]) || contact.result_code!=std::stoul(argv[7]) || contact.subtype!=after[0x43e])throw std::runtime_error("Flight defender comparison differs");
   return 0;
  }
  if(argc==4 && std::string(argv[1])=="--compare-flight-prefix") {
@@ -497,6 +497,10 @@ static void test_human_defended_arrival(const captain::MatchRuntimeState& base,c
  assert(!steal.unsupported && steal.state.session.phase==FieldSessionPhase::player_control && steal.state.session.current.field.ball_owner==12 && steal.state.session.current.field.side==11);
  auto deflected=arrival;deflected.session.action->power=23;auto recovery=step_match(deflected,{MatchInputKind::presentation_complete,seq},content);
  assert(!recovery.unsupported && recovery.state.session.phase==FieldSessionPhase::player_control && recovery.state.flight_defenders.empty());
+ auto special=arrival;special.session.action->power=4;special.session.current.field.random_first=0;special.session.current.field.random_second=255;
+ auto special_content=content;special_content.data->pass_flight_comparison->eligibility=128;
+ auto special_steal=step_match(special,{MatchInputKind::presentation_complete,seq},special_content);
+ assert(!special_steal.unsupported && special_steal.state.session.phase==FieldSessionPhase::player_control && special_steal.state.session.current.field.ball_owner==12);
  auto later=arrival;later.flight_defenders={12,12};later.session.action->power=34;
  auto first=step_match(later,{MatchInputKind::presentation_complete,seq},content);
  assert(!first.unsupported && first.state.processed_flight_defenders==std::vector<std::uint8_t>({12}));

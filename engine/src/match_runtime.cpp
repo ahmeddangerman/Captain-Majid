@@ -31,7 +31,7 @@ MatchStepResult resolve_pass_flight_contact(const MatchRuntimeState& input,const
      const auto& player=field.roster[id];const FieldPlayerRecord record{id,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level};
      const auto prep=prepare_profiled_field_defender(record,data.field_players,2,0,0,data.defense);const auto& rules=*data.pass_flight_comparison;
      const auto contact=compare_defender_contact({input.session.action->power,prep.base_strength,field.random_first,field.random_second,rules.range,rules.offset,false,bool(rules.eligibility&128u),0,id,0,rules.thresholds});
-     if(prep.move_effect || contact.subtype){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+     if(prep.move_effect){result.unsupported=UnsupportedCapability::defender_contact;return result;}
      if(contact.result_code==2){
       if(!data.movement){result.unsupported=UnsupportedCapability::content;return result;}
       if(field.elapsed!=input.processed_flight_defenders.size() || data.contact->field_elapsed[5]!=1 || !input.session.scheduling){result.unsupported=UnsupportedCapability::defender_contact;return result;}
