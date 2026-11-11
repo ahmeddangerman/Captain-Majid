@@ -13,7 +13,7 @@ int main(int argc,char** argv) {
  if(demo)std::cerr<<"PROVISIONAL DEMO: simplified timing and random values; synthetic content.\n";
  using namespace captain;
  unsigned failures=0;
- bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false,interception_checked=false,interception_unfinished=false,deflection_checked=false,deflection_unfinished=false,human_defender_checked=false,human_defender_unfinished=false,later_checked=false,later_unfinished=false,special_checked=false,special_unfinished=false,free_target_checked=false,free_target_unfinished=false,free_opponent_checked=false,free_opponent_unfinished=false,free_timeout_checked=false,free_timeout_unfinished=false;
+ bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false,interception_checked=false,interception_unfinished=false,deflection_checked=false,deflection_unfinished=false,human_defender_checked=false,human_defender_unfinished=false,later_checked=false,later_unfinished=false,special_checked=false,special_unfinished=false,free_target_checked=false,free_target_unfinished=false,free_opponent_checked=false,free_opponent_unfinished=false,free_timeout_checked=false,free_timeout_unfinished=false,free_long_checked=false,free_long_unfinished=false,same_cell_checked=false,same_cell_unfinished=false;
  const std::array<std::uint8_t,3> owners{{3,7,15}};
  const std::array<std::uint8_t,3> targets{{7,3,19}};
  unsigned fixture=0;
@@ -136,6 +136,15 @@ int main(int argc,char** argv) {
     MatchInput choose{MatchInputKind::tick,0};choose.pressed=1;if(!blocked)advance(choose);
     MatchInput confirm{MatchInputKind::tick,0};confirm.pressed=128;if(!blocked)advance(confirm);
     MatchInput ordinary{MatchInputKind::action,0};ordinary.action=MatchAction::pass;if(!blocked)advance(ordinary);
+    if(!blocked && !same_cell_checked){
+     auto same=state;MatchInput confirm_same{MatchInputKind::tick,seq};confirm_same.pressed=128;auto result=step_match(same,confirm_same,content);
+     const bool empty_confirmed=!result.unsupported && result.state.session.ordinary_pass_recipient && *result.state.session.ordinary_pass_recipient==255;
+     if(empty_confirmed)result=step_match(result.state,{MatchInputKind::tick,seq+1},content);
+     if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::presentation_complete,seq+2},content);
+     if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::tick,seq+3},content);
+     if(empty_confirmed && !result.unsupported)result=step_match(result.state,{MatchInputKind::tick,seq+4},content);
+     same_cell_checked=true;same_cell_unfinished=!empty_confirmed || bool(result.unsupported) || result.state.session.phase!=FieldSessionPhase::control_ready;
+    }
     if(!blocked && !free_target_checked){
      auto free=state;for(unsigned id=1;id<=21;++id)if(id!=11 && id!=owner){auto& p=free.session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];p.x=52u<<8;p.y=84u<<8;}
      MatchInput move{MatchInputKind::tick,seq};move.held=1;auto result=step_match(free,move,content);
@@ -156,7 +165,15 @@ int main(int argc,char** argv) {
       result=step_match(result.state,{MatchInputKind::tick,result.state.last_sequence+1},content);
      if(empty_confirmed && !result.unsupported && result.state.pass_stage==MatchPassStage::flight_arrived){
       auto opposing=result.state;auto& home=opposing.session.current.field.motion[field_motion_index(1)];home.x=52u<<8;home.y=84u<<8;
-      auto timeout=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);free_timeout_checked=true;free_timeout_unfinished=bool(timeout.unsupported);
+      for(unsigned id=1;id<=21;++id)if(id!=11)opposing.session.current.field.roster[id].type=1;
+      auto long_race=opposing;long_race.pass_target->distance=5;
+      auto long_result=step_match(long_race,{MatchInputKind::presentation_complete,long_race.last_sequence+1},content);free_long_checked=true;
+      if(!long_result.unsupported)long_result=step_match(long_result.state,{MatchInputKind::tick,long_result.state.last_sequence+1},content);
+      free_long_unfinished=bool(long_result.unsupported) || long_result.state.session.phase!=FieldSessionPhase::control_ready;
+      auto timeout=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);free_timeout_checked=true;
+      if(!timeout.unsupported)timeout=step_match(timeout.state,{MatchInputKind::tick,timeout.state.last_sequence+1},content);
+      free_timeout_unfinished=bool(timeout.unsupported) || timeout.state.session.phase!=FieldSessionPhase::control_ready;
+      if(!free_timeout_unfinished)std::cout<<"owner "<<unsigned(owner)<<": provisional empty-target timeout reached recovered control\n";
       auto& away=opposing.session.current.field.motion[field_motion_index(12)];away.x=opposing.pass_trajectory->x;away.y=opposing.pass_trajectory->y;away.status=0;
       auto other=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);free_opponent_checked=true;
       if(!other.unsupported)other=step_match(other.state,{MatchInputKind::tick,other.state.last_sequence+1},content);
@@ -258,6 +275,8 @@ int main(int argc,char** argv) {
  if(demo && (!free_target_checked || free_target_unfinished)){std::cerr<<"M1 still incomplete: passing to an empty target is unsupported or unverified\n";++failures;}
  if(demo && (!free_opponent_checked || free_opponent_unfinished)){std::cerr<<"M1 still incomplete: opponent wins in empty-target races are unsupported or unverified\n";++failures;}
  if(demo && (!free_timeout_checked || free_timeout_unfinished)){std::cerr<<"M1 still incomplete: empty-target race timeout is unsupported or unverified\n";++failures;}
+ if(demo && (!free_long_checked || free_long_unfinished)){std::cerr<<"M1 still incomplete: longer empty-target races are unsupported or unverified\n";++failures;}
+ if(demo && (!same_cell_checked || same_cell_unfinished)){std::cerr<<"M1 still incomplete: same-cell passes are unsupported or unverified\n";++failures;}
  std::cerr<<failures<<" exercised checks incomplete; other match routes remain unverified\n";
  return failures?1:0;
 }

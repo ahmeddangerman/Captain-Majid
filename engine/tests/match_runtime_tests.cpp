@@ -535,10 +535,16 @@ static void test_free_pass(const captain::MatchRuntimeState& base,const captain:
  assert(state.pass_stage==MatchPassStage::flight_arrived);
  auto missing=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);assert(missing.unsupported==UnsupportedCapability::content);
  auto race=std::make_shared<ClearanceRaceContent>();content.data->pass_race=race;
- content.data->movement->profiles.speeds.resize(1);state.session.current.field.roster[1].type=1;state.session.current.field.roster[12].type=1;
+ content.data->movement->profiles.speeds.resize(1);for(unsigned id=1;id<=21;++id)if(id!=11)state.session.current.field.roster[id].type=1;
  for(unsigned id=1;id<=21;++id)if(id!=11 && id!=state.session.current.field.ball_owner){auto& p=state.session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];p.x=52u<<8;p.y=84u<<8;p.status=0;}
  auto timeout=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);
- assert(timeout.unsupported==UnsupportedCapability::action && timeout.state.last_sequence==state.last_sequence && timeout.state.pass_stage==MatchPassStage::flight_arrived);
+ assert(!timeout.unsupported && timeout.state.session.phase==FieldSessionPhase::player_control);
+ auto timeout_control=step_match(timeout.state,{MatchInputKind::tick,timeout.state.last_sequence+1},content);
+ assert(!timeout_control.unsupported && timeout_control.state.session.phase==FieldSessionPhase::control_ready);
+ auto long_race=state;long_race.pass_target->distance=5;timeout=step_match(long_race,{MatchInputKind::presentation_complete,long_race.last_sequence+1},content);
+ assert(!timeout.unsupported && timeout.state.session.phase==FieldSessionPhase::player_control);
+ long_race.pass_target->distance=6;auto unresolved=step_match(long_race,{MatchInputKind::presentation_complete,long_race.last_sequence+1},content);
+ assert(unresolved.unsupported==UnsupportedCapability::action && unresolved.state.last_sequence==long_race.last_sequence);
  auto opposing=state;auto& away=opposing.session.current.field.motion[field_motion_index(12)];away.x=opposing.pass_trajectory->x;away.y=opposing.pass_trajectory->y;
  auto opposing_winner=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);
  assert(!opposing_winner.unsupported && opposing_winner.state.session.phase==FieldSessionPhase::player_control && opposing_winner.state.session.current.field.side==11 && opposing_winner.state.session.current.field.ball_owner==12);

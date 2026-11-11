@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Latest - 2026-11-11 empty-pass timeouts and longer races
+
+Provisional human empty-target races now support winner handoffs and timeout recovery through five rounds. Original CPU comparisons matched 24 constructed timeout recoveries, 16 of 24 four-round-survey contests and 20 of 24 longer-survey contests, including four fifth-round winners; excluded cases followed different paths. Run `tools/check_empty_pass_original.py` with `--timeout`, `--long-timeout`, `--late-winner` or `--long-winner` and private inputs. Comparisons cover represented field/motion, clock, power and experience with cooperative waits, not live NMI/audio/PPU. Synthetic acceptance still exits 1 on same-cell passes. Longer races, goal-area/story paths, graphical play and a complete match remain unfinished. Windows build/all 64 registered checks and Linux warnings-as-errors syntax passed; previous isolated full Linux Make attempts hit unrelated GCC/linker failures. Overall progress is unmeasured. Next compare and connect same-cell passes. Suggested model: GPT-6.1 Terra High.
+
 ## Latest - 2026-11-11 opposing empty-pass race winner
 
 An opposing field player can now win a provisional human empty-target pass race within three rounds and enter opponent control. Twelve constructed original CPU winner handoffs matched represented field/motion, clock, power and experience; reproduce with `tools/check_empty_pass_original.py --opponent-winner` and private inputs. The synthetic possession acceptance reaches opponent control but exits 1 on race timeout. Longer races, timeout recovery, goal-area/story paths, live presentation, graphical input and a complete match remain unfinished. Windows build/all 64 checks and Linux warnings-as-errors syntax passed; earlier isolated full Linux Make attempts hit GCC/linker failures. Overall progress unmeasured. Next implement original-compared timeout recovery. Suggested model GPT-6.1 Terra High.

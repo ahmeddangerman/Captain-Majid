@@ -99,9 +99,18 @@ MatchStepResult resolve_free_pass_arrival(const MatchRuntimeState& input,const M
     auto next=input;auto& session=next.session;const auto trajectory=*next.pass_trajectory;
     session.current.field.ball_x=static_cast<std::uint8_t>(trajectory.x>>8);session.current.field.ball_y=static_cast<std::uint8_t>(trajectory.y>>8);session.current.field.ball_cell=*next.pass_cell;
     auto race=resolve_field_loose_ball_race(session.current.field,session.recovery->opposing_player,next.pass_target->distance,content.data->field_players,*content.data->movement,*content.data->pass_race);
-    if(race.rounds>3 || !race.winner || *race.winner<1 || *race.winner==11 || *race.winner>21){result.unsupported=UnsupportedCapability::action;return result;}
-    session.current.field=std::move(race.field);auto& field=session.current.field;field.ball_owner=*race.winner;field.side=*race.winner<11 ? 0 : 11;
-    auto& player=field.motion[field_motion_index(*race.winner)];player.x=static_cast<std::uint16_t>((player.x&255u)|(unsigned(field.ball_x)<<8));player.y=static_cast<std::uint16_t>((player.y&255u)|(unsigned(field.ball_y)<<8));
+    if((race.winner && (race.rounds>5 || *race.winner<1 || *race.winner==11 || *race.winner>21)) || (!race.winner && race.rounds>5)){result.unsupported=UnsupportedCapability::action;return result;}
+    session.current.field=std::move(race.field);auto& field=session.current.field;std::uint8_t winner=0;
+    if(race.winner)winner=*race.winner;
+    else {
+     field=advance_field_phase(field,content.data->field_players,*content.data->movement).state;
+     BallRecoveryInput recovery{};recovery.ball_x=field.ball_x;recovery.ball_y=field.ball_y;recovery.ball_owner=field.ball_owner;
+     recovery.opposing_player=session.recovery->opposing_player;recovery.random_e2=field.random_first;recovery.random_e3=field.random_second;recovery.ball_update_active=field.elapsed!=0;
+     for(unsigned i=0;i<field.motion.size();++i){const auto& p=field.motion[i];recovery.players[i]={static_cast<std::uint8_t>(p.x>>8),static_cast<std::uint8_t>(p.y>>8),p.status!=0};}
+     const auto recovered=recover_stationary_ball(recovery);winner=recovered.ball_owner;session.recovery->attack_subtype=recovered.attack_subtype;
+    }
+    field.ball_owner=winner;field.side=winner<11 ? 0 : 11;
+    auto& player=field.motion[field_motion_index(winner)];player.x=static_cast<std::uint16_t>((player.x&255u)|(unsigned(field.ball_x)<<8));player.y=static_cast<std::uint16_t>((player.y&255u)|(unsigned(field.ball_y)<<8));
     if((field.ball_y>=96 && field.ball_y<160 && (field.ball_x<80 || field.ball_x>=176)) || (session.recovery->game_mode==4 && field.side==0 && field.roster[field.ball_owner].type!=1 && field.ball_x>=128)){result.unsupported=UnsupportedCapability::action;return result;}
     session.phase=FieldSessionPhase::player_control;session.human_pass_cursor.reset();session.human_pass_steps=0;
     session.ordinary_pass_candidates.reset();session.ordinary_pass_recipient.reset();session.ordinary_pass_defenses.reset();

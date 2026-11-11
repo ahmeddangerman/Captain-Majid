@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-11 - Empty-pass race timeout and longer winners
+
+The provisional human empty-target pass now continues through winning races of up to five rounds and through timeout recovery of up to five rounds. On timeout, it advances the field and applies the existing stationary-ball recovery without adding another jitter or owner cleanup. Unsupported longer races, goal-area and story paths still stop atomically. Numeric timing/random are provisional and presentation remains acknowledged rather than emulated.
+
+Controlled original CPU comparisons matched 12 constructed four-round timeout recoveries and 12 five-round recoveries; a longer-winner survey matched 20 of 24 constructed contests, including four fifth-round winners, while four took different paths and were excluded. A separate four-round survey matched 16 of 24 contests; eight were excluded. Comparisons cover represented field/motion, clock, power and experience through the bounded handoff, using cooperative waits rather than live NMI, audio or PPU. Reproduce with `tools/check_empty_pass_original.py --timeout`, `--long-timeout`, `--late-winner` and `--long-winner` and private inputs. The synthetic possession acceptance reaches recovered control, but still exits 1 on unsupported or unverified same-cell passes. Windows build and all 64 registered checks passed; Linux warnings-as-errors syntax passed, while earlier isolated full Linux Make attempts hit unrelated GCC/linker failures. Graphical play and a complete match remain unfinished. Overall progress is unmeasured. Next compare same-cell passes with the original and connect the supported route. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opposing winner of an empty-pass race
 
 The provisional runtime now accepts an opposing field player winning a human empty-target pass race within the existing three-round bound. It switches possession side, places the winner at the ball and enters player-control setup; the existing opponent control setup can then run. Goal-area and side-zero story branches remain explicitly guarded. Timeout and longer races remain unsupported.
