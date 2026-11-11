@@ -17,8 +17,9 @@ enum class MatchAction { none, pass };
 enum class MatchPassStage { none, awaiting_presentation, handoff, target_ready, flight_ready, flight_cell, flight_arrived };
 struct MatchBallFraction { std::uint8_t x=0,y=0; };
 struct MatchPassTarget { std::uint8_t recipient=0,destination=0,counter=255,distance=0; };
-enum class MatchDefenseStage { polling, choice_confirmed, complete, ai_chosen, attack_prepared, clock_pending, dispatch_pending };
-struct MatchDefenseMenu { MatchDefenseStage stage=MatchDefenseStage::polling; DefenseMenuPollState poll{}; std::optional<std::uint16_t> attack_cost{}; };
+struct MatchAiPassTarget { std::uint8_t recipient=0,cell=0; };
+enum class MatchDefenseStage { polling, choice_confirmed, complete, ai_chosen, attack_prepared, clock_pending, dispatch_pending, ai_pass_handoff, ai_pass_target_ready, ai_flight_ready, ai_flight_cell, ai_flight_arrived };
+struct MatchDefenseMenu { MatchDefenseStage stage=MatchDefenseStage::polling; DefenseMenuPollState poll{}; std::uint8_t defender_count=0; std::optional<std::uint16_t> attack_cost{}; std::optional<MatchAiPassTarget> ai_pass_target{}; std::optional<std::uint8_t> ai_pass_distance{}; std::optional<BallTrajectoryContext> ai_trajectory{}; std::optional<std::uint8_t> ai_ball_cell{}; };
 // Inputs express intent only; action outcomes and random samples are never supplied.
 struct MatchInput { MatchInputKind kind; std::uint64_t sequence; std::uint8_t held=0, pressed=0; MatchAction action=MatchAction::none; std::optional<std::uint8_t> target{}; };
 struct MatchEvent { ControlPresentationRequest presentation; };

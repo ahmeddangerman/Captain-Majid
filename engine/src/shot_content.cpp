@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -228,6 +228,11 @@ ShotContent load_shot_content(std::istream& input) {
         for(auto& cell:ai.low_x_categories)reader.bytes(cell);
         ai.rows.resize(reader.count(1,64));
         for(auto& row:ai.rows)reader.bytes(row);
+    }
+    if(version>='M') {
+        auto& ai=*content.ai_field_choice;ai.empty_pass_options=std::array<std::uint8_t,118>{};
+        reader.bytes(*ai.empty_pass_options);
+        for(auto value:*ai.empty_pass_options)if(value>1)throw std::invalid_argument("Invalid field AI pass-option gate");
     }
     reader.end();
     return content;

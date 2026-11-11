@@ -9,7 +9,7 @@
 namespace captain {
 namespace {
 constexpr char magic[]="CMJMATCH";
-constexpr std::uint8_t current_version=5;
+constexpr std::uint8_t current_version=10;
 constexpr std::uint32_t max_payload=1024*1024;
 void put(std::string& out,std::uint64_t n,unsigned bytes) {
  for(unsigned i=0;i<bytes;++i)out.push_back(static_cast<char>((n>>(8*i))&255));
@@ -50,13 +50,22 @@ void validate_runtime(const MatchRuntimeState& s) {
  if(flight && (*s.pass_cell>=240 || s.pass_trajectory->flags!=1 || !s.session.saved_ball_flight_flag))
   throw std::invalid_argument("Invalid match flight state");
  if(s.defense_menu) {
-  const auto& m=*s.defense_menu;const auto count=s.session.current.field.selected_defenders;
-  if(s.mode!=MatchTimingMode::provisional_demo || s.session.phase!=FieldSessionPhase::field_contact_pending ||
+  const auto& m=*s.defense_menu;const auto count=m.defender_count;
+  const bool flight=static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_flight_ready);
+  if(s.mode!=MatchTimingMode::provisional_demo || (flight ? s.session.phase!=FieldSessionPhase::field : s.session.phase!=FieldSessionPhase::field_contact_pending) ||
      s.session.current.field.side!=11 || s.pass_stage!=MatchPassStage::none || !s.session.scheduling || !count || count>4 ||
-     static_cast<unsigned>(m.stage)>static_cast<unsigned>(MatchDefenseStage::dispatch_pending) || m.poll.cursor>count ||
+     (flight ? s.session.current.field.selected_defenders!=0 : s.session.current.field.selected_defenders!=count) ||
+     static_cast<unsigned>(m.stage)>static_cast<unsigned>(MatchDefenseStage::ai_flight_arrived) || m.poll.cursor>count ||
      (static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::complete) && m.poll.cursor!=count) ||
-     (m.stage==MatchDefenseStage::ai_chosen && (!s.session.action || !s.session.recovery || s.session.action->action!=2 || s.session.recovery->attack_subtype!=0)) ||
-     (static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::attack_prepared) && (!s.session.action || !s.session.recovery || s.session.action->action!=2)) ||
+     (m.stage==MatchDefenseStage::ai_chosen && (!s.session.action || !s.session.recovery || s.session.recovery->attack_subtype!=0)) ||
+     (static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen) && (!s.session.action || !s.session.recovery || (s.session.action->action!=1 && s.session.action->action!=2))) ||
+     (bool(m.ai_pass_target)!=(static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen) && s.session.action && s.session.action->action==1)) ||
+     (m.ai_pass_target && (m.ai_pass_target->recipient<12 || m.ai_pass_target->recipient>21 || m.ai_pass_target->cell>=240)) ||
+     (static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_pass_handoff) && (!s.session.action || s.session.action->action!=1)) ||
+     (bool(m.ai_pass_distance)!=(static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_pass_target_ready))) ||
+     (bool(m.ai_trajectory)!=flight) || (bool(m.ai_ball_cell)!=flight) ||
+     (m.ai_trajectory && (m.ai_trajectory->flags!=1 || *m.ai_ball_cell>=240 || !s.session.saved_ball_flight_flag)) ||
+     (m.stage==MatchDefenseStage::ai_flight_arrived && *m.ai_ball_cell!=m.ai_pass_target->cell) ||
      (bool(m.attack_cost)!=(static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::attack_prepared))) ||
      (m.stage==MatchDefenseStage::choice_confirmed && (m.poll.cursor>=count || m.poll.defense.actions[m.poll.cursor]==255 || !(m.poll.defense.pressed&128u))) ||
      (m.stage!=MatchDefenseStage::choice_confirmed && m.poll.defense.pressed))
@@ -113,7 +122,7 @@ void write_match_save(std::ostream& output,const MatchRuntimeState& s,const Matc
  put(payload,s.ball_fraction.has_value(),1);if(s.ball_fraction){put(payload,s.ball_fraction->x,1);put(payload,s.ball_fraction->y,1);}
  put(payload,s.pass_trajectory.has_value(),1);if(s.pass_trajectory){const auto& t=*s.pass_trajectory;for(auto n:{t.x,t.y,t.vx,t.vy})put(payload,n,2);put(payload,t.direction,1);put(payload,t.flags,1);}
  put(payload,s.pass_cell.has_value(),1);if(s.pass_cell)put(payload,*s.pass_cell,1);
- put(payload,s.defense_menu.has_value(),1);if(s.defense_menu){const auto& m=*s.defense_menu;put(payload,static_cast<unsigned>(m.stage),1);put(payload,m.poll.cursor,1);put(payload,m.poll.flash_counter,1);for(auto n:m.poll.defense.actions)put(payload,n,1);for(auto n:m.poll.defense.subtypes)put(payload,n,1);put(payload,m.poll.defense.blink,1);put(payload,m.poll.defense.pressed,1);put(payload,m.attack_cost.has_value(),1);if(m.attack_cost)put(payload,*m.attack_cost,2);}
+ put(payload,s.defense_menu.has_value(),1);if(s.defense_menu){const auto& m=*s.defense_menu;put(payload,static_cast<unsigned>(m.stage),1);put(payload,m.poll.cursor,1);put(payload,m.poll.flash_counter,1);for(auto n:m.poll.defense.actions)put(payload,n,1);for(auto n:m.poll.defense.subtypes)put(payload,n,1);put(payload,m.poll.defense.blink,1);put(payload,m.poll.defense.pressed,1);put(payload,m.attack_cost.has_value(),1);if(m.attack_cost)put(payload,*m.attack_cost,2);put(payload,m.ai_pass_target.has_value(),1);if(m.ai_pass_target){put(payload,m.ai_pass_target->recipient,1);put(payload,m.ai_pass_target->cell,1);}put(payload,m.ai_pass_distance.has_value(),1);if(m.ai_pass_distance)put(payload,*m.ai_pass_distance,1);put(payload,m.defender_count,1);put(payload,m.ai_trajectory.has_value(),1);if(m.ai_trajectory){const auto& t=*m.ai_trajectory;for(auto n:{t.x,t.y,t.vx,t.vy})put(payload,n,2);put(payload,t.direction,1);put(payload,t.flags,1);}put(payload,m.ai_ball_cell.has_value(),1);if(m.ai_ball_cell)put(payload,*m.ai_ball_cell,1);}
  if(payload.size()>max_payload)throw std::invalid_argument("Match save is too large");
  std::string header(magic,sizeof(magic)-1);put(header,current_version,1);put(header,payload.size(),4);put(header,checksum(payload),4);
  output.write(header.data(),header.size());output.write(payload.data(),payload.size());
@@ -143,10 +152,14 @@ MatchRuntimeState load_match_save(std::istream& input,const MatchContentIdentity
  if(r.flag()){MatchBallFraction f{};f.x=r.get(1);f.y=r.get(1);s.ball_fraction=f;}
  if(r.flag()){BallTrajectoryContext t{};t.x=r.get(2);t.y=r.get(2);t.vx=r.get(2);t.vy=r.get(2);t.direction=r.get(1);t.flags=r.get(1);s.pass_trajectory=t;}
  if(r.flag())s.pass_cell=static_cast<std::uint8_t>(r.get(1));
- if(version>=2 && r.flag()){MatchDefenseMenu m{};m.stage=static_cast<MatchDefenseStage>(r.get(1));m.poll.cursor=r.get(1);m.poll.flash_counter=r.get(1);for(auto& n:m.poll.defense.actions)n=r.get(1);for(auto& n:m.poll.defense.subtypes)n=r.get(1);m.poll.defense.blink=r.get(1);m.poll.defense.pressed=r.get(1);if(version>=4 && r.flag())m.attack_cost=static_cast<std::uint16_t>(r.get(2));s.defense_menu=m;}
+ if(version>=2 && r.flag()){MatchDefenseMenu m{};m.stage=static_cast<MatchDefenseStage>(r.get(1));m.poll.cursor=r.get(1);m.poll.flash_counter=r.get(1);for(auto& n:m.poll.defense.actions)n=r.get(1);for(auto& n:m.poll.defense.subtypes)n=r.get(1);m.poll.defense.blink=r.get(1);m.poll.defense.pressed=r.get(1);if(version>=4 && r.flag())m.attack_cost=static_cast<std::uint16_t>(r.get(2));if(version>=6 && r.flag()){MatchAiPassTarget t{};t.recipient=r.get(1);t.cell=r.get(1);m.ai_pass_target=t;}if(version>=8 && r.flag())m.ai_pass_distance=static_cast<std::uint8_t>(r.get(1));if(version>=9){m.defender_count=r.get(1);if(r.flag()){BallTrajectoryContext t{};t.x=r.get(2);t.y=r.get(2);t.vx=r.get(2);t.vy=r.get(2);t.direction=r.get(1);t.flags=r.get(1);m.ai_trajectory=t;}if(r.flag())m.ai_ball_cell=static_cast<std::uint8_t>(r.get(1));}else m.defender_count=s.session.current.field.selected_defenders;s.defense_menu=m;}
  if(version<3 && s.defense_menu && s.defense_menu->stage==MatchDefenseStage::ai_chosen)throw std::invalid_argument("Unsupported saved defense stage");
  if(version<4 && s.defense_menu && s.defense_menu->stage==MatchDefenseStage::attack_prepared)throw std::invalid_argument("Unsupported saved attack stage");
  if(version<5 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::attack_prepared))throw std::invalid_argument("Unsupported saved clock stage");
+ if(version<7 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::dispatch_pending))throw std::invalid_argument("Unsupported saved opponent pass stage");
+ if(version<8 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::ai_pass_handoff))throw std::invalid_argument("Unsupported saved opponent target stage");
+ if(version<9 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::ai_pass_target_ready))throw std::invalid_argument("Unsupported saved opponent flight stage");
+ if(version<10 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::ai_flight_ready))throw std::invalid_argument("Unsupported saved opponent flight progression");
  if(r.pos!=payload.size())throw std::invalid_argument("Unexpected match save data");
  validate_runtime(s);return s;
 }

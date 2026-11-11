@@ -147,6 +147,9 @@ int main(int argc,char** argv) {
  const auto field_retry=captain::plan_ai_field_pass_candidate(23,0,0,19,112,124,1,0,teammates,field,field_shared);
  if(field_retry.action!=2 || field_retry.random_first!=128 || field_retry.recipient)return 1;
  try {captain::plan_ai_field_pass_candidate(23,0,0,19,160,124,1,0,teammates,field,field_shared);return 1;}catch(const std::invalid_argument&){}
+ field.empty_pass_options=std::array<std::uint8_t,118>{};(*field.empty_pass_options)[23]=1;
+ const auto empty_options_pass=captain::plan_ai_field_pass_candidate(23,0,0,19,160,124,1,0,teammates,field,field_shared);
+ if(empty_options_pass.action!=1 || empty_options_pass.recipient!=20 || empty_options_pass.subtype)return 1;
  const auto retry=captain::choose_ai_area_recipient(41,19,120,1,0,teammates);
  if(retry.action!=4 || retry.random_first!=128 || retry.recipient)return 1;
  const std::array<std::uint8_t,4> candidates{{0x01,0x23,0x45,0x67}};

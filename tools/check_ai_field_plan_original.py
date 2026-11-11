@@ -7,6 +7,7 @@ from pathlib import Path
 
 from py65.devices.mpu6502 import MPU
 from check_ai_field_candidate_original import original_candidate
+from reference_cartridge import ReferenceCartridge
 from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
@@ -33,6 +34,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('rom', 'pack', 'ram', 'exe'):
         parser.add_argument('--' + name, required=True, type=Path)
+    parser.add_argument('--pass-gates', action='store_true', help='Expect pass choices with original zero option pointers')
     args = parser.parse_args()
     rom = args.rom.read_bytes()
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
@@ -40,6 +42,9 @@ def main():
     base = bytearray(args.ram.read_bytes())
     if len(base) != 2048 or base[0x22] & 64:
         parser.error('Expected compatible original internal RAM')
+    stats = ReferenceCartridge(rom[16:262160])
+    stats.registers[6:8] = [28, 29]
+    word = lambda address: stats[address] | (stats[address + 1] << 8)
     cases, expected = [], []
     for kind in (1, 7, 23, 35, 70, 117):
         for flags, alternate in ((0, 0), (128, 35)):
@@ -64,6 +69,11 @@ def main():
                                 if final[0x43c] or final[0x5fc] != 250 or final[0x638] != 250:
                                     raise RuntimeError('Unexpected original fallback effects')
                                 want = f'2 0 {final[0xe2]} -1 -1'
+                            elif (args.pass_gates and final is not None and final[0x43b] == 1 and kind < 118
+                                  and word(word(0x8e1b + 2 * kind) + 2) == 0):
+                                if final[0x43c] or final[0x5fc] not in range(12, 22):
+                                    raise RuntimeError('Unexpected original zero-option pass')
+                                want = f'1 0 {final[0xe2]} {final[0x5fc]} {final[0x638]}'
                             else:
                                 want = 'unsupported'
                             cases.append((kind, flags, alternate, actor, x, y, first, second, *positions))
@@ -77,8 +87,9 @@ def main():
     for case, observed, want in zip(cases, actual, expected):
         if observed != want:
             raise RuntimeError(f'Field plan differs for {case}: {observed} != {want}')
-    count = sum(value != 'unsupported' for value in expected)
-    print(f'{count} original field AI fallback plans matched; {len(expected)-count} other choices rejected')
+    fallbacks = sum(value.startswith('2 ') for value in expected)
+    passes = sum(value.startswith('1 ') for value in expected)
+    print(f'{fallbacks} original field AI fallback and {passes} pass plans matched; {len(expected)-fallbacks-passes} other choices rejected')
 
 
 if __name__ == '__main__':

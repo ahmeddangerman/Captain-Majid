@@ -23,13 +23,19 @@ AiAreaPlan plan_ai_field_pass_candidate(std::uint8_t type,std::uint8_t flags,std
  std::uint8_t carrier,std::uint8_t x,std::uint8_t y,std::uint8_t first,std::uint8_t second,
  const std::array<std::array<std::uint8_t,2>,10>& teammates,const AiFieldChoiceContent& field,const AiAreaChoiceContent& shared) {
  if(carrier<12 || carrier>21)throw std::invalid_argument("Field AI requires an opponent carrier");
+ const auto raw_type=type;
  const auto choice=choose_ai_field_candidate(type,flags,alternate,x,y,first,field);
  if(choice.candidate!=2)throw std::invalid_argument("Unsupported field AI candidate");
  if(flags&128u)type=alternate;
  const auto row=field.recipient_profile_rows[type];
  if(row>=shared.recipient_rows.size())throw std::invalid_argument("Missing field AI recipient row");
  const auto target=choose_ai_area_recipient(shared.recipient_rows[row][first&7u],carrier,x,first,second,teammates);
- if(target.recipient)throw std::invalid_argument("Field AI pass special-option rules are not represented");
+ if(target.recipient) {
+  if(!field.empty_pass_options || raw_type>=field.empty_pass_options->size() || (*field.empty_pass_options)[raw_type]!=1)
+   throw std::invalid_argument("Field AI pass special-option rules are not represented");
+  if(!target.cell || *target.cell>=240)throw std::invalid_argument("Field AI recipient is outside the field");
+  return {1,0,target.random_first,target.recipient,target.cell};
+ }
  return {2,0,target.random_first,std::nullopt,std::nullopt};
 }
 AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
