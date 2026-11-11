@@ -879,7 +879,7 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
     if (sample.ball_mode_sample) {
         const auto mode=*sample.ball_mode_sample;
         const bool player18=input.current.field.ball_owner==18 && (input.current.clock.remaining==156 || input.current.clock.remaining==155 || input.current.clock.remaining==154);
-        const bool player20=input.current.field.ball_owner==20 && input.current.clock.remaining==128;
+        const bool player20=input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127);
         if (!input.score || input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 ||
             (!player18 && !player20) || input.current.clock.extra_time || input.current.field.side!=11 ||
             !((mode==192 && state.current.clock.ball_mode==128) || (mode==128 && state.current.clock.ball_mode==192)))
@@ -910,15 +910,16 @@ NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionSt
     const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control,
     std::uint8_t initial_random_index,const ObservedNmiFieldPoll& sample) {
     validate_phase_session(input);
-    if(input.phase!=FieldSessionPhase::player2_opponent_control_ready || (sample.buttons.held!=0 && sample.buttons.held!=128) ||
-       sample.buttons.pressed)
+    const bool later=input.phase==FieldSessionPhase::player2_opponent_field_complete;
+    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later) || (later && !input.control->decision_timer) ||
+       (sample.buttons.held!=0 && sample.buttons.held!=128) || sample.buttons.pressed)
         throw std::invalid_argument("Opponent20 poll requires the observed neutral or held-A input");
     auto normalized=input;normalized.phase=FieldSessionPhase::control_ready;normalized.area_defender_cursor=0;
     auto result=advance_observed_nmi_control_poll(normalized,primary,movement,control,initial_random_index,sample);
     if(result.poll.state.phase==FieldSessionPhase::control_clock_pending)
         result.poll.state.phase=FieldSessionPhase::player2_opponent_clock_pending;
     else if(result.poll.state.phase==FieldSessionPhase::control_ready)
-        result.poll.state.phase=FieldSessionPhase::player2_opponent_control_ready;
+        result.poll.state.phase=later ? FieldSessionPhase::player2_opponent_field_complete : FieldSessionPhase::player2_opponent_control_ready;
     else throw std::invalid_argument("Unobserved opponent20 control continuation");
     result.poll.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.poll.state);return result;

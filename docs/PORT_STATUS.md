@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Ten further opponent20 polls match after the first field cycle. The following ball-cell change and AI decision remain unmatched; all 62 Windows checks passed. A complete match remains unsupported and progress is unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Opponent20's first recovered-possession control cycle matches the original through 11 polls, the match clock and one 22-player field round using supplied events. Further cycles and a complete match remain unsupported; all 62 Windows checks passed and progress is unmeasured.
 
 **Latest match checkpoint (2026-11-10):** Opponent20's captured post-recovery setup matches through the original control-ready boundary. Subsequent opponent control and a complete match remain unmatched; all 62 Windows checks passed and progress is unmeasured.

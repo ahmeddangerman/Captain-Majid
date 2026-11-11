@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 next AI decision
+
+Ten captured opponent20 polls after the first field cycle match the original, random index26. Private checkpoint: `../Captain-Majid-analysis/opponent20-second-polls-v2-20261111/10.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The next original poll refreshes ball (104,164)/cell94 to (100,161)/cell82 and writes action2 before the clock; the native guard rejects this decision until original behavior is compared. Verify using `tools/verify_player2_opponent_control.py --second-cycle-polls`. Windows build, both cycle replays and all 62 checks passed. Next trace the cell-change decision; events remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 first field cycle
 
 Opponent20's recovered possession now matches 11 observed input polls, the control clock and one 22-player field round, clock127 and random index16. Phase437 snapshot: `../Captain-Majid-analysis/opponent20-field-v2-20261111/field.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Replay: `tools/verify_player2_opponent_control.py`; original random/travel/ball-mode events and inputs remain supplied. The snapshot roundtrips and repeated field-round execution rejects atomically. Windows CMake build and 62 registered checks passed. Next compare the next opponent control cycle and decision; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
