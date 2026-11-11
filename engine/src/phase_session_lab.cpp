@@ -684,6 +684,8 @@ void continue_recovery(captain::PhaseSessionState& state) {
 void setup_control(captain::PhaseSessionState& state) {
     const auto result = state.phase==captain::FieldSessionPhase::player2_same_cell_pass_recovered_owner
         ? captain::prepare_player2_opponent_control(state)
+        : state.phase==captain::FieldSessionPhase::player2_opponent_pass_received
+        ? captain::prepare_opponent21_pass_control(state)
         : state.phase==captain::FieldSessionPhase::postgoal_opponent_return_reception_wait
         ? captain::prepare_postgoal_return_control(state)
         : state.phase==captain::FieldSessionPhase::player3_one_two_ball_recovered

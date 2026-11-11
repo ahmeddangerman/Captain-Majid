@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent21 field control setup
+
+The captured opponent20 pass now reaches player21 field-control setup at original C9C5: shared control setup matches represented original state, including opponent defender selection and control/presentation fields, random index91. The guarded handoff removes consumed pass contexts and uses existing control selection; timing and prior AI choice remain supplied. The verifier compares original state, rejects early/repeated control setup and invalid motion atomically, and roundtrips the resulting snapshot. Evidence: `../Captain-Majid-analysis/opponent21-control-v3-20261111`. Windows CMake build and all 62 registered checks passed. Live presentation, autonomous AI and a complete playable match remain unsupported; overall progress unmeasured. Next trace player21 control waits and decisions, comparing the original before extending gameplay. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent21 reception motion samples
 
 The original/native reception replay now includes sampled facing64 to0 and motion0 to1 to0, interspersed with 23 supplied NMI/travel pairs, through original E406 immediately before the next state changes, random index91. Existing event handlers accept these guarded samples at phase466; they do not generate animation. The defender verifier checks represented state, trajectory, invalid motion rejection and snapshot roundtrip. Evidence: `../Captain-Majid-analysis/opponent21-motion-v2-20261111`. Windows CMake build and all 62 registered checks passed. Next compare the subsequent presentation changes and control handoff. AI/timing supplied; complete match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.

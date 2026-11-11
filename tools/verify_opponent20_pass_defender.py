@@ -87,6 +87,7 @@ def main():
     result_text=run('--advance-observed-nmi-sequence',out/'reception-more.cmjsession',events,196)
     if re.findall(r'final random index (\d+);',result_text)!=[str(ram(last)[0xe1])]:raise ValueError('Later reception wait random index differs')
     compare(26199,466,'later opponent reception wait')
+    reject('--setup-control')
     for start,end,count,index,samples,label in ((26199,26240,16,68,['F 0','M 1'],'motion-start'),(26239,26315,30,76,['M 0'],'motion-stop')):
         rows,last=menu_wait_events(lines,pcs,ram,start,end)
         if len(rows)!=count:raise ValueError(f'{label}: unexpected event count')
@@ -96,10 +97,15 @@ def main():
         compare(last,466,label)
     invalid_events=out/'invalid-motion.events.txt';invalid_events.write_text('CMJNMISEQ1\nM 1\nM 1\n')
     reject('--advance-observed-nmi-sequence',invalid_events,91)
+    run('--setup-control',out/'control.cmjsession')
+    data=source.read_bytes()
+    if data[258]!=9:raise ValueError('Opponent21 control setup phase differs')
+    compare_represented(data,export_session(ram(26315)),False,'opponent21','control setup')
+    reject('--setup-control')
     before=source.read_bytes();roundtrip=out/'roundtrip.cmjsession'
     attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--capture',str(roundtrip)],capture_output=True,text=True,timeout=30)
     if attempt.returncode or roundtrip.read_bytes()!=before:raise ValueError('Defender snapshot roundtrip differs')
-    print(f'Matched opponent pass defender2 result {result}, presentation wait contact cleanup, reception and sampled motion; random index {ram(last)[0xe1]}.')
+    print(f'Matched opponent pass defender2 result {result}, presentation wait contact cleanup, reception, sampled motion and player21 control; random index {ram(last)[0xe1]}.')
 
 
 if __name__=='__main__':

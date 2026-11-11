@@ -22,6 +22,7 @@ struct ControlSetupResult {
 // Stops before live controller sampling, AI decisions and frame advancement.
 ControlSetupResult prepare_session_control(const PhaseSessionState& input);
 ControlSetupResult prepare_postgoal_return_control(const PhaseSessionState& input);
+ControlSetupResult prepare_opponent21_pass_control(const PhaseSessionState& input);
 ControlSetupResult prepare_third_return_control(const PhaseSessionState& input);
 ControlSetupResult prepare_player3_recovered_control(const PhaseSessionState& input);
 ControlSetupResult prepare_player2_one_two_control(const PhaseSessionState& input);

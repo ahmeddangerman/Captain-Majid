@@ -38,6 +38,14 @@ ControlSetupResult prepare_third_return_control(const PhaseSessionState& input) 
  state.area_defender_cursor=0;state.area_sequence_result=255;
  return prepare_session_control(state);
 }
+ControlSetupResult prepare_opponent21_pass_control(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_received || input.current.field.random_first!=82 || input.current.field.random_second!=172 || !input.control || input.control->facing || input.control->motion_requested)
+  throw std::invalid_argument("Opponent21 control requires the observed pre-setup boundary");
+ auto state=input;state.phase=FieldSessionPhase::player_control;state.area_ai_target.reset();state.area_contact.reset();state.area_pass_contact.reset();
+ state.shot_flight.reset();state.ball_trajectory.reset();state.area_defender_cursor=0;state.area_sequence_result=255;
+ return prepare_session_control(state);
+}
 ControlSetupResult prepare_postgoal_return_control(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::postgoal_opponent_return_reception_wait || input.current.field.random_first!=82 ||
