@@ -24,7 +24,12 @@ int main() {
  auto action=step_match(ready.state,MatchInput{MatchInputKind::action,2},content);
  assert(action.unsupported==UnsupportedCapability::action && action.state.last_sequence==1);
  auto wait=step_match(ready.state,MatchInput{MatchInputKind::tick,2},content);
- assert(wait.unsupported==UnsupportedCapability::timing && wait.state.last_sequence==1);
+ assert(wait.unsupported==UnsupportedCapability::random_state && wait.state.last_sequence==1);
+ MatchConfig with_index{};with_index.initial=ready.state.session;with_index.random_index=0;
+ auto resumed=create_match(with_index,content);
+ assert(resumed.state.random_index && *resumed.state.random_index==0);
+ auto scheduled=step_match(resumed.state,MatchInput{MatchInputKind::tick,1},content);
+ assert(scheduled.unsupported==UnsupportedCapability::timing && *scheduled.state.random_index==0);
  auto duplicate=step_match(start.state,MatchInput{MatchInputKind::tick,0},content);
  assert(duplicate.unsupported==UnsupportedCapability::input_sequence);
  assert(duplicate.state.last_sequence==start.state.last_sequence);

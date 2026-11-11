@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active checkpoint ? 2026-11-11: possession acceptance and random memory
+
+`match-possession-acceptance` now expresses three synthetic pass/reception scenarios and intentionally exits 1: all stop at unsupported live timing/random scheduling. `RuntimeRandomMemory` projects 210 represented player RAM bytes and refuses random steps when source bytes are unknown; original RAM comparisons cover three snapshots and 11 captured random calls. Original index is not in legacy session snapshots and is optional explicit development metadata. Sound/other memory, carry, scheduler, action routing, actual pass and live match initialization remain unsupported. See docs/MATCH_CAPABILITIES.md. Windows build and 64 registered checks passed. Next investigate and implement general sources and timing necessary for the first control poll; do not synthesize random bytes or declare acceptance passed. Overall progress unmeasured, playable match unsupported. Suggested model GPT-6.1 Terra High.
+
 ## Active runtime checkpoint ? 2026-11-11
 
 Runtime-first plan task 1 is in progress. `captain-match-lab CONTENT_PACK DEVELOPMENT_SESSION` loads explicit private inputs, can invoke shared control setup for a validated player_control state, and reports live timing/random scheduling unsupported for control_ready. `docs/MATCH_CAPABILITIES.md` maps current functions and blockers. The driver does not initialize a match or implement a possession cycle. Nonzero seed/clock options reject; synthetic test content and development snapshots are not original initialization evidence. Next build an executable possession acceptance test and investigate the minimum general scheduling/random semantics before connecting control polls. Windows CMake build and 63 registered checks passed; no graphical playthrough. Overall progress unmeasured; complete match unsupported. Suggested model GPT-6.1 Terra High.
