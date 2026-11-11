@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 fourth field round
+
+Opponent20's following action2 field round matches all 22 original player updates to E145, random index112 to133. As in the previous round, the first slot shares the already-consumed clock random event and has no interleaved switch waits. Phase449 preserves the checkpoint; `tools/verify_opponent20_wait_round.py --fourth-round` compares represented fields, retained cursor/flag and checks snapshot roundtrip plus atomic invalid-order/replay rejection. Evidence: `../Captain-Majid-analysis/opponent20-fourth-field-v1-20261111`; earlier shared-random replay also matches. Windows build and all 62 checks passed. Captured AI/timing are supplied; full match unsupported, overall progress unmeasured. Next inspect the remaining original trace and extend it if necessary. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 fourth cell decision and clock
 
 Opponent20's next cell refresh to (93,154)/cell69, explicitly captured action2 and subsequent clock now match the original E407: clock124, random index112. Phases446-448 save the separate cell decision, observed choice and pending field round. The verifier compares represented fields, cursor/flight flag, rejects unsupported action3 atomically and roundtrips the clock snapshot. Evidence: `../Captain-Majid-analysis/opponent20-fourth-decision-v1-20261111`; Windows build, earlier decision/poll replays and all 62 checks passed. Autonomous AI/timing and a complete match remain unsupported, overall progress unmeasured. Next compare the next field round. Suggested model GPT-6.1 Terra High.

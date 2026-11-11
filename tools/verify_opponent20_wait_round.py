@@ -15,8 +15,10 @@ def main():
     for name in ('trace-directory','source','pack','exe','output'):
         parser.add_argument('--'+name,type=Path,required=True)
     parser.add_argument('--next-round',action='store_true')
+    parser.add_argument('--fourth-round',action='store_true')
     args=parser.parse_args();lines,pcs,ram=trace_data(args.trace_directory)
-    start,end=(22950,23104) if args.next_round else (22673,22848)
+    if args.next_round and args.fourth_round:raise ValueError('Choose one later round')
+    start,end=(23226,23380) if args.fourth_round else (22950,23104) if args.next_round else (22673,22848)
     if (pcs[start],pcs[end])!=('E407','E145'):raise ValueError('Unexpected original round boundaries')
     polls=[i for i in range(start+1,end) if pcs[i]=='E412']
     tails=[i for i in range(start+1,end) if pcs[i]=='E48F']
@@ -45,7 +47,7 @@ def main():
         for j,begin in enumerate(starts):extras.extend(captured_event(begin,starts[j+1] if j+1<len(starts) else tail)[:8])
         records.append((sample[0x1c],sample[0x1e],*base[:4],1,*base[4:7],base[7],base[8],len(starts),*extras))
         extra_counts.append(len(starts));previous=tail
-    expected_counts=[0]*22 if args.next_round else [0]*7+[4]+[0]*14
+    expected_counts=[0]*22 if args.next_round or args.fourth_round else [0]*7+[4]+[0]*14
     if extra_counts!=expected_counts:raise ValueError(f'Unexpected interleaved waits: {extra_counts}')
     out=prepare_output(args.output,Path(__file__).resolve().parents[1]);events=out/'events.txt'
     events.write_text('CMJWORLDNMI3\n'+''.join(' '.join(map(str,row))+'\n' for row in records))
@@ -54,7 +56,7 @@ def main():
     if result.returncode:raise RuntimeError(result.stderr.strip())
     if re.findall(r'final random index (\d+);',result.stdout)!=[str(ram(end)[0xe1])]:raise ValueError('Field random index differs')
     data=target.read_bytes()
-    if int.from_bytes(data[258:260],'little')!=(445 if args.next_round else 441) or data[413]!=ram(end)[0x616] or data[418]!=ram(end)[0x61b]:raise ValueError('Field phase or retained flags differ')
+    if int.from_bytes(data[258:260],'little')!=(449 if args.fourth_round else 445 if args.next_round else 441) or data[413]!=ram(end)[0x616] or data[418]!=ram(end)[0x61b]:raise ValueError('Field phase or retained flags differ')
     compare_represented(data,export_session(ram(end)),True,'opponent20','interleaved field round')
     rejected=out/'rejected.cmjsession'
     replay=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(target),'--advance-observed-nmi-world-file',str(events),str(ram(end)[0xe1]),'--capture',str(rejected)],capture_output=True,text=True,timeout=30)

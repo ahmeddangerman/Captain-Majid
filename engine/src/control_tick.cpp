@@ -700,7 +700,7 @@ static FieldRoundResult run_control_field_round(const PhaseSessionState& input,
                 const auto mode = *sample.ball_mode_sample;
                 if (!input.score || input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
                     !((input.current.field.ball_owner==18 && (input.current.clock.remaining==159 || input.current.clock.remaining==158 || input.current.clock.remaining==155 || input.current.clock.remaining==154 || input.current.clock.remaining==153)) ||
-                      (input.current.field.ball_owner==20 && (input.current.clock.remaining==127 || input.current.clock.remaining==126 || input.current.clock.remaining==125))) || input.current.clock.extra_time != 0 ||
+                      (input.current.field.ball_owner==20 && (input.current.clock.remaining==127 || input.current.clock.remaining==126 || input.current.clock.remaining==125 || input.current.clock.remaining==124))) || input.current.clock.extra_time != 0 ||
                     input.current.field.side != 11 ||
                     !((mode == 192 && state.current.clock.ball_mode == 128) ||
                       (mode == 128 && state.current.clock.ball_mode == 192)))
@@ -964,7 +964,7 @@ NmiFieldRoundResult advance_observed_nmi_field_round(const PhaseSessionState& in
             throw std::invalid_argument("Unobserved travel event must have zero inputs");
         if(!inputs[i].random_observed || !inputs[i].interleaved_waits.empty()) {
             if(!input.score || input.score->left_goals!=1 || input.score->right_goals || input.score->kickoff!=4 ||
-               input.current.field.side!=11 || input.current.field.ball_owner!=20 || (input.current.clock.remaining!=126 && input.current.clock.remaining!=125) ||
+               input.current.field.side!=11 || input.current.field.ball_owner!=20 || (input.current.clock.remaining!=126 && input.current.clock.remaining!=125 && input.current.clock.remaining!=124) ||
                (i==0 ? (inputs[i].random_observed || !inputs[i].interleaved_waits.empty()) :
                 i==7 ? (!inputs[i].random_observed || inputs[i].interleaved_waits.size()!=4) : true))
                 throw std::invalid_argument("Unsupported interleaved field-round events");
@@ -1055,20 +1055,21 @@ NmiFieldRoundResult advance_observed_player2_opponent_field_round(const PhaseSes
     validate_phase_session(input);
     const bool action_round=input.phase==FieldSessionPhase::player2_opponent_action_field_pending;
     const bool next_round=input.phase==FieldSessionPhase::player2_opponent_next_field_pending;
-    if(input.phase!=FieldSessionPhase::player2_opponent_field_pending && !action_round && !next_round)
+    const bool fourth_round=input.phase==FieldSessionPhase::player2_opponent_fourth_field_pending;
+    if(input.phase!=FieldSessionPhase::player2_opponent_field_pending && !action_round && !next_round && !fourth_round)
         throw std::invalid_argument("Opponent20 field round requires its pending phase");
     if(action_round) for(std::size_t i=0;i<inputs.size();++i)
         if(inputs[i].random_observed!=(i!=0) || inputs[i].interleaved_waits.size()!=(i==7 ? 4u : 0u) ||
            (i==7 && (inputs[i].buttons.held!=128 || inputs[i].buttons.pressed!=128)))
             throw std::invalid_argument("Opponent20 action round requires its observed interleaved waits");
-    if(next_round) for(std::size_t i=0;i<inputs.size();++i)
+    if(next_round || fourth_round) for(std::size_t i=0;i<inputs.size();++i)
         if(inputs[i].random_observed!=(i!=0) || !inputs[i].interleaved_waits.empty())
             throw std::invalid_argument("Opponent20 next round requires its observed random ordering");
     auto normalized=input;normalized.phase=FieldSessionPhase::field_round_pending;normalized.area_defender_cursor=0;
     auto result=advance_observed_nmi_field_round(normalized,primary,movement,control,world,initial_random_index,inputs);
     if(result.round.state.phase!=FieldSessionPhase::control_ready)
         throw std::invalid_argument("Unobserved opponent20 field-round continuation");
-    result.round.state.phase=next_round ? FieldSessionPhase::player2_opponent_next_field_complete : action_round ? FieldSessionPhase::player2_opponent_action_field_complete : FieldSessionPhase::player2_opponent_field_complete;
+    result.round.state.phase=fourth_round ? FieldSessionPhase::player2_opponent_fourth_field_complete : next_round ? FieldSessionPhase::player2_opponent_next_field_complete : action_round ? FieldSessionPhase::player2_opponent_action_field_complete : FieldSessionPhase::player2_opponent_field_complete;
     result.round.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.round.state);return result;
 }
