@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent21 extended reception wait
+
+The original/native comparison now covers 142 supplied NMI/travel pairs after reception, through original E406 immediately before a facing and motion change, random index68. This extends only the verifier using the already supported event replay; it is not live presentation. Evidence: `../Captain-Majid-analysis/opponent21-reception-wait-v2-20261111`. The verifier and snapshot roundtrip passed; the Windows build and all 62 checks passed at the immediately preceding code checkpoint. Next trace the facing/motion changes and remaining control handoff. AI and timing supplied; complete match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent21 reception wait
 
 Replayed 14 captured NMI/travel pairs following player21 reception through original 80D9, matching represented state and trajectory, random index196. The event sequence is supplied and does not render the presentation. The defender verifier checks prior states, invalid operations and snapshot roundtrip. Evidence: `../Captain-Majid-analysis/opponent21-reception-wait-v1-20261111`. Windows CMake build and all 62 registered checks passed. Later presentation and resumed control remain unmatched; AI and timing supplied, complete match unsupported and progress unmeasured. Next trace the remaining reception presentation and handoff to control. Suggested model GPT-6.1 Terra High.
