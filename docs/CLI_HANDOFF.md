@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent21 control clock entry
+
+Eleven neutral player21 polls match the original through E1E7, random index106. Phase10 snapshot: `../Captain-Majid-analysis/opponent21-polls-v2-20261111/11.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent21_control.py` checks each checkpoint, invalid mode and snapshot roundtrip; Windows build and all 62 checks passed. Next compare control clock and field round; AI/timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent21 control wait
 
 Four supplied NMI/travel pairs and a ball-mode sample match original E145 for player21 control entry, random index95. Phase9 snapshot: `../Captain-Majid-analysis/opponent21-control-wait-v1-20261111/control-wait.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. Verifier and all 62 Windows checks passed. Next compare control polls and decisions; AI/timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

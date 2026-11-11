@@ -945,8 +945,9 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
         const auto mode=*sample.ball_mode_sample;
         const bool player18=input.current.field.ball_owner==18 && (input.current.clock.remaining==156 || input.current.clock.remaining==155 || input.current.clock.remaining==154);
         const bool player20=input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127 || input.current.clock.remaining==126 || input.current.clock.remaining==125 || input.current.clock.remaining==124);
+        const bool player21=input.current.field.ball_owner==21 && input.current.clock.remaining==123;
         if (!input.score || input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 ||
-            (!player18 && !player20) || input.current.clock.extra_time || input.current.field.side!=11 ||
+            (!player18 && !player20 && !player21) || input.current.clock.extra_time || input.current.field.side!=11 ||
             !((mode==192 && state.current.clock.ball_mode==128) || (mode==128 && state.current.clock.ball_mode==192)))
             throw std::invalid_argument("Unsupported observed control-poll ball-mode sample");
         state.current.clock.ball_mode=mode;

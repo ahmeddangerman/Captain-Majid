@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent21 control polls
+
+Player21's first 11 neutral-input control polls now match original E145/E14A through clock entry E1E7, random index106. The shared poll kernel processes supplied random/travel and two observed ball-mode changes; guarded support covers this owner/clock case. `tools/verify_opponent21_control.py` compares each original represented checkpoint, rejects an invalid mode atomically and roundtrips the resulting snapshot. Evidence: `../Captain-Majid-analysis/opponent21-polls-v2-20261111`. Windows CMake build and all 62 registered checks passed. Next compare the control clock and subsequent field round. Timing/AI are supplied, a full playable match remains unsupported and overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent21 control entry wait
 
 Player21 control entry now matches original E145 after four supplied NMI/travel pairs and an observed ball-mode128 to192 sample, random index95. The guarded control-ready event handler accepts the sample for this captured owner/clock case; no live presentation is claimed. The defender verifier checks the original represented state and snapshot roundtrip. Evidence: `../Captain-Majid-analysis/opponent21-control-wait-v1-20261111`. Windows CMake build and all 62 registered checks passed. Next compare player21 control polls and decisions. AI/timing remain supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
