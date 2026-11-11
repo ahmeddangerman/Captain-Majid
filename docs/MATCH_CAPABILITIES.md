@@ -46,3 +46,9 @@ General `prepare_ordinary_unopposed_pass` accepts a confirmed ordinary side-zero
 ## Provisional unopposed pass handoff (2026-11-11)
 
 The demo runtime tracks an explicit awaiting-presentation state after pass preparation. Only a `presentation_complete` input acknowledges the original pass handoff and changes ball variant to1; this does not render or emulate the presentation. The resulting represented field and variant match 24 legacy empty-target handoffs previously compared with the original. Single-teammate cases remain constructed and need independent original coverage. The runtime-local pass stage is not included in legacy snapshots or a complete match save. Both human acceptance cases reach this handoff then stop before dispatch/flight; opponent AI remains unsupported.
+
+## Unopposed teammate target (2026-11-11)
+
+After an explicitly acknowledged unopposed handoff, the provisional runtime resolves the current teammate's field cell and computes distance using the existing original-backed kernels and an explicitly supplied private `CMJPDST1` table. This path currently requires side-zero teammate, no defenders and elapsed0; free passes and moving-field cases are unsupported. It retains target data in runtime-only `MatchPassTarget`, not a legacy snapshot. CLI accepts `--demo SEED TICKS --distance FILE`.
+
+Eight controlled original CPU cases cover four constructed starting states and teammate IDs6/7. In each, the recipient byte was explicitly intervened after an original empty-target selection; cooperative presentation was acknowledged and no NMI/PPU/audio was emulated. The native target cell, distance and counter matched original DE64; represented field bytes did not change from C612 to DE64 in these cases. This is partial evidence, not a live match or a generally observed user-selected teammate pass. The two synthetic human acceptance cases reach `target_ready` then stop at unsupported flight; opponent AI still stops at action routing.

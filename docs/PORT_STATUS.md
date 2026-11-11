@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest runtime checkpoint (2026-11-11):** Opt-in provisional human passing reaches unopposed teammate target calculation. Eight controlled constructed original cases match target/distance; flight and opponent AI remain unsupported, full match unverified and progress unmeasured.
+
 **Latest runtime checkpoint (2026-11-11):** Opt-in provisional human passing reaches an explicitly acknowledged unopposed handoff; subsequent dispatch/flight and opponent AI remain unsupported. Empty-target handoff matches 24 prior original-compared cases. Windows 64 checks passed; full match unsupported, progress unmeasured.
 
 **Latest runtime checkpoint (2026-11-11):** Opt-in provisional human passing reaches general unopposed preparation for two synthetic cases; dispatch/flight and opponent AI remain unsupported. Preparation matches 24 previously original-compared empty-target cases; full match unsupported and progress unmeasured.

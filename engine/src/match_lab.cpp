@@ -13,7 +13,7 @@ unsigned parse_number(const char* text,unsigned max,const char* message){
 }
 }
 int main(int argc,char** argv) {
- if(argc!=3 && argc!=4 && argc!=6){std::cerr<<"Usage: captain-match-lab CONTENT_PACK DEVELOPMENT_SESSION [RANDOM_INDEX | --demo SEED TICKS]\n";return 2;}
+ if(argc!=3 && argc!=4 && argc!=6 && argc!=8){std::cerr<<"Usage: captain-match-lab CONTENT_PACK DEVELOPMENT_SESSION [RANDOM_INDEX | --demo SEED TICKS [--distance FILE]]\n";return 2;}
  try {
   std::ifstream pack(argv[1],std::ios::binary),snapshot(argv[2],std::ios::binary);
   if(!pack || !snapshot)throw std::runtime_error("Cannot open content pack or session snapshot");
@@ -21,9 +21,13 @@ int main(int argc,char** argv) {
   captain::MatchConfig config{};config.initial=captain::load_phase_session(snapshot);
   unsigned ticks=1;
   if(argc==4)config.random_index=static_cast<std::uint8_t>(parse_number(argv[3],255,"Random index must be 0..255"));
-  if(argc==6){if(std::string(argv[3])!="--demo")throw std::invalid_argument("Expected --demo SEED TICKS");
+  if(argc==6 || argc==8){if(std::string(argv[3])!="--demo")throw std::invalid_argument("Expected --demo SEED TICKS");
    config.mode=captain::MatchTimingMode::provisional_demo;config.seed=parse_number(argv[4],0xffffffffu,"Seed must be 1..4294967295");
    ticks=parse_number(argv[5],10000,"Ticks must be 1..10000");if(!config.seed || !ticks)throw std::invalid_argument("Demo seed and ticks must be nonzero");
+   if(argc==8){if(std::string(argv[6])!="--distance")throw std::invalid_argument("Expected --distance FILE");
+    std::ifstream distance(argv[7],std::ios::binary);if(!distance)throw std::invalid_argument("Cannot open pass distance file");
+    content.pass_distance=captain::read_pass_distance_content(distance);
+   }
    std::cout<<"PROVISIONAL DEMO: simplified timing and random values; not original parity.\n";
   }
   auto start=captain::create_match(config,content);

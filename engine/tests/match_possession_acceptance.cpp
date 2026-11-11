@@ -26,7 +26,7 @@ int main(int argc,char** argv) {
   initial.current.field.motion[field_motion_index(target)].x=140u<<8;
   MatchConfig config{};config.initial=initial;config.random_index=0; // Synthetic metadata, not an original capture.
   MatchContent content{};content.data=ShotContent{};
-  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->control_movement=ControlMovementContent{};content.data->action_menu=ActionMenuContent{};content.data->action_menu->directions[0][0]=1;content.data->field_players.skills.resize(1);content.data->field_players.skills[0].fill(20);content.data->attack.skill_selectors[1][0]=1;content.data->attack.moves[1].push_back({2,0,20,0});content.data->attack.strength_curve.fill(20);}
+  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->control_movement=ControlMovementContent{};content.data->action_menu=ActionMenuContent{};content.data->action_menu->directions[0][0]=1;content.data->field_players.skills.resize(1);content.data->field_players.skills[0].fill(20);content.data->attack.skill_selectors[1][0]=1;content.data->attack.moves[1].push_back({2,0,20,0});content.data->attack.strength_curve.fill(20);content.pass_distance=PassDistanceContent{};content.pass_distance->values.fill(4);}
   try {
    auto started=create_match(config,content);
    if(started.unsupported) {std::cerr<<"owner "<<unsigned(owner)<<": create: "<<capability_name(*started.unsupported)<<'\n';++failures;continue;}
@@ -38,7 +38,7 @@ int main(int argc,char** argv) {
     auto state=poll.state;std::uint64_t seq=3;bool blocked=false;
     auto advance=[&](MatchInput event) {
      event.sequence=seq++;auto result=step_match(state,event,content);
-     if(result.unsupported){std::cerr<<"owner "<<unsigned(owner)<<": "<<capability_name(*result.unsupported)<<" (phase "<<unsigned(state.session.phase)<<")\n";blocked=true;return;}
+     if(result.unsupported){std::cerr<<"owner "<<unsigned(owner)<<": "<<capability_name(*result.unsupported)<<" (phase "<<unsigned(state.session.phase)<<", pass stage "<<unsigned(state.pass_stage)<<")\n";blocked=true;return;}
      state=result.state;
     };
     MatchInput menu{MatchInputKind::tick,0};menu.held=64;advance(menu);
@@ -56,6 +56,10 @@ int main(int argc,char** argv) {
      std::cerr<<"owner "<<unsigned(owner)<<": unopposed pass preparation differs\n";blocked=true;
     }
     if(!blocked)advance({MatchInputKind::presentation_complete,0});
+    if(!blocked)advance({MatchInputKind::tick,0});
+    if(!blocked && (!state.pass_target || state.pass_target->recipient!=target || state.pass_stage!=MatchPassStage::target_ready)){
+     std::cerr<<"owner "<<unsigned(owner)<<": wrong pass target\n";blocked=true;
+    }
     if(!blocked)advance({MatchInputKind::tick,0});
     if(blocked){++failures;continue;}
     std::cerr<<"owner "<<unsigned(owner)<<": pass flight/reception not complete\n";++failures;continue;

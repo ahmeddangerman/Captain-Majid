@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active checkpoint ? provisional unopposed teammate target (2026-11-11)
+
+After explicit handoff, the provisional runtime resolves teammate cell and distance using an explicitly supplied private distance table; synthetic human acceptance reaches target_ready and stops at flight. Eight controlled original CPU cases (four starting fixtures, recipient6/7 intervened after empty-target selection, cooperative waits) matched cell/distance/counter, with represented field unchanged from C612 to DE64. This is partial evidence, not live timing or true player-selected menu coverage. Private evidence: `../Captain-Majid-analysis/trace_unopposed_teammate_20261111.py` and `unopposed-target-case*-de64-20261111.bin` plus `unopposed-teammate*-de64-20261111.bin`. Target stage is runtime-only, not a complete save. Windows build and 64 checks passed. Next implement numeric flight setup/crossings using controlled original comparisons; opponent AI and full match remain unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Active checkpoint ? provisional unopposed pass handoff (2026-11-11)
 
 Explicit `presentation_complete` moves the demo runtime from unopposed pass preparation to handoff (variant1), with no claim of rendering. Field and variant match 24 legacy empty-target handoffs previously compared with the original; teammate targets are constructed, not independently observed. Pass stage is runtime-only and not saved in legacy snapshots. Synthetic human acceptance remains red at post-handoff dispatch; opponent AI unsupported. Windows build and all 64 checks passed. Next trace and implement general post-handoff field update/flight. Full match unsupported and overall progress unmeasured. Suggested model GPT-6.1 Terra High.

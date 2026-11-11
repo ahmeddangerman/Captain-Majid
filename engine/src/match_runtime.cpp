@@ -98,6 +98,25 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   result.state.pass_stage=MatchPassStage::handoff;result.state.last_sequence=event.sequence;
   return result;
  }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_prepared &&
+    input.pass_stage==MatchPassStage::handoff && event.kind==MatchInputKind::tick) {
+  validate_phase_session(input.session);
+  if(!content.pass_distance){result.unsupported=UnsupportedCapability::content;return result;}
+  const auto& field=input.session.current.field;
+  if(field.elapsed || !input.session.ordinary_pass_recipient || !input.session.human_pass_cursor ||
+     *input.session.ordinary_pass_recipient==255 || *input.session.ordinary_pass_recipient<1 || *input.session.ordinary_pass_recipient>10) {
+   result.unsupported=UnsupportedCapability::phase;return result;
+  }
+  const auto recipient=*input.session.ordinary_pass_recipient;
+  const auto& player=field.motion[field_motion_index(recipient)];
+  const auto destination=resolve_pass_target_cell(recipient,*input.session.human_pass_cursor,
+      static_cast<std::uint8_t>(player.x>>8),static_cast<std::uint8_t>(player.y>>8));
+  if(destination==255){result.unsupported=UnsupportedCapability::action;return result;}
+  const auto distance=calculate_pass_distance(field.ball_x,field.ball_y,destination,*content.pass_distance);
+  result.state.pass_target=MatchPassTarget{recipient,destination,255,distance};
+  result.state.pass_stage=MatchPassStage::target_ready;result.state.last_sequence=event.sequence;
+  return result;
+ }
  if(input.session.phase==FieldSessionPhase::field){result.unsupported=UnsupportedCapability::initialization;return result;}
  if(event.kind==MatchInputKind::action)result.unsupported=UnsupportedCapability::action;
  else if(event.kind==MatchInputKind::presentation_complete)result.unsupported=UnsupportedCapability::presentation;

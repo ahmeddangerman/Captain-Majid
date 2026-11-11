@@ -1,6 +1,7 @@
 #include "captain/match_runtime.hpp"
 #include "captain/phase_session_io.hpp"
 #include "captain/field_state_io.hpp"
+#include "captain/defender_selection.hpp"
 #include <cassert>
 #include <stdexcept>
 #include <fstream>
@@ -8,6 +9,23 @@
 #include <string>
 int main(int argc,char** argv) {
  using namespace captain;
+ if(argc==5 && std::string(argv[1])=="--compare-target") {
+  std::ifstream session_file(argv[2],std::ios::binary),original_file(argv[3],std::ios::binary),distance_file(argv[4],std::ios::binary);
+  auto source=load_phase_session(session_file);std::array<unsigned char,2048> original{};
+  if(!original_file.read(reinterpret_cast<char*>(original.data()),original.size()))throw std::runtime_error("Missing original RAM");
+  MatchContent target_content{};target_content.data=ShotContent{};target_content.pass_distance=read_pass_distance_content(distance_file);
+  const auto recipient=original[0x5fc];source.phase=FieldSessionPhase::ordinary_pass_prepared;source.human_pass_steps=0;
+  source.ordinary_pass_candidates=OrdinaryPassCandidateContext{};source.ordinary_pass_candidates->scanned=true;
+  source.ordinary_pass_candidates->candidates.count=1;source.ordinary_pass_candidates->candidates.allied_count=1;
+  source.ordinary_pass_candidates->candidates.ids[0]=recipient;source.ordinary_pass_recipient=recipient;
+  source.ordinary_pass_defenses=OrdinaryPassDefenseContext{};
+  MatchRuntimeState state{};state.session=source;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;state.pass_stage=MatchPassStage::handoff;
+  const auto result=step_match(state,{MatchInputKind::tick,1},target_content);
+  if(result.unsupported || !result.state.pass_target || result.state.pass_target->recipient!=recipient || result.state.pass_target->destination!=original[0x638] ||
+     result.state.pass_target->distance!=original[0x62b] || result.state.pass_target->counter!=original[0x61a])
+    throw std::runtime_error("Unopposed target differs from original");
+  return 0;
+ }
  if(argc==4 && std::string(argv[1])=="--compare-unopposed") {
   std::ifstream source_file(argv[2],std::ios::binary),pack_file(argv[3],std::ios::binary);
   const auto legacy=load_phase_session(source_file);const auto pack=load_shot_content(pack_file);
@@ -124,6 +142,18 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  assert(early_flight.unsupported==UnsupportedCapability::presentation && early_flight.state.last_sequence==9);
  auto handoff=step_match(prepared.state,{MatchInputKind::presentation_complete,10},content);
  assert(!handoff.unsupported && handoff.state.pass_stage==MatchPassStage::handoff && handoff.state.session.recovery->ball_variant==1);
+ auto recipient_state=handoff.state;recipient_state.session.ordinary_pass_candidates->scanned=true;
+ recipient_state.session.ordinary_pass_candidates->candidates.count=1;recipient_state.session.ordinary_pass_candidates->candidates.allied_count=1;
+ recipient_state.session.ordinary_pass_candidates->candidates.ids[0]=6;recipient_state.session.ordinary_pass_recipient=6;
+ recipient_state.session.current.field.motion[field_motion_index(6)].x=140u<<8;
+ recipient_state.session.current.field.motion[field_motion_index(6)].y=124u<<8;
+ auto missing_distance=step_match(recipient_state,{MatchInputKind::tick,11},content);
+ assert(missing_distance.unsupported==UnsupportedCapability::content && missing_distance.state.last_sequence==10);
+ content.pass_distance=PassDistanceContent{};content.pass_distance->values.fill(4);
+ auto target_result=step_match(recipient_state,{MatchInputKind::tick,11},content);
+ assert(!target_result.unsupported && target_result.state.pass_stage==MatchPassStage::target_ready && target_result.state.pass_target);
+ assert(target_result.state.pass_target->recipient==6 && target_result.state.pass_target->destination==field_cell_at(140,124) && target_result.state.pass_target->distance==4 && target_result.state.pass_target->counter==255);
+ assert(target_result.state.session.current.field.ball_owner==7 && recipient_state.pass_stage==MatchPassStage::handoff);
  auto repeated_handoff=step_match(handoff.state,{MatchInputKind::presentation_complete,11},content);
  assert(repeated_handoff.unsupported==UnsupportedCapability::presentation && repeated_handoff.state.last_sequence==10);
  std::ostringstream pass_bytes;write_phase_session(pass_bytes,prepared.state.session);
