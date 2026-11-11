@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Opponent20 pass defender2 preparation, comparison result1 and variant restoration match the captured original with supplied timing and comparison data. The following wait and pass outcome remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Opponent20's pass matches destination arrival before and after snapping, with defender2 selected. Defender interaction remains unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Opponent20's pass matches three cell crossings and selects home defender2. Destination arrival and defender handling remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.

@@ -49,6 +49,25 @@ PhaseSessionState snap_player2_opponent_pass_arrival(const PhaseSessionState& in
  state.current.field.ball_x=x;state.current.field.ball_y=y;state.phase=FieldSessionPhase::player2_opponent_pass_arrival_snapped;
  validate_phase_session(state);return state;
 }
+PhaseSessionState begin_player2_opponent_pass_defender(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_arrival_snapped || input.current.field.random_first!=31 || input.current.field.random_second!=197)
+  throw std::invalid_argument("Opponent20 pass defender loop requires its observed snapped arrival");
+ auto state=input;state.area_defender_cursor=0;state.phase=FieldSessionPhase::player2_opponent_pass_defender_pending;
+ validate_phase_session(state);return state;
+}
+PhaseSessionState prepare_player2_opponent_pass_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_defender_pending || input.current.field.random_first!=122 || input.current.field.random_second!=176)
+  throw std::invalid_argument("Opponent20 defender preparation requires its observed wait");
+ const auto& player=input.current.field.roster[2];
+ const auto prepared=prepare_profiled_field_defender({2,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level},profiles,2,0,0,defense);
+ if(prepared.base_strength!=8 || prepared.stamina_cost!=50 || prepared.move_effect)
+  throw std::invalid_argument("Unobserved opponent20 pass defender preparation");
+ auto state=input;state.area_pass_contact=AreaPassContactContext{2,prepared.stamina_cost};state.recovery->ball_variant=0;state.recovery->opposing_player=2;
+ state.area_contact=AreaContactContext{0,2,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+ state.phase=FieldSessionPhase::player2_opponent_pass_defender_prepared;validate_phase_session(state);return state;
+}
 PhaseSessionState resolve_player2_opponent_pass_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::player2_opponent_pass_flight_callback || input.current.field.selected_defenders)
@@ -397,6 +416,24 @@ PhaseSessionState restore_area_pass_ball_variant(const PhaseSessionState& input)
   throw std::invalid_argument("Area pass variant restoration requires a saved comparison");
  auto state=input;state.recovery->ball_variant=state.area_pass_contact->saved_ball_variant;
  state.phase=FieldSessionPhase::area_pass_variant_restored;validate_phase_session(state);return state;
+}
+PhaseSessionState compare_player2_opponent_pass_defender(const PhaseSessionState& input,const AreaPassComparisonContent& comparison) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_defender_prepared || input.current.field.random_first!=122 || input.current.field.random_second!=176)
+  throw std::invalid_argument("Opponent20 defender comparison requires the observed preparation");
+ const auto result=compare_defender_contact({input.action->power,input.area_contact->defender_power,input.current.field.random_first,
+  input.current.field.random_second,comparison.range,comparison.offset,false,bool(comparison.eligibility&128u),0,2,0,comparison.thresholds});
+ if(result.strength!=4 || result.loss!=1 || result.score!=96 || result.result_code!=1 || result.subtype)
+  throw std::invalid_argument("Unobserved opponent20 pass defender comparison");
+ auto state=input;state.area_contact->strength=result.strength;state.area_contact->loss=result.loss;
+ state.area_contact->score=result.score;state.area_contact->result=result.result_code;state.area_sequence_result=result.result_code;
+ state.phase=FieldSessionPhase::player2_opponent_pass_defender_compared;validate_phase_session(state);return state;
+}
+PhaseSessionState restore_player2_opponent_pass_variant(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_defender_compared)throw std::invalid_argument("Opponent20 variant restore requires a comparison");
+ auto state=input;state.recovery->ball_variant=state.area_pass_contact->saved_ball_variant;
+ state.phase=FieldSessionPhase::player2_opponent_pass_defender_variant_restored;validate_phase_session(state);return state;
 }
 PhaseSessionState compare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_power,
  std::uint8_t captured_context,const AreaPassComparisonContent& content) {

@@ -14,6 +14,8 @@ PhaseSessionState begin_player2_opponent_pass_flight(const PhaseSessionState& in
 SessionBallStepResult advance_player2_opponent_pass_flight(const PhaseSessionState& input);
 PhaseSessionState resolve_player2_opponent_pass_cell(const PhaseSessionState& input);
 PhaseSessionState snap_player2_opponent_pass_arrival(const PhaseSessionState& input);
+PhaseSessionState begin_player2_opponent_pass_defender(const PhaseSessionState& input);
+PhaseSessionState prepare_player2_opponent_pass_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& defense);
 PhaseSessionState begin_postgoal_opponent_first_flight(const PhaseSessionState& input,
  std::uint8_t x_fraction,std::uint8_t y_fraction,std::uint8_t captured_distance,
  const MovementGeometryContent& geometry,const BallVelocityContent& velocity);
@@ -54,6 +56,8 @@ PhaseSessionState prepare_session_sampled_loose_shot_defender(const PhaseSession
 PhaseSessionState acknowledge_area_pass_defender_announcement(const PhaseSessionState& input);
 PhaseSessionState prepare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_cost);
 struct AreaPassComparisonContent { std::uint8_t range,offset,eligibility; std::array<std::uint8_t,4> thresholds; };
+PhaseSessionState compare_player2_opponent_pass_defender(const PhaseSessionState& input,const AreaPassComparisonContent& comparison);
+PhaseSessionState restore_player2_opponent_pass_variant(const PhaseSessionState& input);
 PhaseSessionState compare_postgoal_return_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,
  const FieldDefenseContent& defense,const AreaPassComparisonContent& comparison);
 PhaseSessionState begin_postgoal_defender_result_wait(const PhaseSessionState& input);
