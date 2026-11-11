@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current observation - 2026-11-11: opponent21 clock stamina ordering
+
+After the matched phase10 entry, original-only evidence shows stamina changes in two groups on opposite sides of the final NMI; the existing `clock_events` extractor rejects the split as ambiguous. No native parity is claimed after E1E7. Next capture and implement both groups and random ordering, then compare the field round. Starting snapshot remains `../Captain-Majid-analysis/opponent21-polls-v2-20261111/11.cmjsession`. Overall progress unmeasured; full match unsupported. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent21 control clock entry
 
 Eleven neutral player21 polls match the original through E1E7, random index106. Phase10 snapshot: `../Captain-Majid-analysis/opponent21-polls-v2-20261111/11.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent21_control.py` checks each checkpoint, invalid mode and snapshot roundtrip; Windows build and all 62 checks passed. Next compare control clock and field round; AI/timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent21 clock observation
+
+Original-only trace inspection after the 11 matched polls found a ball-mode192 to128 change and stamina updates split across two capture intervals: player2, player3 and player5 change before the final NMI, while player7 and player8 change after it. The existing clock evidence extractor rejects the two observed stamina boundaries as ambiguous, so no native clock parity or code change is claimed for this segment. Next preserve and compare the ordering of both groups and the interleaved random event before extending the field round; do not collapse the original writes into one assumed instant. Trace remains private under `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. Overall progress remains unmeasured; a complete playable match remains unsupported. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent21 control polls
 
 Player21's first 11 neutral-input control polls now match original E145/E14A through clock entry E1E7, random index106. The shared poll kernel processes supplied random/travel and two observed ball-mode changes; guarded support covers this owner/clock case. `tools/verify_opponent21_control.py` compares each original represented checkpoint, rejects an invalid mode atomically and roundtrips the resulting snapshot. Evidence: `../Captain-Majid-analysis/opponent21-polls-v2-20261111`. Windows CMake build and all 62 registered checks passed. Next compare the control clock and subsequent field round. Timing/AI are supplied, a full playable match remains unsupported and overall progress unmeasured. Suggested model GPT-6.1 Terra High.
