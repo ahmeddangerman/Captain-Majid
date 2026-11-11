@@ -27,12 +27,17 @@ target_sources(captain_core PRIVATE engine/src/action_menu.cpp engine/src/sessio
 target_compile_features(captain_core PUBLIC cxx_std_17)
 set_target_properties(captain_core PROPERTIES CXX_EXTENSIONS OFF)
 
-target_sources(captain_core PRIVATE engine/src/match_runtime.cpp engine/src/runtime_random.cpp engine/src/match_save.cpp)
+target_sources(captain_core PRIVATE engine/src/match_runtime.cpp engine/src/runtime_random.cpp engine/src/match_save.cpp engine/src/match_client.cpp)
 # Manual milestone acceptance; deliberately not registered as a passing CTest.
 add_executable(match-possession-acceptance EXCLUDE_FROM_ALL engine/tests/match_possession_acceptance.cpp)
 target_link_libraries(match-possession-acceptance PRIVATE captain_core)
 add_executable(captain-match-lab engine/src/match_lab.cpp)
 target_link_libraries(captain-match-lab PRIVATE captain_core)
+
+if(WIN32)
+    add_executable(captain-match-window WIN32 engine/src/match_window_win32.cpp)
+    target_link_libraries(captain-match-window PRIVATE captain_core user32 gdi32 shell32)
+endif()
 
 add_executable(captain-prototype engine/src/main.cpp engine/src/research_protocol.cpp)
 target_link_libraries(captain-prototype PRIVATE captain_core)
@@ -55,6 +60,9 @@ endif()
 
 include(CTest)
 if(BUILD_TESTING)
+    add_executable(match-client-tests engine/tests/match_client_tests.cpp)
+    target_link_libraries(match-client-tests PRIVATE captain_core)
+    add_test(NAME match_client COMMAND match-client-tests)
     add_executable(runtime-random-tests engine/tests/runtime_random_tests.cpp)
     target_link_libraries(runtime-random-tests PRIVATE captain_core)
     add_test(NAME runtime_random COMMAND runtime-random-tests)

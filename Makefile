@@ -28,7 +28,7 @@ CORE_SOURCES += engine/src/control_session.cpp
 CORE_SOURCES += engine/src/control_input.cpp
 CORE_SOURCES += engine/src/control_tick.cpp
 CORE_SOURCES += engine/src/action_menu.cpp engine/src/session_shot.cpp engine/src/staged_shot.cpp engine/src/selected_dispatch.cpp engine/src/capture_clearance.cpp engine/src/clearance_race.cpp engine/src/clearance_handoff.cpp engine/src/restart_route.cpp engine/src/restart_options.cpp engine/src/attack_clock.cpp engine/src/approach_session.cpp engine/src/ball_velocity.cpp engine/src/ball_step.cpp engine/src/ball_flight_session.cpp
-CORE_SOURCES += engine/src/match_runtime.cpp engine/src/runtime_random.cpp engine/src/match_save.cpp
+CORE_SOURCES += engine/src/match_runtime.cpp engine/src/runtime_random.cpp engine/src/match_save.cpp engine/src/match_client.cpp
 HEADERS = $(wildcard engine/include/captain/*.hpp)
 CORE_OBJECTS = $(patsubst engine/src/%.cpp,build/core/%.o,$(CORE_SOURCES))
 CORE = build/libcaptain-core.a
@@ -61,6 +61,9 @@ build/runtime-random-tests: engine/tests/runtime_random_tests.cpp $(CORE) $(HEAD
 
 build/match-runtime-tests: engine/tests/match_runtime_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/match_runtime_tests.cpp $(CORE) -o $@
+
+build/match-client-tests: engine/tests/match_client_tests.cpp $(CORE) $(HEADERS) | build
+	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/match_client_tests.cpp $(CORE) -o $@
 
 build/captain-prototype: engine/src/main.cpp $(CORE) $(RESEARCH) engine/src/research_protocol.hpp $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/src/main.cpp $(RESEARCH) $(CORE) -o $@
@@ -221,10 +224,11 @@ build/observed-world-round-tests: engine/tests/observed_world_round_tests.cpp $(
 build/pass-distance-tests: engine/tests/pass_distance_tests.cpp $(CORE) $(HEADERS) | build
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) engine/tests/pass_distance_tests.cpp $(CORE) -o $@
 
-check: build/runtime-random-tests build/match-runtime-tests build/control-travel-tests build/observed-world-round-tests
+check: build/runtime-random-tests build/match-runtime-tests build/match-client-tests build/control-travel-tests build/observed-world-round-tests
 check: build/pass-target-tests build/pass-distance-tests build/ai-action-candidate-tests build/defensive-move-inspection-tests build/defense-affordability-tests build/kickoff-session-tests build/kickoff-formation-tests build/kickoff-selection-tests build/goal-session-tests build/keeper-save-session-tests build/keeper-session-tests build/loose-arrival-tests build/ball-flight-session-tests build/ball-step-tests build/ball-velocity-tests build/approach-session-tests build/attack-clock-tests build/restart-options-tests build/restart-route-tests build/clearance-handoff-tests build/clearance-race-tests build/capture-clearance-tests build/selected-recovery-tests build/selected-dispatch-tests build/staged-shot-tests build/session-shot-tests build/field-interruption-tests build/field-comparison-content-tests build/complete-prepared-shot-tests build/prepared-keeper-tests build/prepared-attack-tests build/prepared-field-shot-tests build/prepared-defender-sequence-tests build/field-player-profile-tests build/core-tests build/defender-tests build/shot-tests build/energy-tests build/keeper-state-tests build/random-tests build/shot-sequence-tests build/defender-sequence-tests build/defender-outcome-tests build/ball-recovery-tests build/field-handoff-tests build/defender-selection-tests build/field-defender-preparation-tests build/captain-prototype
 	./build/runtime-random-tests
 	./build/match-runtime-tests
+	./build/match-client-tests
 	./build/control-travel-tests
 	./build/observed-world-round-tests
 	./build/pass-target-tests

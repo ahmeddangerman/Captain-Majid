@@ -1,4 +1,5 @@
 #include "captain/match_runtime.hpp"
+#include "captain/match_client.hpp"
 #include "captain/match_save.hpp"
 #include "captain/phase_session_io.hpp"
 #include "captain/field_state_io.hpp"
@@ -54,9 +55,7 @@ static int shot_comparisons(int argc,char** argv) {
   const auto final_phase=kickoff ? FieldSessionPhase::control_ready : FieldSessionPhase::goal_kickoff_pending;
   for(unsigned turn=0;turn<200 && state->session.phase!=final_phase;++turn){
    const auto phase=state->session.phase;
-   const bool presentation=phase==FieldSessionPhase::attack_prepared || phase==FieldSessionPhase::selected_attack_presentation || phase==FieldSessionPhase::ball_arrival_callback || phase==FieldSessionPhase::keeper_presentation_pending || phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending || phase==FieldSessionPhase::kickoff_ball_placed;
-   MatchInput input{phase==FieldSessionPhase::attack_choice_pending ? MatchInputKind::action : presentation ? MatchInputKind::presentation_complete : MatchInputKind::tick,state->last_sequence+1};
-   if(phase==FieldSessionPhase::attack_choice_pending)input.action=MatchAction::shot;
+   const auto input=client_input(*state,0,0);
    *result=step_match(*state,input,content);
    if(result->unsupported)throw std::runtime_error(std::string("End-to-end shot unsupported: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(phase)));
    if(result->state.retained_defense_action){MatchContentIdentity identity{};identity[0]=42;std::ostringstream saved(std::ios::binary);write_match_save(saved,result->state,identity);std::istringstream in(saved.str(),std::ios::binary);auto restored=std::make_unique<MatchRuntimeState>(load_match_save(in,identity));if(restored->retained_defense_action!=result->state.retained_defense_action)throw std::runtime_error("Retained action lost across runtime save");}
@@ -778,6 +777,18 @@ static std::unique_ptr<DeferredDefendedTest> deferred_retained_control_test;
 static void test_retained_action_control(const captain::MatchRuntimeState& base,const captain::MatchContent& original,const captain::MatchContentIdentity& identity) {
  using namespace captain;
  auto state=std::make_unique<MatchRuntimeState>(base);auto content=std::make_unique<MatchContent>(original);state->retained_defense_action=3;
+ MatchConfig initial{};initial.initial=state->session;initial.mode=MatchTimingMode::provisional_demo;initial.seed=1;initial.retained_defense_action=3;
+ auto created=std::make_unique<MatchStepResult>(create_match(initial,*content));assert(!created->unsupported && created->state.retained_defense_action==3);
+ {
+  auto interactive=std::make_unique<MatchRuntimeState>(created->state);auto step=std::make_unique<MatchStepResult>();
+  content->data->action_menu->directions[0][0]=0;
+  const auto advance=[&](std::uint8_t held,std::uint8_t pressed){*step=step_match(*interactive,client_input(*interactive,held,pressed),*content);assert(!step->unsupported);*interactive=step->state;};
+  advance(64,64);assert(interactive->session.phase==FieldSessionPhase::action_menu_pending);
+  advance(0,0);assert(interactive->session.phase==FieldSessionPhase::human_action_menu);
+  advance(1,1);advance(128,128);assert(interactive->session.phase==FieldSessionPhase::attack_choice_pending && interactive->retained_defense_action==3);
+  content->data->field_players.skills.resize(1);content->data->field_players.skills[0].fill(20);content->data->attack.skill_selectors[0][0]=1;content->data->attack.moves[0].push_back({2,0,20,0});content->data->attack.strength_curve.fill(20);
+  advance(0,0);assert(interactive->session.phase==FieldSessionPhase::attack_prepared && interactive->retained_defense_action==3);
+ }
  state->session.current.clock.remaining=200;content->data->world_step=WorldStepContent{};content->data->movement->profiles.speeds.resize(1);
  state->session.current.field.roster[0].type=1;state->session.current.field.roster[11].type=1;content->data->goalkeepers.skills.resize(1);
  for(unsigned id=1;id<=21;++id)if(id!=11 && id!=state->session.current.field.ball_owner){state->session.current.field.roster[id].type=1;auto& player=state->session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];player.x=(id<11 ? 52u : 200u)<<8;player.y=(id<11 ? 84u : 160u)<<8;}

@@ -319,8 +319,10 @@ MatchStepResult create_match(const MatchConfig& config,const MatchContent& conte
  if(!config.initial || config.clock || (config.mode!=MatchTimingMode::original_backed && config.mode!=MatchTimingMode::provisional_demo) || (config.mode==MatchTimingMode::original_backed && config.seed) || (config.mode==MatchTimingMode::provisional_demo && !config.seed)){result.unsupported=UnsupportedCapability::initialization;return result;}
  validate_phase_session(*config.initial);
  if(config.retained_defense_action){const auto& session=*config.initial;
-  if(config.mode!=MatchTimingMode::provisional_demo || *config.retained_defense_action>6 || session.current.field.side!=0 || session.current.field.selected_defenders || !session.action || session.action->action!=0 ||
-     (session.phase!=FieldSessionPhase::attack_choice_pending && session.phase!=FieldSessionPhase::attack_prepared && session.phase!=FieldSessionPhase::shot_dispatch_ready && session.phase!=FieldSessionPhase::selected_attack_presentation)){
+  const bool ready=session.phase==FieldSessionPhase::control_ready && !session.current.field.selected_defenders;
+  const bool shot=session.current.field.side==0 && !session.current.field.selected_defenders && session.action && session.action->action==0 &&
+     (session.phase==FieldSessionPhase::attack_choice_pending || session.phase==FieldSessionPhase::attack_prepared || session.phase==FieldSessionPhase::shot_dispatch_ready || session.phase==FieldSessionPhase::selected_attack_presentation);
+  if(config.mode!=MatchTimingMode::provisional_demo || *config.retained_defense_action>6 || !(ready || shot)){
    result.unsupported=UnsupportedCapability::initialization;return result;
   }
  }
