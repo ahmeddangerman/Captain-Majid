@@ -12,7 +12,7 @@ int main(int argc,char** argv) {
  if(demo)std::cerr<<"PROVISIONAL DEMO: simplified timing and random values; synthetic content.\n";
  using namespace captain;
  unsigned failures=0;
- bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false;
+ bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false,contested_checked=false,contested_unfinished=false;
  const std::array<std::uint8_t,3> owners{{3,7,15}};
  const std::array<std::uint8_t,3> targets{{7,3,19}};
  unsigned fixture=0;
@@ -64,7 +64,15 @@ int main(int argc,char** argv) {
     if(!blocked)advance({MatchInputKind::presentation_complete,0});
     if(!blocked)advance({MatchInputKind::tick,0});
     if(!blocked)advance({MatchInputKind::tick,0});
-    for(unsigned flight_ticks=0;!blocked && state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived && flight_ticks<128;++flight_ticks)advance({MatchInputKind::tick,0});
+    for(unsigned flight_ticks=0;!blocked && state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived && flight_ticks<128;++flight_ticks){
+     advance({MatchInputKind::tick,0});
+     if(!blocked && !contested_checked && state.defense_menu->stage==MatchDefenseStage::ai_flight_cell){
+      auto contested=state;auto& defender=contested.session.current.field.motion[field_motion_index(1)];
+      defender.x=contested.defense_menu->ai_trajectory->x;defender.y=contested.defense_menu->ai_trajectory->y;defender.status=0;
+      contested.session.current.field.random_first=1;contested.session.current.field.random_second=0;
+      auto result=step_match(contested,{MatchInputKind::tick,seq},content);contested_checked=true;contested_unfinished=bool(result.unsupported);
+     }
+    }
     if(!blocked && state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived){std::cerr<<"owner "<<unsigned(owner)<<": opponent pass did not arrive\n";blocked=true;}
     if(!blocked)advance({MatchInputKind::presentation_complete,0});
     if(!blocked)advance({MatchInputKind::tick,0});
@@ -97,7 +105,10 @@ int main(int argc,char** argv) {
      MatchInput choose_multi{MatchInputKind::tick,probe.sequence+1};choose_multi.pressed=128;
      auto result=step_match(second.state,choose_multi,content);
      multi_checked=true;multi_unfinished=bool(first.unsupported) || bool(second.unsupported) ||
-      !second.state.session.ordinary_pass_candidates || second.state.session.ordinary_pass_candidates->candidates.allied_count<2 || bool(result.unsupported);
+      !second.state.session.ordinary_pass_candidates || second.state.session.ordinary_pass_candidates->candidates.allied_count<2 || bool(result.unsupported) || !result.state.target_chooser;
+     if(!multi_unfinished){MatchInput down{MatchInputKind::tick,choose_multi.sequence+1};down.pressed=4;auto selected=step_match(result.state,down,content);
+      MatchInput done{MatchInputKind::tick,down.sequence+1};done.pressed=128;auto confirmed=step_match(selected.state,done,content);
+      multi_unfinished=bool(selected.unsupported) || bool(confirmed.unsupported) || !confirmed.state.session.ordinary_pass_recipient || *confirmed.state.session.ordinary_pass_recipient!=extra;}
     }
     MatchInput aim{MatchInputKind::tick,0};aim.held=1;if(!blocked)advance(aim);if(!blocked)advance(aim);
     if(!blocked)advance(confirm);
@@ -143,6 +154,7 @@ int main(int argc,char** argv) {
  }
  if(demo && cancellation_unfinished){std::cerr<<"M1 still incomplete: ordinary pass target cancellation is unsupported\n";++failures;}
  if(demo && multi_unfinished){std::cerr<<"M1 still incomplete: multi-teammate pass selection is unsupported\n";++failures;}
+ if(demo && (!contested_checked || contested_unfinished)){std::cerr<<"M1 still incomplete: pass-flight defender contact is unsupported or unverified\n";++failures;}
  std::cerr<<failures<<" exercised checks incomplete; other match routes remain unverified\n";
  return failures?1:0;
 }

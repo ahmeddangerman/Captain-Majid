@@ -122,6 +122,7 @@ OrdinaryPassCursorResult poll_ordinary_human_pass_cursor(const PhaseSessionState
 // Return from the target screen after its cancellation presentation completes.
 PhaseSessionState cancel_ordinary_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState confirm_ordinary_human_pass_target(const PhaseSessionState& input);
+PhaseSessionState confirm_ordinary_human_pass_recipient(const PhaseSessionState& input, std::uint8_t index);
 PhaseSessionState begin_ordinary_pass_defense_selection(const PhaseSessionState& input);
 PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
     std::uint8_t defender, std::uint8_t action, std::uint8_t subtype);

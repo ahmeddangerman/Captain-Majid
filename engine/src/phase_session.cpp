@@ -103,11 +103,12 @@ void validate_phase_session(const PhaseSessionState& state) {
                 throw std::invalid_argument("Allied pass candidates exclude opponents");
         }
         if (phase>=332) {
-            if (!state.ordinary_pass_candidates || state.ordinary_pass_candidates->candidates.allied_count > 1)
-                throw std::invalid_argument("Confirmed ordinary pass requires a known single or empty target");
+            if (!state.ordinary_pass_candidates)
+                throw std::invalid_argument("Confirmed ordinary pass requires known candidates");
             const auto& candidates = state.ordinary_pass_candidates->candidates;
-            const auto expected = candidates.allied_count == 1 ? candidates.ids[0] : 255;
-            if (*state.ordinary_pass_recipient != expected)
+            bool allowed=!candidates.allied_count && *state.ordinary_pass_recipient==255;
+            for(unsigned i=0;i<candidates.allied_count;++i)if(candidates.ids[i]==*state.ordinary_pass_recipient)allowed=true;
+            if (!allowed)
                 throw std::invalid_argument("Confirmed ordinary pass recipient disagrees with saved candidates");
         }
         if (state.ordinary_pass_defenses) {

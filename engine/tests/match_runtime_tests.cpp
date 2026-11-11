@@ -10,6 +10,38 @@
 #include <string>
 static int comparisons(int argc,char** argv) {
  using namespace captain;
+ if(argc==8 && std::string(argv[1])=="--compare-multi-chooser") {
+  std::ifstream source_file(argv[2],std::ios::binary),before_file(argv[3],std::ios::binary),after_file(argv[4],std::ios::binary),expected_file(argv[5],std::ios::binary);
+  auto source=load_phase_session(source_file);auto expected=load_phase_session(expected_file);std::array<unsigned char,2048> before{},after{};
+  if(!before_file.read(reinterpret_cast<char*>(before.data()),before.size()) || !after_file.read(reinterpret_cast<char*>(after.data()),after.size()))throw std::runtime_error("Missing original chooser RAM");
+  auto target=begin_ordinary_human_pass_target(source);target.human_pass_cursor=before[0x624];
+  auto& candidates=*target.ordinary_pass_candidates;candidates.scanned=true;candidates.candidates.count=before[0x430];candidates.candidates.allied_count=before[0x430];
+  if(candidates.candidates.count<2 || candidates.candidates.count>4)throw std::runtime_error("Invalid original chooser count");
+  for(unsigned i=0;i<candidates.candidates.count;++i)candidates.candidates.ids[i]=before[0x431+i];
+  MatchRuntimeState state{};state.session=target;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;state.target_chooser=MatchTargetChooser{before[0x625]};
+  MatchContent content{};content.data=ShotContent{};MatchInput input{MatchInputKind::tick,1};input.pressed=static_cast<std::uint8_t>(std::stoul(argv[6]));
+  auto result=step_match(state,input,content);const std::string boundary(argv[7]);
+  if(result.unsupported)throw std::runtime_error("Runtime multi-recipient chooser unsupported");
+  if(boundary=="poll"){
+   if(!result.state.target_chooser || result.state.target_chooser->index!=after[0x625] || result.state.session.ordinary_pass_candidates->candidates.ids[after[0x625]]!=after[0x5fc])
+    throw std::runtime_error("Runtime chooser cursor differs from original");
+  }else if(boundary=="cancel"){
+   if(result.state.target_chooser || result.state.session.phase!=FieldSessionPhase::ordinary_human_pass_target ||
+      result.state.session.ordinary_pass_candidates->candidates.count!=after[0x430] || result.state.session.ordinary_pass_candidates->candidates.allied_count!=after[0x625])
+    throw std::runtime_error("Runtime chooser cancel differs from original");
+   for(unsigned i=0;i<after[0x430];++i)if(result.state.session.ordinary_pass_candidates->candidates.ids[i]!=after[0x431+i])throw std::runtime_error("Runtime rescan differs from original");
+  }else if(boundary=="confirm"){
+   if(result.state.target_chooser || result.state.session.phase!=FieldSessionPhase::ordinary_human_pass_confirmed ||
+      result.state.session.ordinary_pass_recipient!=after[0x5fc] || *result.state.session.human_pass_cursor!=after[0x638])
+    throw std::runtime_error("Runtime chooser recipient differs from original");
+  }else throw std::invalid_argument("Unknown original chooser boundary");
+  auto normalized=result.state.session;normalized.phase=FieldSessionPhase::attack_choice_pending;normalized.human_pass_cursor.reset();normalized.human_pass_steps=0;
+  normalized.ordinary_pass_candidates.reset();normalized.ordinary_pass_recipient.reset();
+  normalized.current.field.random_first=expected.current.field.random_first;normalized.current.field.random_second=expected.current.field.random_second;
+  std::ostringstream actual(std::ios::binary),wanted(std::ios::binary);write_phase_session(actual,normalized);write_phase_session(wanted,expected);
+  if(actual.str()!=wanted.str())throw std::runtime_error("Runtime chooser represented state differs from original");
+  return 0;
+ }
  if(argc==6 && std::string(argv[1])=="--compare-pass-cancel") {
   std::ifstream source_file(argv[2],std::ios::binary),before_file(argv[3],std::ios::binary),expected_file(argv[4],std::ios::binary);
   auto source=load_phase_session(source_file);auto expected=load_phase_session(expected_file);std::array<unsigned char,2048> before{};
@@ -556,6 +588,27 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  auto direct=ordinary;direct.target=7;
  auto direct_rejected=step_match(confirmed.state,direct,content);
  assert(direct_rejected.unsupported==UnsupportedCapability::action && direct_rejected.state.last_sequence==5);
+ auto multi_input=aimed.state;multi_input.session.ordinary_pass_candidates->scanned=true;
+ multi_input.session.ordinary_pass_candidates->candidates.count=2;multi_input.session.ordinary_pass_candidates->candidates.allied_count=2;
+ multi_input.session.ordinary_pass_candidates->candidates.ids={5,6,0,0};
+ MatchInput open_multi{MatchInputKind::tick,8};open_multi.pressed=128;auto multi_open=step_match(multi_input,open_multi,content);
+ assert(!multi_open.unsupported && multi_open.state.target_chooser && multi_open.state.target_chooser->index==0);
+ auto restored_chooser=verify_checkpoint(multi_open.state);assert(restored_chooser.target_chooser->index==0);
+ MatchInput down_multi{MatchInputKind::tick,9};down_multi.pressed=4;auto multi_down=step_match(multi_open.state,down_multi,content);
+ assert(!multi_down.unsupported && multi_down.state.target_chooser->index==1);
+ auto restored_down=step_match(restored_chooser,down_multi,content);
+ assert(!restored_down.unsupported && restored_down.state.target_chooser->index==multi_down.state.target_chooser->index);
+ MatchInput confirm_multi{MatchInputKind::tick,10};confirm_multi.pressed=128;auto multi_confirmed=step_match(multi_down.state,confirm_multi,content);
+ assert(!multi_confirmed.unsupported && !multi_confirmed.state.target_chooser && multi_confirmed.state.session.ordinary_pass_recipient==6);
+ assert(multi_confirmed.state.session.phase==FieldSessionPhase::ordinary_human_pass_confirmed);
+ assert(verify_checkpoint(multi_confirmed.state).session.ordinary_pass_recipient==6);
+ auto multi_prepared=step_match(multi_confirmed.state,{MatchInputKind::tick,11},content);
+ assert(!multi_prepared.unsupported && multi_prepared.state.session.ordinary_pass_recipient==6);
+ assert(multi_prepared.state.session.phase==FieldSessionPhase::ordinary_pass_prepared);
+ auto forged_choice=multi_confirmed.state;forged_choice.session.ordinary_pass_recipient=4;bool reject_forged=false;
+ try {std::ostringstream bad(std::ios::binary);write_match_save(bad,forged_choice,identity);}catch(const std::invalid_argument&){reject_forged=true;}assert(reject_forged);
+ MatchInput cancel_multi{MatchInputKind::tick,9};cancel_multi.pressed=192;auto multi_cancel=step_match(multi_open.state,cancel_multi,content);
+ assert(!multi_cancel.unsupported && !multi_cancel.state.target_chooser && multi_cancel.state.session.phase==FieldSessionPhase::ordinary_human_pass_target);
  auto no_menu_content=content;no_menu_content.data->action_menu.reset();
  auto blocked_menu=step_match(menu_result.state,{MatchInputKind::tick,3},no_menu_content);
  assert(blocked_menu.unsupported==UnsupportedCapability::content && blocked_menu.state.last_sequence==2);
@@ -613,6 +666,7 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  assert(defense_ai.unsupported==UnsupportedCapability::content && defense_ai.state.last_sequence==6);
  assert(verify_checkpoint(defense_complete.state).defense_menu->stage==MatchDefenseStage::complete);
  auto legacy_menu_save=[](std::string bytes,std::uint8_t version) {
+  assert(bytes.back()==0);bytes.pop_back(); // Version11 target chooser flag.
   assert(bytes.back()==0);bytes.pop_back();
   assert(bytes.back()==0);bytes.pop_back();
   bytes.pop_back(); // Version9 defender count; older saves derive it from the session.
@@ -679,7 +733,11 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  auto ai_flight_restored=verify_checkpoint(ai_flight.state);
  assert(ai_flight_restored.defense_menu->ai_trajectory->x==ai_flight.state.defense_menu->ai_trajectory->x);
  std::ostringstream save_v9_source(std::ios::binary);write_match_save(save_v9_source,ai_flight.state,identity);
- auto save_v9=save_v9_source.str();save_v9[8]=9;std::istringstream save_v9_stream(save_v9,std::ios::binary);
+ auto save_v9=save_v9_source.str();assert(save_v9.back()==0);save_v9.pop_back();save_v9[8]=9;
+ const auto v9_length=static_cast<std::uint32_t>(save_v9.size()-17);std::uint32_t v9_crc=0xffffffffu;
+ for(std::size_t i=17;i<save_v9.size();++i){v9_crc^=static_cast<unsigned char>(save_v9[i]);for(unsigned j=0;j<8;++j)v9_crc=(v9_crc>>1)^(0xedb88320u&static_cast<std::uint32_t>(-static_cast<std::int32_t>(v9_crc&1)));}
+ v9_crc=~v9_crc;for(unsigned i=0;i<4;++i){save_v9[9+i]=static_cast<char>(v9_length>>(8*i));save_v9[13+i]=static_cast<char>(v9_crc>>(8*i));}
+ std::istringstream save_v9_stream(save_v9,std::ios::binary);
  assert(load_match_save(save_v9_stream,identity).defense_menu->stage==MatchDefenseStage::ai_flight_ready);
  auto ai_first_crossing=step_match(ai_flight.state,{MatchInputKind::tick,14},content);
  if(!ai_first_crossing.unsupported && ai_first_crossing.state.defense_menu->stage==MatchDefenseStage::ai_flight_cell){

@@ -9,7 +9,7 @@
 namespace captain {
 namespace {
 constexpr char magic[]="CMJMATCH";
-constexpr std::uint8_t current_version=10;
+constexpr std::uint8_t current_version=11;
 constexpr std::uint32_t max_payload=1024*1024;
 void put(std::string& out,std::uint64_t n,unsigned bytes) {
  for(unsigned i=0;i<bytes;++i)out.push_back(static_cast<char>((n>>(8*i))&255));
@@ -49,6 +49,10 @@ void validate_runtime(const MatchRuntimeState& s) {
   throw std::invalid_argument("Invalid match pass target");
  if(flight && (*s.pass_cell>=240 || s.pass_trajectory->flags!=1 || !s.session.saved_ball_flight_flag))
   throw std::invalid_argument("Invalid match flight state");
+ if(s.target_chooser && (s.mode!=MatchTimingMode::provisional_demo || s.session.phase!=FieldSessionPhase::ordinary_human_pass_target ||
+    s.pass_stage!=MatchPassStage::none || s.defense_menu || !s.session.ordinary_pass_candidates || !s.session.ordinary_pass_candidates->scanned ||
+    s.session.ordinary_pass_candidates->candidates.allied_count<2 || s.target_chooser->index>=s.session.ordinary_pass_candidates->candidates.allied_count))
+  throw std::invalid_argument("Invalid match target chooser");
  if(s.defense_menu) {
   const auto& m=*s.defense_menu;const auto count=m.defender_count;
   const bool flight=static_cast<unsigned>(m.stage)>=static_cast<unsigned>(MatchDefenseStage::ai_flight_ready);
@@ -123,6 +127,7 @@ void write_match_save(std::ostream& output,const MatchRuntimeState& s,const Matc
  put(payload,s.pass_trajectory.has_value(),1);if(s.pass_trajectory){const auto& t=*s.pass_trajectory;for(auto n:{t.x,t.y,t.vx,t.vy})put(payload,n,2);put(payload,t.direction,1);put(payload,t.flags,1);}
  put(payload,s.pass_cell.has_value(),1);if(s.pass_cell)put(payload,*s.pass_cell,1);
  put(payload,s.defense_menu.has_value(),1);if(s.defense_menu){const auto& m=*s.defense_menu;put(payload,static_cast<unsigned>(m.stage),1);put(payload,m.poll.cursor,1);put(payload,m.poll.flash_counter,1);for(auto n:m.poll.defense.actions)put(payload,n,1);for(auto n:m.poll.defense.subtypes)put(payload,n,1);put(payload,m.poll.defense.blink,1);put(payload,m.poll.defense.pressed,1);put(payload,m.attack_cost.has_value(),1);if(m.attack_cost)put(payload,*m.attack_cost,2);put(payload,m.ai_pass_target.has_value(),1);if(m.ai_pass_target){put(payload,m.ai_pass_target->recipient,1);put(payload,m.ai_pass_target->cell,1);}put(payload,m.ai_pass_distance.has_value(),1);if(m.ai_pass_distance)put(payload,*m.ai_pass_distance,1);put(payload,m.defender_count,1);put(payload,m.ai_trajectory.has_value(),1);if(m.ai_trajectory){const auto& t=*m.ai_trajectory;for(auto n:{t.x,t.y,t.vx,t.vy})put(payload,n,2);put(payload,t.direction,1);put(payload,t.flags,1);}put(payload,m.ai_ball_cell.has_value(),1);if(m.ai_ball_cell)put(payload,*m.ai_ball_cell,1);}
+ put(payload,s.target_chooser.has_value(),1);if(s.target_chooser)put(payload,s.target_chooser->index,1);
  if(payload.size()>max_payload)throw std::invalid_argument("Match save is too large");
  std::string header(magic,sizeof(magic)-1);put(header,current_version,1);put(header,payload.size(),4);put(header,checksum(payload),4);
  output.write(header.data(),header.size());output.write(payload.data(),payload.size());
@@ -160,6 +165,7 @@ MatchRuntimeState load_match_save(std::istream& input,const MatchContentIdentity
  if(version<8 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::ai_pass_handoff))throw std::invalid_argument("Unsupported saved opponent target stage");
  if(version<9 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::ai_pass_target_ready))throw std::invalid_argument("Unsupported saved opponent flight stage");
  if(version<10 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::ai_flight_ready))throw std::invalid_argument("Unsupported saved opponent flight progression");
+ if(version>=11 && r.flag())s.target_chooser=MatchTargetChooser{static_cast<std::uint8_t>(r.get(1))};
  if(r.pos!=payload.size())throw std::invalid_argument("Unexpected match save data");
  validate_runtime(s);return s;
 }

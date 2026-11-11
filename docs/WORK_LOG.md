@@ -1,5 +1,13 @@
 # Development log
 
+## 2026-11-11 - Multi-teammate pass chooser
+
+The opt-in provisional runtime now opens a recipient chooser when an ordinary pass target contains two to four teammates. It exposes the selected index, clamps up/down movement, confirms the chosen teammate, and returns to targeting on cancel; cancel takes precedence over simultaneous confirm. The chosen recipient can proceed through pass preparation. Checkpoint version 11 preserves an open chooser and reads earlier versions. Chooser rendering and original opening presentation remain unimplemented; opening while holding a movement direction and confirming simultaneously is explicitly unsupported.
+
+Controlled original CPU observations matched 162 chooser polls: 108 at the initial index across four fixtures and 54 at the last index across two fixtures, using constructed placements of two to four teammates and nine input masks. The comparisons normalize provisional random state and acknowledge presentation; they do not establish live NMI, audio or display behavior. Reproduce with `tools/check_multi_pass_chooser_original.py` and private inputs, and repeat with `--last-index`.
+
+The manual synthetic possession acceptance completes two human passes and one opponent pass and exercises the chooser, but exits 1 at unsupported pass-flight defender contact. Windows build and all 64 registered checks passed; Linux syntax passed with warnings as errors. A complete playable match, graphical input, contested flight and other match routes remain unfinished. Overall progress is unmeasured. Next investigate original defender-contact behavior and connect supported outcomes. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Ordinary pass target cancellation
 
 Implemented cancel from the ordinary human pass target back to the existing action menu in provisional mode. Cancel takes precedence when cancel and confirm are pressed together, clears the target-only cursor/candidate context, resets the action-menu cursor, and retains other represented state. The original return presentation is acknowledged, not rendered or run with original NMI/audio timing. Controlled original CPU traces matched the complete represented menu session in96 cases:24 prior fixtures, initial or moved target, and cancel alone or cancel plus confirm. Demo random bytes were normalized for this comparison because the opt-in scheduler deliberately differs. Reproduce with `tools/check_ordinary_pass_cancel_original.py` and private inputs.

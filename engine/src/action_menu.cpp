@@ -968,6 +968,15 @@ PhaseSessionState confirm_ordinary_human_pass_target(const PhaseSessionState& in
     validate_phase_session(state);
     return state;
 }
+PhaseSessionState confirm_ordinary_human_pass_recipient(const PhaseSessionState& input,std::uint8_t index) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_human_pass_target || !input.ordinary_pass_candidates ||
+       !input.ordinary_pass_candidates->scanned || input.ordinary_pass_candidates->candidates.allied_count<2 ||
+       index>=input.ordinary_pass_candidates->candidates.allied_count)
+        throw std::invalid_argument("Pass recipient choice requires a valid teammate index");
+    auto state=input;state.ordinary_pass_recipient=state.ordinary_pass_candidates->candidates.ids[index];
+    state.phase=FieldSessionPhase::ordinary_human_pass_confirmed;validate_phase_session(state);return state;
+}
 PhaseSessionState begin_ordinary_pass_defense_selection(const PhaseSessionState& input) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::ordinary_human_pass_confirmed || !input.current.field.selected_defenders)
