@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest runtime checkpoint (2026-11-11):** Opt-in provisional human menu and pass targeting reach recipient confirmation in synthetic cases. Unopposed pass preparation, opponent AI and full match remain unsupported; Windows 64 checks passed and progress unmeasured.
+
 **Latest runtime checkpoint (2026-11-11):** With explicit user approval, an opt-in labeled provisional timing/random mode advances control polls without supplied trace samples. Random values differ from the original; action routing and complete match remain unsupported. Overall progress unmeasured.
 
 **Latest runtime checkpoint (2026-11-11):** The reusable runtime owns a partial player-memory projection and has an explicit three-case possession acceptance executable; all cases currently stop at missing timing/random scheduling. Windows 64 registered checks and Linux Make check passed. This is not a playable match; overall progress is unmeasured.

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active checkpoint ? provisional human pass target (2026-11-11)
+
+Opt-in provisional runtime now routes original-backed human action menu, ordinary-pass selection, cursor movement and single-recipient confirmation. Demo synthetic acceptance selects intended recipients for both human-side cases and stops at phase332 because unopposed pass preparation is not generalized; opponent-side AI/action remains unsupported. Menu and confirmation state matched existing original-compared checkpoints after normalizing provisional random bytes; timing/random parity and presentation rendering not claimed. Windows build and all 64 checks passed. Next inspect controlled original unopposed-pass preparation and connect a general supported path; maintain explicit unsupported branches. Full match unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Active checkpoint ? provisional demo polls (2026-11-11)
 
 User explicitly approved a separately labeled provisional timing/random mode. Runtime now runs one control poll per tick with deterministic xorshift32 random bytes when `MatchConfig.mode=provisional_demo` and seed is nonzero; original-backed mode remains default and unchanged. `captain-match-lab PACK SNAPSHOT --demo 1 11` labels the mode; 11 neutral polls reached control clock pending on a private development snapshot. All 11 random pairs differed from original in a controlled comparison; no parity or full match claimed. `match-possession-acceptance --demo` remains red at action routing for three synthetic cases. Next connect original-backed human menu/action routing and then general pass/possession, keeping provisional behavior explicitly isolated. Windows 64 registered checks and Linux Make check passed; the final runtime test also passed on both platforms. Overall progress unmeasured; playable match unsupported. Suggested model GPT-6.1 Terra High.

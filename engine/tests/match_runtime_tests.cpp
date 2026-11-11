@@ -1,8 +1,24 @@
 #include "captain/match_runtime.hpp"
+#include "captain/phase_session_io.hpp"
 #include <cassert>
 #include <stdexcept>
-int main() {
+#include <fstream>
+#include <sstream>
+#include <string>
+int main(int argc,char** argv) {
  using namespace captain;
+ if(argc==4 && (std::string(argv[1])=="--compare-menu" || std::string(argv[1])=="--compare-confirm")) {
+  std::ifstream before_file(argv[2],std::ios::binary), expected_file(argv[3],std::ios::binary);
+  auto before=load_phase_session(before_file);auto expected=load_phase_session(expected_file);
+  MatchContent captured{};captured.data=ShotContent{};captured.data->action_menu=ActionMenuContent{};
+  MatchRuntimeState current{before,0};current.mode=MatchTimingMode::provisional_demo;current.demo_rng=1;
+  MatchInput request{MatchInputKind::tick,1};if(std::string(argv[1])=="--compare-confirm")request.pressed=128;
+  auto result=step_match(current,request,captured);
+  assert(!result.unsupported);result.state.session.current.field.random_first=expected.current.field.random_first;
+  result.state.session.current.field.random_second=expected.current.field.random_second;
+  std::ostringstream actual_bytes,expected_bytes;write_phase_session(actual_bytes,result.state.session);write_phase_session(expected_bytes,expected);
+  assert(actual_bytes.str()==expected_bytes.str());return 0;
+ }
  MatchConfig cfg{}; MatchContent content{};
  auto missing=create_match(cfg,content);
  assert(missing.unsupported==UnsupportedCapability::content);
@@ -47,6 +63,33 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  MatchInput menu{MatchInputKind::tick,2};menu.held=64;
  auto menu_result=step_match(c1.state,menu,content);
  assert(!menu_result.unsupported && menu_result.state.session.phase==FieldSessionPhase::action_menu_pending);
+ content.data->action_menu=ActionMenuContent{};content.data->action_menu->directions[0][0]=1;
+ auto open=step_match(menu_result.state,{MatchInputKind::tick,3},content);
+ assert(!open.unsupported && open.state.session.phase==FieldSessionPhase::human_action_menu && !open.events.empty());
+ MatchInput select{MatchInputKind::tick,4};select.pressed=1;
+ auto selected=step_match(open.state,select,content);
+ assert(!selected.unsupported && selected.state.session.action->action==1);
+ MatchInput confirm{MatchInputKind::tick,5};confirm.pressed=128;
+ auto confirmed=step_match(selected.state,confirm,content);
+ assert(!confirmed.unsupported && confirmed.state.session.phase==FieldSessionPhase::attack_choice_pending);
+ MatchInput ordinary{MatchInputKind::action,6};ordinary.action=MatchAction::pass;
+ auto target_mode=step_match(confirmed.state,ordinary,content);
+ assert(!target_mode.unsupported && target_mode.state.session.phase==FieldSessionPhase::ordinary_human_pass_target);
+ MatchInput aim{MatchInputKind::tick,7};aim.held=1;
+ auto aimed=step_match(target_mode.state,aim,content);
+ assert(!aimed.unsupported && aimed.state.session.human_pass_cursor!=target_mode.state.session.human_pass_cursor);
+ MatchInput choose{MatchInputKind::tick,8};choose.pressed=128;
+ auto chosen=step_match(aimed.state,choose,content);
+ assert(!chosen.unsupported && chosen.state.session.phase==FieldSessionPhase::ordinary_human_pass_confirmed);
+ MatchInput cancel{MatchInputKind::tick,8};cancel.pressed=64;
+ auto cancelled=step_match(aimed.state,cancel,content);
+ assert(cancelled.unsupported==UnsupportedCapability::action && cancelled.state.last_sequence==7);
+ auto direct=ordinary;direct.target=7;
+ auto direct_rejected=step_match(confirmed.state,direct,content);
+ assert(direct_rejected.unsupported==UnsupportedCapability::action && direct_rejected.state.last_sequence==5);
+ auto no_menu_content=content;no_menu_content.data->action_menu.reset();
+ auto blocked_menu=step_match(menu_result.state,{MatchInputKind::tick,3},no_menu_content);
+ assert(blocked_menu.unsupported==UnsupportedCapability::content && blocked_menu.state.last_sequence==2);
  auto incomplete=content;incomplete.data->movement.reset();
  auto denied=step_match(c1.state,{MatchInputKind::tick,2},incomplete);
  assert(denied.unsupported==UnsupportedCapability::content && denied.state.last_sequence==1 && denied.state.demo_rng==c1.state.demo_rng);

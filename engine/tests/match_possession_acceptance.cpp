@@ -18,14 +18,14 @@ int main(int argc,char** argv) {
   const auto target=targets[fixture++];
   PhaseSessionState initial{};initial.phase=FieldSessionPhase::player_control;
   initial.experience=ExperienceState{};initial.recovery=RecoveryContext{};
-  initial.control=ControlContext{};initial.scheduling=SchedulingContext{};
+  initial.control=ControlContext{};initial.scheduling=SchedulingContext{};initial.action=ActionContext{};
   initial.current.field.side=owner<11?0:11;initial.current.field.ball_owner=owner;
   initial.current.field.ball_x=124;initial.current.field.ball_y=124;
   for(auto& player:initial.current.field.motion){player.x=124u<<8;player.y=124u<<8;}
   initial.current.field.motion[field_motion_index(target)].x=140u<<8;
   MatchConfig config{};config.initial=initial;config.random_index=0; // Synthetic metadata, not an original capture.
   MatchContent content{};content.data=ShotContent{};
-  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->control_movement=ControlMovementContent{};}
+  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->control_movement=ControlMovementContent{};content.data->action_menu=ActionMenuContent{};content.data->action_menu->directions[0][0]=1;}
   try {
    auto started=create_match(config,content);
    if(started.unsupported) {std::cerr<<"owner "<<unsigned(owner)<<": create: "<<capability_name(*started.unsupported)<<'\n';++failures;continue;}
@@ -33,6 +33,27 @@ int main(int argc,char** argv) {
    if(control.unsupported) {std::cerr<<"owner "<<unsigned(owner)<<": control: "<<capability_name(*control.unsupported)<<'\n';++failures;continue;}
    auto poll=step_match(control.state,{MatchInputKind::tick,2},content);
    if(poll.unsupported) {std::cerr<<"owner "<<unsigned(owner)<<": first control poll: "<<capability_name(*poll.unsupported)<<'\n';++failures;continue;}
+   if(demo && owner<11) {
+    auto state=poll.state;std::uint64_t seq=3;bool blocked=false;
+    auto advance=[&](MatchInput event) {
+     event.sequence=seq++;auto result=step_match(state,event,content);
+     if(result.unsupported){std::cerr<<"owner "<<unsigned(owner)<<": "<<capability_name(*result.unsupported)<<" (phase "<<unsigned(state.session.phase)<<")\n";blocked=true;return;}
+     state=result.state;
+    };
+    MatchInput menu{MatchInputKind::tick,0};menu.held=64;advance(menu);
+    if(!blocked)advance({MatchInputKind::tick,0});
+    MatchInput choose{MatchInputKind::tick,0};choose.pressed=1;if(!blocked)advance(choose);
+    MatchInput confirm{MatchInputKind::tick,0};confirm.pressed=128;if(!blocked)advance(confirm);
+    MatchInput ordinary{MatchInputKind::action,0};ordinary.action=MatchAction::pass;if(!blocked)advance(ordinary);
+    MatchInput aim{MatchInputKind::tick,0};aim.held=1;if(!blocked)advance(aim);if(!blocked)advance(aim);
+    if(!blocked)advance(confirm);
+    if(!blocked && (!state.session.ordinary_pass_recipient || *state.session.ordinary_pass_recipient!=target)){
+     std::cerr<<"owner "<<unsigned(owner)<<": wrong selected recipient\n";blocked=true;
+    }
+    if(!blocked)advance({MatchInputKind::tick,0});
+    if(blocked){++failures;continue;}
+    std::cerr<<"owner "<<unsigned(owner)<<": pass flight/reception not complete\n";++failures;continue;
+   }
    MatchInput request{MatchInputKind::action,3};request.action=MatchAction::pass;request.target=target;
    auto action=step_match(poll.state,request,content);
    if(action.unsupported) {std::cerr<<"owner "<<unsigned(owner)<<": action: "<<capability_name(*action.unsupported)<<'\n';++failures;continue;}
