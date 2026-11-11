@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 pass destination arrival
+
+The captured pass now matches original E7C0 before snapping at (104,161)/cell94 and E7CC after snapping to (108,164), preserving fractions and selected defender2. The shared ball-step kernel supplies the numeric arrival; the original pre-snap coordinate is reconstructed from its addition count before the separate snap. Phases458/459 save both boundaries, random index215. The verifier compares represented fields and complete trajectory, rejects premature/repeated snap atomically and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-arrival-v2-20261111`; Windows build and all 62 checks passed. Defender encounter and autonomous timing remain unmatched; full match unsupported and overall progress unmeasured. Next compare the original defender interaction. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 pass crossings
 
 The pass to player21 now matches three numeric cell crossings (68 to69 to81 to82) and the original flight-defender scan selecting home player2 at cell82. Supplied NMI/travel events advance random index211 to214. Phases456/457 retain flight and callback boundaries; the verifier compares represented fields, trajectory and cursor/flag, rejects early steps/repeated callbacks atomically and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-crossings-v2-20261111`; Windows build and all 62 checks passed. Arrival, defender handling and live timing remain unmatched; full match unsupported, progress unmeasured. Next compare the original destination arrival and defender encounter. Suggested model GPT-6.1 Terra High.

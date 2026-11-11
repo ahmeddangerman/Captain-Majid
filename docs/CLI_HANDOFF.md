@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 pass snapped arrival
+
+The pass matches original E7C0 at (104,161)/cell94 and E7CC after snapping to (108,164), retaining defender2 and random index215. Phase459 snapshot: `../Captain-Majid-analysis/opponent20-arrival-v2-20261111/snapped.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent20_pass_flight.py` checks flight crossings, arrival/snap, invalid-operation rejection and roundtrip. Windows build and all 62 checks passed. Next compare defender interaction; timing and AI choice are supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 pass defender selected
 
 The pass to player21 matches crossings 68,69,81,82 and selects home defender2 at cell82, random index214. Phase456 snapshot: `../Captain-Majid-analysis/opponent20-crossings-v2-20261111/03-ready.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent20_pass_flight.py` checks each original boundary, trajectory, retained flags, invalid-operation rejection and snapshot roundtrip. Windows build and 62 checks passed. Next compare destination arrival and defender encounter; event timing/AI supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

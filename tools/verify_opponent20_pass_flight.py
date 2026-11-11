@@ -19,6 +19,8 @@ def main():
     rejected=out/'rejected.cmjsession';before=source.read_bytes()
     attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-player2-opponent-pass-flight','--capture',str(rejected)],capture_output=True,text=True,timeout=30)
     if attempt.returncode==0 or rejected.exists() or source.read_bytes()!=before:raise ValueError('Early flight step did not reject atomically')
+    attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--snap-player2-opponent-pass-arrival','--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if attempt.returncode==0 or rejected.exists() or source.read_bytes()!=before:raise ValueError('Early arrival snap did not reject atomically')
     def run(option,target,*values):
         nonlocal source
         result=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),option,*map(str,values),'--capture',str(target)],capture_output=True,text=True,timeout=30)
@@ -41,11 +43,20 @@ def main():
         run('--advance-player2-opponent-pass-flight',out/f'{step:02d}-cross.cmjsession');compare(cross,457,f'cross {step}')
         run('--resolve-player2-opponent-pass-cell',out/f'{step:02d}-ready.cmjsession');compare(ready,456,f'callback {step}')
     if ram(24065)[0x600]!=1 or ram(24065)[0x601]!=2:raise ValueError('Unexpected selected original defender')
+    rows,last=menu_wait_events(lines,pcs,ram,24065,24071)
+    if len(rows)!=2 or pcs[24071]!='E7C0' or pcs[24074]!='E7CC':raise ValueError('Unexpected original arrival ordering')
+    events=out/'arrival-events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+    result=run('--advance-observed-nmi-sequence',out/'arrival-wait.cmjsession',events,index);index=ram(last)[0xe1]
+    if re.findall(r'final random index (\d+);',result)!=[str(index)]:raise ValueError('Arrival random index differs')
+    run('--advance-player2-opponent-pass-flight',out/'arrival.cmjsession');compare(24071,458,'arrival before snap')
+    run('--snap-player2-opponent-pass-arrival',out/'snapped.cmjsession');compare(24074,459,'arrival snap')
     before=source.read_bytes();attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--resolve-player2-opponent-pass-cell','--capture',str(rejected)],capture_output=True,text=True,timeout=30)
     if attempt.returncode==0 or rejected.exists() or source.read_bytes()!=before:raise ValueError('Repeated callback did not reject atomically')
+    attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--snap-player2-opponent-pass-arrival','--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if attempt.returncode==0 or rejected.exists() or source.read_bytes()!=before:raise ValueError('Repeated arrival snap did not reject atomically')
     roundtrip=out/'roundtrip.cmjsession';attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--capture',str(roundtrip)],capture_output=True,text=True,timeout=30)
     if attempt.returncode or roundtrip.read_bytes()!=before:raise ValueError('Flight snapshot roundtrip differs')
-    print(f'Matched three pass crossings and defender2 selection; random index {index}.')
+    print(f'Matched three pass crossings, defender2 selection and destination snap; random index {index}.')
 
 
 if __name__=='__main__':

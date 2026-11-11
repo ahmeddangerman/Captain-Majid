@@ -135,7 +135,8 @@ enum class FieldSessionPhase : std::uint16_t {
     player2_opponent_pass_choice = 451, player2_opponent_pass_prepared = 452,
     player2_opponent_pass_handoff = 453, player2_opponent_pass_field_moved = 454,
     player2_opponent_pass_target = 455, player2_opponent_pass_flight_ready = 456,
-    player2_opponent_pass_flight_callback = 457
+    player2_opponent_pass_flight_callback = 457, player2_opponent_pass_arrived = 458,
+    player2_opponent_pass_arrival_snapped = 459
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

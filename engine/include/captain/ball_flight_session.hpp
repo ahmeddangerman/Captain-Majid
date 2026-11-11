@@ -13,6 +13,7 @@ PhaseSessionState begin_player2_opponent_pass_flight(const PhaseSessionState& in
  const MovementGeometryContent& geometry,const BallVelocityContent& velocity);
 SessionBallStepResult advance_player2_opponent_pass_flight(const PhaseSessionState& input);
 PhaseSessionState resolve_player2_opponent_pass_cell(const PhaseSessionState& input);
+PhaseSessionState snap_player2_opponent_pass_arrival(const PhaseSessionState& input);
 PhaseSessionState begin_postgoal_opponent_first_flight(const PhaseSessionState& input,
  std::uint8_t x_fraction,std::uint8_t y_fraction,std::uint8_t captured_distance,
  const MovementGeometryContent& geometry,const BallVelocityContent& velocity);

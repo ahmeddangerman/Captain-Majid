@@ -20,17 +20,34 @@ PhaseSessionState begin_player2_opponent_pass_flight(const PhaseSessionState& in
 }
 SessionBallStepResult advance_player2_opponent_pass_flight(const PhaseSessionState& input) {
  validate_phase_session(input);const auto& f=input.current.field;
- if(input.phase!=FieldSessionPhase::player2_opponent_pass_flight_ready || f.selected_defenders ||
+ const bool arrival=f.ball_cell==82 && f.selected_defenders==1 && input.scheduling->selected_ids[0]==2 && f.random_first==31 && f.random_second==197;
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_flight_ready || (!arrival && f.selected_defenders) ||
     !((f.ball_cell==68 && f.random_first==19 && f.random_second==91) ||
       (f.ball_cell==69 && f.random_first==214 && f.random_second==38) ||
-      (f.ball_cell==81 && f.random_first==72 && f.random_second==144)))
+      (f.ball_cell==81 && f.random_first==72 && f.random_second==144) || arrival))
   throw std::invalid_argument("Opponent20 flight step requires an observed crossing boundary");
  auto state=input;auto& t=*state.ball_trajectory;
- const auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},f.ball_cell,state.shot_flight->destination});
+ auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},f.ball_cell,state.shot_flight->destination});
+ if(arrival) {
+  if(step.event!=BallStepEvent::arrived || step.cell!=94 || step.forced_destination)throw std::invalid_argument("Unobserved opponent20 arrival");
+  step.x=static_cast<std::uint16_t>(unsigned(t.x)+step.additions*unsigned(t.vx));
+  step.y=static_cast<std::uint16_t>(unsigned(t.y)+step.additions*unsigned(t.vy));
+  t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;state.current.field.ball_cell=step.cell;
+  state.phase=FieldSessionPhase::player2_opponent_pass_arrived;validate_phase_session(state);return {std::move(state),step};
+ }
  const auto wanted=static_cast<std::uint8_t>(f.ball_cell==68 ? 69 : f.ball_cell==69 ? 81 : 82);
  if(step.event!=BallStepEvent::cell_changed || step.cell!=wanted)throw std::invalid_argument("Unobserved opponent20 flight crossing");
  t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;state.current.field.ball_cell=step.cell;
  state.phase=FieldSessionPhase::player2_opponent_pass_flight_callback;validate_phase_session(state);return {std::move(state),step};
+}
+PhaseSessionState snap_player2_opponent_pass_arrival(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_arrived)throw std::invalid_argument("Opponent20 pass snap requires the observed arrival");
+ auto state=input;auto& t=*state.ball_trajectory;const auto cell=state.current.field.ball_cell;
+ const auto x=static_cast<std::uint8_t>((cell/12u)*8u+52u),y=static_cast<std::uint8_t>((cell%12u)*8u+84u);
+ t.x=static_cast<std::uint16_t>((unsigned(x)<<8)|(t.x&255u));t.y=static_cast<std::uint16_t>((unsigned(y)<<8)|(t.y&255u));
+ state.current.field.ball_x=x;state.current.field.ball_y=y;state.phase=FieldSessionPhase::player2_opponent_pass_arrival_snapped;
+ validate_phase_session(state);return state;
 }
 PhaseSessionState resolve_player2_opponent_pass_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
