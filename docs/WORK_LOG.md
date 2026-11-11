@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 pass choice
+
+The next opponent20 poll matches the original E19B ball refresh to (90,151)/cell68; the separately captured action1 pass/recipient21 and retained target scratch94 match E1B2, random index144. Phases450/451 preserve the decision and supplied choice without claiming autonomous AI. The verifier compares represented session fields, recipient/target scratch, cursor and flight flag, rejects an invalid recipient atomically and roundtrips the snapshot. The extended private original trace through frame22400 reproduces all 23,572 earlier records exactly: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`; native evidence: `../Captain-Majid-analysis/opponent20-pass-choice-v1-20261111`. Windows build, previous decision replay and all 62 checks passed. Pass preparation/continuation and live AI/timing remain unmatched; a complete match unsupported, progress unmeasured. Next compare pass preparation and presentation. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 fifth-cycle polls
 
 Ten further opponent20 polls match the original after the fourth field round, random index133 to143, including represented fields and retained cursor/flight flag. The next original poll refreshes the ball to (90,151)/cell68 and chooses an action1 pass with recipient21; that AI decision remains guarded. The verifier rejects that unmodeled decision atomically. Evidence: `../Captain-Majid-analysis/opponent20-fifth-polls-v2-20261111`; Windows build, original replay and all 62 checks passed. AI/timing remain supplied, full match unsupported and overall progress unmeasured. Next compare the new pass decision and extend its original trace. Suggested model GPT-6.1 Terra High.

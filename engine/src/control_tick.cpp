@@ -985,12 +985,14 @@ NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionSt
     const bool fourth_round=input.phase==FieldSessionPhase::player2_opponent_fourth_field_complete;
     const bool observed_switch=next_round && input.control->controlled_player==3 && input.control->decision_timer==5 &&
         sample.buttons.held==128 && sample.buttons.pressed==128 && sample.interleaved_waits.size()==4;
-    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later && !action_round && !next_round && !fourth_round) || (fourth_round && !input.control->decision_timer) ||
+    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later && !action_round && !next_round && !fourth_round) ||
        (sample.buttons.held!=0 && sample.buttons.held!=128) || (sample.buttons.pressed && !observed_switch))
         throw std::invalid_argument("Opponent20 poll requires the observed neutral or held-A input");
     auto normalized=input;normalized.phase=FieldSessionPhase::control_ready;normalized.area_defender_cursor=0;
     auto result=advance_observed_nmi_control_poll(normalized,primary,movement,control,initial_random_index,sample);
-    if(next_round && result.poll.state.phase==FieldSessionPhase::ai_cell_decision)
+    if(fourth_round && result.poll.state.phase==FieldSessionPhase::ai_cell_decision)
+        result.poll.state.phase=FieldSessionPhase::player2_opponent_pass_cell_decision;
+    else if(next_round && result.poll.state.phase==FieldSessionPhase::ai_cell_decision)
         result.poll.state.phase=FieldSessionPhase::player2_opponent_fourth_cell_decision;
     else if(action_round && result.poll.state.phase==FieldSessionPhase::ai_cell_decision)
         result.poll.state.phase=FieldSessionPhase::player2_opponent_next_cell_decision;

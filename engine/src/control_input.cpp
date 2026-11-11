@@ -1191,6 +1191,14 @@ ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::u
     return result;
 }
 
+PhaseSessionState capture_player2_opponent_pass(const PhaseSessionState& input,std::uint8_t recipient,std::uint8_t target) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_opponent_pass_cell_decision || recipient!=21 || target!=94 ||
+       input.current.field.random_first!=218 || input.current.field.random_second!=106)
+        throw std::invalid_argument("Only the observed opponent20 pass choice is supported");
+    auto state=input;state.action->action=1;state.area_ai_target=PhaseSessionState::AreaAiTarget{recipient,target,0};
+    state.phase=FieldSessionPhase::player2_opponent_pass_choice;validate_phase_session(state);return state;
+}
 PhaseSessionState capture_player2_opponent_action(const PhaseSessionState& input,std::uint8_t action) {
     validate_phase_session(input);
     const bool first=input.phase==FieldSessionPhase::player2_opponent_cell_decision && input.current.field.random_first==59 && input.current.field.random_second==202;

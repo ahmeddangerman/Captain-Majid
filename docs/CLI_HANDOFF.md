@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 pass choice
+
+Opponent20's cell refresh to (90,151)/cell68 and explicitly captured action1 pass to player21 match original E19B/E1B2, random index144; target scratch94 is retained as captured context. Phase451 snapshot: `../Captain-Majid-analysis/opponent20-pass-choice-v1-20261111/choice.cmjsession`. The longer original trace at `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace` reproduces all 23,572 prior instruction records exactly. `tools/verify_opponent20_pass_choice.py` checks state, context, invalid-recipient rejection and snapshot roundtrip. Windows build, previous decision replay and 62 checks passed. Next compare pass preparation and presentation; AI/timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 pass decision
 
 Ten opponent20 polls after the fourth field round match, random index143. Snapshot: `../Captain-Majid-analysis/opponent20-fifth-polls-v2-20261111/10.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The next original poll refreshes ball to (90,151)/cell68 and chooses action1/recipient21; this remains guarded and the current trace ends during its presentation. `tools/verify_player2_opponent_control.py --fifth-cycle-polls` checks state and atomic rejection. Windows build and all 62 checks passed. Next compare this pass decision and extend original capture; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
