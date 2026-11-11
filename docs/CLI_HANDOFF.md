@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 action2 clock
+
+The captured opponent20 action2 now matches the original control clock through E407: clock126, random index32, saved phase440. Snapshot: `../Captain-Majid-analysis/opponent20-action-clock-v3-20261111/clock.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The following 22-player field round contains four extra wait frames interleaved with player updates; the current fixed 22-event field replay cannot express them. Trace their position and compare a faithful representation before continuing. Windows build, original replay and all 62 checks passed. Timing/AI remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 captured action2
 
 Opponent20's cell refresh matches E19B at (100,161)/cell82; separately supplied action2 matches E1B2, random index27. Phase439 checkpoint: `../Captain-Majid-analysis/opponent20-decision-v2-20261111/captured-choice.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. `tools/verify_opponent20_decision.py` checks both boundaries, atomic invalid-action rejection and snapshot roundtrip. The choice is captured, not autonomous AI. Windows build, affected replays and all 62 checks passed. Next compare the subsequent clock and field cycle; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 action2 clock
+
+Following the explicitly captured action2, the native control clock now matches original E407, including observed NMI/travel and ball-mode event order: clock127 to126 and random index27 to32. Phase440 saves the resulting pending field round; represented session bytes, cursor and flight flag match. The verifier rejects a repeated clock atomically and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-action-clock-v3-20261111`; Windows build, original replay and all 62 registered checks passed. The next original field round has 22 player polls plus four interleaved wait frames; the existing 22-event replay cannot represent those extra frames and must not be used as evidence for that round. Next trace and model their ordering. Autonomous AI/timing and a full playable match remain unsupported; overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 cell change and captured choice
 
 The next observed poll now matches the original E19B cell refresh, moving the ball from (104,164)/cell94 to (100,161)/cell82. The separately supplied action2 then matches the original E1B2 write. Phases438/439 retain the distinction between the cell decision and the explicitly captured choice; this does not calculate autonomous AI. The verifier compares represented session fields, cursor and flight flag, rejects unsupported action3 atomically, and roundtrips the captured snapshot. Evidence: `../Captain-Majid-analysis/opponent20-decision-v2-20261111`. Windows build, affected original replays and all 62 checks passed. Subsequent clock/field continuation and autonomous timing remain unmatched; a complete match is unsupported, progress unmeasured. Next compare the action2 control clock and field cycle. Suggested model GPT-6.1 Terra High.

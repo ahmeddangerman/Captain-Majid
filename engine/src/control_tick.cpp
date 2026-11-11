@@ -234,7 +234,7 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
         case ObservedClockEventKind::ball_mode_sample:
             if (!input.score || input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
                 !((input.current.field.ball_owner==18 && (input.current.clock.remaining==160 || input.current.clock.remaining==159 || input.current.clock.remaining==155 || input.current.clock.remaining==154)) ||
-                  (input.current.field.ball_owner==20 && input.current.clock.remaining==128)) || input.current.clock.extra_time != 0 ||
+                  (input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127))) || input.current.clock.extra_time != 0 ||
                 input.current.field.side != 11 ||
                 !((event.held == 192 && state.current.clock.ball_mode == 128) ||
                   (event.held == 128 && state.current.clock.ball_mode == 192)))
@@ -946,13 +946,14 @@ NmiClockResult advance_observed_player2_opponent_clock(const PhaseSessionState& 
     const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content,
     std::uint8_t initial_random_index,const std::vector<ObservedClockEvent>& events) {
     validate_phase_session(input);
-    if(input.phase!=FieldSessionPhase::player2_opponent_clock_pending)
+    const bool captured_action=input.phase==FieldSessionPhase::player2_opponent_action_captured;
+    if(input.phase!=FieldSessionPhase::player2_opponent_clock_pending && !captured_action)
         throw std::invalid_argument("Opponent20 control clock requires its pending phase");
     auto normalized=input;normalized.phase=FieldSessionPhase::control_clock_pending;normalized.area_defender_cursor=0;
     auto result=advance_observed_nmi_control_clock(normalized,field,keepers,content,initial_random_index,events);
     if(result.tick.state.phase!=FieldSessionPhase::field_round_pending)
         throw std::invalid_argument("Unobserved opponent20 clock continuation");
-    result.tick.state.phase=FieldSessionPhase::player2_opponent_field_pending;
+    result.tick.state.phase=captured_action ? FieldSessionPhase::player2_opponent_action_field_pending : FieldSessionPhase::player2_opponent_field_pending;
     result.tick.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.tick.state);return result;
 }
