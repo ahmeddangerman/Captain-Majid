@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent21 control entry wait
+
+Player21 control entry now matches original E145 after four supplied NMI/travel pairs and an observed ball-mode128 to192 sample, random index95. The guarded control-ready event handler accepts the sample for this captured owner/clock case; no live presentation is claimed. The defender verifier checks the original represented state and snapshot roundtrip. Evidence: `../Captain-Majid-analysis/opponent21-control-wait-v1-20261111`. Windows CMake build and all 62 registered checks passed. Next compare player21 control polls and decisions. AI/timing remain supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent21 field control setup
 
 The captured opponent20 pass now reaches player21 field-control setup at original C9C5: shared control setup matches represented original state, including opponent defender selection and control/presentation fields, random index91. The guarded handoff removes consumed pass contexts and uses existing control selection; timing and prior AI choice remain supplied. The verifier compares original state, rejects early/repeated control setup and invalid motion atomically, and roundtrips the resulting snapshot. Evidence: `../Captain-Majid-analysis/opponent21-control-v3-20261111`. Windows CMake build and all 62 registered checks passed. Live presentation, autonomous AI and a complete playable match remain unsupported; overall progress unmeasured. Next trace player21 control waits and decisions, comparing the original before extending gameplay. Suggested model GPT-6.1 Terra High.

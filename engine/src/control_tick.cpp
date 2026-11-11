@@ -564,8 +564,9 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
             state.current.clock.ball_mode = event.held;
         } else if (event.kind == ObservedClockEventKind::ball_mode_sample && input.phase == FieldSessionPhase::control_ready &&
                    input.score && input.score->left_goals == 1 && input.score->right_goals == 0 && input.score->kickoff == 4 &&
-                   (input.current.clock.remaining == 160 || input.current.clock.remaining == 159 || input.current.clock.remaining == 158 || input.current.clock.remaining == 156) && input.current.clock.extra_time == 0 &&
-                   input.current.field.side == 11 && input.current.field.ball_owner == 18) {
+                   ((input.current.field.ball_owner == 18 && (input.current.clock.remaining == 160 || input.current.clock.remaining == 159 || input.current.clock.remaining == 158 || input.current.clock.remaining == 156)) ||
+                    (input.current.field.ball_owner == 21 && input.current.clock.remaining == 123)) && input.current.clock.extra_time == 0 &&
+                   input.current.field.side == 11) {
             if (!((event.held == 192 && state.current.clock.ball_mode == 128) ||
                   (event.held == 128 && state.current.clock.ball_mode == 192)))
                 throw std::invalid_argument("Only the observed kickoff control ball-mode change is supported");

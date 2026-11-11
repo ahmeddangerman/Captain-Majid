@@ -102,6 +102,13 @@ def main():
     if data[258]!=9:raise ValueError('Opponent21 control setup phase differs')
     compare_represented(data,export_session(ram(26315)),False,'opponent21','control setup')
     reject('--setup-control')
+    rows,last=menu_wait_events(lines,pcs,ram,26314,26335)
+    if len(rows)!=8:raise ValueError('Expected four control setup NMI/travel pairs')
+    rows.insert(7,'B 192')
+    events=out/'control-wait.events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+    result_text=run('--advance-observed-nmi-sequence',out/'control-wait.cmjsession',events,91)
+    if re.findall(r'final random index (\d+);',result_text)!=[str(ram(last)[0xe1])]:raise ValueError('Control setup wait random index differs')
+    compare_represented(source.read_bytes(),export_session(ram(26335)),False,'opponent21','control wait')
     before=source.read_bytes();roundtrip=out/'roundtrip.cmjsession'
     attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--capture',str(roundtrip)],capture_output=True,text=True,timeout=30)
     if attempt.returncode or roundtrip.read_bytes()!=before:raise ValueError('Defender snapshot roundtrip differs')

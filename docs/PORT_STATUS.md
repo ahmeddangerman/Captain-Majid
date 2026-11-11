@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Player21 control entry matches the original after four supplied NMI/travel pairs and a ball-mode sample. Later control decisions and a full match remain unsupported; all 62 Windows checks passed, progress unmeasured.
+
 **Latest match checkpoint (2026-11-11):** The captured opponent20 pass now reaches player21 field-control setup matching the original, including defender selection. Subsequent decisions and a full match remain unsupported; all 62 Windows checks passed, progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Supplied facing, motion and timing samples match opponent21's reception presentation through random index91. Remaining presentation/control and full match unsupported; all 62 Windows checks passed, progress unmeasured.
