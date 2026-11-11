@@ -9,6 +9,8 @@ struct AreaFlightAcknowledgement {
  std::uint8_t x_fraction,y_fraction,distance,facing,motion;
  std::uint16_t prior_vx,prior_vy;
 };
+PhaseSessionState begin_player2_opponent_pass_flight(const PhaseSessionState& input,std::uint8_t x_fraction,std::uint8_t y_fraction,
+ const MovementGeometryContent& geometry,const BallVelocityContent& velocity);
 PhaseSessionState begin_postgoal_opponent_first_flight(const PhaseSessionState& input,
  std::uint8_t x_fraction,std::uint8_t y_fraction,std::uint8_t captured_distance,
  const MovementGeometryContent& geometry,const BallVelocityContent& velocity);

@@ -3,6 +3,21 @@
 #include "captain/action_strength.hpp"
 #include <stdexcept>
 namespace captain {
+PhaseSessionState begin_player2_opponent_pass_flight(const PhaseSessionState& input,std::uint8_t x_fraction,std::uint8_t y_fraction,
+ const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_target || x_fraction!=248 || y_fraction!=152)
+  throw std::invalid_argument("Opponent20 pass flight requires the observed target and fractions");
+ const auto& field=input.current.field;
+ BallTrajectoryContext trajectory{static_cast<std::uint16_t>((unsigned(field.ball_x)<<8)|x_fraction),
+  static_cast<std::uint16_t>((unsigned(field.ball_y)<<8)|y_fraction),0,0,0,1};
+ trajectory.direction=calculate_player_direction({trajectory.x,trajectory.y,input.shot_flight->destination,0},field.ball_cell,geometry);
+ const auto projected=calculate_ball_velocity(trajectory.direction,velocity);trajectory.vx=projected.x;trajectory.vy=projected.y;
+ if(trajectory.direction!=25 || trajectory.vx!=201 || trajectory.vy!=142)
+  throw std::invalid_argument("Unobserved opponent20 pass flight projection");
+ auto state=input;state.recovery->x_jitter_control=trajectory.direction;state.saved_ball_flight_flag=1;state.ball_trajectory=trajectory;
+ state.phase=FieldSessionPhase::player2_opponent_pass_flight_ready;validate_phase_session(state);return state;
+}
 PhaseSessionState begin_postgoal_opponent_first_flight(const PhaseSessionState& input,
  std::uint8_t x_fraction,std::uint8_t y_fraction,std::uint8_t captured_distance,
  const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {

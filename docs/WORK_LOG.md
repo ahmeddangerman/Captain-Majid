@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 pass flight setup
+
+The captured opponent20 pass now matches original E773 flight setup using shared direction and velocity kernels plus supplied private fractional coordinates: direction25 and velocity201/142, target94, random index211. Phase456 saves the trajectory and retained target context. `tools/verify_opponent20_pass_movement.py` compares the represented original state and complete trajectory, rejects unobserved fractions and repeated setup atomically, and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-flight-v2-20261111`; Windows build and all 62 checks passed. Flight crossings/arrival and autonomous AI/timing remain unmatched; full match unsupported and overall progress unmeasured. Next compare the original pass flight crossings. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 pass target
 
 The captured opponent20 pass to player21 now calculates the original target cell94 and distance3 at DE64 using the shared target and private distance-table kernels. Phase455 preserves the target, counter255 and distance in the existing extended snapshot layout. The original comparison checks represented state and calculated flight fields; malformed distance input and repeated target resolution reject atomically, and the snapshot roundtrips. Evidence: `../Captain-Majid-analysis/opponent20-pass-target-v2-20261111`; Windows build and all 62 checks passed. Ball flight and autonomous AI/timing remain unmatched; a complete match is unsupported, overall progress unmeasured. Next compare flight setup and crossings. Suggested model GPT-6.1 Terra High.

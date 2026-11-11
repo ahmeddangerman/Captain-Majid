@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Opponent20's pass trajectory setup matches the original using supplied fractions and shared velocity kernels. Flight crossings remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Opponent20's pass target and distance match the original using shared kernels and a supplied private table. Flight remains unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Opponent20's pass field movement matches through original C612 using captured timing and presentation samples. Target/flight remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.

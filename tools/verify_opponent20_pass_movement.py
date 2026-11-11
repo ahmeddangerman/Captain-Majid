@@ -12,7 +12,7 @@ from verify_player7_pass_end_to_end import compare_represented,prepare_output
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
-    for name in ('trace-directory','source','pack','exe','output','distance-table'):parser.add_argument('--'+name,type=Path,required=True)
+    for name in ('trace-directory','source','pack','exe','output','distance-table','velocity'):parser.add_argument('--'+name,type=Path,required=True)
     args=parser.parse_args();lines,pcs,ram=trace_data(args.trace_directory);start,end=23515,24037
     if (pcs[start],pcs[end])!=('C606','C612'):raise ValueError('Unexpected pass field boundaries')
     mode={'F':ram(start)[0x517],'M':ram(start)[0x532],'D':ram(start)[0x8e]};samples=[];rows=[];slot=0
@@ -65,7 +65,19 @@ def main():
     if run.returncode==0 or rejected.exists() or destination.read_bytes()!=resolved:raise ValueError('Repeated target did not reject atomically')
     target_roundtrip=out/'target-roundtrip.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(destination),'--capture',str(target_roundtrip)],capture_output=True,text=True,timeout=30)
     if run.returncode or target_roundtrip.read_bytes()!=resolved:raise ValueError('Target snapshot roundtrip differs')
-    print('Matched opponent20 pass field movement and calculated target; random index 211.')
+    flight=out/'flight.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(destination),'--begin-player2-opponent-pass-flight',str(args.velocity.resolve()),str(original[0x634]),str(original[0x636]),'--capture',str(flight)],capture_output=True,text=True,timeout=30)
+    if run.returncode:raise RuntimeError(run.stderr.strip())
+    actual=flight.read_bytes();flight_original=ram(24041)
+    if int.from_bytes(actual[258:260],'little')!=456 or actual[345:356]!=bytes((1,))+flight_original[0x634:0x638]+flight_original[0x639:0x63d]+bytes((flight_original[0x62c],flight_original[0x61b])):
+        raise ValueError('Opponent pass trajectory setup differs')
+    compare_represented(actual,export_session(flight_original),True,'opponent20','pass flight setup')
+    run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(destination),'--begin-player2-opponent-pass-flight',str(args.velocity.resolve()),'0',str(original[0x636]),'--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if run.returncode==0 or rejected.exists() or destination.read_bytes()!=resolved:raise ValueError('Unobserved flight fraction did not reject atomically')
+    run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(flight),'--begin-player2-opponent-pass-flight',str(args.velocity.resolve()),str(original[0x634]),str(original[0x636]),'--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if run.returncode==0 or rejected.exists() or flight.read_bytes()!=actual:raise ValueError('Repeated flight setup did not reject atomically')
+    flight_roundtrip=out/'flight-roundtrip.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(flight),'--capture',str(flight_roundtrip)],capture_output=True,text=True,timeout=30)
+    if run.returncode or flight_roundtrip.read_bytes()!=actual:raise ValueError('Flight snapshot roundtrip differs')
+    print('Matched opponent20 pass field movement, calculated target and flight setup; random index 211.')
 
 
 if __name__=='__main__':
