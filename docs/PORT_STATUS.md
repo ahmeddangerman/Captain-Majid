@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest runtime checkpoint (2026-11-11):** The reusable runtime owns a partial player-memory projection and has an explicit three-case possession acceptance executable; all cases currently stop at missing timing/random scheduling. Windows 64 registered checks and Linux Make check passed. This is not a playable match; overall progress is unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Eleven neutral player21 control polls match the original through the next clock entry. Later clock/field play and a full match remain unsupported; all 62 Windows checks passed, progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Player21 control entry matches the original after four supplied NMI/travel pairs and a ball-mode sample. Later control decisions and a full match remain unsupported; all 62 Windows checks passed, progress unmeasured.
