@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 next field round
+
+Opponent20's next action2 field round matches 22 original player updates at E145, random index93. Phase445 snapshot: `../Captain-Majid-analysis/opponent20-next-field-v1-20261111/field.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. `tools/verify_opponent20_wait_round.py --next-round` checks represented fields, cursor/flag, roundtrip and atomic invalid-order/replay rejection. The original shares the first slot's random event with the previous clock; no extra switch waits occurred. Both original field-round variants and all 62 Windows checks passed. Next compare later opponent control; timing/AI remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 third decision clock
 
 Opponent20's third cell refresh to (97,158)/cell81, explicitly captured action2 and control clock match the original E407, clock125/random index72. Phase444 snapshot: `../Captain-Majid-analysis/opponent20-third-decision-v2-20261111/clock.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. `tools/verify_opponent20_third_decision.py` checks represented fields, atomic invalid choice rejection and snapshot roundtrip. Windows build, both decision replays and 62 checks passed. Next compare the following field round; AI choice/timing remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

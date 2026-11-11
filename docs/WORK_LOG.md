@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 next field round
+
+The next captured opponent20 action2 field round now matches all 22 original player updates to E145, random index72 to93. Its first player shares the random event already consumed by the preceding clock; unlike the prior round, it has no interleaved switch waits. Phase445 preserves this checkpoint. The existing V3 replay verifier checks original represented fields, cursor/flag, snapshot roundtrip, malformed ordering and repeated-operation rejection. Evidence: `../Captain-Majid-analysis/opponent20-next-field-v1-20261111`; the prior four-wait V3 replay also still matches. Windows build and all 62 registered checks passed. Autonomous AI/timing and a full match remain unsupported; overall progress unmeasured. Next compare later opponent control. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 third cell decision and clock
 
 The next opponent20 poll matches the original cell refresh to (97,158)/cell81, followed by the explicitly captured action2 and the control clock through E407: clock125, random index72. Phases442-444 preserve the cell decision, captured choice and pending field round; represented session fields, cursor and flight flag match. Unsupported action3 rejects atomically and the clock snapshot roundtrips. Evidence: `../Captain-Majid-analysis/opponent20-third-decision-v2-20261111`; Windows build, both decision replays and all 62 checks passed. The choice and event timing remain supplied; subsequent field movement and a full playable match are unsupported, overall progress unmeasured. Next compare the next original field round. Suggested model GPT-6.1 Terra High.
