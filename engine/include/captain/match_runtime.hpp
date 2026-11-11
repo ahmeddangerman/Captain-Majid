@@ -10,10 +10,10 @@
 #include <vector>
 
 namespace captain {
-enum class UnsupportedCapability { content, initialization, input_sequence, random_state, ball_fraction, timing, action, defender_contact, defensive_prompt, opponent_action, opponent_execution, period_transition, presentation, phase };
+enum class UnsupportedCapability { content, initialization, input_sequence, random_state, ball_fraction, timing, action, defender_contact, defensive_prompt, opponent_action, opponent_execution, period_transition, presentation, phase, defense_action_state };
 enum class MatchTimingMode { original_backed, provisional_demo };
 enum class MatchInputKind { tick, action, presentation_complete };
-enum class MatchAction { none, pass };
+enum class MatchAction { none, pass, shot };
 enum class MatchPassStage { none, awaiting_presentation, handoff, target_ready, flight_ready, flight_cell, flight_arrived };
 struct MatchBallFraction { std::uint8_t x=0,y=0; };
 struct MatchPassTarget { std::uint8_t recipient=0,destination=0,counter=255,distance=0; };

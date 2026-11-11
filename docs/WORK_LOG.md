@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-11 - Ordinary human shot preparation and dispatch
+
+The provisional match controller now accepts an ordinary unopposed human shot choice, calculates stamina and shot power with the shared original-backed preparation, acknowledges its initial presentation, advances the one-unit dispatch clock and moves the field to the next attack presentation. Unaffordable shots, selected defenders and period transitions stop atomically. The original-backed timing mode is unchanged. The runtime now names the next blocker: the original's retained defensive-action byte is absent from existing development snapshots. A controlled original probe varied that byte from 0 through 6 and found different clock/status results; inventing a value would change gameplay.
+
+`tools/check_runtime_human_shot_original.py` matched 24 constructed original CPU cases across four ready snapshots and six attacker stamina values through the full represented prepared, clocked and field-moved session boundaries. The shot routine uses an explicitly prepared ordinary choice and synthetic return; presentation uses cooperative acknowledgements with no actual NMI, audio or PPU. Tests also cover duplicate input, insufficient stamina, presentation ordering and a save/reload between preparation and dispatch. Windows build/all 64 registered checks and Linux warnings-as-errors syntax passed; earlier isolated full Linux Make attempts hit unrelated GCC/linker failures. The ball has not been shot at goal: subsequent action state, flight, defenders, goalkeeper and scoring are unfinished. Graphical play, fresh match initialization and a complete match remain unfinished; overall progress is unmeasured. Next preserve or otherwise determine the retained defensive-action state and compare the unopposed shot continuation. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-11 - Same-cell empty pass
 
 The provisional human pass runtime now handles an empty target at the ball's current cell: it preserves the ball position and recovery direction, sets the flight flag and proceeds directly to the existing loose-ball race without inventing movement. Same-cell teammate reception, unsupported race lengths, goal-area/story paths and full presentation remain outside this change. Original-backed timing remains unchanged.

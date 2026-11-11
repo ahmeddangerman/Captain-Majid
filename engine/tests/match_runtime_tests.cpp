@@ -12,6 +12,44 @@
 #include <string>
 static int comparisons(int argc,char** argv) {
  using namespace captain;
+ if(argc==5 && std::string(argv[1])=="--compare-human-shot-movement") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  MatchRuntimeState state{};state.session=before;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;
+  auto clock=step_match(state,{MatchInputKind::presentation_complete,1},content);
+  if(clock.unsupported)throw std::runtime_error("Human shot dispatch unsupported");
+  auto result=step_match(clock.state,{MatchInputKind::tick,2},content);
+  if(result.unsupported || result.state.session.phase!=FieldSessionPhase::selected_attack_presentation)throw std::runtime_error("Human shot movement unsupported");
+  expected.phase=FieldSessionPhase::selected_attack_presentation;expected.shot_progress=ShotContactProgress{};
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);
+  write_phase_session(actual_bytes,result.state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Human shot movement differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Human shot movement session lengths differ");}
+  return 0;
+ }
+ if(argc==5 && std::string(argv[1])=="--compare-human-shot-clock") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  MatchRuntimeState state{};state.session=before;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;
+  auto result=step_match(state,{MatchInputKind::presentation_complete,1},content);
+  if(result.unsupported || result.state.session.phase!=FieldSessionPhase::shot_dispatch_ready)throw std::runtime_error("Human shot dispatch unsupported");
+  expected.phase=FieldSessionPhase::shot_dispatch_ready;expected.shot_progress=ShotContactProgress{};
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);
+  write_phase_session(actual_bytes,result.state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Human shot dispatch differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Human shot dispatch session lengths differ");}
+  return 0;
+ }
+ if(argc==5 && std::string(argv[1])=="--compare-human-shot") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  MatchRuntimeState state{};state.session=before;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;
+  MatchInput shot{MatchInputKind::action,1};shot.action=MatchAction::shot;
+  auto result=step_match(state,shot,content);
+  if(result.unsupported)throw std::runtime_error(std::string("Human shot preparation unsupported: ")+capability_name(*result.unsupported));
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);
+  write_phase_session(actual_bytes,result.state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Human shot preparation differs at byte "+std::to_string(i));throw std::runtime_error("Human shot session lengths differ");}
+  return 0;
+ }
  if(argc==6 && (std::string(argv[1])=="--compare-free-arrival" || std::string(argv[1])=="--compare-same-arrival")) {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),raw_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);std::array<unsigned char,2048> raw{};
@@ -538,6 +576,28 @@ struct DeferredDefendedTest { captain::MatchRuntimeState state;captain::MatchCon
 static std::unique_ptr<DeferredDefendedTest> deferred_defended_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_human_defended_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_free_pass_test;
+static std::unique_ptr<DeferredDefendedTest> deferred_human_shot_test;
+static void test_human_shot(const captain::MatchRuntimeState& base,const captain::MatchContent& original,const captain::MatchContentIdentity& identity) {
+ using namespace captain;
+ auto content=std::make_unique<MatchContent>(original);auto state=std::make_unique<MatchRuntimeState>(base);state->session.action->action=0;state->session.current.clock.remaining=200;
+ for(unsigned id=1;id<=21;++id)if(id!=11){state->session.current.field.roster[id].type=1;auto& player=state->session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];player.x=100u<<8;player.y=124u<<8;}
+ content->data->attack.skill_selectors[0][0]=1;content->data->attack.moves[0].push_back({2,0,20,0});
+ content->data->experience=ExperienceContent{};content->data->movement->profiles.speeds.resize(1);
+ MatchInput shot{MatchInputKind::action,state->last_sequence+1};shot.action=MatchAction::shot;
+ const auto owner=state->session.current.field.ball_owner;const auto stamina=state->session.current.field.roster[owner].stamina;
+ state->session.current.field.roster[owner].stamina=0;auto result=std::make_unique<MatchStepResult>(step_match(*state,shot,*content));
+ assert(result->unsupported==UnsupportedCapability::action && result->state.last_sequence==state->last_sequence && result->state.session.current.field.roster[owner].stamina==0);
+ state->session.current.field.roster[owner].stamina=stamina;*result=step_match(*state,shot,*content);assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::attack_prepared);
+ *state=result->state;*result=step_match(*state,shot,*content);assert(result->unsupported==UnsupportedCapability::input_sequence && result->state.session.current.field.roster[owner].stamina==state->session.current.field.roster[owner].stamina);
+ *result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(result->unsupported==UnsupportedCapability::presentation);
+ std::ostringstream save(std::ios::binary);write_match_save(save,*state,identity);std::istringstream in(save.str(),std::ios::binary);*state=load_match_save(in,identity);
+ *result=step_match(*state,{MatchInputKind::presentation_complete,state->last_sequence+1},*content);
+ assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::shot_dispatch_ready);
+ *state=result->state;*result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);
+ assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::selected_attack_presentation);
+ *state=result->state;*result=step_match(*state,{MatchInputKind::presentation_complete,state->last_sequence+1},*content);
+ assert(result->unsupported==UnsupportedCapability::defense_action_state && result->state.last_sequence==state->last_sequence);
+}
 static void test_free_pass(const captain::MatchRuntimeState& base,const captain::MatchContent& original,std::uint64_t seq,const captain::MatchContentIdentity& identity) {
  using namespace captain;
  auto content=original;auto state=base;state.ball_fraction=MatchBallFraction{5,9};
@@ -772,6 +832,8 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  assert(crossing.state.pass_stage==MatchPassStage::flight_cell || crossing.state.pass_stage==MatchPassStage::flight_arrived);
  assert(flight.state.pass_stage==MatchPassStage::flight_ready && flight.state.last_sequence==12);
  MatchContentIdentity identity{};identity[0]=42;
+ deferred_human_shot_test=std::make_unique<DeferredDefendedTest>();deferred_human_shot_test->state=confirmed.state;
+ deferred_human_shot_test->content=content;deferred_human_shot_test->identity=identity;
  const MatchContentIdentity known_identity{{0x68,0x76,0x27,0x7d,0xbe,0xf7,0x26,0xc2,0xcb,0xd8,0x41,0x99,0xda,0xb2,0x7b,0xf8,0x02,0xe6,0x03,0x55,0x6d,0xd6,0x26,0xee,0xd2,0x0c,0x04,0x54,0xeb,0xd5,0x00,0x14}};
  assert(match_content_identity("abc",{}, {})==known_identity);
  assert(match_content_identity("abc",std::string{}, {})!=known_identity);
@@ -1154,5 +1216,6 @@ int main(int argc,char** argv) {
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);
  test_free_pass(deferred_free_pass_test->state,deferred_free_pass_test->content,deferred_free_pass_test->seq,deferred_free_pass_test->identity);
+ test_human_shot(deferred_human_shot_test->state,deferred_human_shot_test->content,deferred_human_shot_test->identity);
  return result;
 }
