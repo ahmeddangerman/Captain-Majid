@@ -52,7 +52,7 @@ PhaseSessionState prepare_session_kickoff_receiver(const PhaseSessionState& inpu
  validate_phase_session(state);
  return state;
 }
-PhaseSessionState prepare_session_kickoff_formation(const PhaseSessionState& input,std::uint8_t selected_side,const KickoffFormationContent& content) {
+PhaseSessionState prepare_session_kickoff_formation(const PhaseSessionState& input,std::uint8_t selected_side,const KickoffFormationContent& content,bool runtime_reset_completed) {
  validate_phase_session(input);
  const bool sampled_draw=input.phase==FieldSessionPhase::sampled_opponent_goal_restart || input.phase==FieldSessionPhase::sampled_player19_return_goal_restart || input.phase==FieldSessionPhase::sampled_score24_goal_restart;
  if((input.phase!=FieldSessionPhase::goal_kickoff_pending && !sampled_draw) ||
@@ -76,7 +76,7 @@ PhaseSessionState prepare_session_kickoff_formation(const PhaseSessionState& inp
   for(auto& keeper:state.current.field.keepers)keeper.stun=0;
  }
  // The captured 1-0 restart resets these statuses before the formation routine.
- if(input.phase==FieldSessionPhase::goal_kickoff_pending && selected_side==11 && input.score &&
+ if(!runtime_reset_completed && input.phase==FieldSessionPhase::goal_kickoff_pending && selected_side==11 && input.score &&
     input.score->left_goals==1 && input.score->right_goals==0 && input.score->kickoff==4 &&
     input.current.clock.remaining==160 && input.current.clock.extra_time==0 && field.side==11 &&
     field.ball_owner==8 && field.ball_cell==234 && field.selected_defenders==1 &&
@@ -99,7 +99,7 @@ PhaseSessionState prepare_session_kickoff_formation(const PhaseSessionState& inp
   }else{auto& m=state.current.field.motion[field_motion_index(slot)];m.x=placed[slot].x;m.y=placed[slot].y;}
  }
  // The observed 2-1 restart runs the original status reset before formation placement.
- if(input.phase==FieldSessionPhase::goal_kickoff_pending && selected_side==11 && input.score &&
+ if(!runtime_reset_completed && input.phase==FieldSessionPhase::goal_kickoff_pending && selected_side==11 && input.score &&
     input.score->left_goals==2 && input.score->right_goals==1 && input.score->kickoff==4 &&
     input.current.clock.remaining==408 && input.current.clock.extra_time==9 && field.side==11 &&
     field.ball_owner==5 && field.ball_cell==233 && field.selected_defenders==1 &&

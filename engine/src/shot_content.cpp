@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -252,6 +252,13 @@ ShotContent load_shot_content(std::istream& input) {
         for(auto& row:keeper->rows)reader.bytes(row);
         for(auto& row:keeper->special_options)reader.bytes(row);
         content.ai_keeper_choice=std::move(keeper);
+    }
+    if(version>='Q') {
+        auto kickoff=std::make_shared<RuntimeKickoffContent>();reader.bytes(kickoff->formation.on_ball);reader.bytes(kickoff->formation.off_ball);reader.bytes(kickoff->receivers);
+        for(auto cell:kickoff->formation.on_ball)if(cell>=240)throw std::invalid_argument("Invalid kickoff formation cell");
+        for(auto cell:kickoff->formation.off_ball)if(cell>=240)throw std::invalid_argument("Invalid kickoff formation cell");
+        for(auto id:kickoff->receivers)if(id<1 || id>10)throw std::invalid_argument("Invalid kickoff receiver");
+        content.kickoff=std::move(kickoff);
     }
     reader.end();
     return content;

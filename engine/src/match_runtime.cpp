@@ -14,6 +14,7 @@
 #include "captain/goal_session.hpp"
 #include "captain/keeper_save_session.hpp"
 #include "captain/recovery_session.hpp"
+#include "captain/kickoff_session.hpp"
 #include <stdexcept>
 namespace captain {
 namespace {
@@ -239,7 +240,7 @@ MatchStepResult restart_after_human_goal(const MatchRuntimeState& input,const Ma
  MatchStepResult result{input};
  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
  try {
-  result.state.session=continue_prepared_goal_restart(input.session);result.state.last_sequence=event.sequence;
+  result.state.session=continue_prepared_goal_restart(input.session);result.state.ball_fraction.reset();result.state.last_sequence=event.sequence;
   project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
 }
@@ -271,6 +272,25 @@ MatchStepResult prepare_keeper_save_area(const MatchRuntimeState& input,const Ma
   result.state.session=prepare_session_keeper_area(input.session);result.state.last_sequence=event.sequence;
   project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult advance_goal_kickoff(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};const auto phase=input.session.phase;
+ const auto expected=phase==FieldSessionPhase::kickoff_ball_placed ? MatchInputKind::presentation_complete : MatchInputKind::tick;
+ if(event.kind!=expected){result.unsupported=expected==MatchInputKind::presentation_complete ? UnsupportedCapability::presentation : UnsupportedCapability::action;return result;}
+ if((phase==FieldSessionPhase::goal_kickoff_pending || phase==FieldSessionPhase::kickoff_formation_placed) && !content.data->kickoff){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  if(phase==FieldSessionPhase::goal_kickoff_pending){
+   for(auto& player:result.state.session.current.field.motion)player.status=0;
+   for(auto& keeper:result.state.session.current.field.keepers){keeper.penalty=0;keeper.stun=0;}
+   result.state.session=prepare_session_kickoff_formation(result.state.session,11,content.data->kickoff->formation,true);
+   result.state.ball_fraction.reset();
+  } else if(phase==FieldSessionPhase::kickoff_formation_placed)
+   result.state.session=prepare_session_kickoff_receiver(input.session,input.session.current.field.random_first,content.data->kickoff->receivers);
+  else if(phase==FieldSessionPhase::kickoff_receiver_selected)result.state.session=prepare_session_kickoff_ball(input.session);
+  else if(phase==FieldSessionPhase::kickoff_ball_placed)result.state.session=continue_prepared_session_kickoff(input.session);
+  else {auto prepared=prepare_session_control(input.session);result.state.session=prepared.state;for(const auto& request:prepared.presentation)result.events.push_back({request});}
+  result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
 }
 }
 const char* capability_name(UnsupportedCapability c) {
@@ -564,6 +584,10 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return continue_keeper_save_recovery(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_interaction && input.session.action && input.session.action->action==0)
   return prepare_keeper_save_area(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::goal_kickoff_pending || input.session.phase==FieldSessionPhase::kickoff_formation_placed ||
+    input.session.phase==FieldSessionPhase::kickoff_receiver_selected || input.session.phase==FieldSessionPhase::kickoff_ball_placed || input.session.phase==FieldSessionPhase::kickoff_control_pending) &&
+    input.session.current.field.side==11 && input.session.score && input.session.score->kickoff==4)
+  return advance_goal_kickoff(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
   if(input.target_chooser){
    if(!input.demo_rng || !input.session.ordinary_pass_candidates){result.unsupported=UnsupportedCapability::phase;return result;}

@@ -11,13 +11,16 @@
 #include "captain/action_menu.hpp"
 #include "captain/ai_action_candidate.hpp"
 #include "captain/clearance_race.hpp"
+#include "captain/kickoff_formation.hpp"
 #include <istream>
 #include <memory>
 #include <optional>
 
 namespace captain {
+struct RuntimeKickoffContent { KickoffFormationContent formation{}; std::array<std::uint8_t,5> receivers{}; };
 struct ShotContent {
     std::shared_ptr<const AiKeeperContent> ai_keeper_choice{};
+    std::shared_ptr<const RuntimeKickoffContent> kickoff{};
     std::optional<AiAreaChoiceContent> ai_area_choice{};
     std::optional<AiFieldChoiceContent> ai_field_choice{};
     std::optional<FieldDefenseContent> area_attack6{};
@@ -45,7 +48,7 @@ struct ShotContent {
     std::optional<AreaDefenseMenuContent> area_defense_menu{};
 };
 
-// Development CMJSHOT1..9/A..P content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..9/A..Q content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

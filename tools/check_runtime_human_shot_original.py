@@ -14,6 +14,7 @@ from trace_field_loop import trace_loop
 from trace_shot_approach import trace_approach
 from check_scored_goal_original import observe_scored_goal
 from check_keeper_entry_original import observe as observe_keeper_entry
+from check_runtime_goal_kickoff_original import capture as kickoff_capture
 from trace_field_script import ObservedCartridge
 from check_kickoff_flight_original import until, snapshot as flight_snapshot
 from py65.devices.mpu6502 import MPU
@@ -29,8 +30,10 @@ def main():
     parser.add_argument('--defenders', action='store_true', help='Intervene on flight defenders and random bytes')
     parser.add_argument('--keeper', action='store_true', help='Compare unopposed arrival and normal keeper entry')
     parser.add_argument('--end-to-end', action='store_true', help='Compare uninterrupted shot through an AI keeper and goal')
+    parser.add_argument('--kickoff-end-to-end', action='store_true', help='Continue uninterrupted shot through opponent kickoff control')
     parser.add_argument('--velocity', type=Path, help='Private ball velocity table for --flight')
     args = parser.parse_args()
+    if args.kickoff_end_to_end: args.end_to_end = True
     if args.end_to_end: args.keeper = True
     if args.defenders and args.keeper: parser.error('Keeper survey needs an unopposed arrival')
     if args.defenders or args.keeper: args.flight = True
@@ -152,14 +155,31 @@ def main():
                             if keeper_result[0x612]!=0: raise RuntimeError('End-to-end goal fixture did not produce a goal')
                             goal,_=observe_scored_goal(prg,keeper_result)
                             if goal[0x62d]:raise RuntimeError('End-to-end restart requires ball mode zero')
-                            restart,_,_=observe_keeper_entry(prg,goal,0x85bf,{0x85dd});before_file.write_bytes(choice_source);after_file.write_bytes(flight_snapshot(restart,60,False))
-                            result=subprocess.run([str(args.exe.resolve()),'--compare-human-shot-end-to-end',str(before_file),str(after_file),str(args.pack.resolve()),str(action),str(raw_file),str(args.velocity.resolve()),str(keeper_result[0x28]),str(keeper_result[0x29]),str(keeper_result[0x629])],capture_output=True,text=True)
+                            restart,_,_=observe_keeper_entry(prg,goal,0x85bf,{0x85dd});before_file.write_bytes(choice_source)
+                            if args.kickoff_end_to_end:
+                                kickoff_memory=ObservedCartridge(prg,restart,None,set());kickoff_memory.registers[6:8]=[26,27]
+                                kickoff_memory[0x24],kickoff_memory[0x25]=26,27;kickoff_memory[0x23]=kickoff_memory[0x22]|7;kickoff_memory.select=kickoff_memory[0x23]
+                                kickoff_cpu=MPU(memory=kickoff_memory);kickoff_cpu.pc,kickoff_cpu.sp,kickoff_cpu.p=0x85dd,0xfd,kickoff_cpu.UNUSED
+                                for _ in range(2_000_000):
+                                    if kickoff_cpu.pc==0xdb0e:break
+                                    if kickoff_cpu.pc<0x8000:raise RuntimeError('Original kickoff left PRG')
+                                    if kickoff_cpu.pc==0xcaae:
+                                        kickoff_memory.instruction=None;kickoff_memory[0x1b]|=128;kickoff_memory[0x515]=0
+                                        if kickoff_memory[0x498]:kickoff_memory[0x498]-=1
+                                    kickoff_memory.instruction=(kickoff_memory.bank_at(kickoff_cpu.pc),kickoff_cpu.pc);kickoff_cpu.step()
+                                else:raise RuntimeError('Original kickoff instruction bound')
+                                kickoff_cpu.pc=0xdb13;until(kickoff_cpu,{0xdb1e})
+                                _,ready=trace_recovery(prg,bytes(kickoff_memory.ram[:2048]),prepare_control=True);after_file.write_bytes(kickoff_capture(ready,9))
+                            else:after_file.write_bytes(flight_snapshot(restart,60,False))
+                            command=[str(args.exe.resolve()),'--compare-human-shot-end-to-end',str(before_file),str(after_file),str(args.pack.resolve()),str(action),str(raw_file),str(args.velocity.resolve()),str(keeper_result[0x28]),str(keeper_result[0x29]),str(keeper_result[0x629])]
+                            if args.kickoff_end_to_end:command.append('control')
+                            result=subprocess.run(command,capture_output=True,text=True)
                             if result.returncode:raise RuntimeError(f'fixture={fixture}, stamina={stamina}, action={action} end-to-end: {result.stderr}')
                             goals+=1
                 matched += 1
     print(f'{matched} constructed original unopposed shot preparations, dispatch clocks and field movements' + (', attack tails and approaches' if args.tail else '') + (', and flight setups' if args.flight and not args.defenders else '') + ' matched')
     if args.flight: print(f'{flight_boundaries} numeric flight/callback boundaries matched; {defended_arrivals} arrivals had defenders')
-    if args.end_to_end: print(f'{goals} uninterrupted native shot-to-restart sequences matched the original restart boundary')
+    if args.end_to_end: print(f'{goals} uninterrupted native shot-to-'+('kickoff-control' if args.kickoff_end_to_end else 'restart')+' sequences matched the original boundary')
 
 
 if __name__ == '__main__':
