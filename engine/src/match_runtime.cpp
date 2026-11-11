@@ -13,6 +13,7 @@
 #include "captain/keeper_session.hpp"
 #include "captain/goal_session.hpp"
 #include "captain/keeper_save_session.hpp"
+#include "captain/recovery_session.hpp"
 #include <stdexcept>
 namespace captain {
 namespace {
@@ -239,6 +240,35 @@ MatchStepResult restart_after_human_goal(const MatchRuntimeState& input,const Ma
  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
  try {
   result.state.session=continue_prepared_goal_restart(input.session);result.state.last_sequence=event.sequence;
+  project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult recover_after_keeper_save(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+ if(!content.data->movement){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  if(input.session.phase==FieldSessionPhase::keeper_punch_recovery){
+   if(!result.state.session.control){result.unsupported=UnsupportedCapability::phase;return result;}
+   result.state.session.control->motion_requested=0;
+   result.state.session=advance_session_keeper_punch_recovery(result.state.session,content.data->field_players,*content.data->movement).state;
+  } else result.state.session=advance_session_recovery(input.session,content.data->field_players,*content.data->movement).state;
+  result.state.ball_fraction.reset();result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult continue_keeper_save_recovery(const MatchRuntimeState& input,const MatchInput& event) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+ try {
+  result.state.session=continue_session_recovery(input.session);result.state.last_sequence=event.sequence;
+  project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult prepare_keeper_save_area(const MatchRuntimeState& input,const MatchInput& event) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+ try {
+  result.state.session=prepare_session_keeper_area(input.session);result.state.last_sequence=event.sequence;
   project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
 }
@@ -528,6 +558,12 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::goal_celebration_pending &&
     input.session.current.field.side==0 && input.session.action && input.session.action->action==0)
   return restart_after_human_goal(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ball_recovery || input.session.phase==FieldSessionPhase::keeper_punch_recovery) && input.session.action && input.session.action->action==0)
+  return recover_after_keeper_save(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::recovered_owner && input.session.action && input.session.action->action==0)
+  return continue_keeper_save_recovery(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_interaction && input.session.action && input.session.action->action==0)
+  return prepare_keeper_save_area(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
   if(input.target_chooser){
    if(!input.demo_rng || !input.session.ordinary_pass_candidates){result.unsupported=UnsupportedCapability::phase;return result;}

@@ -12,6 +12,21 @@
 #include <string>
 static int shot_comparisons(int argc,char** argv) {
  using namespace captain;
+ if(argc==6 && std::string(argv[1])=="--compare-human-shot-keeper-recovery") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  auto state=std::make_unique<MatchRuntimeState>();state->session=before;state->mode=MatchTimingMode::provisional_demo;state->demo_rng=1;
+  auto result=std::make_unique<MatchStepResult>(step_match(*state,{MatchInputKind::presentation_complete,1},content));if(result->unsupported)throw std::runtime_error("Recovery fixture keeper AI unsupported");
+  *state=result->state;*result=step_match(*state,{MatchInputKind::presentation_complete,2},content);if(result->unsupported)throw std::runtime_error("Recovery fixture save unsupported");
+  *state=result->state;*result=step_match(*state,{MatchInputKind::presentation_complete,3},content);if(result->unsupported)throw std::runtime_error(std::string("Keeper recovery unsupported: ")+capability_name(*result->unsupported));
+  if(std::string(argv[5])=="tail" || std::string(argv[5])=="control" || std::string(argv[5])=="area"){*state=result->state;*result=step_match(*state,{MatchInputKind::presentation_complete,4},content);if(result->unsupported)throw std::runtime_error("Keeper recovery tail unsupported");}
+  if(std::string(argv[5])=="control"){*state=result->state;*result=step_match(*state,{MatchInputKind::tick,5},content);if(result->unsupported)throw std::runtime_error("Keeper recovery control setup unsupported");}
+  if(std::string(argv[5])=="area"){*state=result->state;*result=step_match(*state,{MatchInputKind::tick,5},content);if(result->unsupported)throw std::runtime_error("Keeper area setup unsupported");}
+  if(result->state.session.phase!=expected.phase)throw std::runtime_error("Keeper recovery phase differs");
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,result->state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Keeper recovery differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Keeper recovery session lengths differ");}
+  return 0;
+ }
  if(argc==11 && std::string(argv[1])=="--compare-human-shot-end-to-end") {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary),raw_file(argv[6],std::ios::binary),velocity_file(argv[7]);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);content.ball_velocity=read_ball_velocity_content(velocity_file);

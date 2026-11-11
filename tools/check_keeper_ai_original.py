@@ -68,6 +68,7 @@ def main():
     parser.add_argument('--runtime-exe',type=Path,help='Also compare autonomous runtime keeper resolution')
     parser.add_argument('--private-temp',type=Path,help='Private directory for temporary sessions')
     parser.add_argument('--team',type=int,choices=(3,4,5,6),default=3,help='Explicit original team matching the private pack')
+    parser.add_argument('--recovery-survey',action='store_true',help='Survey original save continuation boundaries')
     args=parser.parse_args();rom=args.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:parser.error('Expected verified Japanese ROM')
     prg=rom[16:262160];ready=bytearray(args.ready.read_bytes());ready[0x2b]=args.team
@@ -97,7 +98,7 @@ def main():
     print(f'Excluded cases by route/action: {dict(sorted(Counter((case[3],wanted[0]) for case,wanted in skipped).items()))}')
     if args.runtime_exe:
         if not args.private_temp or args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):parser.error('A private temporary directory is required')
-        count=goals=saves=restarts=0;outcomes=Counter()
+        count=goals=saves=restarts=0;outcomes=Counter();recovery_routes=Counter()
         with tempfile.TemporaryDirectory(prefix='keeper-ai-',dir=args.private_temp) as temp:
             before,after=Path(temp)/'before.cmjsession',Path(temp)/'after.cmjsession'
             for stamina in (50,100,120):
@@ -124,10 +125,34 @@ def main():
                             result=subprocess.run([str(args.runtime_exe.resolve()),'--compare-human-shot-keeper-save',str(before),str(after),str(args.pack.resolve())],capture_output=True,text=True)
                             if result.returncode:raise RuntimeError(f'Keeper save stamina={stamina}, power={power}, random={random}: {result.stderr}')
                             saves+=1
+                            if args.recovery_survey and phase in (2,58):
+                                report,recovered=trace_recovery(prg,saved,skip_jitter=phase==58)
+                                recovery_routes[report['boundary']]+=1
+                                if report['boundary']=='recovered_owner_handoff':
+                                    after.write_bytes(post_save_checkpoint(recovered,6))
+                                    result=subprocess.run([str(args.runtime_exe.resolve()),'--compare-human-shot-keeper-recovery',str(before),str(after),str(args.pack.resolve()),'owner'],capture_output=True,text=True)
+                                    if result.returncode:raise RuntimeError(f'Keeper recovered owner stamina={stamina}, power={power}, random={random}: {result.stderr}')
+                                    tail_report,tail=trace_recovery(prg,recovered,continue_handoff=True);recovery_routes['tail:'+tail_report['boundary']]+=1
+                                    phases={'player_control_handoff':1,'keeper_area_interaction':7}
+                                    if tail_report['boundary'] in phases:
+                                        after.write_bytes(post_save_checkpoint(tail,phases[tail_report['boundary']]))
+                                        result=subprocess.run([str(args.runtime_exe.resolve()),'--compare-human-shot-keeper-recovery',str(before),str(after),str(args.pack.resolve()),'tail'],capture_output=True,text=True)
+                                        if result.returncode:raise RuntimeError(f'Keeper recovery tail stamina={stamina}, power={power}, random={random}: {result.stderr}')
+                                        if tail_report['boundary']=='player_control_handoff':
+                                            _,ready=trace_recovery(prg,tail,prepare_control=True);after.write_bytes(post_save_checkpoint(ready,9))
+                                            result=subprocess.run([str(args.runtime_exe.resolve()),'--compare-human-shot-keeper-recovery',str(before),str(after),str(args.pack.resolve()),'control'],capture_output=True,text=True)
+                                            if result.returncode:raise RuntimeError(f'Keeper recovery control stamina={stamina}, power={power}, random={random}: {result.stderr}')
+                                            recovery_routes['tail:control_ready']+=1
+                                        elif tail_report['boundary']=='keeper_area_interaction':
+                                            area,_,_=observe_keeper_entry(prg,tail,0x8b4a,{0x8b73});area_session=bytearray(post_save_checkpoint(area,65));area_session[370:372]=bytes((1,area[0x61a]));after.write_bytes(area_session)
+                                            result=subprocess.run([str(args.runtime_exe.resolve()),'--compare-human-shot-keeper-recovery',str(before),str(after),str(args.pack.resolve()),'area'],capture_output=True,text=True)
+                                            if result.returncode:raise RuntimeError(f'Keeper recovery area stamina={stamina}, power={power}, random={random}: {result.stderr}')
+                                            recovery_routes['tail:area_prepared']+=1
         print(f'{count} constructed autonomous keeper choices and comparisons matched; result codes {dict(sorted(outcomes.items()))}')
         print(f'{goals} constructed original goal/reward registrations matched')
         print(f'{saves} constructed original goalkeeper save/recovery handoffs matched')
         print(f'{restarts} constructed original post-goal restart handoffs matched')
+        if args.recovery_survey:print(f'Original recovery boundaries: {dict(sorted(recovery_routes.items()))}')
 
 
 if __name__=='__main__':main()
