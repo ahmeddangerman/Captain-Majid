@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest runtime checkpoint (2026-11-11):** With explicit user approval, an opt-in labeled provisional timing/random mode advances control polls without supplied trace samples. Random values differ from the original; action routing and complete match remain unsupported. Overall progress unmeasured.
+
 **Latest runtime checkpoint (2026-11-11):** The reusable runtime owns a partial player-memory projection and has an explicit three-case possession acceptance executable; all cases currently stop at missing timing/random scheduling. Windows 64 registered checks and Linux Make check passed. This is not a playable match; overall progress is unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Eleven neutral player21 control polls match the original through the next clock entry. Later clock/field play and a full match remain unsupported; all 62 Windows checks passed, progress unmeasured.

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active checkpoint ? provisional demo polls (2026-11-11)
+
+User explicitly approved a separately labeled provisional timing/random mode. Runtime now runs one control poll per tick with deterministic xorshift32 random bytes when `MatchConfig.mode=provisional_demo` and seed is nonzero; original-backed mode remains default and unchanged. `captain-match-lab PACK SNAPSHOT --demo 1 11` labels the mode; 11 neutral polls reached control clock pending on a private development snapshot. All 11 random pairs differed from original in a controlled comparison; no parity or full match claimed. `match-possession-acceptance --demo` remains red at action routing for three synthetic cases. Next connect original-backed human menu/action routing and then general pass/possession, keeping provisional behavior explicitly isolated. Windows 64 registered checks and Linux Make check passed; the final runtime test also passed on both platforms. Overall progress unmeasured; playable match unsupported. Suggested model GPT-6.1 Terra High.
+
 ## Active checkpoint ? Linux verification and timing mode clarification (2026-11-11)
 
 WSL Ubuntu Make `check`, `all` and acceptance target build passed. Running possession acceptance separately still exits 1 for all three scenarios at live timing/random scheduling. A bounded original NMI diagnostic requires actual $2002 PPU status before reaching random; no live scheduler inferred. The user was asked whether a clearly labeled provisional timing/random demo mode is acceptable; their reply was ambiguous, clarification pending. Do not assume approval or silently change classic behavior. Continue independent runtime/evidence work. Overall progress unmeasured; full match unsupported. Suggested model GPT-6.1 Terra High.

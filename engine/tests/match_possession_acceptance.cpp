@@ -1,10 +1,14 @@
 #include "captain/match_runtime.hpp"
 #include <iostream>
 #include <array>
+#include <string>
 
 // Explicitly failing milestone acceptance, invoked manually, not part of CTest.
 // Synthetic fixtures test runtime wiring; they are not original startup evidence.
-int main() {
+int main(int argc,char** argv) {
+ const bool demo=argc==2 && std::string(argv[1])=="--demo";
+ if(argc>1 && !demo){std::cerr<<"Usage: match-possession-acceptance [--demo]\n";return 2;}
+ if(demo)std::cerr<<"PROVISIONAL DEMO: simplified timing and random values; synthetic content.\n";
  using namespace captain;
  unsigned failures=0;
  const std::array<std::uint8_t,3> owners{{3,7,15}};
@@ -21,6 +25,7 @@ int main() {
   initial.current.field.motion[field_motion_index(target)].x=140u<<8;
   MatchConfig config{};config.initial=initial;config.random_index=0; // Synthetic metadata, not an original capture.
   MatchContent content{};content.data=ShotContent{};
+  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->control_movement=ControlMovementContent{};}
   try {
    auto started=create_match(config,content);
    if(started.unsupported) {std::cerr<<"owner "<<unsigned(owner)<<": create: "<<capability_name(*started.unsupported)<<'\n';++failures;continue;}
