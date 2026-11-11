@@ -163,7 +163,27 @@ int main(int argc,char** argv) {
     for(unsigned flight_ticks=0;!blocked && state.pass_stage!=MatchPassStage::flight_arrived && flight_ticks<128;++flight_ticks)
      advance({MatchInputKind::tick,0});
     if(!blocked && state.pass_stage!=MatchPassStage::flight_arrived){std::cerr<<"owner "<<unsigned(owner)<<": pass flight did not arrive\n";blocked=true;}
-    if(!blocked && !human_defender_checked){auto contested=state;contested.flight_defenders={12};auto result=step_match(contested,{MatchInputKind::presentation_complete,seq},content);human_defender_checked=true;human_defender_unfinished=bool(result.unsupported);}
+    if(!blocked && !human_defender_checked){
+     auto contested=state;contested.flight_defenders={12};contested.session.current.clock.remaining=200;
+     for(unsigned id=1;id<=21;++id)if(id!=11)contested.session.current.field.roster[id].type=1;
+     contested.session.current.field.motion[field_motion_index(12)].x=100u<<8;contested.session.current.field.motion[field_motion_index(12)].y=124u<<8;
+     contested.session.current.field.random_first=1;contested.session.current.field.random_second=0;
+     content.data->movement->profiles.speeds.resize(1);content.data->pass_flight_comparison=PassFlightComparisonContent{1,255,0,{154,96,68,0}};
+     content.data->defense.skill_selectors[2][0]=1;content.data->defense.moves[2].push_back({0,0,50,0});content.data->defense.strength_curve.fill(20);
+     content.data->contact=ContactPreludeContent{};content.data->contact->field_elapsed[4]=2;content.data->contact->field_elapsed[5]=1;content.data->contact->defender_status[2]=6;content.data->experience=ExperienceContent{};
+     human_defender_checked=true;contested.session.action->power=30;
+     auto result=step_match(contested,{MatchInputKind::presentation_complete,seq},content);
+     if(!result.unsupported)result=step_match(result.state,{MatchInputKind::presentation_complete,result.state.last_sequence+1},content);
+     if(!result.unsupported)result=step_match(result.state,{MatchInputKind::tick,result.state.last_sequence+1},content);
+     human_defender_unfinished=bool(result.unsupported) || result.state.session.phase!=FieldSessionPhase::control_ready || result.state.session.current.field.ball_owner!=target;
+     contested.session.action->power=1;result=step_match(contested,{MatchInputKind::presentation_complete,seq},content);
+     if(!result.unsupported)result=step_match(result.state,{MatchInputKind::tick,result.state.last_sequence+1},content);
+     human_defender_unfinished=human_defender_unfinished || bool(result.unsupported) || result.state.session.phase!=FieldSessionPhase::control_ready || result.state.session.current.field.ball_owner!=12;
+     contested.session.action->power=23;result=step_match(contested,{MatchInputKind::presentation_complete,seq},content);
+     if(!result.unsupported)result=step_match(result.state,{MatchInputKind::tick,result.state.last_sequence+1},content);
+     human_defender_unfinished=human_defender_unfinished || bool(result.unsupported) || result.state.session.phase!=FieldSessionPhase::control_ready;
+     if(!human_defender_unfinished)std::cout<<"owner "<<unsigned(owner)<<": provisional human pass handled weakening, interception and deflection\n";
+    }
     if(!blocked)advance({MatchInputKind::presentation_complete,0});
     if(!blocked)advance({MatchInputKind::tick,0});
     if(!blocked && (state.session.phase!=FieldSessionPhase::control_ready || state.session.current.field.ball_owner!=target)){
