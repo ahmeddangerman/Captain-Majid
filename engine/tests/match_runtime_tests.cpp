@@ -10,6 +10,7 @@ int main() {
  cfg.seed=1; assert(create_match(cfg,content).unsupported==UnsupportedCapability::initialization); cfg.seed=0;
  auto start=create_match(cfg,content);
  assert(!start.unsupported && start.state.session.phase==FieldSessionPhase::field);
+ assert(start.state.random_memory.known[0x300] && !start.state.random_memory.known[0x304] && !start.state.random_memory.known[0x700]);
  auto tick=step_match(start.state,MatchInput{MatchInputKind::tick,1},content);
  assert(tick.unsupported==UnsupportedCapability::initialization);
  assert(tick.state.last_sequence==start.state.last_sequence);
@@ -17,10 +18,14 @@ int main() {
  pre.experience=ExperienceState{};pre.recovery=RecoveryContext{};pre.control=ControlContext{};pre.scheduling=SchedulingContext{};
  pre.current.field.side=0;pre.current.field.ball_owner=7;pre.current.field.ball_x=124;pre.current.field.ball_y=124;
  pre.current.field.motion[6].x=124u<<8;pre.current.field.motion[6].y=124u<<8;
- auto ready=step_match(MatchRuntimeState{pre,0},MatchInput{MatchInputKind::tick,1},content);
+ MatchRuntimeState prepared_input{pre,0};prepared_input.random_memory.known[0x304]=true;
+ prepared_input.random_memory.known[0x700]=true;prepared_input.random_memory.bytes[0x700]=23;
+ auto ready=step_match(prepared_input,MatchInput{MatchInputKind::tick,1},content);
  assert(!ready.unsupported && ready.state.session.phase==FieldSessionPhase::control_ready);
  assert(pre.phase==FieldSessionPhase::player_control && ready.state.last_sequence==1);
  assert(!ready.events.empty() && ready.events[0].presentation.kind==ControlPresentationKind::display);
+ assert(!ready.state.random_memory.known[0x304] && ready.state.random_memory.known[0x700] && ready.state.random_memory.bytes[0x700]==23);
+ assert(ready.state.random_memory.known[0x300+12*7] && ready.state.random_memory.bytes[0x300+12*7]==pre.current.field.roster[7].type);
  auto action=step_match(ready.state,MatchInput{MatchInputKind::action,2},content);
  assert(action.unsupported==UnsupportedCapability::action && action.state.last_sequence==1);
  auto wait=step_match(ready.state,MatchInput{MatchInputKind::tick,2},content);

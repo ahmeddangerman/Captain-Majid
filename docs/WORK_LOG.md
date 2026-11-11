@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 ? Runtime-owned partial random memory
+
+Integrated guarded player-memory projection into MatchRuntimeState, refreshing it after snapshot initialization and successful control setup. Synthetic tests check that stale unrepresented player bytes become unknown while external bytes are preserved; no sound RAM, carry, random advance or scheduler is invented. Possession acceptance remains intentionally red at timing for all three synthetic fixtures. Windows build and 64 registered checks passed. The previous checkpoint compared projection at three original boundaries and 11 original random states; this increment changes ownership/refresh, not original rules. Next trace general sound/memory and interrupt dependencies needed for control polling. No playable match; overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 ? Possession acceptance and guarded random-memory projection
 
 Added an explicit manually invoked possession acceptance target with three synthetic owner/recipient cases on both sides. It remains red: all stop at live timing/random scheduling before the first poll; passing requires actual pass and resumed recipient control. Match inputs now carry button/action intent and recipient, never an outcome. Runtime state can retain an optional random index as development-snapshot metadata; absent index is distinguished from unavailable scheduler. The synthetic fixture index and content are not original startup or autonomous AI evidence.

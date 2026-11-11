@@ -12,6 +12,7 @@ MatchStepResult create_match(const MatchConfig& config,const MatchContent& conte
  validate_phase_session(*config.initial);
  result.state.session=*config.initial;
  result.state.random_index=config.random_index;
+ project_field_random_memory(result.state.session.current.field,result.state.random_memory);
  return result;
 }
 MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
@@ -21,6 +22,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.session.phase==FieldSessionPhase::player_control && event.kind==MatchInputKind::tick) {
   auto prepared=prepare_session_control(input.session);
   result.state.session=prepared.state;result.state.last_sequence=event.sequence;
+  project_field_random_memory(result.state.session.current.field,result.state.random_memory);
   for(const auto& request:prepared.presentation) result.events.push_back({request});
   return result;
  }

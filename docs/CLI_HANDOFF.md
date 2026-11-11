@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active checkpoint ? runtime owns partial random memory (2026-11-11)
+
+The runtime now retains partial random memory and refreshes 210 represented player bytes on snapshot initialization and control setup; omitted player bytes are invalidated and externally owned memory remains untouched. No sound memory, carry, interrupt scheduler or original random inputs are generated. Possession acceptance remains red for all three synthetic cases at timing. Windows build and 64 registered checks passed. Next identify and compare the general sound/memory and interrupt sources needed by the first poll; implement only evidence-supported behavior. Complete match unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Active checkpoint ? 2026-11-11: possession acceptance and random memory
 
 `match-possession-acceptance` now expresses three synthetic pass/reception scenarios and intentionally exits 1: all stop at unsupported live timing/random scheduling. `RuntimeRandomMemory` projects 210 represented player RAM bytes and refuses random steps when source bytes are unknown; original RAM comparisons cover three snapshots and 11 captured random calls. Original index is not in legacy session snapshots and is optional explicit development metadata. Sound/other memory, carry, scheduler, action routing, actual pass and live match initialization remain unsupported. See docs/MATCH_CAPABILITIES.md. Windows build and 64 registered checks passed. Next investigate and implement general sources and timing necessary for the first control poll; do not synthesize random bytes or declare acceptance passed. Overall progress unmeasured, playable match unsupported. Suggested model GPT-6.1 Terra High.
