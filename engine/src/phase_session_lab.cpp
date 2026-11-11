@@ -76,6 +76,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::player2_opponent_pass_choice: return "opponent20 observed pass choice captured";
     case captain::FieldSessionPhase::player2_opponent_pass_prepared: return "opponent20 pass prepared";
     case captain::FieldSessionPhase::player2_opponent_pass_handoff: return "opponent20 pass field handoff";
+    case captain::FieldSessionPhase::player2_opponent_pass_field_moved: return "opponent20 pass field movement complete";
     case captain::FieldSessionPhase::third_return_defender_compared: return "third return defender comparison pending result";
     case captain::FieldSessionPhase::third_return_defender_result: return "third return defender result2 pending contact";
     case captain::FieldSessionPhase::third_return_contact_clocked: return "third return result2 contact clock complete";

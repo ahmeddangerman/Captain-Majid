@@ -307,10 +307,10 @@ static std::vector<ObservedClockEvent> read_observed_events(std::istream& input,
             unsigned id,low,high;
             if(!(input>>id>>low>>high) || id>255 || low>255 || high>255)throw std::invalid_argument("Invalid observed stamina sample");
             events.push_back({ObservedClockEventKind::stamina_sample,{},static_cast<std::uint8_t>(id),static_cast<std::uint16_t>(low|(high<<8))});
-        } else if (((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "U" || token == "P" || token == "Q" || token == "G" || token == "O") && !milestones) || token == "B") {
+        } else if (((token == "M" || token == "F" || token == "D" || token == "L" || token == "C" || token == "U" || token == "P" || token == "Q" || token == "G" || token == "O" || token == "V") && !milestones) || token == "B") {
             unsigned value;
             if (!(input >> value) || value > 255) throw std::invalid_argument("Invalid observed presentation sample");
-            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : token == "D" ? ObservedClockEventKind::display_sample : token == "L" ? ObservedClockEventKind::carrier_cell_sample : token == "C" ? ObservedClockEventKind::defender_cursor_sample : token == "U" ? ObservedClockEventKind::attack_subtype_sample : token == "B" ? ObservedClockEventKind::ball_mode_sample : token == "Q" ? ObservedClockEventKind::action_cursor_sample : token == "G" ? ObservedClockEventKind::move_flags_sample : token == "O" ? ObservedClockEventKind::opposing_player_sample : ObservedClockEventKind::field_player,
+            events.push_back({token == "M" ? ObservedClockEventKind::motion_sample : token == "F" ? ObservedClockEventKind::facing_sample : token == "D" ? ObservedClockEventKind::display_sample : token == "L" ? ObservedClockEventKind::carrier_cell_sample : token == "C" ? ObservedClockEventKind::defender_cursor_sample : token == "U" ? ObservedClockEventKind::attack_subtype_sample : token == "B" ? ObservedClockEventKind::ball_mode_sample : token == "Q" ? ObservedClockEventKind::action_cursor_sample : token == "G" ? ObservedClockEventKind::move_flags_sample : token == "O" ? ObservedClockEventKind::opposing_player_sample : token == "V" ? ObservedClockEventKind::ball_variant_sample : ObservedClockEventKind::field_player,
                               {}, static_cast<std::uint8_t>(value)});
         } else if (token == "S" && milestones) events.push_back({ObservedClockEventKind::schedule});
         else if (token == "E" && milestones) events.push_back({ObservedClockEventKind::energy});
@@ -623,13 +623,14 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
     const bool player7_shot=input.phase==FieldSessionPhase::player7_shot_ball_jittered;
     const bool player3_one_two=input.phase==FieldSessionPhase::player3_one_two_ball_jittered;
     const bool player2_pass_recovery=input.phase==FieldSessionPhase::player2_same_cell_pass_timeout;
-    if ((!shot && !recovery && !goal_shot && !postgoal && !third_return && !player7_shot && !player3_one_two && !player2_pass_recovery && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
+    const bool player2_opponent_pass=input.phase==FieldSessionPhase::player2_opponent_pass_handoff;
+    if ((!shot && !recovery && !goal_shot && !postgoal && !third_return && !player7_shot && !player3_one_two && !player2_pass_recovery && !player2_opponent_pass && input.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock) || !input.current.field.elapsed || !input.control)
         throw std::invalid_argument("Observed field movement requires a supported dispatch and elapsed time");
     auto state=input;
     auto& field=state.current.field;
     field.movement_region=static_cast<std::uint8_t>(field_ball_region(field.ball_x,field.ball_y)|128u);
     auto index=initial_random_index;
-    unsigned slot=0;
+    unsigned slot=0,presentation_stage=0;
     for (const auto& event:events) {
         if (event.kind==ObservedClockEventKind::random) {
             const auto next=advance_reference_random({index,field.random_first,field.random_second},event.random);
@@ -637,6 +638,15 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
         } else if (event.kind==ObservedClockEventKind::travel) {
             state.control->travel_accumulator=advance_control_travel(state.control->travel_accumulator,event.speed,
                 field.side,event.held,state.control->facing);
+        } else if(player2_opponent_pass && event.kind==ObservedClockEventKind::motion_sample && presentation_stage==0 && event.held==0 && state.control->motion_requested==1) {
+            state.control->motion_requested=0;++presentation_stage;
+        } else if(player2_opponent_pass && event.kind==ObservedClockEventKind::facing_sample && presentation_stage==1 && event.held==64 && state.control->facing==0) {
+            state.control->facing=64;++presentation_stage;
+        } else if(player2_opponent_pass && event.kind==ObservedClockEventKind::display_sample && presentation_stage==2 && event.held==0 && state.control->display_parameter==2) {
+            state.control->display_parameter=0;++presentation_stage;
+        } else if(player2_opponent_pass && event.kind==ObservedClockEventKind::ball_variant_sample && slot==22 && presentation_stage==3 && event.held==2 && !state.recovery->ball_variant && !state.control->last_carrier_cell) {
+            // Both values are sampled at C612; their internal write order is not observed.
+            state.recovery->ball_variant=2;state.control->last_carrier_cell=128;++presentation_stage;
         } else if (event.kind==ObservedClockEventKind::field_player) {
             if (slot>=22 || event.held!=slot) throw std::invalid_argument("Observed pass movement needs each ordered player slot");
             if (slot!=0 && slot!=11 && slot!=field.ball_owner)
@@ -645,8 +655,9 @@ NmiEventSequenceResult advance_observed_pass_field_movement(const PhaseSessionSt
         } else throw std::invalid_argument("Unsupported observed pass movement event");
     }
     if (slot!=22) throw std::invalid_argument("Observed pass movement has incomplete player slots");
+    if(player2_opponent_pass && presentation_stage!=4)throw std::invalid_argument("Opponent20 pass movement needs its observed presentation and variant samples");
     field.elapsed=0;
-    state.phase=player2_pass_recovery ? FieldSessionPhase::player2_same_cell_pass_recovery_moved : player3_one_two ? FieldSessionPhase::player3_one_two_recovery_field_moved : player7_shot ? FieldSessionPhase::player7_shot_recovery_field_moved : third_return ? FieldSessionPhase::third_return_recovery_field_moved : postgoal ? FieldSessionPhase::postgoal_opponent_field_moved : goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
+    state.phase=player2_opponent_pass ? FieldSessionPhase::player2_opponent_pass_field_moved : player2_pass_recovery ? FieldSessionPhase::player2_same_cell_pass_recovery_moved : player3_one_two ? FieldSessionPhase::player3_one_two_recovery_field_moved : player7_shot ? FieldSessionPhase::player7_shot_recovery_field_moved : third_return ? FieldSessionPhase::third_return_recovery_field_moved : postgoal ? FieldSessionPhase::postgoal_opponent_field_moved : goal_shot ? FieldSessionPhase::ordinary_return_goal_area_field_moved : recovery ? FieldSessionPhase::ordinary_return_shot_recovery_field_moved : shot ? FieldSessionPhase::ordinary_return_shot_field_moved : FieldSessionPhase::ordinary_pass_field_moved;
     validate_phase_session(state);
     return {std::move(state),index};
 }

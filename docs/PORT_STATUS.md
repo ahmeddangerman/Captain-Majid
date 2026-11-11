@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Opponent20's pass field movement matches through original C612 using captured timing and presentation samples. Target/flight remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Opponent20's captured pass presentation matches through the original field handoff using supplied events. Field update and flight remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** Opponent20's explicitly captured pass to player21 matches original preparation using the shared attack kernel. Pass presentation and flight remain unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
