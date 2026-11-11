@@ -9,7 +9,7 @@
 namespace captain {
 namespace {
 constexpr char magic[]="CMJMATCH";
-constexpr std::uint8_t current_version=13;
+constexpr std::uint8_t current_version=14;
 constexpr std::uint32_t max_payload=1024*1024;
 void put(std::string& out,std::uint64_t n,unsigned bytes) {
  for(unsigned i=0;i<bytes;++i)out.push_back(static_cast<char>((n>>(8*i))&255));
@@ -39,6 +39,9 @@ void validate_runtime(const MatchRuntimeState& s) {
     (s.mode==MatchTimingMode::provisional_demo && !s.demo_rng) ||
     static_cast<unsigned>(s.pass_stage)>static_cast<unsigned>(MatchPassStage::flight_arrived))
   throw std::invalid_argument("Invalid match runtime mode or pass stage");
+ if(s.retained_defense_action && (s.mode!=MatchTimingMode::provisional_demo || *s.retained_defense_action>6 || s.session.current.field.side!=0 || s.session.current.field.selected_defenders || !s.session.action || s.session.action->action!=0 ||
+    (s.session.phase!=FieldSessionPhase::attack_choice_pending && s.session.phase!=FieldSessionPhase::attack_prepared && s.session.phase!=FieldSessionPhase::shot_dispatch_ready && s.session.phase!=FieldSessionPhase::selected_attack_presentation)))
+  throw std::invalid_argument("Invalid retained defensive action provenance");
  const bool target=static_cast<unsigned>(s.pass_stage)>=static_cast<unsigned>(MatchPassStage::target_ready);
  const bool flight=static_cast<unsigned>(s.pass_stage)>=static_cast<unsigned>(MatchPassStage::flight_ready);
  const bool ai_flight=s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_flight_ready);
@@ -141,6 +144,7 @@ void write_match_save(std::ostream& output,const MatchRuntimeState& s,const Matc
  put(payload,s.target_chooser.has_value(),1);if(s.target_chooser)put(payload,s.target_chooser->index,1);
  put(payload,s.flight_defenders.size(),1);for(const auto id:s.flight_defenders)put(payload,id,1);
  put(payload,s.processed_flight_defenders.size(),1);for(const auto id:s.processed_flight_defenders)put(payload,id,1);
+ put(payload,s.retained_defense_action.has_value(),1);if(s.retained_defense_action)put(payload,*s.retained_defense_action,1);
  if(payload.size()>max_payload)throw std::invalid_argument("Match save is too large");
  std::string header(magic,sizeof(magic)-1);put(header,current_version,1);put(header,payload.size(),4);put(header,checksum(payload),4);
  output.write(header.data(),header.size());output.write(payload.data(),payload.size());
@@ -181,6 +185,7 @@ MatchRuntimeState load_match_save(std::istream& input,const MatchContentIdentity
  if(version>=11 && r.flag())s.target_chooser=MatchTargetChooser{static_cast<std::uint8_t>(r.get(1))};
  if(version>=12){const auto count=r.get(1);if(count>5)throw std::invalid_argument("Invalid flight defender count");for(unsigned i=0;i<count;++i)s.flight_defenders.push_back(static_cast<std::uint8_t>(r.get(1)));}
  if(version>=13){const auto count=r.get(1);if(count>5)throw std::invalid_argument("Invalid processed flight defender count");for(unsigned i=0;i<count;++i)s.processed_flight_defenders.push_back(static_cast<std::uint8_t>(r.get(1)));}
+ if(version>=14 && r.flag())s.retained_defense_action=static_cast<std::uint8_t>(r.get(1));
  if(r.pos!=payload.size())throw std::invalid_argument("Unexpected match save data");
  validate_runtime(s);return s;
 }

@@ -36,7 +36,7 @@ void save_new_file(const std::string& path,const captain::MatchRuntimeState& sta
 int main(int argc,char** argv) {
  if(argc<3){std::cerr<<"Usage: captain-match-lab CONTENT_PACK DEVELOPMENT_SESSION [RANDOM_INDEX | --demo SEED TICKS [options]]\n"
   <<"       captain-match-lab CONTENT_PACK --resume SAVE TICKS [options]\n"
-  <<"Options: --distance FILE --velocity FILE --save NEW_FILE; initial demo also: --ball-fractions X Y\n";return 2;}
+  <<"Options: --distance FILE --velocity FILE --save NEW_FILE; initial demo also: --ball-fractions X Y --retained-defense-action N\n";return 2;}
  try {
   const bool resume=std::string(argv[2])=="--resume";captain::MatchConfig config{};
   std::string session_path,save_path,resume_path;std::optional<std::string> distance_path,velocity_path;
@@ -60,6 +60,7 @@ int main(int argc,char** argv) {
    else if(option=="--velocity" && i<argc && !velocity_path)velocity_path=argv[i++];
    else if(option=="--save" && i<argc && save_path.empty())save_path=argv[i++];
    else if(option=="--ball-fractions" && !resume && config.mode==captain::MatchTimingMode::provisional_demo && i+1<argc && !config.ball_fraction){auto x=parse_number(argv[i++],255,"Ball fraction must be 0..255");auto y=parse_number(argv[i++],255,"Ball fraction must be 0..255");config.ball_fraction=captain::MatchBallFraction{static_cast<std::uint8_t>(x),static_cast<std::uint8_t>(y)};}
+   else if(option=="--retained-defense-action" && !resume && config.mode==captain::MatchTimingMode::provisional_demo && i<argc && !config.retained_defense_action)config.retained_defense_action=static_cast<std::uint8_t>(parse_number(argv[i++],6,"Retained defensive action must be 0..6"));
    else throw std::invalid_argument("Invalid, incomplete or repeated option");
   }
   const auto pack_bytes=read_file(argv[1]);std::optional<std::string> distance_bytes,velocity_bytes;

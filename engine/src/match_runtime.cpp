@@ -7,6 +7,10 @@
 #include "captain/ball_recovery.hpp"
 #include "captain/staged_shot.hpp"
 #include "captain/selected_dispatch.hpp"
+#include "captain/attack_clock.hpp"
+#include "captain/approach_session.hpp"
+#include "captain/ball_flight_session.hpp"
+#include "captain/keeper_session.hpp"
 #include <stdexcept>
 namespace captain {
 namespace {
@@ -151,11 +155,64 @@ MatchStepResult move_human_shot_field(const MatchRuntimeState& input,const Match
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
 }
+MatchStepResult continue_human_shot_attack(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+ if(!input.retained_defense_action || *input.retained_defense_action>6){result.unsupported=UnsupportedCapability::defense_action_state;return result;}
+ if(!content.data->contact){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  const auto continuation=continue_prepared_session_attack(input.session,*content.data->contact,*input.retained_defense_action);
+  if(!continuation.clock || continuation.clock->continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+  result.state.session=continuation.state;result.state.retained_defense_action.reset();result.state.last_sequence=event.sequence;
+  project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult approach_human_shot(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+ if(!content.data->approach){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  result.state.session=prepare_session_shot_approach(input.session,*content.data->approach).state;
+  result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult begin_human_shot_flight(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+ if(!input.ball_fraction){result.unsupported=UnsupportedCapability::ball_fraction;return result;}
+ if(!content.data->movement || !content.ball_velocity){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  result.state.session=begin_prepared_session_ball_flight(input.session,input.ball_fraction->x,input.ball_fraction->y,content.data->movement->geometry,*content.ball_velocity);
+  result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult advance_human_shot_flight(const MatchRuntimeState& input,const MatchInput& event) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+ try {
+  result.state.session=input.session.phase==FieldSessionPhase::ball_cell_callback ? resolve_session_ball_cell(input.session) : advance_prepared_session_ball_cell(input.session).state;
+  result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult enter_human_shot_keeper(const MatchRuntimeState& input,const MatchInput& event) {
+ MatchStepResult result{input};
+ if(input.session.phase==FieldSessionPhase::ball_arrival_callback && event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+ if(input.session.phase==FieldSessionPhase::shot_keeper_entry && event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+ if(input.session.current.field.selected_defenders){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+ if(!input.session.shot_flight || input.session.shot_flight->loose_ball || input.session.current.field.keepers[1].stun){result.unsupported=UnsupportedCapability::action;return result;}
+ try {
+  result.state.session=input.session.phase==FieldSessionPhase::ball_arrival_callback ? continue_session_unopposed_arrival(input.session) : prepare_session_keeper_entry(input.session);
+  result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
 }
 const char* capability_name(UnsupportedCapability c) {
  switch(c) {case UnsupportedCapability::content:return "content";case UnsupportedCapability::initialization:return "match initialization";case UnsupportedCapability::input_sequence:return "input sequence";case UnsupportedCapability::ball_fraction:return "ball fractional position is unknown";case UnsupportedCapability::random_state:return "random index is not present in development snapshot";case UnsupportedCapability::timing:return "live timing and random scheduling";case UnsupportedCapability::action:return "action routing";case UnsupportedCapability::defender_contact:return "pass-flight defender contact";case UnsupportedCapability::defensive_prompt:return "opponent contact defensive prompt";case UnsupportedCapability::opponent_action:return "opponent attack choice";case UnsupportedCapability::opponent_execution:return "opponent attack execution and defensive resolution";case UnsupportedCapability::period_transition:return "period or added-time transition";case UnsupportedCapability::presentation:return "presentation completion";case UnsupportedCapability::phase:return "session phase";case UnsupportedCapability::defense_action_state:return "retained defensive action is unknown";} return "unknown";
 }
 MatchBallView match_ball_view(const MatchRuntimeState& state) {
+ if((state.session.phase==FieldSessionPhase::ball_advance_ready || state.session.phase==FieldSessionPhase::ball_cell_callback || state.session.phase==FieldSessionPhase::ball_arrival_callback || state.session.phase==FieldSessionPhase::ball_already_arrived) && state.session.ball_trajectory){
+  const auto& t=*state.session.ball_trajectory;return {static_cast<std::uint8_t>(t.x>>8),static_cast<std::uint8_t>(t.y>>8),state.session.current.field.ball_cell,true};
+ }
  if(state.defense_menu && static_cast<unsigned>(state.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_flight_ready)){
   const auto& m=*state.defense_menu;if(!m.ai_trajectory || !m.ai_ball_cell)throw std::invalid_argument("Missing opponent flight ball context");
   return {static_cast<std::uint8_t>(m.ai_trajectory->x>>8),static_cast<std::uint8_t>(m.ai_trajectory->y>>8),*m.ai_ball_cell,true};
@@ -172,9 +229,15 @@ MatchStepResult create_match(const MatchConfig& config,const MatchContent& conte
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(!config.initial || config.clock || (config.mode!=MatchTimingMode::original_backed && config.mode!=MatchTimingMode::provisional_demo) || (config.mode==MatchTimingMode::original_backed && config.seed) || (config.mode==MatchTimingMode::provisional_demo && !config.seed)){result.unsupported=UnsupportedCapability::initialization;return result;}
  validate_phase_session(*config.initial);
+ if(config.retained_defense_action){const auto& session=*config.initial;
+  if(config.mode!=MatchTimingMode::provisional_demo || *config.retained_defense_action>6 || session.current.field.side!=0 || session.current.field.selected_defenders || !session.action || session.action->action!=0 ||
+     (session.phase!=FieldSessionPhase::attack_choice_pending && session.phase!=FieldSessionPhase::attack_prepared && session.phase!=FieldSessionPhase::shot_dispatch_ready && session.phase!=FieldSessionPhase::selected_attack_presentation)){
+   result.unsupported=UnsupportedCapability::initialization;return result;
+  }
+ }
  result.state.session=*config.initial;
  result.state.random_index=config.random_index;
- result.state.mode=config.mode;result.state.demo_rng=config.seed;result.state.ball_fraction=config.ball_fraction;
+ result.state.mode=config.mode;result.state.demo_rng=config.seed;result.state.ball_fraction=config.ball_fraction;result.state.retained_defense_action=config.retained_defense_action;
  project_field_random_memory(result.state.session.current.field,result.state.random_memory);
  return result;
 }
@@ -405,8 +468,20 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::selected_attack_presentation &&
     input.session.current.field.side==0 && input.session.action && input.session.action->action==0 && !input.session.current.field.selected_defenders) {
-  result.unsupported=event.kind==MatchInputKind::presentation_complete ? UnsupportedCapability::defense_action_state : UnsupportedCapability::presentation;return result;
+  return continue_human_shot_attack(input,event,content);
  }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::shot_approach_ready &&
+    input.session.current.field.side==0 && input.session.action && input.session.action->action==0 && !input.session.current.field.selected_defenders)
+  return approach_human_shot(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::shot_flight_pending &&
+    input.session.current.field.side==0 && input.session.action && input.session.action->action==0 && !input.session.current.field.selected_defenders)
+  return begin_human_shot_flight(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ball_advance_ready || input.session.phase==FieldSessionPhase::ball_cell_callback) &&
+    input.session.current.field.side==0 && input.session.action && input.session.action->action==0)
+  return advance_human_shot_flight(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ball_arrival_callback || input.session.phase==FieldSessionPhase::shot_keeper_entry) &&
+    input.session.current.field.side==0 && input.session.action && input.session.action->action==0)
+  return enter_human_shot_keeper(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
   if(input.target_chooser){
    if(!input.demo_rng || !input.session.ordinary_pass_candidates){result.unsupported=UnsupportedCapability::phase;return result;}
