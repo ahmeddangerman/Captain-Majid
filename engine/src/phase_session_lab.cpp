@@ -1092,21 +1092,10 @@ void prepare_kickoff_formation(captain::PhaseSessionState& state,const std::stri
  state=captain::prepare_session_kickoff_formation(state,side,content);
 }
 captain::BallVelocityContent read_ball_velocity(const std::string& file) {
- std::ifstream in(file);std::string magic,extra;
- if(!(in>>magic) || magic!="CMJBALL1")throw std::invalid_argument("Expected private CMJBALL1 projection content");
- captain::BallVelocityContent velocity{};
- for(auto& word:velocity.quarter_wave){
-  std::string token;unsigned value=0;
-  if(!(in>>token))throw std::invalid_argument("Expected64projection words");
-  const auto parsed=std::from_chars(token.data(),token.data()+token.size(),value);
-  if(parsed.ec!=std::errc{} || parsed.ptr!=token.data()+token.size() || value>65535)
-   throw std::invalid_argument("Expected unsigned projection word0..65535");
-  word=value;
- }
- if(in>>extra)throw std::invalid_argument("Trailing ball projection content");
- if(in.bad())throw std::invalid_argument("Unable to read ball projection content");
- return velocity;
+ std::ifstream input(file);
+ return captain::read_ball_velocity_content(input);
 }
+
 void begin_ball_flight(captain::PhaseSessionState& state,const captain::ShotContent& content,
  const std::string& file,unsigned low_x,unsigned low_y) {
  const auto velocity=read_ball_velocity(file);

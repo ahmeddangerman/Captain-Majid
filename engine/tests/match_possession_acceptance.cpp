@@ -24,9 +24,9 @@ int main(int argc,char** argv) {
   initial.current.field.ball_x=124;initial.current.field.ball_y=124;
   for(auto& player:initial.current.field.motion){player.x=124u<<8;player.y=124u<<8;}
   initial.current.field.motion[field_motion_index(target)].x=140u<<8;
-  MatchConfig config{};config.initial=initial;config.random_index=0; // Synthetic metadata, not an original capture.
+  MatchConfig config{};config.initial=initial;config.random_index=0;config.ball_fraction=MatchBallFraction{0,0}; // Synthetic metadata, not an original capture.
   MatchContent content{};content.data=ShotContent{};
-  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->control_movement=ControlMovementContent{};content.data->action_menu=ActionMenuContent{};content.data->action_menu->directions[0][0]=1;content.data->field_players.skills.resize(1);content.data->field_players.skills[0].fill(20);content.data->attack.skill_selectors[1][0]=1;content.data->attack.moves[1].push_back({2,0,20,0});content.data->attack.strength_curve.fill(20);content.pass_distance=PassDistanceContent{};content.pass_distance->values.fill(4);}
+  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->movement->geometry.direction_thresholds.fill(65535);content.data->control_movement=ControlMovementContent{};content.data->action_menu=ActionMenuContent{};content.data->action_menu->directions[0][0]=1;content.data->field_players.skills.resize(1);content.data->field_players.skills[0].fill(20);content.data->attack.skill_selectors[1][0]=1;content.data->attack.moves[1].push_back({2,0,20,0});content.data->attack.strength_curve.fill(20);content.pass_distance=PassDistanceContent{};content.pass_distance->values.fill(4);content.ball_velocity=BallVelocityContent{};content.ball_velocity->quarter_wave.fill(128);}
   try {
    auto started=create_match(config,content);
    if(started.unsupported) {std::cerr<<"owner "<<unsigned(owner)<<": create: "<<capability_name(*started.unsupported)<<'\n';++failures;continue;}
@@ -61,8 +61,19 @@ int main(int argc,char** argv) {
      std::cerr<<"owner "<<unsigned(owner)<<": wrong pass target\n";blocked=true;
     }
     if(!blocked)advance({MatchInputKind::tick,0});
+    if(!blocked && (!state.pass_trajectory || state.pass_stage!=MatchPassStage::flight_ready)){
+     std::cerr<<"owner "<<unsigned(owner)<<": flight setup missing\n";blocked=true;
+    }
+    for(unsigned flight_ticks=0;!blocked && state.pass_stage!=MatchPassStage::flight_arrived && flight_ticks<128;++flight_ticks)
+     advance({MatchInputKind::tick,0});
+    if(!blocked && state.pass_stage!=MatchPassStage::flight_arrived){std::cerr<<"owner "<<unsigned(owner)<<": pass flight did not arrive\n";blocked=true;}
+    if(!blocked)advance({MatchInputKind::presentation_complete,0});
+    if(!blocked)advance({MatchInputKind::tick,0});
+    if(!blocked && (state.session.phase!=FieldSessionPhase::control_ready || state.session.current.field.ball_owner!=target)){
+     std::cerr<<"owner "<<unsigned(owner)<<": recipient did not regain control\n";blocked=true;
+    }
     if(blocked){++failures;continue;}
-    std::cerr<<"owner "<<unsigned(owner)<<": pass flight/reception not complete\n";++failures;continue;
+    std::cout<<"owner "<<unsigned(owner)<<": provisional human possession cycle reached player "<<unsigned(target)<<" control\n";continue;
    }
    MatchInput request{MatchInputKind::action,3};request.action=MatchAction::pass;request.target=target;
    auto action=step_match(poll.state,request,content);
