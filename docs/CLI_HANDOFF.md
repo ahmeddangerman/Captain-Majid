@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 waited field round
+
+Opponent20's action2 field round matches the original E145 after 22 player updates and four NMI/travel waits interleaved within slot7 after a defender switch. The first slot uses the random state already advanced by the preceding clock. `CMJWORLDNMI3` records this ordering; `tools/verify_opponent20_wait_round.py` checks represented fields, retained cursor/flag, snapshot roundtrip and invalid ordering/replay rejection. Phase441 snapshot: `../Captain-Majid-analysis/opponent20-wait-field-v2-20261111/field.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Windows build, both old/new original replays and all 62 checks passed. Next compare subsequent opponent polls; timing and action selection remain supplied, a full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 action2 clock
 
 The captured opponent20 action2 now matches the original control clock through E407: clock126, random index32, saved phase440. Snapshot: `../Captain-Majid-analysis/opponent20-action-clock-v3-20261111/clock.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The following 22-player field round contains four extra wait frames interleaved with player updates; the current fixed 22-event field replay cannot express them. Trace their position and compare a faithful representation before continuing. Windows build, original replay and all 62 checks passed. Timing/AI remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

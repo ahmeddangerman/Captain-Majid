@@ -38,6 +38,12 @@ struct FieldRoundResult {
     std::vector<ControlPresentationRequest> presentation{};
     unsigned consumed_polls = 0, moved_players = 0, decayed_statuses = 0;
 };
+struct ObservedNmiWait {
+    ReferenceRandomInputs random{};
+    std::uint8_t travel_held = 0;
+    std::uint16_t travel_speed = 0;
+    std::optional<std::uint8_t> ball_mode_sample{};
+};
 struct ObservedNmiFieldPoll {
     LogicalButtons buttons{};
     ReferenceRandomInputs random{};
@@ -45,6 +51,8 @@ struct ObservedNmiFieldPoll {
     std::uint8_t travel_held = 0;
     std::uint16_t travel_speed = 0;
     std::optional<std::uint8_t> ball_mode_sample{};
+    bool random_observed = true;
+    std::vector<ObservedNmiWait> interleaved_waits{};
 };
 struct NmiFieldRoundResult {
     FieldRoundResult round;
