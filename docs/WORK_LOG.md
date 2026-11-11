@@ -1,5 +1,13 @@
 # Development log
 
+## 2026-11-11 - Later flight defenders and checkpoint history
+
+The provisional runtime now retains already-processed ordinary pass flight defenders, allowing a later defender's supported interception or deflection after earlier non-stopping contacts on either side. The original full defender prefix is restored on interception, contact elapsed time accumulates across defenders, and runtime checkpoint version 13 preserves the processed prefix. Earlier versions still load; when an older in-progress checkpoint lacks required defender history, the runtime rejects further contact atomically rather than inventing it. Invalid IDs, over-capacity prefixes and inconsistent elapsed state are rejected.
+
+Ten constructed original CPU later-defender cases matched through interception/deflection and control handoff: five opponent passes and five human passes, each with an initial weakening contact and intervened profiles for the second defender (two interceptions and three deflections on each side). Represented field/motion, selected prefix where retained, clock, power, recovery and experience were compared. Reproduce using `tools/check_opponent_pass_flight_contact_original.py --later-defenders` and `tools/check_human_pass_flight_original.py --later-defenders` with private inputs. This bounded evidence uses one arrival fixture per side, constructed players and acknowledged presentation, not live NMI/audio/rendering.
+
+The manual synthetic possession check now demonstrates a later-defender interception in addition to both sides' ordinary contested outcomes, but exits 1 on unsupported special defender rolls; the complete match and graphical input remain unfinished. Windows build/all 64 registered checks and Linux warnings-as-errors syntax passed; prior isolated full Linux Make attempts hit GCC/linker failures. Overall progress is unmeasured. Next trace special defender results, then address match startup/lifecycle and an interactive client. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Human-pass flight defender outcomes
 
 Extended the provisional ordinary-pass flight defender continuation to human passes using the same shared numerical path. Supported first-defender non-stopping results continue to the receiver; supported ordinary interceptions and interior-field deflections return to player control. Save/resume covers the represented arrival and handoff; special subtypes/move effects, later-defender terminal outcomes, selected story/goal-area/boundary branches and period transitions still reject. The legacy session retains the preflight ball position during a surviving human pass; `match_ball_view` remains the flight position until reception. Timing/random are provisional and presentation is acknowledged.

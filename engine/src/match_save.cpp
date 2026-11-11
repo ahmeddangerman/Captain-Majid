@@ -9,7 +9,7 @@
 namespace captain {
 namespace {
 constexpr char magic[]="CMJMATCH";
-constexpr std::uint8_t current_version=12;
+constexpr std::uint8_t current_version=13;
 constexpr std::uint32_t max_payload=1024*1024;
 void put(std::string& out,std::uint64_t n,unsigned bytes) {
  for(unsigned i=0;i<bytes;++i)out.push_back(static_cast<char>((n>>(8*i))&255));
@@ -47,6 +47,11 @@ void validate_runtime(const MatchRuntimeState& s) {
   throw std::invalid_argument("Invalid flight defender prefix");
  for(const auto id:s.flight_defenders)if((side==0 && (id<12 || id>21)) || (side==11 && (id<1 || id>10)))
   throw std::invalid_argument("Invalid flight defender ID");
+ const bool arrived=s.pass_stage==MatchPassStage::flight_arrived || (s.defense_menu && s.defense_menu->stage==MatchDefenseStage::ai_flight_arrived);
+ if(!s.processed_flight_defenders.empty() && (s.mode!=MatchTimingMode::provisional_demo || !arrived || (side!=0 && side!=11) || s.flight_defenders.empty() || s.flight_defenders.size()+s.processed_flight_defenders.size()>capacity || s.session.current.field.elapsed!=s.processed_flight_defenders.size()))
+  throw std::invalid_argument("Invalid processed flight defender prefix");
+ for(const auto id:s.processed_flight_defenders)if((side==0 && (id<12 || id>21)) || (side==11 && (id<1 || id>10)))
+  throw std::invalid_argument("Invalid processed flight defender ID");
  if(bool(s.pass_target)!=target || bool(s.pass_trajectory)!=flight || bool(s.pass_cell)!=flight ||
     (s.pass_stage!=MatchPassStage::none && (s.mode!=MatchTimingMode::provisional_demo || s.session.phase!=FieldSessionPhase::ordinary_pass_prepared)))
   throw std::invalid_argument("Inconsistent match pass state");
@@ -135,6 +140,7 @@ void write_match_save(std::ostream& output,const MatchRuntimeState& s,const Matc
  put(payload,s.defense_menu.has_value(),1);if(s.defense_menu){const auto& m=*s.defense_menu;put(payload,static_cast<unsigned>(m.stage),1);put(payload,m.poll.cursor,1);put(payload,m.poll.flash_counter,1);for(auto n:m.poll.defense.actions)put(payload,n,1);for(auto n:m.poll.defense.subtypes)put(payload,n,1);put(payload,m.poll.defense.blink,1);put(payload,m.poll.defense.pressed,1);put(payload,m.attack_cost.has_value(),1);if(m.attack_cost)put(payload,*m.attack_cost,2);put(payload,m.ai_pass_target.has_value(),1);if(m.ai_pass_target){put(payload,m.ai_pass_target->recipient,1);put(payload,m.ai_pass_target->cell,1);}put(payload,m.ai_pass_distance.has_value(),1);if(m.ai_pass_distance)put(payload,*m.ai_pass_distance,1);put(payload,m.defender_count,1);put(payload,m.ai_trajectory.has_value(),1);if(m.ai_trajectory){const auto& t=*m.ai_trajectory;for(auto n:{t.x,t.y,t.vx,t.vy})put(payload,n,2);put(payload,t.direction,1);put(payload,t.flags,1);}put(payload,m.ai_ball_cell.has_value(),1);if(m.ai_ball_cell)put(payload,*m.ai_ball_cell,1);}
  put(payload,s.target_chooser.has_value(),1);if(s.target_chooser)put(payload,s.target_chooser->index,1);
  put(payload,s.flight_defenders.size(),1);for(const auto id:s.flight_defenders)put(payload,id,1);
+ put(payload,s.processed_flight_defenders.size(),1);for(const auto id:s.processed_flight_defenders)put(payload,id,1);
  if(payload.size()>max_payload)throw std::invalid_argument("Match save is too large");
  std::string header(magic,sizeof(magic)-1);put(header,current_version,1);put(header,payload.size(),4);put(header,checksum(payload),4);
  output.write(header.data(),header.size());output.write(payload.data(),payload.size());
@@ -174,6 +180,7 @@ MatchRuntimeState load_match_save(std::istream& input,const MatchContentIdentity
  if(version<10 && s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>static_cast<unsigned>(MatchDefenseStage::ai_flight_ready))throw std::invalid_argument("Unsupported saved opponent flight progression");
  if(version>=11 && r.flag())s.target_chooser=MatchTargetChooser{static_cast<std::uint8_t>(r.get(1))};
  if(version>=12){const auto count=r.get(1);if(count>5)throw std::invalid_argument("Invalid flight defender count");for(unsigned i=0;i<count;++i)s.flight_defenders.push_back(static_cast<std::uint8_t>(r.get(1)));}
+ if(version>=13){const auto count=r.get(1);if(count>5)throw std::invalid_argument("Invalid processed flight defender count");for(unsigned i=0;i<count;++i)s.processed_flight_defenders.push_back(static_cast<std::uint8_t>(r.get(1)));}
  if(r.pos!=payload.size())throw std::invalid_argument("Unexpected match save data");
  validate_runtime(s);return s;
 }

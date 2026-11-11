@@ -55,12 +55,13 @@ def main():
     p = argparse.ArgumentParser(description=__doc__)
     for name in ('rom', 'ready', 'pack', 'exe', 'private-temp'):
         p.add_argument('--' + name, type=Path, required=True)
+    p.add_argument('--later-defenders', action='store_true', help='Also compare terminal outcomes after an earlier defender')
     args = p.parse_args(); rom, ready = args.rom.read_bytes(), args.ready.read_bytes()
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256 or len(ready) != 2048:
         p.error('Expected verified ROM and private 2048-byte ready RAM')
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):
         p.error('Private temporary data must stay outside the checkout')
-    prg = rom[16:262160]; base, registers = entry(prg, ready); cases = {}
+    prg = rom[16:262160]; base, registers = entry(prg, ready); cases = {}; later_cases = {}
     with tempfile.TemporaryDirectory(prefix='human-pass-flight-', dir=args.private_temp) as temp:
         before_raw, before_session, after_session = (Path(temp) / name for name in ('before.bin', 'before.cmjsession', 'after.cmjsession'))
         for kind in (1, 23, 70):
@@ -98,7 +99,37 @@ def main():
                     if result.returncode:
                         raise RuntimeError(f'profile={kind}, power={power}, random={(first, second)}, result={code}: {result.stderr}')
                     cases[code] = cases.get(code, 0) + 1
+        if args.later_defenders:
+            for kind in (1, 7, 23, 35, 70):
+                raw = bytearray(base);raw[0x600],raw[0x601],raw[0x602] = 2,12,13
+                raw[0x300+12*12],raw[0x303+12*12] = 23,0
+                raw[0x300+12*13],raw[0x303+12*13] = kind,0
+                raw[0x306+12*12],raw[0x308+12*12],raw[0x30a+12*12] = 100,124,0
+                raw[0x306+12*13],raw[0x308+12*13],raw[0x30a+12*13] = 104,124,0
+                raw[0xe2],raw[0xe3],raw[0x61c],raw[0x61d] = 122,176,6,0
+                memory = ObservedCartridge(prg,bytes(raw),None,set());memory.select=memory[0x23];memory.registers[6:8]=[26,27]
+                cpu = MPU(memory=memory);cpu.pc=0x8845;cpu.sp,cpu.p,cpu.a,cpu.x,cpu.y=registers;results=[]
+                for _ in range(3000000):
+                    bank = memory.bank_at(cpu.pc)
+                    if bank==26 and cpu.pc==0x8870:
+                        if memory[0x43e]:raise RuntimeError('Later human defender unexpectedly used a special subtype')
+                        results.append(cpu.y)
+                    if bank==30 and cpu.pc==0xc60f:break
+                    if cpu.pc<0x8000:raise RuntimeError(f'Original later human defender left PRG at {cpu.pc:04x}')
+                    if cpu.pc==0xcaae:
+                        memory.instruction=None;memory[0x1b]|=128;memory[0x515]=0;memory[0x1c]=memory[0x1e]=128
+                        if memory[0x498]:memory[0x498]-=1
+                    memory.instruction=(bank,cpu.pc);cpu.step()
+                else:raise RuntimeError('Later human defender exceeded instruction limit')
+                if len(results)!=2 or results[0]!=1 or results[1] not in (2,3):raise RuntimeError(f'Unexpected later human defender results {results}')
+                before_raw.write_bytes(raw);before_session.write_bytes(export_session(raw));after_session.write_bytes(export_session(bytes(memory.ram[:2048])))
+                command=[str(args.exe.resolve()),'--compare-human-flight-contact',str(before_session),str(after_session),str(args.pack.resolve()),str(before_raw),str(results[1])]
+                result=subprocess.run(command,capture_output=True,text=True)
+                if result.returncode:raise RuntimeError(f'later human defender profile={kind}, results={results}: {result.stderr}')
+                later_cases[results[1]]=later_cases.get(results[1],0)+1
     print(f'{sum(cases.values())} constructed human-pass defender outcomes matched original; result counts {cases}')
+    if args.later_defenders:
+        print(f'{sum(later_cases.values())} later human-pass defender outcomes matched original; result counts {later_cases}')
 
 
 if __name__ == '__main__':
