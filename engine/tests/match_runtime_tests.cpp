@@ -1,4 +1,5 @@
 #include "captain/match_runtime.hpp"
+#include "captain/match_save.hpp"
 #include "captain/phase_session_io.hpp"
 #include "captain/field_state_io.hpp"
 #include "captain/defender_selection.hpp"
@@ -269,6 +270,40 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  assert(!crossing.unsupported && crossing.state.pass_cell && *crossing.state.pass_cell!=flight.state.session.current.field.ball_cell);
  assert(crossing.state.pass_stage==MatchPassStage::flight_cell || crossing.state.pass_stage==MatchPassStage::flight_arrived);
  assert(flight.state.pass_stage==MatchPassStage::flight_ready && flight.state.last_sequence==12);
+ MatchContentIdentity identity{};identity[0]=42;
+ const MatchContentIdentity known_identity{{0x68,0x76,0x27,0x7d,0xbe,0xf7,0x26,0xc2,0xcb,0xd8,0x41,0x99,0xda,0xb2,0x7b,0xf8,0x02,0xe6,0x03,0x55,0x6d,0xd6,0x26,0xee,0xd2,0x0c,0x04,0x54,0xeb,0xd5,0x00,0x14}};
+ assert(match_content_identity("abc",{}, {})==known_identity);
+ assert(match_content_identity("abc",std::string{}, {})!=known_identity);
+ const MatchContentIdentity long_identity{{0xf2,0xb3,0x8a,0x7e,0x55,0x5b,0x29,0xea,0x1a,0xc6,0xcc,0x08,0x30,0x9e,0xb6,0x72,0xf0,0x3d,0xa0,0x2c,0x7e,0x5f,0x54,0x71,0xad,0x88,0xb2,0xe2,0x06,0xed,0xfb,0x49}};
+ assert(match_content_identity(std::string(1000,'a'),std::string("xy"),std::string("z"))==long_identity);
+ auto verify_checkpoint=[&](const MatchRuntimeState& state) {
+  std::ostringstream before(std::ios::binary);write_match_save(before,state,identity);
+  std::istringstream in(before.str(),std::ios::binary);auto restored=load_match_save(in,identity);
+  std::ostringstream after(std::ios::binary);write_match_save(after,restored,identity);
+  assert(before.str()==after.str());return restored;
+ };
+ verify_checkpoint(c1.state);verify_checkpoint(prepared.state);verify_checkpoint(handoff.state);
+ verify_checkpoint(target_result.state);verify_checkpoint(flight.state);
+ crossing.state.random_memory.bytes[17]=77;crossing.state.random_memory.known[17]=true;
+ std::ostringstream checkpoint(std::ios::binary);write_match_save(checkpoint,crossing.state,identity);
+ std::istringstream resume_stream(checkpoint.str(),std::ios::binary);auto restored_match=load_match_save(resume_stream,identity);
+ assert(restored_match.last_sequence==crossing.state.last_sequence && restored_match.demo_rng==crossing.state.demo_rng);
+ assert(restored_match.pass_stage==crossing.state.pass_stage && restored_match.pass_target->recipient==6);
+ assert(restored_match.pass_trajectory->x==crossing.state.pass_trajectory->x && restored_match.pass_cell==crossing.state.pass_cell);
+ assert(restored_match.random_memory.known[17] && restored_match.random_memory.bytes[17]==77);
+ auto uninterrupted=step_match(crossing.state,{MatchInputKind::tick,14},content);
+ auto continued=step_match(restored_match,{MatchInputKind::tick,14},content);
+ assert(uninterrupted.unsupported==continued.unsupported && uninterrupted.state.pass_stage==continued.state.pass_stage);
+ assert(uninterrupted.state.pass_trajectory->x==continued.state.pass_trajectory->x);
+ assert(step_match(restored_match,{MatchInputKind::tick,13},content).unsupported==UnsupportedCapability::input_sequence);
+ auto damaged=checkpoint.str();damaged[damaged.size()/2]^=1;
+ bool reject_corruption=false;try {std::istringstream bad(damaged,std::ios::binary);load_match_save(bad,identity);}catch(const std::invalid_argument&){reject_corruption=true;}assert(reject_corruption);
+ bool reject_truncated=false;try {std::istringstream bad(checkpoint.str().substr(0,checkpoint.str().size()-1),std::ios::binary);load_match_save(bad,identity);}catch(const std::invalid_argument&){reject_truncated=true;}assert(reject_truncated);
+ auto wrong_identity=identity;wrong_identity[0]++;
+ bool reject_content=false;try {std::istringstream bad(checkpoint.str(),std::ios::binary);load_match_save(bad,wrong_identity);}catch(const std::invalid_argument&){reject_content=true;}assert(reject_content);
+ bool reject_extra=false;try {std::istringstream bad(checkpoint.str()+"x",std::ios::binary);load_match_save(bad,identity);}catch(const std::invalid_argument&){reject_extra=true;}assert(reject_extra);
+ auto invalid_saved=crossing.state;invalid_saved.pass_target.reset();
+ bool reject_inconsistent=false;try {std::ostringstream bad(std::ios::binary);write_match_save(bad,invalid_saved,identity);}catch(const std::invalid_argument&){reject_inconsistent=true;}assert(reject_inconsistent);
  auto visible=match_ball_view(crossing.state);
  assert(visible.in_flight && visible.x==(crossing.state.pass_trajectory->x>>8) && visible.y==(crossing.state.pass_trajectory->y>>8) && visible.cell==*crossing.state.pass_cell);
  auto stationary=match_ball_view(c1.state);assert(!stationary.in_flight && stationary.x==c1.state.session.current.field.ball_x);
@@ -282,11 +317,16 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
   assert(blocked.unsupported==UnsupportedCapability::defender_contact && blocked.state.last_sequence==13);
  }
  auto flight_state=crossing.state;std::uint64_t seq=14;
+ auto resumed_flight=restored_match;
  for(;flight_state.pass_stage!=MatchPassStage::flight_arrived && seq<150;++seq){
   auto advance=step_match(flight_state,{MatchInputKind::tick,seq},content);
-  assert(!advance.unsupported);flight_state=advance.state;
+  auto resume_advance=step_match(resumed_flight,{MatchInputKind::tick,seq},content);
+  assert(!advance.unsupported && !resume_advance.unsupported);flight_state=advance.state;resumed_flight=resume_advance.state;
+  std::ostringstream left(std::ios::binary),right(std::ios::binary);
+  write_match_save(left,flight_state,identity);write_match_save(right,resumed_flight,identity);assert(left.str()==right.str());
  }
  assert(flight_state.pass_stage==MatchPassStage::flight_arrived);
+ verify_checkpoint(flight_state);
  auto before_reception=step_match(flight_state,{MatchInputKind::tick,seq},content);
  assert(before_reception.unsupported==UnsupportedCapability::presentation && before_reception.state.last_sequence==flight_state.last_sequence);
  auto wrong_target=flight_state;wrong_target.pass_target->recipient=5;
@@ -297,7 +337,11 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  auto unsupported_reception=step_match(moved_recipient,{MatchInputKind::presentation_complete,seq},content);
  assert(unsupported_reception.unsupported==UnsupportedCapability::phase && unsupported_reception.state.last_sequence==flight_state.last_sequence);
  auto received=step_match(flight_state,{MatchInputKind::presentation_complete,seq},content);
+ auto resumed_received=step_match(resumed_flight,{MatchInputKind::presentation_complete,seq},content);
  assert(!received.unsupported && received.state.session.phase==FieldSessionPhase::player_control && received.state.session.current.field.ball_owner==6);
+ assert(!resumed_received.unsupported);verify_checkpoint(received.state);
+ std::ostringstream final_left(std::ios::binary),final_right(std::ios::binary);
+ write_match_save(final_left,received.state,identity);write_match_save(final_right,resumed_received.state,identity);assert(final_left.str()==final_right.str());
  assert(!received.state.session.ordinary_pass_recipient && !received.state.pass_trajectory && received.state.ball_fraction);
  auto stale_input=pre;stale_input.current.field.ball_x=116;
  MatchRuntimeState stale{stale_input,0};stale.ball_fraction=MatchBallFraction{5,9};

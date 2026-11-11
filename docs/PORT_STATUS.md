@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - 2026-11-11 runtime checkpoints:** Versioned development save/resume now preserves represented session, runtime random state, input sequence and pass flight, and checks content identity and corruption. Synthetic continued-flight and private CLI split-run tests passed, as did the Windows build and 64 registered checks; Linux syntax checked with warnings as errors. The CLI only advances neutral ticks, the saved session is not a complete original game state, and opponent defensive decisions/AI, a graphical client and a complete match remain unfinished. Overall progress is unmeasured; see CLI_HANDOFF and WORK_LOG.
+
 **Latest runtime checkpoint (2026-11-11):** Two synthetic human-side possession cycles complete in the opt-in provisional mode. Eight constructed original CPU cases match bounded flight/reception, but timing/field movement differ and opponent defense/AI remain unsupported. Full match unverified; progress unmeasured.
 
 **Latest runtime checkpoint (2026-11-11):** Opt-in provisional human passing reaches unopposed teammate target calculation. Eight controlled constructed original cases match target/distance; flight and opponent AI remain unsupported, full match unverified and progress unmeasured.
