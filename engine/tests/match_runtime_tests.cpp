@@ -12,6 +12,56 @@
 #include <string>
 static int comparisons(int argc,char** argv) {
  using namespace captain;
+ if(argc==6 && std::string(argv[1])=="--compare-free-arrival") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),raw_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);std::array<unsigned char,2048> raw{};
+  if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing original free-pass arrival");
+  MatchContent content{};content.data=load_shot_content(pack_file);const auto owner=before.current.field.ball_owner;
+  PhaseSessionState session{};session.current=before.current;session.experience=before.experience;session.recovery=before.recovery;session.control=before.control;session.scheduling=before.scheduling;session.action=before.action;
+  const auto& carrier=session.current.field.motion[field_motion_index(owner)];session.current.field.ball_x=carrier.x>>8;session.current.field.ball_y=carrier.y>>8;
+  session.current.field.ball_cell=field_cell_at(session.current.field.ball_x,session.current.field.ball_y);session.current.field.selected_defenders=0;
+  session.phase=FieldSessionPhase::ordinary_pass_prepared;session.human_pass_cursor=raw[0x638];session.ordinary_pass_candidates=OrdinaryPassCandidateContext{};
+  session.ordinary_pass_candidates->scanned=true;session.ordinary_pass_recipient=255;session.ordinary_pass_defenses=OrdinaryPassDefenseContext{};session.saved_ball_flight_flag=raw[0x61b];
+  const auto word=[&](unsigned at){return static_cast<std::uint16_t>(raw[at]|(unsigned(raw[at+1])<<8));};
+  MatchRuntimeState state{};state.session=session;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;state.pass_stage=MatchPassStage::flight_arrived;
+  state.pass_target=MatchPassTarget{255,raw[0x638],raw[0x61a],raw[0x62b]};state.pass_cell=raw[0x5fe];
+  state.pass_trajectory=BallTrajectoryContext{word(0x634),word(0x636),word(0x639),word(0x63b),raw[0x62c],raw[0x61b]};
+  auto result=step_match(state,{MatchInputKind::presentation_complete,1},content);
+  if(result.unsupported)throw std::runtime_error(std::string("Original free-pass contest unsupported: ")+capability_name(*result.unsupported));
+  if(result.state.session.phase!=FieldSessionPhase::player_control)throw std::runtime_error("Original free-pass contest did not return control");
+  std::ostringstream actual_field(std::ios::binary),expected_field(std::ios::binary);write_field_state(actual_field,result.state.session.current.field);write_field_state(expected_field,expected.current.field);
+  if(actual_field.str()!=expected_field.str()){for(std::size_t i=0;i<actual_field.str().size();++i)if(actual_field.str()[i]!=expected_field.str()[i])throw std::runtime_error("Original free-pass contest field differs at byte "+std::to_string(i));}
+  const auto& a=result.state.session.current;const auto& e=expected.current;
+  if(a.clock.remaining!=e.clock.remaining || a.clock.extra_time!=e.clock.extra_time || a.clock.flags!=e.clock.flags || a.clock.script_flags!=e.clock.script_flags || a.clock.ball_mode!=e.clock.ball_mode || a.shared_recovery_flags!=e.shared_recovery_flags || a.shared_recovery_timer!=e.shared_recovery_timer || result.state.session.action->power!=expected.action->power || result.state.session.experience->totals!=expected.experience->totals)throw std::runtime_error("Original free-pass contest clock or experience differs");
+  return 0;
+ }
+ if(argc==5 && std::string(argv[1])=="--compare-free-race") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  if(!before.shot_flight || !before.ball_trajectory || !before.area_ai_target || before.area_ai_target->recipient!=255 || !content.data->pass_race)throw std::runtime_error("Missing original free-pass flight context");
+  PhaseSessionState session{};session.current=before.current;session.experience=before.experience;session.recovery=before.recovery;session.control=before.control;session.scheduling=before.scheduling;session.action=before.action;
+  const auto owner=session.current.field.ball_owner;const auto& player=session.current.field.motion[field_motion_index(owner)];
+  session.current.field.ball_x=player.x>>8;session.current.field.ball_y=player.y>>8;session.current.field.ball_cell=field_cell_at(session.current.field.ball_x,session.current.field.ball_y);session.current.field.selected_defenders=0;
+  session.phase=FieldSessionPhase::ordinary_pass_prepared;session.human_pass_cursor=before.shot_flight->destination;session.ordinary_pass_candidates=OrdinaryPassCandidateContext{};
+  session.ordinary_pass_recipient=255;session.ordinary_pass_defenses=OrdinaryPassDefenseContext{};session.saved_ball_flight_flag=before.saved_ball_flight_flag;
+  MatchRuntimeState state{};state.session=session;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;state.pass_stage=MatchPassStage::flight_ready;
+  state.pass_target=MatchPassTarget{255,before.shot_flight->destination,before.shot_flight->counter,before.shot_flight->distance};state.pass_trajectory=*before.ball_trajectory;state.pass_cell=before.current.field.ball_cell;
+  for(std::uint64_t seq=1;state.pass_stage!=MatchPassStage::flight_arrived && seq<150;++seq){auto next=step_match(state,{MatchInputKind::tick,seq},content);if(next.unsupported)throw std::runtime_error("Original free pass flight unsupported");state=next.state;}
+  if(state.pass_stage!=MatchPassStage::flight_arrived)throw std::runtime_error("Original free pass did not arrive");
+  auto result=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);
+  if(result.unsupported || result.state.session.phase!=FieldSessionPhase::player_control)throw std::runtime_error("Original free race unsupported");
+  std::ostringstream actual_field(std::ios::binary),expected_field(std::ios::binary);write_field_state(actual_field,result.state.session.current.field);write_field_state(expected_field,expected.current.field);
+  if(actual_field.str()!=expected_field.str()){for(std::size_t i=0;i<actual_field.str().size();++i)if(actual_field.str()[i]!=expected_field.str()[i])throw std::runtime_error("Original free race field differs at byte "+std::to_string(i));}
+  if(result.state.session.current.clock.remaining!=expected.current.clock.remaining || result.state.session.experience->totals!=expected.experience->totals || result.state.session.action->power!=expected.action->power)
+   throw std::runtime_error("Original free race clock, experience or power differs");
+  return 0;
+ }
+ if(argc==4 && std::string(argv[1])=="--compare-race-pack") {
+  std::ifstream pack_file(argv[2],std::ios::binary),table(argv[3]);auto pack=load_shot_content(pack_file);
+  if(!pack.pass_race)throw std::runtime_error("Missing pass race content");
+  for(const auto& pair:pack.pass_race->speeds)for(const auto speed:pair){unsigned expected;if(!(table>>expected) || expected!=speed)throw std::runtime_error("Pass race speed differs from original exporter");}
+  std::string extra;if(table>>extra)throw std::runtime_error("Unexpected race table content");return 0;
+ }
  if(argc==7 && std::string(argv[1])=="--compare-human-flight-contact") {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary),raw_file(argv[5],std::ios::binary);
   auto source=load_phase_session(before_file),expected=load_phase_session(after_file);std::array<unsigned char,2048> raw{};
@@ -401,8 +451,8 @@ static int comparisons(int argc,char** argv) {
   MatchContent target_content{};target_content.data=ShotContent{};target_content.pass_distance=read_pass_distance_content(distance_file);
   const auto recipient=original[0x5fc];source.phase=FieldSessionPhase::ordinary_pass_prepared;source.human_pass_steps=0;
   source.ordinary_pass_candidates=OrdinaryPassCandidateContext{};source.ordinary_pass_candidates->scanned=true;
-  source.ordinary_pass_candidates->candidates.count=1;source.ordinary_pass_candidates->candidates.allied_count=1;
-  source.ordinary_pass_candidates->candidates.ids[0]=recipient;source.ordinary_pass_recipient=recipient;
+  if(recipient==255)source.human_pass_cursor=original[0x638];else {source.ordinary_pass_candidates->candidates.count=1;source.ordinary_pass_candidates->candidates.allied_count=1;source.ordinary_pass_candidates->candidates.ids[0]=recipient;}
+  source.ordinary_pass_recipient=recipient;
   source.ordinary_pass_defenses=OrdinaryPassDefenseContext{};
   MatchRuntimeState state{};state.session=source;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;state.pass_stage=MatchPassStage::handoff;
   const auto result=step_match(state,{MatchInputKind::tick,1},target_content);
@@ -473,6 +523,31 @@ static int comparisons(int argc,char** argv) {
 struct DeferredDefendedTest { captain::MatchRuntimeState state;captain::MatchContent content;std::uint64_t seq;captain::MatchContentIdentity identity; };
 static std::unique_ptr<DeferredDefendedTest> deferred_defended_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_human_defended_test;
+static std::unique_ptr<DeferredDefendedTest> deferred_free_pass_test;
+static void test_free_pass(const captain::MatchRuntimeState& base,const captain::MatchContent& original,std::uint64_t seq,const captain::MatchContentIdentity& identity) {
+ using namespace captain;
+ auto content=original;auto state=base;state.ball_fraction=MatchBallFraction{5,9};
+ auto target=step_match(state,{MatchInputKind::tick,seq},content);
+ assert(!target.unsupported && target.state.pass_target && target.state.pass_target->recipient==255);
+ std::ostringstream bytes(std::ios::binary);write_match_save(bytes,target.state,identity);std::istringstream saved(bytes.str(),std::ios::binary);state=load_match_save(saved,identity);
+ auto next=step_match(state,{MatchInputKind::tick,seq+1},content);assert(!next.unsupported);state=next.state;
+ for(std::uint64_t turn=seq+2;state.pass_stage!=MatchPassStage::flight_arrived && turn<seq+150;++turn){next=step_match(state,{MatchInputKind::tick,turn},content);assert(!next.unsupported);state=next.state;}
+ assert(state.pass_stage==MatchPassStage::flight_arrived);
+ auto missing=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);assert(missing.unsupported==UnsupportedCapability::content);
+ auto race=std::make_shared<ClearanceRaceContent>();content.data->pass_race=race;
+ content.data->movement->profiles.speeds.resize(1);state.session.current.field.roster[1].type=1;state.session.current.field.roster[12].type=1;
+ for(unsigned id=1;id<=21;++id)if(id!=11 && id!=state.session.current.field.ball_owner){auto& p=state.session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];p.x=52u<<8;p.y=84u<<8;p.status=0;}
+ auto timeout=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);
+ assert(timeout.unsupported==UnsupportedCapability::action && timeout.state.last_sequence==state.last_sequence && timeout.state.pass_stage==MatchPassStage::flight_arrived);
+ auto opposing=state;auto& away=opposing.session.current.field.motion[field_motion_index(12)];away.x=opposing.pass_trajectory->x;away.y=opposing.pass_trajectory->y;
+ auto unsupported_winner=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);
+ assert(unsupported_winner.unsupported==UnsupportedCapability::action && unsupported_winner.state.last_sequence==opposing.last_sequence);
+ auto& winner=state.session.current.field.motion[field_motion_index(1)];winner.x=state.pass_trajectory->x;winner.y=state.pass_trajectory->y;winner.status=0;
+ auto result=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);
+ assert(!result.unsupported && result.state.session.phase==FieldSessionPhase::player_control && result.state.session.current.field.ball_owner==1);
+ auto control=step_match(result.state,{MatchInputKind::tick,result.state.last_sequence+1},content);
+ assert(!control.unsupported && control.state.session.phase==FieldSessionPhase::control_ready);
+}
 static void test_human_defended_arrival(const captain::MatchRuntimeState& base,const captain::MatchContent& original,std::uint64_t seq,const captain::MatchContentIdentity& identity) {
  using namespace captain;
  auto content=original;auto arrival=base;arrival.flight_defenders={12};arrival.session.action->power=30;
@@ -649,6 +724,9 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  auto missing_distance=step_match(recipient_state,{MatchInputKind::tick,11},content);
  assert(missing_distance.unsupported==UnsupportedCapability::content && missing_distance.state.last_sequence==10);
  content.pass_distance=PassDistanceContent{};content.pass_distance->values.fill(4);
+ static MatchStepResult free_target;
+ free_target=step_match(handoff.state,{MatchInputKind::tick,11},content);
+ assert(!free_target.unsupported && free_target.state.pass_target && free_target.state.pass_target->recipient==255 && free_target.state.pass_target->destination==*handoff.state.session.human_pass_cursor);
  auto target_result=step_match(recipient_state,{MatchInputKind::tick,11},content);
  assert(!target_result.unsupported && target_result.state.pass_stage==MatchPassStage::target_ready && target_result.state.pass_target);
  assert(target_result.state.pass_target->recipient==6 && target_result.state.pass_target->destination==field_cell_at(140,124) && target_result.state.pass_target->distance==4 && target_result.state.pass_target->counter==255);
@@ -740,6 +818,8 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
   write_match_save(left,flight_state,identity);write_match_save(right,resumed_flight,identity);assert(left.str()==right.str());
  }
  assert(flight_state.pass_stage==MatchPassStage::flight_arrived);
+ deferred_free_pass_test=std::make_unique<DeferredDefendedTest>();deferred_free_pass_test->state=handoff.state;
+ deferred_free_pass_test->content=content;deferred_free_pass_test->seq=11;deferred_free_pass_test->identity=identity;
  deferred_human_defended_test=std::make_unique<DeferredDefendedTest>();deferred_human_defended_test->state=flight_state;
  deferred_human_defended_test->content=content;deferred_human_defended_test->seq=seq;deferred_human_defended_test->identity=identity;
  verify_checkpoint(flight_state);
@@ -1051,5 +1131,6 @@ int main(int argc,char** argv) {
  const auto result=regular_tests();
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);
+ test_free_pass(deferred_free_pass_test->state,deferred_free_pass_test->content,deferred_free_pass_test->seq,deferred_free_pass_test->identity);
  return result;
 }

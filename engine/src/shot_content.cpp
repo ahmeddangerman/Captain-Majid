@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -239,6 +239,11 @@ ShotContent load_shot_content(std::istream& input) {
         pass.range=reader.byte();pass.offset=reader.byte();pass.eligibility=reader.byte();reader.bytes(pass.thresholds);
         if(!pass.range)throw std::invalid_argument("Invalid pass-flight comparison range");
         classify_score(0,pass.thresholds);
+    }
+    if(version>='O') {
+        auto race=std::make_shared<ClearanceRaceContent>();
+        for(auto& pair:race->speeds)for(auto& speed:pair)speed=reader.word();
+        content.pass_race=std::move(race);
     }
     reader.end();
     return content;

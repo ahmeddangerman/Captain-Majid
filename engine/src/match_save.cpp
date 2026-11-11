@@ -56,7 +56,7 @@ void validate_runtime(const MatchRuntimeState& s) {
     (s.pass_stage!=MatchPassStage::none && (s.mode!=MatchTimingMode::provisional_demo || s.session.phase!=FieldSessionPhase::ordinary_pass_prepared)))
   throw std::invalid_argument("Inconsistent match pass state");
  if(target && (!s.session.ordinary_pass_recipient || s.pass_target->recipient!=*s.session.ordinary_pass_recipient ||
-    s.pass_target->recipient<1 || s.pass_target->recipient>10 || s.pass_target->destination>=240 || s.pass_target->counter!=255))
+    (s.pass_target->recipient!=255 && (s.pass_target->recipient<1 || s.pass_target->recipient>10)) || s.pass_target->destination>=240 || s.pass_target->counter!=255))
   throw std::invalid_argument("Invalid match pass target");
  if(flight && (*s.pass_cell>=240 || s.pass_trajectory->flags!=1 || !s.session.saved_ball_flight_flag))
   throw std::invalid_argument("Invalid match flight state");

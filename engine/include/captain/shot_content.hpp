@@ -10,7 +10,9 @@
 #include "captain/control_tick.hpp"
 #include "captain/action_menu.hpp"
 #include "captain/ai_action_candidate.hpp"
+#include "captain/clearance_race.hpp"
 #include <istream>
+#include <memory>
 #include <optional>
 
 namespace captain {
@@ -32,6 +34,7 @@ struct ShotContent {
     std::optional<ShotApproachContent> approach{};
     std::optional<FlightContactContent> flight{};
     std::optional<PassFlightComparisonContent> pass_flight_comparison{};
+    std::shared_ptr<const ClearanceRaceContent> pass_race{};
     std::optional<FieldPhaseContent> movement{};
     std::optional<ContactPreludeContent> contact{};
     std::optional<ExperienceContent> experience{};

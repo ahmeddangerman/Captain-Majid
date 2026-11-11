@@ -91,6 +91,26 @@ MatchStepResult resolve_pass_flight_contact(const MatchRuntimeState& input,const
     } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::defender_contact;return result;}
 
 }
+MatchStepResult resolve_free_pass_arrival(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+
+   if(!content.data->pass_race || !content.data->movement || !input.session.recovery){result.unsupported=UnsupportedCapability::content;return result;}
+   try {
+    auto next=input;auto& session=next.session;const auto trajectory=*next.pass_trajectory;
+    session.current.field.ball_x=static_cast<std::uint8_t>(trajectory.x>>8);session.current.field.ball_y=static_cast<std::uint8_t>(trajectory.y>>8);session.current.field.ball_cell=*next.pass_cell;
+    auto race=resolve_field_loose_ball_race(session.current.field,session.recovery->opposing_player,next.pass_target->distance,content.data->field_players,*content.data->movement,*content.data->pass_race);
+    if(race.rounds>3 || !race.winner || *race.winner<1 || *race.winner>10){result.unsupported=UnsupportedCapability::action;return result;}
+    session.current.field=std::move(race.field);auto& field=session.current.field;field.ball_owner=*race.winner;
+    auto& player=field.motion[field_motion_index(*race.winner)];player.x=static_cast<std::uint16_t>((player.x&255u)|(unsigned(field.ball_x)<<8));player.y=static_cast<std::uint16_t>((player.y&255u)|(unsigned(field.ball_y)<<8));
+    if((field.ball_y>=96 && field.ball_y<160 && (field.ball_x<80 || field.ball_x>=176)) || (session.recovery->game_mode==4 && field.roster[field.ball_owner].type!=1 && field.ball_x>=128)){result.unsupported=UnsupportedCapability::action;return result;}
+    session.phase=FieldSessionPhase::player_control;session.human_pass_cursor.reset();session.human_pass_steps=0;
+    session.ordinary_pass_candidates.reset();session.ordinary_pass_recipient.reset();session.ordinary_pass_defenses.reset();
+    next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(trajectory.x),static_cast<std::uint8_t>(trajectory.y)};
+    next.pass_target.reset();next.pass_trajectory.reset();next.pass_cell.reset();next.pass_stage=MatchPassStage::none;
+    next.last_sequence=event.sequence;validate_phase_session(session);project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
+   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::action;return result;}
+
+}
 }
 const char* capability_name(UnsupportedCapability c) {
  switch(c) {case UnsupportedCapability::content:return "content";case UnsupportedCapability::initialization:return "match initialization";case UnsupportedCapability::input_sequence:return "input sequence";case UnsupportedCapability::ball_fraction:return "ball fractional position is unknown";case UnsupportedCapability::random_state:return "random index is not present in development snapshot";case UnsupportedCapability::timing:return "live timing and random scheduling";case UnsupportedCapability::action:return "action routing";case UnsupportedCapability::defender_contact:return "pass-flight defender contact";case UnsupportedCapability::defensive_prompt:return "opponent contact defensive prompt";case UnsupportedCapability::opponent_action:return "opponent attack choice";case UnsupportedCapability::opponent_execution:return "opponent attack execution and defensive resolution";case UnsupportedCapability::period_transition:return "period or added-time transition";case UnsupportedCapability::presentation:return "presentation completion";case UnsupportedCapability::phase:return "session phase";} return "unknown";
@@ -392,13 +412,13 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   if(!content.pass_distance){result.unsupported=UnsupportedCapability::content;return result;}
   const auto& field=input.session.current.field;
   if(field.elapsed || !input.session.ordinary_pass_recipient || !input.session.human_pass_cursor ||
-     *input.session.ordinary_pass_recipient==255 || *input.session.ordinary_pass_recipient<1 || *input.session.ordinary_pass_recipient>10) {
+     (*input.session.ordinary_pass_recipient!=255 && (*input.session.ordinary_pass_recipient<1 || *input.session.ordinary_pass_recipient>10))) {
    result.unsupported=UnsupportedCapability::phase;return result;
   }
   const auto recipient=*input.session.ordinary_pass_recipient;
-  const auto& player=field.motion[field_motion_index(recipient)];
+  const auto* player=recipient==255 ? nullptr : &field.motion[field_motion_index(recipient)];
   const auto destination=resolve_pass_target_cell(recipient,*input.session.human_pass_cursor,
-      static_cast<std::uint8_t>(player.x>>8),static_cast<std::uint8_t>(player.y>>8));
+      player ? static_cast<std::uint8_t>(player->x>>8) : 0,player ? static_cast<std::uint8_t>(player->y>>8) : 0);
   if(destination==255){result.unsupported=UnsupportedCapability::action;return result;}
   const auto distance=calculate_pass_distance(field.ball_x,field.ball_y,destination,*content.pass_distance);
   result.state.pass_target=MatchPassTarget{recipient,destination,255,distance};
@@ -455,6 +475,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
      input.pass_target->recipient!=*input.session.ordinary_pass_recipient || input.pass_target->counter!=255 || input.pass_trajectory->flags!=1 ||
      *input.pass_cell!=input.pass_target->destination || input.session.current.field.selected_defenders){result.unsupported=UnsupportedCapability::phase;return result;}
   const auto recipient=input.pass_target->recipient;
+  if(recipient==255)return resolve_free_pass_arrival(input,event,content);
   if(recipient<1 || recipient>10){result.unsupported=UnsupportedCapability::action;return result;}
   const auto& player=input.session.current.field.motion[field_motion_index(recipient)];
   const auto x=static_cast<std::uint8_t>(input.pass_trajectory->x>>8),y=static_cast<std::uint8_t>(input.pass_trajectory->y>>8);
