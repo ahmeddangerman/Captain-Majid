@@ -120,6 +120,7 @@ MatchStepResult resolve_free_pass_arrival(const MatchRuntimeState& input,const M
      const auto recovered=recover_stationary_ball(recovery);winner=recovered.ball_owner;session.recovery->attack_subtype=recovered.attack_subtype;
     }
     field.ball_owner=winner;field.side=winner<11 ? 0 : 11;
+    if(!race.winner || winner>=11)next.retained_defense_action.reset();
     auto& player=field.motion[field_motion_index(winner)];player.x=static_cast<std::uint16_t>((player.x&255u)|(unsigned(field.ball_x)<<8));player.y=static_cast<std::uint16_t>((player.y&255u)|(unsigned(field.ball_y)<<8));
     if((field.ball_y>=96 && field.ball_y<160 && (field.ball_x<80 || field.ball_x>=176)) || (session.recovery->game_mode==4 && field.side==0 && field.roster[field.ball_owner].type!=1 && field.ball_x>=128)){result.unsupported=UnsupportedCapability::action;return result;}
     session.phase=FieldSessionPhase::player_control;session.human_pass_cursor.reset();session.human_pass_steps=0;
@@ -219,6 +220,7 @@ MatchStepResult resolve_opponent_keeper_ai(const MatchRuntimeState& input,const 
   const FieldPlayerRecord record{11,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level};
   const auto& ai=*content.data->ai_keeper_choice;const auto choice=choose_opponent_keeper_action(record,content.data->goalkeepers,input.session.action->menu_route,field.random_first,ai);
   result.state.session=resolve_prepared_session_keeper(input.session,choice.action,choice.subtype,ai.team_id,*content.data);
+  result.state.retained_defense_action=choice.action;
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::opponent_action;return result;}
 }
@@ -231,7 +233,7 @@ MatchStepResult score_human_shot(const MatchRuntimeState& input,const MatchInput
   if(input.session.keeper_decision->result_code==0){
    if(!input.session.score){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
    result.state.session=prepare_session_scored_goal(input.session,*input.session.score,*content.data);
-  } else if(input.session.keeper_decision->result_code==2 || input.session.keeper_decision->result_code==3)result.state.session=resolve_session_keeper_save(input.session,*content.data).state;
+  } else if(input.session.keeper_decision->result_code==2 || input.session.keeper_decision->result_code==3){result.state.session=resolve_session_keeper_save(input.session,*content.data).state;result.state.retained_defense_action.reset();}
   else {result.unsupported=UnsupportedCapability::opponent_execution;return result;}
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::opponent_execution;return result;}
@@ -515,6 +517,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     ? open_human_action_menu(next.session,*content.data->action_menu)
     : poll_human_action_menu(next.session,event.pressed,*content.data->action_menu);
   next.session=menu.state;next.last_sequence=event.sequence;
+  if(input.session.phase==FieldSessionPhase::field_contact_pending || next.session.current.field.selected_defenders)next.retained_defense_action.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);
   for(const auto& request:menu.presentation)result.events.push_back({request});
   return result;
@@ -525,6 +528,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto next=input;advance_demo_random(next);
   auto poll=poll_session_control(next.session,event.held,event.pressed,content.data->field_players,*content.data->movement,*content.data->control_movement);
   next.session=poll.state;next.last_sequence=event.sequence;
+  if(next.session.current.field.selected_defenders || (next.session.phase!=FieldSessionPhase::control_ready && next.session.phase!=FieldSessionPhase::control_clock_pending && next.session.phase!=FieldSessionPhase::action_menu_pending))next.retained_defense_action.reset();
   if((poll.moved_player && *poll.moved_player==input.session.current.field.ball_owner) || next.session.current.field.ball_x!=input.session.current.field.ball_x || next.session.current.field.ball_y!=input.session.current.field.ball_y)next.ball_fraction.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);
   result.state=std::move(next);
@@ -535,6 +539,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     input.session.current.field.side==0 && input.session.action && input.session.action->action==1 &&
     input.session.action->menu_route==0 && event.kind==MatchInputKind::action && event.action==MatchAction::pass && !event.target) {
   result.state.session=begin_ordinary_human_pass_target(input.session);
+  if(input.session.current.field.selected_defenders)result.state.retained_defense_action.reset();
   if(result.state.session.current.field.ball_x!=input.session.current.field.ball_x || result.state.session.current.field.ball_y!=input.session.current.field.ball_y)result.state.ball_fraction.reset();
   result.state.last_sequence=event.sequence;
   project_field_random_memory(result.state.session.current.field,result.state.random_memory);
@@ -613,13 +618,17 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
   if(!(event.pressed&64u) && (event.pressed&128u) && input.session.ordinary_pass_candidates->candidates.allied_count>1){
    if(event.held&15u){result.unsupported=UnsupportedCapability::action;return result;}
-   auto next=input;advance_demo_random(next);next.target_chooser=MatchTargetChooser{};next.last_sequence=event.sequence;
+   auto next=input;advance_demo_random(next);next.target_chooser=MatchTargetChooser{};next.retained_defense_action.reset();next.last_sequence=event.sequence;
    project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
   }
   auto next=input;advance_demo_random(next);
   next.session=(event.pressed&64u) ? cancel_ordinary_human_pass_target(next.session)
     : (event.pressed&128u) ? confirm_ordinary_human_pass_target(next.session)
     : poll_ordinary_human_pass_cursor(next.session,event.held,event.pressed).state;
+  const auto direction=event.held&15u;
+  if((event.pressed&64u) || (direction!=0 && direction!=1 && direction!=2 && direction!=4 && direction!=8) ||
+     ((event.pressed&128u) && direction!=0) ||
+     (next.session.ordinary_pass_recipient && *next.session.ordinary_pass_recipient!=255))next.retained_defense_action.reset();
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);
   result.state=std::move(next);return result;
  }
@@ -708,6 +717,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   for(unsigned i=0;i<field.motion.size();++i){const auto& player=field.motion[i];
    selection.players[i]={static_cast<std::uint8_t>(player.x>>8),static_cast<std::uint8_t>(player.y>>8),player.status!=0};}
   result.state.flight_defenders=accumulate_flight_defenders(selection,input.flight_defenders);
+  if(!result.state.flight_defenders.empty())result.state.retained_defense_action.reset();
   result.state.pass_stage=MatchPassStage::flight_ready;result.state.last_sequence=event.sequence;return result;
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_prepared &&
@@ -737,6 +747,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto next=input;advance_demo_random(next);
   auto clock=advance_control_tick(next.session,content.data->field_players,content.data->goalkeepers,*content.data->world_step);
   next.session=clock.state;next.last_sequence=event.sequence;
+  if(next.session.phase!=FieldSessionPhase::field_round_pending && next.session.phase!=FieldSessionPhase::control_ready)next.retained_defense_action.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);
   for(const auto& request:clock.presentation)result.events.push_back({request});
   return result;
@@ -748,6 +759,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   std::array<LogicalButtons,22> buttons{};for(auto& item:buttons)item.held=event.held;buttons[0].pressed=event.pressed;
   auto round=advance_control_field_round(next.session,content.data->field_players,*content.data->movement,*content.data->control_movement,*content.data->world_step,buttons);
   next.session=round.state;next.last_sequence=event.sequence;next.ball_fraction.reset();
+  if(next.session.phase!=FieldSessionPhase::control_ready || next.session.current.field.selected_defenders)next.retained_defense_action.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);
   for(const auto& request:round.presentation)result.events.push_back({request});
   return result;

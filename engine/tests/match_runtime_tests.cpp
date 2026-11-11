@@ -42,10 +42,10 @@ static int shot_comparisons(int argc,char** argv) {
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Keeper recovery differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Keeper recovery session lengths differ");}
   return 0;
  }
- if((argc==11 || argc==12) && std::string(argv[1])=="--compare-human-shot-end-to-end") {
+ if((argc==11 || argc==13) && std::string(argv[1])=="--compare-human-shot-end-to-end") {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary),raw_file(argv[6],std::ios::binary),velocity_file(argv[7]);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);content.ball_velocity=read_ball_velocity_content(velocity_file);
-  const bool kickoff=argc==12 && std::string(argv[11])=="control";
+  const bool kickoff=argc==13 && std::string(argv[11])=="control";
   if(!kickoff)expected.kickoff_formation.reset(); // Before kickoff the starting session has no formation metadata.
   std::array<unsigned char,2048> raw{};if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing original flight metadata");
   before.score=MatchScoreContext{static_cast<std::uint8_t>(std::stoul(argv[8])),static_cast<std::uint8_t>(std::stoul(argv[9])),static_cast<std::uint8_t>(std::stoul(argv[10]))};
@@ -59,9 +59,11 @@ static int shot_comparisons(int argc,char** argv) {
    if(phase==FieldSessionPhase::attack_choice_pending)input.action=MatchAction::shot;
    *result=step_match(*state,input,content);
    if(result->unsupported)throw std::runtime_error(std::string("End-to-end shot unsupported: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(phase)));
+   if(result->state.retained_defense_action){MatchContentIdentity identity{};identity[0]=42;std::ostringstream saved(std::ios::binary);write_match_save(saved,result->state,identity);std::istringstream in(saved.str(),std::ios::binary);auto restored=std::make_unique<MatchRuntimeState>(load_match_save(in,identity));if(restored->retained_defense_action!=result->state.retained_defense_action)throw std::runtime_error("Retained action lost across runtime save");}
    *state=result->state;
   }
   if(state->session.phase!=final_phase)throw std::runtime_error("End-to-end shot did not reach requested continuation");
+  if(kickoff && (!state->retained_defense_action || *state->retained_defense_action!=std::stoul(argv[12])))throw std::runtime_error("Goalkeeper action was not retained through kickoff");
   std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,state->session);write_phase_session(expected_bytes,expected);
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("End-to-end shot differs at byte "+std::to_string(i));throw std::runtime_error("End-to-end shot session lengths differ");}
   return 0;
@@ -238,7 +240,7 @@ static int shot_comparisons(int argc,char** argv) {
 }
 static int comparisons(int argc,char** argv) {
  using namespace captain;
- if(argc==6 && (std::string(argv[1])=="--compare-free-arrival" || std::string(argv[1])=="--compare-same-arrival")) {
+ if((argc==6 || (argc==7 && std::string(argv[6])=="--retained")) && (std::string(argv[1])=="--compare-free-arrival" || std::string(argv[1])=="--compare-same-arrival")) {
   std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),raw_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
   auto before=load_phase_session(before_file),expected=load_phase_session(after_file);std::array<unsigned char,2048> raw{};
   if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing original free-pass arrival");
@@ -250,6 +252,7 @@ static int comparisons(int argc,char** argv) {
   session.ordinary_pass_candidates->scanned=true;session.ordinary_pass_recipient=255;session.ordinary_pass_defenses=OrdinaryPassDefenseContext{};session.saved_ball_flight_flag=raw[0x61b];
   const auto word=[&](unsigned at){return static_cast<std::uint16_t>(raw[at]|(unsigned(raw[at+1])<<8));};
   MatchRuntimeState state{};state.session=session;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;state.pass_stage=MatchPassStage::flight_arrived;
+  if(argc==7){if(raw[0x43d]>6)throw std::runtime_error("Invalid original retained action");state.retained_defense_action=raw[0x43d];}
   state.pass_target=MatchPassTarget{255,raw[0x638],raw[0x61a],raw[0x62b]};state.pass_cell=raw[0x5fe];
   state.pass_trajectory=BallTrajectoryContext{word(0x634),word(0x636),word(0x639),word(0x63b),raw[0x62c],raw[0x61b]};
   std::uint64_t sequence=1;
@@ -269,6 +272,12 @@ static int comparisons(int argc,char** argv) {
   auto result=step_match(state,{MatchInputKind::presentation_complete,sequence},content);
   if(result.unsupported)throw std::runtime_error(std::string("Original free-pass contest unsupported: ")+capability_name(*result.unsupported));
   if(result.state.session.phase!=FieldSessionPhase::player_control)throw std::runtime_error("Original free-pass contest did not return control");
+  if(argc==7){
+   if(result.state.retained_defense_action!=state.retained_defense_action)throw std::runtime_error("Free-pass contest lost retained action");
+   MatchContentIdentity identity{};identity[0]=42;std::ostringstream out(std::ios::binary);write_match_save(out,result.state,identity);std::istringstream in(out.str(),std::ios::binary);
+   auto restored=load_match_save(in,identity);auto ready=step_match(restored,{MatchInputKind::tick,sequence+1},content);
+   if(ready.unsupported || ready.state.session.phase!=FieldSessionPhase::control_ready || ready.state.retained_defense_action!=state.retained_defense_action)throw std::runtime_error("Free-pass control lost retained action");
+  }
   std::ostringstream actual_field(std::ios::binary),expected_field(std::ios::binary);write_field_state(actual_field,result.state.session.current.field);write_field_state(expected_field,expected.current.field);
   if(actual_field.str()!=expected_field.str()){for(std::size_t i=0;i<actual_field.str().size();++i)if(actual_field.str()[i]!=expected_field.str()[i])throw std::runtime_error("Original free-pass contest field differs at byte "+std::to_string(i));}
   const auto& a=result.state.session.current;const auto& e=expected.current;
@@ -765,6 +774,40 @@ static std::unique_ptr<DeferredDefendedTest> deferred_defended_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_human_defended_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_free_pass_test;
 static std::unique_ptr<DeferredDefendedTest> deferred_human_shot_test;
+static std::unique_ptr<DeferredDefendedTest> deferred_retained_control_test;
+static void test_retained_action_control(const captain::MatchRuntimeState& base,const captain::MatchContent& original,const captain::MatchContentIdentity& identity) {
+ using namespace captain;
+ auto state=std::make_unique<MatchRuntimeState>(base);auto content=std::make_unique<MatchContent>(original);state->retained_defense_action=3;
+ state->session.current.clock.remaining=200;content->data->world_step=WorldStepContent{};content->data->movement->profiles.speeds.resize(1);
+ state->session.current.field.roster[0].type=1;state->session.current.field.roster[11].type=1;content->data->goalkeepers.skills.resize(1);
+ for(unsigned id=1;id<=21;++id)if(id!=11 && id!=state->session.current.field.ball_owner){state->session.current.field.roster[id].type=1;auto& player=state->session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];player.x=(id<11 ? 52u : 200u)<<8;player.y=(id<11 ? 84u : 160u)<<8;}
+ auto result=std::make_unique<MatchStepResult>();
+ for(unsigned turn=0;turn<12 && state->session.phase==FieldSessionPhase::control_ready;++turn){
+  *result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(!result->unsupported && result->state.retained_defense_action==3);*state=result->state;
+ }
+ assert(state->session.phase==FieldSessionPhase::control_clock_pending);
+ std::ostringstream saved(std::ios::binary);write_match_save(saved,*state,identity);std::istringstream in(saved.str(),std::ios::binary);*state=load_match_save(in,identity);
+ *result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(!result->unsupported && result->state.retained_defense_action==3 && result->state.session.phase==FieldSessionPhase::field_round_pending);
+ *state=result->state;*result=step_match(*state,{MatchInputKind::tick,state->last_sequence+1},*content);assert(!result->unsupported);
+ if(result->state.session.phase==FieldSessionPhase::control_ready)assert(result->state.retained_defense_action==3);
+ else assert(!result->state.retained_defense_action);
+}
+static void test_retained_action_invalidation(const captain::MatchRuntimeState& base,const captain::MatchContent& content,const captain::MatchContentIdentity& identity) {
+ using namespace captain;
+ auto state=std::make_unique<MatchRuntimeState>(base);state->retained_defense_action=3;
+ std::ostringstream saved(std::ios::binary);write_match_save(saved,*state,identity);std::istringstream in(saved.str(),std::ios::binary);*state=load_match_save(in,identity);
+ assert(state->retained_defense_action && *state->retained_defense_action==3);
+ MatchInput pass{MatchInputKind::action,state->last_sequence+1};pass.action=MatchAction::pass;
+ auto result=std::make_unique<MatchStepResult>(step_match(*state,pass,content));
+ assert(!result->unsupported && result->state.session.phase==FieldSessionPhase::ordinary_human_pass_target && result->state.retained_defense_action==3);
+ {std::ostringstream out(std::ios::binary);write_match_save(out,result->state,identity);std::istringstream input(out.str(),std::ios::binary);*state=load_match_save(input,identity);}
+ MatchInput cancel{MatchInputKind::tick,state->last_sequence+1};cancel.pressed=64;
+ *result=step_match(*state,cancel,content);assert(!result->unsupported && !result->state.retained_defense_action);
+ MatchInput diagonal{MatchInputKind::tick,state->last_sequence+1};diagonal.held=3;diagonal.pressed=3;
+ *result=step_match(*state,diagonal,content);assert(!result->unsupported && !result->state.retained_defense_action);
+ auto blocked=std::make_unique<MatchStepResult>(step_match(*state,{MatchInputKind::tick,state->last_sequence},content));
+ assert(blocked->unsupported==UnsupportedCapability::input_sequence && blocked->state.retained_defense_action==state->retained_defense_action);
+}
 static void test_goal_kickoff(const captain::MatchRuntimeState& base,const captain::MatchContent& original,const captain::MatchContentIdentity& identity) {
  using namespace captain;
  auto state=std::make_unique<MatchRuntimeState>(base);auto content=std::make_unique<MatchContent>(original);
@@ -824,19 +867,26 @@ static void test_human_shot(const captain::MatchRuntimeState& base,const captain
 }
 static void test_free_pass(const captain::MatchRuntimeState& base,const captain::MatchContent& original,std::uint64_t seq,const captain::MatchContentIdentity& identity) {
  using namespace captain;
- auto content=original;auto state=base;state.ball_fraction=MatchBallFraction{5,9};
+ auto content=original;auto state=base;state.ball_fraction=MatchBallFraction{5,9};state.retained_defense_action=3;
  auto target=step_match(state,{MatchInputKind::tick,seq},content);
- assert(!target.unsupported && target.state.pass_target && target.state.pass_target->recipient==255);
+ assert(!target.unsupported && target.state.pass_target && target.state.pass_target->recipient==255 && target.state.retained_defense_action==3);
  std::ostringstream bytes(std::ios::binary);write_match_save(bytes,target.state,identity);std::istringstream saved(bytes.str(),std::ios::binary);state=load_match_save(saved,identity);
  auto next=step_match(state,{MatchInputKind::tick,seq+1},content);assert(!next.unsupported);state=next.state;
  for(std::uint64_t turn=seq+2;state.pass_stage!=MatchPassStage::flight_arrived && turn<seq+150;++turn){next=step_match(state,{MatchInputKind::tick,turn},content);assert(!next.unsupported);state=next.state;}
  assert(state.pass_stage==MatchPassStage::flight_arrived);
+ {
+  auto contested=std::make_unique<MatchRuntimeState>(state);contested->pass_stage=MatchPassStage::flight_cell;
+  contested->pass_cell=field_cell_at(100,100);contested->session.current.field.random_first=1;contested->session.current.field.random_second=0;
+  auto& defender=contested->session.current.field.motion[field_motion_index(12)];defender.x=100u<<8;defender.y=100u<<8;defender.status=0;
+  auto contact=std::make_unique<MatchStepResult>(step_match(*contested,{MatchInputKind::tick,contested->last_sequence+1},content));
+  assert(!contact->unsupported && !contact->state.flight_defenders.empty() && !contact->state.retained_defense_action);
+ }
  auto missing=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);assert(missing.unsupported==UnsupportedCapability::content);
  auto race=std::make_shared<ClearanceRaceContent>();content.data->pass_race=race;
  content.data->movement->profiles.speeds.resize(1);for(unsigned id=1;id<=21;++id)if(id!=11)state.session.current.field.roster[id].type=1;
  for(unsigned id=1;id<=21;++id)if(id!=11 && id!=state.session.current.field.ball_owner){auto& p=state.session.current.field.motion[field_motion_index(static_cast<std::uint8_t>(id))];p.x=52u<<8;p.y=84u<<8;p.status=0;}
  auto timeout=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);
- assert(!timeout.unsupported && timeout.state.session.phase==FieldSessionPhase::player_control);
+ assert(!timeout.unsupported && timeout.state.session.phase==FieldSessionPhase::player_control && !timeout.state.retained_defense_action);
  auto timeout_control=step_match(timeout.state,{MatchInputKind::tick,timeout.state.last_sequence+1},content);
  assert(!timeout_control.unsupported && timeout_control.state.session.phase==FieldSessionPhase::control_ready);
  auto long_race=state;long_race.pass_target->distance=5;timeout=step_match(long_race,{MatchInputKind::presentation_complete,long_race.last_sequence+1},content);
@@ -845,14 +895,14 @@ static void test_free_pass(const captain::MatchRuntimeState& base,const captain:
  assert(unresolved.unsupported==UnsupportedCapability::action && unresolved.state.last_sequence==long_race.last_sequence);
  auto opposing=state;auto& away=opposing.session.current.field.motion[field_motion_index(12)];away.x=opposing.pass_trajectory->x;away.y=opposing.pass_trajectory->y;
  auto opposing_winner=step_match(opposing,{MatchInputKind::presentation_complete,opposing.last_sequence+1},content);
- assert(!opposing_winner.unsupported && opposing_winner.state.session.phase==FieldSessionPhase::player_control && opposing_winner.state.session.current.field.side==11 && opposing_winner.state.session.current.field.ball_owner==12);
+ assert(!opposing_winner.unsupported && opposing_winner.state.session.phase==FieldSessionPhase::player_control && opposing_winner.state.session.current.field.side==11 && opposing_winner.state.session.current.field.ball_owner==12 && !opposing_winner.state.retained_defense_action);
  auto opposing_control=step_match(opposing_winner.state,{MatchInputKind::tick,opposing_winner.state.last_sequence+1},content);
  assert(!opposing_control.unsupported && opposing_control.state.session.phase==FieldSessionPhase::control_ready);
  auto& winner=state.session.current.field.motion[field_motion_index(1)];winner.x=state.pass_trajectory->x;winner.y=state.pass_trajectory->y;winner.status=0;
  auto result=step_match(state,{MatchInputKind::presentation_complete,state.last_sequence+1},content);
- assert(!result.unsupported && result.state.session.phase==FieldSessionPhase::player_control && result.state.session.current.field.ball_owner==1);
+ assert(!result.unsupported && result.state.session.phase==FieldSessionPhase::player_control && result.state.session.current.field.ball_owner==1 && result.state.retained_defense_action==3);
  auto control=step_match(result.state,{MatchInputKind::tick,result.state.last_sequence+1},content);
- assert(!control.unsupported && control.state.session.phase==FieldSessionPhase::control_ready);
+ assert(!control.unsupported && control.state.session.phase==FieldSessionPhase::control_ready && control.state.retained_defense_action==3);
 }
 static void test_human_defended_arrival(const captain::MatchRuntimeState& base,const captain::MatchContent& original,std::uint64_t seq,const captain::MatchContentIdentity& identity) {
  using namespace captain;
@@ -1059,6 +1109,8 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  MatchContentIdentity identity{};identity[0]=42;
  deferred_human_shot_test=std::make_unique<DeferredDefendedTest>();deferred_human_shot_test->state=confirmed.state;
  deferred_human_shot_test->content=content;deferred_human_shot_test->identity=identity;
+ deferred_retained_control_test=std::make_unique<DeferredDefendedTest>();deferred_retained_control_test->state=c1.state;
+ deferred_retained_control_test->content=content;deferred_retained_control_test->identity=identity;
  const MatchContentIdentity known_identity{{0x68,0x76,0x27,0x7d,0xbe,0xf7,0x26,0xc2,0xcb,0xd8,0x41,0x99,0xda,0xb2,0x7b,0xf8,0x02,0xe6,0x03,0x55,0x6d,0xd6,0x26,0xee,0xd2,0x0c,0x04,0x54,0xeb,0xd5,0x00,0x14}};
  assert(match_content_identity("abc",{}, {})==known_identity);
  assert(match_content_identity("abc",std::string{}, {})!=known_identity);
@@ -1443,6 +1495,8 @@ int main(int argc,char** argv) {
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);
  test_free_pass(deferred_free_pass_test->state,deferred_free_pass_test->content,deferred_free_pass_test->seq,deferred_free_pass_test->identity);
  test_human_shot(deferred_human_shot_test->state,deferred_human_shot_test->content,deferred_human_shot_test->identity);
+ test_retained_action_invalidation(deferred_human_shot_test->state,deferred_human_shot_test->content,deferred_human_shot_test->identity);
+ test_retained_action_control(deferred_retained_control_test->state,deferred_retained_control_test->content,deferred_retained_control_test->identity);
  test_goal_kickoff(deferred_human_shot_test->state,deferred_human_shot_test->content,deferred_human_shot_test->identity);
  return result;
 }

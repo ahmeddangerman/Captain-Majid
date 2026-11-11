@@ -13,7 +13,7 @@ from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def observe(prg, ready, home_x, opposing_x, timeout=False, long_timeout=False, late_winner=False, same_cell=False):
+def observe(prg, ready, home_x, opposing_x, timeout=False, long_timeout=False, late_winner=False, same_cell=False, direction=1):
     _, raw = trace_recovery(prg, ready, control_input=(64, 0))
     memory = ObservedCartridge(prg, raw, None, set());memory.ram[:0x1a] = bytes(0x1a)
     for address,value in ((0,5),(1,255),(2,0x90),(3,26),(4,27),(5,1),(6,0x50),(7,26),(8,27),(0x191,0x85),(0x192,0xeb),(0x24,26),(0x25,27)):
@@ -38,7 +38,7 @@ def observe(prg, ready, home_x, opposing_x, timeout=False, long_timeout=False, l
                         memory[0x306+12*player]=52;memory[0x308+12*player]=84;memory[0x30a+12*player]=0
                 memory[0x306+12*3],memory[0x308+12*3]=home_x,84 if long_timeout else 108
                 memory[0x306+12*16],memory[0x308+12*16]=(home_x-8 if timeout else opposing_x),84 if long_timeout else 108
-                held=pressed=128 if same_cell else 8 if long_timeout else 1;stage=8 if same_cell else 7;moves_remaining=3 if long_timeout else 5 if timeout or late_winner else 1;vertical_phase=long_timeout
+                held=pressed=128 if same_cell else 8 if long_timeout else direction;stage=8 if same_cell else 7;moves_remaining=3 if long_timeout else 5 if timeout or late_winner else 1;vertical_phase=long_timeout
             elif stage==7:
                 moves_remaining-=1
                 if not moves_remaining:
@@ -75,8 +75,10 @@ def main():
     p.add_argument('--late-winner',action='store_true',help='Construct longer races favoring the home player')
     p.add_argument('--long-winner',action='store_true',help='Construct long-distance races favoring the home player')
     p.add_argument('--same-cell',action='store_true',help='Construct passes targeting the ball\'s current cell')
+    p.add_argument('--retained-action',type=int,choices=range(7),help='Compare preservation of an explicitly seeded original defensive-action byte')
     args=p.parse_args();rom=args.rom.read_bytes()
     if args.long_timeout:args.timeout=True
+    if args.retained_action is not None and (args.timeout or args.opponent_winner):p.error('Retained-action comparison currently covers home race winners')
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected verified Japanese ROM')
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private temporary data must stay outside the checkout')
     target_count=race_count=0;skipped=[]
@@ -84,6 +86,8 @@ def main():
         tmp=Path(temp);before=tmp/'before.cmjsession';after=tmp/'after.cmjsession';raw_file=tmp/'raw.bin';target_file=tmp/'target.bin'
         for fixture in range(4):
             ready=(args.ready_dir/f'{fixture}-ready.bin').read_bytes()
+            if args.retained_action is not None:
+                ready=bytearray(ready);ready[0x43d]=args.retained_action
             for home_x in ((60,68,76) if args.timeout else (170,174,178,182,186,190) if args.long_winner else (124,128,132,136,140,142) if args.late_winner else (96,100,104) if args.opponent_winner else (104,108,110)):
                 handoff,target,arrival,final,boundary,rounds=observe(rom[16:262160],ready,home_x,52 if args.late_winner or args.long_winner else 108 if args.opponent_winner else 100,args.timeout,args.long_timeout or args.long_winner,args.late_winner,args.same_cell)
                 before.write_bytes(export_session(handoff));target_file.write_bytes(target)
@@ -94,7 +98,10 @@ def main():
                 if arrival[0x600] or (args.timeout and boundary!=0xded4) or (not args.timeout and (boundary!=0xdf0d or final[0x5fb]!=expected_side)):
                     skipped.append((fixture,home_x,'defended, timeout or different winner'));continue
                 before.write_bytes(export_session(arrival));after.write_bytes(export_session(final));raw_file.write_bytes(arrival)
-                result=subprocess.run([str(args.exe.resolve()),'--compare-same-arrival' if args.same_cell else '--compare-free-arrival',str(before),str(after),str(raw_file),str(args.pack.resolve())],capture_output=True,text=True)
+                if args.retained_action is not None and any(raw[0x43d]!=args.retained_action for raw in (handoff,target,arrival,final)):raise RuntimeError('Original pass changed retained action')
+                command=[str(args.exe.resolve()),'--compare-same-arrival' if args.same_cell else '--compare-free-arrival',str(before),str(after),str(raw_file),str(args.pack.resolve())]
+                if args.retained_action is not None:command.append('--retained')
+                result=subprocess.run(command,capture_output=True,text=True)
                 if result.returncode:
                     if 'unsupported: action routing' in result.stderr and rounds>(5 if args.long_timeout or args.long_winner else 4 if args.timeout or args.late_winner else 3):skipped.append((fixture,home_x,f'unsupported race after {rounds} rounds'));continue
                     raise RuntimeError(f'race fixture={fixture}, x={home_x}, rounds={rounds}: {result.stderr}')

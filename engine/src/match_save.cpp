@@ -39,9 +39,21 @@ void validate_runtime(const MatchRuntimeState& s) {
     (s.mode==MatchTimingMode::provisional_demo && !s.demo_rng) ||
     static_cast<unsigned>(s.pass_stage)>static_cast<unsigned>(MatchPassStage::flight_arrived))
   throw std::invalid_argument("Invalid match runtime mode or pass stage");
- if(s.retained_defense_action && (s.mode!=MatchTimingMode::provisional_demo || *s.retained_defense_action>6 || s.session.current.field.side!=0 || s.session.current.field.selected_defenders || !s.session.action || s.session.action->action!=0 ||
-    (s.session.phase!=FieldSessionPhase::attack_choice_pending && s.session.phase!=FieldSessionPhase::attack_prepared && s.session.phase!=FieldSessionPhase::shot_dispatch_ready && s.session.phase!=FieldSessionPhase::selected_attack_presentation)))
-  throw std::invalid_argument("Invalid retained defensive action provenance");
+ if(s.retained_defense_action){
+  const auto phase=s.session.phase;const auto& f=s.session.current.field;
+  const bool shot=f.side==0 && !f.selected_defenders && s.session.action && s.session.action->action==0 &&
+   (phase==FieldSessionPhase::attack_choice_pending || phase==FieldSessionPhase::attack_prepared || phase==FieldSessionPhase::shot_dispatch_ready || phase==FieldSessionPhase::selected_attack_presentation);
+  const bool goal=f.side==0 && (phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending);
+  const bool kickoff=f.side==11 && phase>=FieldSessionPhase::goal_kickoff_pending && phase<=FieldSessionPhase::kickoff_control_pending;
+  const bool control=!f.selected_defenders && (phase==FieldSessionPhase::control_ready || phase==FieldSessionPhase::control_clock_pending || phase==FieldSessionPhase::field_round_pending ||
+   (f.side==0 && phase==FieldSessionPhase::player_control) ||
+   (f.side==0 && (phase==FieldSessionPhase::action_menu_pending || phase==FieldSessionPhase::human_action_menu || phase==FieldSessionPhase::attack_choice_pending)));
+  const bool pass=f.side==0 && !f.selected_defenders && s.session.action && s.session.action->action==1 && !s.target_chooser &&
+   s.flight_defenders.empty() && s.processed_flight_defenders.empty() &&
+   (phase==FieldSessionPhase::ordinary_human_pass_target || ((phase==FieldSessionPhase::ordinary_human_pass_confirmed || phase==FieldSessionPhase::ordinary_pass_prepared) &&
+    s.session.ordinary_pass_recipient && *s.session.ordinary_pass_recipient==255));
+  if(s.mode!=MatchTimingMode::provisional_demo || *s.retained_defense_action>6 || !(shot || goal || kickoff || control || pass))throw std::invalid_argument("Invalid retained defensive action provenance");
+ }
  const bool target=static_cast<unsigned>(s.pass_stage)>=static_cast<unsigned>(MatchPassStage::target_ready);
  const bool flight=static_cast<unsigned>(s.pass_stage)>=static_cast<unsigned>(MatchPassStage::flight_ready);
  const bool ai_flight=s.defense_menu && static_cast<unsigned>(s.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_flight_ready);

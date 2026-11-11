@@ -170,9 +170,10 @@ def main():
                                 else:raise RuntimeError('Original kickoff instruction bound')
                                 kickoff_cpu.pc=0xdb13;until(kickoff_cpu,{0xdb1e})
                                 _,ready=trace_recovery(prg,bytes(kickoff_memory.ram[:2048]),prepare_control=True);after_file.write_bytes(kickoff_capture(ready,9))
+                                if ready[0x43d]!=keeper_result[0x43d]:raise RuntimeError('Original keeper action was not retained through kickoff')
                             else:after_file.write_bytes(flight_snapshot(restart,60,False))
                             command=[str(args.exe.resolve()),'--compare-human-shot-end-to-end',str(before_file),str(after_file),str(args.pack.resolve()),str(action),str(raw_file),str(args.velocity.resolve()),str(keeper_result[0x28]),str(keeper_result[0x29]),str(keeper_result[0x629])]
-                            if args.kickoff_end_to_end:command.append('control')
+                            if args.kickoff_end_to_end:command.extend(('control',str(keeper_result[0x43d])))
                             result=subprocess.run(command,capture_output=True,text=True)
                             if result.returncode:raise RuntimeError(f'fixture={fixture}, stamina={stamina}, action={action} end-to-end: {result.stderr}')
                             goals+=1

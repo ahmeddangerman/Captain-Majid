@@ -63,6 +63,7 @@ def main():
                     run_until(0xdb0e);compare(63,3)
                     cpu.pc=0xdb13;run_until(0xdb1e);compare(64,4)
                     _,ready=trace_recovery(prg,bytes(memory.ram[:2048]),prepare_control=True);compare(9,5,ready)
+                    if ready[0x43d]!=raw[0x43d]:raise RuntimeError('Original kickoff changed retained defensive action')
                     count+=1
     print(f'{count} original post-goal kickoff sequences matched through control setup')
 

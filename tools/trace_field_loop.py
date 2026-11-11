@@ -62,7 +62,7 @@ def trace_loop(prg, internal_ram, cartridge_ram=None, max_instructions=2_000_000
                         memory[0x43B] != 0 or memory[0x617] != 0):
         raise ValueError('Attack tail needs prepared selected field action0 and no active keeper')
     shot_mode = until != 'field'
-    minimum = 0 if shot_mode or dispatch_only or attack_tail else 1
+    minimum = 0 if shot_mode or dispatch_only or attack_tail or race_tail else 1
     if not minimum <= memory[0x600] <= 5:
         raise ValueError(f'This entry requires {minimum}..5 selected defenders')
     if memory[0x5FB] not in (0, 11) or memory[0x43B] >= 5:
