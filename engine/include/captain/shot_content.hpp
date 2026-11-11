@@ -31,6 +31,7 @@ struct ShotContent {
     std::array<std::uint8_t, 8> punch_intervals;
     std::optional<ShotApproachContent> approach{};
     std::optional<FlightContactContent> flight{};
+    std::optional<PassFlightComparisonContent> pass_flight_comparison{};
     std::optional<FieldPhaseContent> movement{};
     std::optional<ContactPreludeContent> contact{};
     std::optional<ExperienceContent> experience{};

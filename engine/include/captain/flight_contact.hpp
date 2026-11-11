@@ -2,6 +2,7 @@
 #include "captain/prepared_defender_sequence.hpp"
 
 namespace captain {
+struct PassFlightComparisonContent { std::uint8_t range=0,offset=0,eligibility=0; std::array<std::uint8_t,4> thresholds{}; };
 struct FlightContactContent {
     std::array<std::uint8_t, 2> defense_actions;
     std::array<std::uint8_t, 2> eligibility;

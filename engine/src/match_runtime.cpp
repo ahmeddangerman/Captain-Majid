@@ -2,6 +2,8 @@
 #include "captain/control_session.hpp"
 #include "captain/ball_step.hpp"
 #include "captain/defender_selection.hpp"
+#include "captain/field_player_profile.hpp"
+#include "captain/action_strength.hpp"
 #include <stdexcept>
 namespace captain {
 namespace {
@@ -71,7 +73,27 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   }
   if(input.defense_menu && input.defense_menu->stage==MatchDefenseStage::ai_flight_arrived){
    if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
-   if(!input.flight_defenders.empty()){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+   if(!input.flight_defenders.empty()){
+    const auto& data=*content.data;const auto& field=input.session.current.field;
+    if(!data.pass_flight_comparison || !data.contact || !data.experience || !input.session.experience || !input.session.action || !input.session.recovery || !input.defense_menu->ai_trajectory || !input.defense_menu->ai_ball_cell){result.unsupported=UnsupportedCapability::content;return result;}
+    const auto id=input.flight_defenders.front();if(id<1 || id>10 || field.ball_owner<12 || field.ball_owner>21){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+    try {
+     const auto& player=field.roster[id];const FieldPlayerRecord record{id,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level};
+     const auto prep=prepare_profiled_field_defender(record,data.field_players,2,0,0,data.defense);const auto& rules=*data.pass_flight_comparison;
+     const auto contact=compare_defender_contact({input.session.action->power,prep.base_strength,field.random_first,field.random_second,rules.range,rules.offset,false,bool(rules.eligibility&128u),0,id,0,rules.thresholds});
+     if(prep.move_effect || contact.result_code>1 || contact.subtype){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+     auto next=input;auto& session=next.session;const auto& trajectory=*next.defense_menu->ai_trajectory;
+     session.current.field.ball_x=static_cast<std::uint8_t>(trajectory.x>>8);session.current.field.ball_y=static_cast<std::uint8_t>(trajectory.y>>8);session.current.field.ball_cell=*next.defense_menu->ai_ball_cell;
+     session.recovery->opposing_player=id;
+     if(contact.result_code==1){session.action->power=reduce_action_strength(session.action->power,contact.loss);
+      session.experience=award_player_experience(*session.experience,field.roster[field.ball_owner].type,1,*data.experience).state;}
+     auto clock=apply_contact_prelude({session.current,id,2,true},*data.contact);
+     if(clock.clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+     session.current=clock.state;next.flight_defenders.erase(next.flight_defenders.begin());
+     if(next.flight_defenders.empty())session.current.field.elapsed=0;
+     next.last_sequence=event.sequence;project_field_random_memory(session.current.field,next.random_memory);result.state=std::move(next);return result;
+    } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::defender_contact;return result;}
+   }
    const auto& menu=*input.defense_menu;
    if(!menu.ai_pass_target || !menu.ai_trajectory || !menu.ai_ball_cell || *menu.ai_ball_cell!=menu.ai_pass_target->cell ||
       menu.ai_trajectory->flags!=1 || input.session.current.field.selected_defenders){result.unsupported=UnsupportedCapability::phase;return result;}
