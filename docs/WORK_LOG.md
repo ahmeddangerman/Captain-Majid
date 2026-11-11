@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 pass crossings
+
+The pass to player21 now matches three numeric cell crossings (68 to69 to81 to82) and the original flight-defender scan selecting home player2 at cell82. Supplied NMI/travel events advance random index211 to214. Phases456/457 retain flight and callback boundaries; the verifier compares represented fields, trajectory and cursor/flag, rejects early steps/repeated callbacks atomically and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-crossings-v2-20261111`; Windows build and all 62 checks passed. Arrival, defender handling and live timing remain unmatched; full match unsupported, progress unmeasured. Next compare the original destination arrival and defender encounter. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 pass flight setup
 
 The captured opponent20 pass now matches original E773 flight setup using shared direction and velocity kernels plus supplied private fractional coordinates: direction25 and velocity201/142, target94, random index211. Phase456 saves the trajectory and retained target context. `tools/verify_opponent20_pass_movement.py` compares the represented original state and complete trajectory, rejects unobserved fractions and repeated setup atomically, and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-flight-v2-20261111`; Windows build and all 62 checks passed. Flight crossings/arrival and autonomous AI/timing remain unmatched; full match unsupported and overall progress unmeasured. Next compare the original pass flight crossings. Suggested model GPT-6.1 Terra High.

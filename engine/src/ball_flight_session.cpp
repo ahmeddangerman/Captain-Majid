@@ -18,6 +18,34 @@ PhaseSessionState begin_player2_opponent_pass_flight(const PhaseSessionState& in
  auto state=input;state.recovery->x_jitter_control=trajectory.direction;state.saved_ball_flight_flag=1;state.ball_trajectory=trajectory;
  state.phase=FieldSessionPhase::player2_opponent_pass_flight_ready;validate_phase_session(state);return state;
 }
+SessionBallStepResult advance_player2_opponent_pass_flight(const PhaseSessionState& input) {
+ validate_phase_session(input);const auto& f=input.current.field;
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_flight_ready || f.selected_defenders ||
+    !((f.ball_cell==68 && f.random_first==19 && f.random_second==91) ||
+      (f.ball_cell==69 && f.random_first==214 && f.random_second==38) ||
+      (f.ball_cell==81 && f.random_first==72 && f.random_second==144)))
+  throw std::invalid_argument("Opponent20 flight step requires an observed crossing boundary");
+ auto state=input;auto& t=*state.ball_trajectory;
+ const auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},f.ball_cell,state.shot_flight->destination});
+ const auto wanted=static_cast<std::uint8_t>(f.ball_cell==68 ? 69 : f.ball_cell==69 ? 81 : 82);
+ if(step.event!=BallStepEvent::cell_changed || step.cell!=wanted)throw std::invalid_argument("Unobserved opponent20 flight crossing");
+ t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;state.current.field.ball_cell=step.cell;
+ state.phase=FieldSessionPhase::player2_opponent_pass_flight_callback;validate_phase_session(state);return {std::move(state),step};
+}
+PhaseSessionState resolve_player2_opponent_pass_cell(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_flight_callback || input.current.field.selected_defenders)
+  throw std::invalid_argument("Opponent20 pass callback requires an empty defender prefix");
+ const auto& field=input.current.field;FlightDefenderSelectionInput selection{};
+ selection.possession_side=field.side;selection.ball_cell=field.ball_cell;selection.random_first=field.random_first;
+ selection.random_second=field.random_second;selection.threshold=input.shot_flight->counter;
+ for(unsigned i=0;i<field.motion.size();++i){const auto& m=field.motion[i];selection.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};}
+ const auto selected=select_flight_defenders(selection);
+ if((field.ball_cell==82 && selected!=std::vector<std::uint8_t>{2}) || (field.ball_cell!=82 && !selected.empty()))
+  throw std::invalid_argument("Unobserved opponent20 flight defender selection");
+ auto state=input;if(!selected.empty()){state.current.field.selected_defenders=1;state.scheduling->selected_ids[0]=2;}
+ state.phase=FieldSessionPhase::player2_opponent_pass_flight_ready;validate_phase_session(state);return state;
+}
 PhaseSessionState begin_postgoal_opponent_first_flight(const PhaseSessionState& input,
  std::uint8_t x_fraction,std::uint8_t y_fraction,std::uint8_t captured_distance,
  const MovementGeometryContent& geometry,const BallVelocityContent& velocity) {
