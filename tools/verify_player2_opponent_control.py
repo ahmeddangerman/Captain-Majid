@@ -18,11 +18,12 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--second-cycle-polls',action='store_true')
     parser.add_argument('--third-cycle-polls',action='store_true')
+    parser.add_argument('--fourth-cycle-polls',action='store_true')
     args = parser.parse_args()
     lines, pcs, ram = trace_data(args.trace_directory)
-    if args.second_cycle_polls and args.third_cycle_polls:raise ValueError('Choose one later cycle')
-    later=args.second_cycle_polls or args.third_cycle_polls
-    first = 22848 if args.third_cycle_polls else 22566 if args.second_cycle_polls else 22273
+    if sum((args.second_cycle_polls,args.third_cycle_polls,args.fourth_cycle_polls))>1:raise ValueError('Choose one later cycle')
+    later=args.second_cycle_polls or args.third_cycle_polls or args.fourth_cycle_polls
+    first = 23104 if args.fourth_cycle_polls else 22848 if args.third_cycle_polls else 22566 if args.second_cycle_polls else 22273
     if pcs[first] != 'E145':
         raise ValueError('Unexpected initial opponent control boundary')
     output = prepare_output(args.output, Path(__file__).resolve().parents[1])
@@ -44,7 +45,25 @@ def main():
         if mode not in (128,192) or poll[0x62d]!=mode:
             raise ValueError(f'Poll {count}: unexpected ball mode')
         sample=mode if mode!=previous_mode else 256
-        events=output/f'{count:02d}-events.txt';events.write_text('CMJPOLLNMI2\n'+' '.join(map(str,row))+f' {sample}\n')
+        waits=[i for i in range(at+1,end) if pcs[i]=='C9C5'];extras=[];previous_mode=mode
+        for position,point in enumerate(waits):
+            stop=waits[position+1] if position+1<len(waits) else end
+            travel_point=next(i for i in range(point+1,stop) if pcs[i]=='E3CA')
+            loader=next(i for i in range(travel_point+1,stop) if pcs[i]=='E3DE')
+            wait=ram(point);observed=ram(travel_point);loaded=ram(loader);random_index=wait[0xe1]
+            carry=re.search(r'\bP=([0-9A-Fa-f]{2})\b',lines[point])
+            if carry is None:raise ValueError('Missing interleaved random carry')
+            current=observed[0x62d];mode_sample=current if current!=previous_mode else 256;previous_mode=current
+            extras.extend((wait[0x300+random_index],wait[0x700+random_index],wait[(0x780+random_index)&2047],int(carry.group(1),16)&1,observed[0x1c],loaded[0x32],loaded[0x33],mode_sample))
+        if waits and (not args.fourth_cycle_polls or count!=6 or len(waits)!=4):raise ValueError('Unexpected interleaved poll waits')
+        events=output/f'{count:02d}-events.txt'
+        if waits:events.write_text('CMJPOLLNMI3\n'+' '.join(map(str,(*row,sample,len(waits),*extras)))+'\n')
+        else:events.write_text('CMJPOLLNMI2\n'+' '.join(map(str,row))+f' {sample}\n')
+        if waits:
+            invalid=output/f'{count:02d}-invalid-events.txt';invalid.write_text('CMJPOLLNMI3\n'+' '.join(map(str,(*row,sample,3,*extras[:24])))+'\n')
+            rejected=output/f'{count:02d}-rejected.cmjsession';before=source.read_bytes()
+            attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--advance-observed-nmi-poll',str(invalid),str(index),'--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+            if attempt.returncode==0 or rejected.exists() or source.read_bytes()!=before:raise ValueError('Incomplete switch waits did not reject atomically')
         target=output/f'{count:02d}.cmjsession'
         result=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),
                                '--advance-observed-nmi-poll',str(events),str(index),'--capture',str(target)],
@@ -53,13 +72,13 @@ def main():
         index=ram(end)[0xe1]
         if re.findall(r'final random index (\d+);',result.stdout)!=[str(index)]:
             raise ValueError(f'Poll {count}: random index differs')
-        data=target.read_bytes();expected_phase=441 if args.third_cycle_polls else 437 if args.second_cycle_polls else (435 if pcs[end]=='E1E7' else 434)
+        data=target.read_bytes();expected_phase=445 if args.fourth_cycle_polls else 441 if args.third_cycle_polls else 437 if args.second_cycle_polls else (435 if pcs[end]=='E1E7' else 434)
         if int.from_bytes(data[258:260],'little')!=expected_phase or data[413]!=ram(end)[0x616] or data[418]!=ram(end)[0x61b]:
             raise ValueError(f'Poll {count}: phase, cursor or flight flag differs')
         compare_represented(data,export_session(ram(end)),True,'opponent20',f'poll {count}')
         source,previous=target,end
     if later:
-        if previous!=(22918 if args.third_cycle_polls else 22636): raise ValueError('Unexpected later-cycle decision boundary')
+        if previous!=(23194 if args.fourth_cycle_polls else 22918 if args.third_cycle_polls else 22636): raise ValueError('Unexpected later-cycle decision boundary')
         print(f'Matched 10 opponent20 later-cycle polls before the captured AI decision; random index {index}.')
         return
     if pcs[previous]!='E1E7': raise ValueError('Expected control-clock entry')

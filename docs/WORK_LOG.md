@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 fourth-cycle polls
+
+Ten further opponent20 polls match the original, including a player-controlled defender switch and four captured NMI/travel waits after the sixth poll; random index93 to107. `CMJPOLLNMI3` records those waits and the observed ball-mode changes, guarded to this captured scenario. The verifier compares represented fields, cursor/flag and rejects an incomplete wait sequence atomically; the earlier `CMJWORLDNMI3` replay still matches. Evidence: `../Captain-Majid-analysis/opponent20-fourth-polls-v2-20261111`; Windows build and all 62 checks passed. The next cell decision and autonomous match timing remain unsupported; complete match unfinished and overall progress unmeasured. Next trace and compare that decision. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 next field round
 
 The next captured opponent20 action2 field round now matches all 22 original player updates to E145, random index72 to93. Its first player shares the random event already consumed by the preceding clock; unlike the prior round, it has no interleaved switch waits. Phase445 preserves this checkpoint. The existing V3 replay verifier checks original represented fields, cursor/flag, snapshot roundtrip, malformed ordering and repeated-operation rejection. Evidence: `../Captain-Majid-analysis/opponent20-next-field-v1-20261111`; the prior four-wait V3 replay also still matches. Windows build and all 62 registered checks passed. Autonomous AI/timing and a full match remain unsupported; overall progress unmeasured. Next compare later opponent control. Suggested model GPT-6.1 Terra High.

@@ -848,14 +848,26 @@ static void finish_nmi_input(std::istream& input) {
 }
 ObservedNmiFieldPoll load_observed_nmi_poll(std::istream& input) {
     std::string magic;
-    if (!(input >> magic) || (magic != "CMJPOLLNMI1" && magic != "CMJPOLLNMI2"))
+    if (!(input >> magic) || (magic != "CMJPOLLNMI1" && magic != "CMJPOLLNMI2" && magic != "CMJPOLLNMI3"))
         throw std::invalid_argument("Invalid observed NMI poll file header");
     auto sample = read_nmi_poll(input);
-    if (magic == "CMJPOLLNMI2") {
+    if (magic == "CMJPOLLNMI2" || magic == "CMJPOLLNMI3") {
         unsigned mode;
         if (!(input >> mode) || (mode != 128 && mode != 192 && mode != 256))
             throw std::invalid_argument("Invalid observed NMI ball-mode sample");
         if (mode != 256) sample.ball_mode_sample = static_cast<std::uint8_t>(mode);
+    }
+    if(magic=="CMJPOLLNMI3") {
+        unsigned count;if(!(input>>count) || count>8)throw std::invalid_argument("Invalid interleaved poll event count");
+        for(unsigned i=0;i<count;++i) {
+            unsigned player,sound,tail,carry,held,low,high,mode;
+            if(!(input>>player>>sound>>tail>>carry>>held>>low>>high>>mode) || player>255 || sound>255 || tail>255 || carry>1 || held>255 || low>255 || high>255 || (mode!=128 && mode!=192 && mode!=256))
+                throw std::invalid_argument("Invalid interleaved poll wait");
+            ObservedNmiWait wait{{static_cast<std::uint8_t>(player),static_cast<std::uint8_t>(sound),static_cast<std::uint8_t>(tail),carry!=0},
+                static_cast<std::uint8_t>(held),static_cast<std::uint16_t>(low|(high<<8)),{}};
+            if(mode!=256)wait.ball_mode_sample=static_cast<std::uint8_t>(mode);
+            sample.interleaved_waits.push_back(wait);
+        }
     }
     finish_nmi_input(input);
     return sample;
@@ -902,8 +914,10 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::control_ready || !input.control)
         throw std::invalid_argument("Observed NMI poll requires ready control");
-    if(!sample.random_observed || !sample.interleaved_waits.empty())
-        throw std::invalid_argument("Control polls require one random event and no interleaved waits");
+    if(!sample.random_observed || (!sample.interleaved_waits.empty() &&
+       (!input.score || input.score->left_goals!=1 || input.score->right_goals || input.score->kickoff!=4 || input.current.field.side!=11 ||
+        input.current.field.ball_owner!=20 || input.current.clock.remaining!=125 || sample.buttons.held!=128 || sample.buttons.pressed!=128 || sample.interleaved_waits.size()!=4)))
+        throw std::invalid_argument("Unsupported interleaved control poll waits");
     if (!sample.travel_observed && (sample.travel_held || sample.travel_speed))
         throw std::invalid_argument("Unobserved travel event must have zero inputs");
     auto state = input;
@@ -914,7 +928,7 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
     if (sample.ball_mode_sample) {
         const auto mode=*sample.ball_mode_sample;
         const bool player18=input.current.field.ball_owner==18 && (input.current.clock.remaining==156 || input.current.clock.remaining==155 || input.current.clock.remaining==154);
-        const bool player20=input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127 || input.current.clock.remaining==126);
+        const bool player20=input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127 || input.current.clock.remaining==126 || input.current.clock.remaining==125);
         if (!input.score || input.score->left_goals!=1 || input.score->right_goals!=0 || input.score->kickoff!=4 ||
             (!player18 && !player20) || input.current.clock.extra_time || input.current.field.side!=11 ||
             !((mode==192 && state.current.clock.ball_mode==128) || (mode==128 && state.current.clock.ball_mode==192)))
@@ -924,7 +938,20 @@ NmiControlPollResult advance_observed_nmi_control_poll(const PhaseSessionState& 
     if (sample.travel_observed)
         state = advance_session_control_travel(state, sample.travel_speed, sample.travel_held);
     auto poll = poll_session_control(state, sample.buttons.held, sample.buttons.pressed, primary, movement, control);
-    return {std::move(poll), random.state.index};
+    auto index=random.state.index;
+    for(const auto& wait:sample.interleaved_waits) {
+        const auto next=advance_reference_random({index,poll.state.current.field.random_first,poll.state.current.field.random_second},wait.random);
+        index=next.state.index;poll.state.current.field.random_first=next.state.first;poll.state.current.field.random_second=next.state.second;
+        if(wait.ball_mode_sample) {
+            const auto mode=*wait.ball_mode_sample;
+            if(!((mode==192 && poll.state.current.clock.ball_mode==128) || (mode==128 && poll.state.current.clock.ball_mode==192)))
+                throw std::invalid_argument("Unsupported interleaved poll ball-mode sample");
+            poll.state.current.clock.ball_mode=mode;
+        }
+        poll.state.control->travel_accumulator=advance_control_travel(poll.state.control->travel_accumulator,wait.travel_speed,
+            poll.state.current.field.side,wait.travel_held,poll.state.control->facing);
+    }
+    validate_phase_session(poll.state);return {std::move(poll), index};
 }
 
 NmiFieldRoundResult advance_observed_nmi_field_round(const PhaseSessionState& input,
@@ -954,8 +981,11 @@ NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionSt
     validate_phase_session(input);
     const bool later=input.phase==FieldSessionPhase::player2_opponent_field_complete;
     const bool action_round=input.phase==FieldSessionPhase::player2_opponent_action_field_complete;
-    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later && !action_round) ||
-       (sample.buttons.held!=0 && sample.buttons.held!=128) || sample.buttons.pressed)
+    const bool next_round=input.phase==FieldSessionPhase::player2_opponent_next_field_complete;
+    const bool observed_switch=next_round && input.control->controlled_player==3 && input.control->decision_timer==5 &&
+        sample.buttons.held==128 && sample.buttons.pressed==128 && sample.interleaved_waits.size()==4;
+    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later && !action_round && !next_round) || (next_round && !input.control->decision_timer) ||
+       (sample.buttons.held!=0 && sample.buttons.held!=128) || (sample.buttons.pressed && !observed_switch))
         throw std::invalid_argument("Opponent20 poll requires the observed neutral or held-A input");
     auto normalized=input;normalized.phase=FieldSessionPhase::control_ready;normalized.area_defender_cursor=0;
     auto result=advance_observed_nmi_control_poll(normalized,primary,movement,control,initial_random_index,sample);
@@ -966,7 +996,7 @@ NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionSt
     else if(result.poll.state.phase==FieldSessionPhase::control_clock_pending && !later)
         result.poll.state.phase=FieldSessionPhase::player2_opponent_clock_pending;
     else if(result.poll.state.phase==FieldSessionPhase::control_ready)
-        result.poll.state.phase=action_round ? FieldSessionPhase::player2_opponent_action_field_complete : later ? FieldSessionPhase::player2_opponent_field_complete : FieldSessionPhase::player2_opponent_control_ready;
+        result.poll.state.phase=next_round ? FieldSessionPhase::player2_opponent_next_field_complete : action_round ? FieldSessionPhase::player2_opponent_action_field_complete : later ? FieldSessionPhase::player2_opponent_field_complete : FieldSessionPhase::player2_opponent_control_ready;
     else throw std::invalid_argument("Unobserved opponent20 control continuation");
     result.poll.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.poll.state);return result;

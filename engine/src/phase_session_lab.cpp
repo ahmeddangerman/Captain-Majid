@@ -788,7 +788,7 @@ void advance_observed_nmi_poll_file(captain::PhaseSessionState& state, const cap
     std::ifstream input(path);
     if (!input) throw std::invalid_argument("Unable to open observed NMI poll file");
     const auto sample = captain::load_observed_nmi_poll(input);
-    const auto result = (state.phase==captain::FieldSessionPhase::player2_opponent_control_ready || state.phase==captain::FieldSessionPhase::player2_opponent_field_complete || state.phase==captain::FieldSessionPhase::player2_opponent_action_field_complete) ? captain::advance_observed_player2_opponent_poll(
+    const auto result = (state.phase==captain::FieldSessionPhase::player2_opponent_control_ready || state.phase==captain::FieldSessionPhase::player2_opponent_field_complete || state.phase==captain::FieldSessionPhase::player2_opponent_action_field_complete || state.phase==captain::FieldSessionPhase::player2_opponent_next_field_complete) ? captain::advance_observed_player2_opponent_poll(
         state, content.field_players, *content.movement, *content.control_movement, initial_index, sample) : ordinary_return ? captain::advance_observed_ordinary_return_poll(
         state, content.field_players, *content.movement, *content.control_movement, initial_index, sample) :
         captain::advance_observed_nmi_control_poll(state, content.field_players, *content.movement, *content.control_movement, initial_index, sample);
