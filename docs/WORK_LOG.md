@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 defender presentation wait
+
+Replayed 219 original captured NMI/travel pairs after defender2's comparison and restored variant, matching represented state at original 88AD and random index179. The existing event and travel kernels run the supplied sequence; this does not render or emulate the presentation. The extended defender verifier also checks the final snapshot roundtrip and prior invalid operations. Evidence: `../Captain-Majid-analysis/opponent20-defender-wait-v1-20261111`. Windows CMake build and all 62 registered checks passed. Next trace the remaining contact clock, power reduction and defender cleanup before pass reception. AI/timing are supplied; complete match unsupported and overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 pass defender comparison
 
 The captured pass now matches the original defender2 loop and preparation (action2, power8, cost50), comparison (strength4, loss1, score96, result1) and restoration of ball variant2. Phases460?463 retain the sampled contexts; the shared comparison kernel uses a private captured table and one supplied NMI/travel pair advances random index215 to216. `tools/verify_opponent20_pass_defender.py` compares represented original states and contact details, rejects invalid or repeated operations atomically and verifies snapshot roundtrip. Evidence: `../Captain-Majid-analysis/opponent20-defender-v3-20261111`. Windows CMake build, all 62 registered checks, and the prior flight verifier passed. The following presentation wait and pass outcome remain unmatched; AI choice and event timing are supplied, a complete playable match remains unsupported, and overall progress is unmeasured. Next trace the original wait and power reduction before reception. Suggested model GPT-6.1 Terra High.
