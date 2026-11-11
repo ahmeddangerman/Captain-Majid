@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 ? Provisional unopposed pass handoff
+
+Added runtime-local pass stages so a prepared unopposed pass explicitly waits for `presentation_complete`, then acknowledges the observed ball-variant change to1. This is a provisional acknowledgement, not original presentation execution. The represented field and variant matched 24 legacy empty-target handoffs previously compared against original. Teammate targets remain constructed-only evidence; the runtime-local stage is not serialized in legacy snapshots. Tests reject premature/repeated acknowledgements atomically. Synthetic human acceptance reaches handoff then stops at unsupported dispatch/flight; opponent AI remains unsupported. Windows build and all 64 registered checks passed. Next investigate the original post-handoff field update and general flight. Overall progress unmeasured; no complete playable match. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 ? General unopposed pass preparation
 
 Added general ordinary unopposed pass preparation after target confirmation: shared attack, stamina, power and subtype kernels update the side-zero carrier; an empty defense context is retained in existing phase335/snapshot layout. No new player-specific phase was added and previous valid snapshot readers remain supported. The separately selected provisional runtime advances through this stage after explicit human menu and target selection. Two synthetic human possession cases reach the next unsupported dispatch at phase335; opponent AI is still unsupported.

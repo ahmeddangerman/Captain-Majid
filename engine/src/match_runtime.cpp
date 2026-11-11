@@ -83,8 +83,20 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   if(content.data->field_players.skills.empty() || content.data->attack.moves[1].empty()) {result.unsupported=UnsupportedCapability::content;return result;}
   auto next=input;advance_demo_random(next);
   next.session=prepare_ordinary_unopposed_pass(next.session,content.data->field_players,content.data->attack);
+  next.pass_stage=MatchPassStage::awaiting_presentation;
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);
   result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_prepared &&
+    input.pass_stage==MatchPassStage::awaiting_presentation) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  if(!input.session.recovery || input.session.recovery->ball_variant || input.session.current.field.selected_defenders) {
+   result.unsupported=UnsupportedCapability::phase;return result;
+  }
+  result.state.session.recovery->ball_variant=1;
+  validate_phase_session(result.state.session);
+  result.state.pass_stage=MatchPassStage::handoff;result.state.last_sequence=event.sequence;
+  return result;
  }
  if(input.session.phase==FieldSessionPhase::field){result.unsupported=UnsupportedCapability::initialization;return result;}
  if(event.kind==MatchInputKind::action)result.unsupported=UnsupportedCapability::action;

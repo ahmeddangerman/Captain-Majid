@@ -1,5 +1,6 @@
 #include "captain/match_runtime.hpp"
 #include "captain/phase_session_io.hpp"
+#include "captain/field_state_io.hpp"
 #include <cassert>
 #include <stdexcept>
 #include <fstream>
@@ -25,6 +26,16 @@ int main(int argc,char** argv) {
      actual.action->move_effect!=reference.action->move_effect || actual.action->move_flags!=reference.action->move_flags ||
      actual.recovery->attack_subtype!=reference.recovery->attack_subtype || actual.current.clock.ball_mode!=reference.current.clock.ball_mode)
    throw std::runtime_error("Unopposed pass differs from original-compared preparation");
+  const auto expected_handoff=acknowledge_sampled_human_empty_pass_handoff(reference);
+  MatchContent handoff_content{};handoff_content.data=pack;
+  MatchRuntimeState handoff_input{};handoff_input.session=actual;handoff_input.mode=MatchTimingMode::provisional_demo;
+  handoff_input.demo_rng=1;handoff_input.pass_stage=MatchPassStage::awaiting_presentation;
+  const auto handoff_result=step_match(handoff_input,{MatchInputKind::presentation_complete,1},handoff_content);
+  if(handoff_result.unsupported || handoff_result.state.session.recovery->ball_variant!=expected_handoff.recovery->ball_variant)
+   throw std::runtime_error("Unopposed handoff differs from original-compared case");
+  std::ostringstream actual_field,expected_field;write_field_state(actual_field,handoff_result.state.session.current.field);
+  write_field_state(expected_field,expected_handoff.current.field);
+  if(actual_field.str()!=expected_field.str())throw std::runtime_error("Unopposed handoff field differs");
   std::ostringstream saved;write_phase_session(saved,actual);std::istringstream read(saved.str());auto restored=load_phase_session(read);
   if(!restored.ordinary_pass_defenses || restored.ordinary_pass_defenses->count)throw std::runtime_error("Empty defense snapshot mismatch");
   return 0;
@@ -108,6 +119,13 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  auto prepared=step_match(chosen.state,{MatchInputKind::tick,9},content);
  assert(!prepared.unsupported && prepared.state.session.phase==FieldSessionPhase::ordinary_pass_prepared);
  assert(prepared.state.session.current.field.roster[7].stamina==80 && prepared.state.session.action->power>0);
+ assert(prepared.state.pass_stage==MatchPassStage::awaiting_presentation);
+ auto early_flight=step_match(prepared.state,{MatchInputKind::tick,10},content);
+ assert(early_flight.unsupported==UnsupportedCapability::presentation && early_flight.state.last_sequence==9);
+ auto handoff=step_match(prepared.state,{MatchInputKind::presentation_complete,10},content);
+ assert(!handoff.unsupported && handoff.state.pass_stage==MatchPassStage::handoff && handoff.state.session.recovery->ball_variant==1);
+ auto repeated_handoff=step_match(handoff.state,{MatchInputKind::presentation_complete,11},content);
+ assert(repeated_handoff.unsupported==UnsupportedCapability::presentation && repeated_handoff.state.last_sequence==10);
  std::ostringstream pass_bytes;write_phase_session(pass_bytes,prepared.state.session);
  std::istringstream pass_stream(pass_bytes.str());auto pass_loaded=load_phase_session(pass_stream);
  assert(pass_loaded.ordinary_pass_defenses && pass_loaded.ordinary_pass_defenses->count==0);

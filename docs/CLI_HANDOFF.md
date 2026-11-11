@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active checkpoint ? provisional unopposed pass handoff (2026-11-11)
+
+Explicit `presentation_complete` moves the demo runtime from unopposed pass preparation to handoff (variant1), with no claim of rendering. Field and variant match 24 legacy empty-target handoffs previously compared with the original; teammate targets are constructed, not independently observed. Pass stage is runtime-only and not saved in legacy snapshots. Synthetic human acceptance remains red at post-handoff dispatch; opponent AI unsupported. Windows build and all 64 checks passed. Next trace and implement general post-handoff field update/flight. Full match unsupported and overall progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Active checkpoint ? general unopposed pass preparation (2026-11-11)
 
 Provisional human menu/target routing reaches new general unopposed pass preparation, phase335, using shared attack/stamina kernels and an empty defense context in existing snapshot layout. The two synthetic human acceptance cases now stop at the subsequent unsupported dispatch; opponent AI remains unsupported. Compared preparation fields with 24 legacy cases previously matched to original empty-target behavior; single-teammate variants are constructed only. Snapshot roundtrip and defender rejection passed; Windows build and 64 registered checks passed. Next trace/implement unopposed dispatch and flight with real content, preserving explicit demo-mode differences. Full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

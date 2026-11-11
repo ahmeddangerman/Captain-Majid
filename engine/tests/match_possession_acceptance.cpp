@@ -55,6 +55,7 @@ int main(int argc,char** argv) {
     if(!blocked && (state.session.phase!=FieldSessionPhase::ordinary_pass_prepared || state.session.current.field.roster[owner].stamina!=80)){
      std::cerr<<"owner "<<unsigned(owner)<<": unopposed pass preparation differs\n";blocked=true;
     }
+    if(!blocked)advance({MatchInputKind::presentation_complete,0});
     if(!blocked)advance({MatchInputKind::tick,0});
     if(blocked){++failures;continue;}
     std::cerr<<"owner "<<unsigned(owner)<<": pass flight/reception not complete\n";++failures;continue;
