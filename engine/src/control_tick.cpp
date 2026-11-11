@@ -433,10 +433,10 @@ NmiEventSequenceResult advance_observed_nmi_events(const PhaseSessionState& inpu
         } else if (event.kind == ObservedClockEventKind::travel) {
             state.control->travel_accumulator = advance_control_travel(state.control->travel_accumulator,
                 event.speed, state.current.field.side, event.held, state.control->facing);
-        } else if (input.phase==FieldSessionPhase::player2_same_cell_pass_recovered_owner && event.kind==ObservedClockEventKind::facing_sample) {
+        } else if ((input.phase==FieldSessionPhase::player2_same_cell_pass_recovered_owner || input.phase==FieldSessionPhase::player2_opponent_pass_received) && event.kind==ObservedClockEventKind::facing_sample) {
             if(event.held || state.control->facing!=64) throw std::invalid_argument("Unsupported opponent recovery facing sample");
             state.control->facing=0;
-        } else if (input.phase==FieldSessionPhase::player2_same_cell_pass_recovered_owner && event.kind==ObservedClockEventKind::motion_sample) {
+        } else if ((input.phase==FieldSessionPhase::player2_same_cell_pass_recovered_owner || input.phase==FieldSessionPhase::player2_opponent_pass_received) && event.kind==ObservedClockEventKind::motion_sample) {
             if(!((state.control->motion_requested==0 && event.held==1) || (state.control->motion_requested==1 && event.held==0)))
                 throw std::invalid_argument("Unsupported opponent recovery motion sample");
             state.control->motion_requested=event.held;
