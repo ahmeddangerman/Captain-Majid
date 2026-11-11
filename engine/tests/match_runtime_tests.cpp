@@ -7,6 +7,28 @@
 #include <string>
 int main(int argc,char** argv) {
  using namespace captain;
+ if(argc==4 && std::string(argv[1])=="--compare-unopposed") {
+  std::ifstream source_file(argv[2],std::ios::binary),pack_file(argv[3],std::ios::binary);
+  const auto legacy=load_phase_session(source_file);const auto pack=load_shot_content(pack_file);
+  const auto reference=prepare_sampled_human_empty_pass(legacy,pack.field_players,pack.attack);
+  auto input=legacy;input.phase=FieldSessionPhase::ordinary_human_pass_confirmed;input.human_pass_steps=0;
+  input.ordinary_pass_candidates=OrdinaryPassCandidateContext{};input.ordinary_pass_recipient=255;
+  const auto actual=prepare_ordinary_unopposed_pass(input,pack.field_players,pack.attack);
+  auto teammate=input;teammate.ordinary_pass_candidates->scanned=true;
+  teammate.ordinary_pass_candidates->candidates.count=1;teammate.ordinary_pass_candidates->candidates.allied_count=1;
+  teammate.ordinary_pass_candidates->candidates.ids[0]=6;teammate.ordinary_pass_recipient=6;
+  const auto teammate_prepared=prepare_ordinary_unopposed_pass(teammate,pack.field_players,pack.attack);
+  if(teammate_prepared.ordinary_pass_recipient!=6 || teammate_prepared.action->power!=actual.action->power)
+   throw std::runtime_error("Teammate target changed independent pass preparation");
+  const auto id=input.current.field.ball_owner;
+  if(actual.current.field.roster[id].stamina!=reference.current.field.roster[id].stamina || actual.action->power!=reference.action->power ||
+     actual.action->move_effect!=reference.action->move_effect || actual.action->move_flags!=reference.action->move_flags ||
+     actual.recovery->attack_subtype!=reference.recovery->attack_subtype || actual.current.clock.ball_mode!=reference.current.clock.ball_mode)
+   throw std::runtime_error("Unopposed pass differs from original-compared preparation");
+  std::ostringstream saved;write_phase_session(saved,actual);std::istringstream read(saved.str());auto restored=load_phase_session(read);
+  if(!restored.ordinary_pass_defenses || restored.ordinary_pass_defenses->count)throw std::runtime_error("Empty defense snapshot mismatch");
+  return 0;
+ }
  if(argc==4 && (std::string(argv[1])=="--compare-menu" || std::string(argv[1])=="--compare-confirm")) {
   std::ifstream before_file(argv[2],std::ios::binary), expected_file(argv[3],std::ios::binary);
   auto before=load_phase_session(before_file);auto expected=load_phase_session(expected_file);
@@ -32,7 +54,7 @@ int main(int argc,char** argv) {
  assert(tick.state.last_sequence==start.state.last_sequence);
  auto pre=PhaseSessionState{}; pre.phase=FieldSessionPhase::player_control;
  pre.experience=ExperienceState{};pre.recovery=RecoveryContext{};pre.control=ControlContext{};pre.scheduling=SchedulingContext{};pre.action=ActionContext{};
- pre.current.field.side=0;pre.current.field.ball_owner=7;pre.current.field.ball_x=124;pre.current.field.ball_y=124;
+ pre.current.field.roster[7].type=1;pre.current.field.roster[7].stamina=100;pre.current.field.side=0;pre.current.field.ball_owner=7;pre.current.field.ball_x=124;pre.current.field.ball_y=124;
  pre.current.field.motion[6].x=124u<<8;pre.current.field.motion[6].y=124u<<8;
  MatchRuntimeState prepared_input{pre,0};prepared_input.random_memory.known[0x304]=true;
  prepared_input.random_memory.known[0x700]=true;prepared_input.random_memory.bytes[0x700]=23;
@@ -81,6 +103,20 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  MatchInput choose{MatchInputKind::tick,8};choose.pressed=128;
  auto chosen=step_match(aimed.state,choose,content);
  assert(!chosen.unsupported && chosen.state.session.phase==FieldSessionPhase::ordinary_human_pass_confirmed);
+ content.data->field_players.skills.resize(1);content.data->field_players.skills[0].fill(20);
+ content.data->attack.skill_selectors[1][0]=1;content.data->attack.moves[1].push_back({2,0,20,0});content.data->attack.strength_curve.fill(20);
+ auto prepared=step_match(chosen.state,{MatchInputKind::tick,9},content);
+ assert(!prepared.unsupported && prepared.state.session.phase==FieldSessionPhase::ordinary_pass_prepared);
+ assert(prepared.state.session.current.field.roster[7].stamina==80 && prepared.state.session.action->power>0);
+ std::ostringstream pass_bytes;write_phase_session(pass_bytes,prepared.state.session);
+ std::istringstream pass_stream(pass_bytes.str());auto pass_loaded=load_phase_session(pass_stream);
+ assert(pass_loaded.ordinary_pass_defenses && pass_loaded.ordinary_pass_defenses->count==0);
+ auto guarded=chosen.state.session;guarded.current.field.selected_defenders=1;guarded.scheduling->selected_ids[0]=12;
+ bool reject_defender=false;try{prepare_ordinary_unopposed_pass(guarded,content.data->field_players,content.data->attack);}catch(const std::invalid_argument&){reject_defender=true;}
+ assert(reject_defender && guarded.current.field.roster[7].stamina==100);
+ assert(chosen.state.session.current.field.roster[7].stamina==100);
+ auto repeated=step_match(prepared.state,{MatchInputKind::tick,9},content);
+ assert(repeated.unsupported==UnsupportedCapability::input_sequence);
  MatchInput cancel{MatchInputKind::tick,8};cancel.pressed=64;
  auto cancelled=step_match(aimed.state,cancel,content);
  assert(cancelled.unsupported==UnsupportedCapability::action && cancelled.state.last_sequence==7);

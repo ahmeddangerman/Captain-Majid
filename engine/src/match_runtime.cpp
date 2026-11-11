@@ -77,6 +77,15 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);
   result.state=std::move(next);return result;
  }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_confirmed &&
+    !input.session.current.field.selected_defenders && event.kind==MatchInputKind::tick) {
+  if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
+  if(content.data->field_players.skills.empty() || content.data->attack.moves[1].empty()) {result.unsupported=UnsupportedCapability::content;return result;}
+  auto next=input;advance_demo_random(next);
+  next.session=prepare_ordinary_unopposed_pass(next.session,content.data->field_players,content.data->attack);
+  next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);
+  result.state=std::move(next);return result;
+ }
  if(input.session.phase==FieldSessionPhase::field){result.unsupported=UnsupportedCapability::initialization;return result;}
  if(event.kind==MatchInputKind::action)result.unsupported=UnsupportedCapability::action;
  else if(event.kind==MatchInputKind::presentation_complete)result.unsupported=UnsupportedCapability::presentation;

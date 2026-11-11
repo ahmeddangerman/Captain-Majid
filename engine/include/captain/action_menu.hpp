@@ -131,6 +131,9 @@ PhaseSessionState capture_sampled_score25_pass_defenses(const PhaseSessionState&
     const std::array<std::uint8_t,3>& actions,const std::array<std::uint8_t,3>& subtypes);
 PhaseSessionState prepare_sampled_score25_player7_pass(const PhaseSessionState& input,
     const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
+// Ordinary field pass with no selected defenders; input remains unchanged.
+PhaseSessionState prepare_ordinary_unopposed_pass(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
 PhaseSessionState prepare_sampled_human_empty_pass(const PhaseSessionState& input,
     const FieldPlayerProfiles& players,const FieldDefenseContent& attack);
 PhaseSessionState acknowledge_sampled_human_empty_pass_handoff(const PhaseSessionState& input);

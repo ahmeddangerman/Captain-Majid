@@ -20,12 +20,13 @@ int main(int argc,char** argv) {
   initial.experience=ExperienceState{};initial.recovery=RecoveryContext{};
   initial.control=ControlContext{};initial.scheduling=SchedulingContext{};initial.action=ActionContext{};
   initial.current.field.side=owner<11?0:11;initial.current.field.ball_owner=owner;
+  initial.current.field.roster[owner].type=1;initial.current.field.roster[owner].stamina=100;
   initial.current.field.ball_x=124;initial.current.field.ball_y=124;
   for(auto& player:initial.current.field.motion){player.x=124u<<8;player.y=124u<<8;}
   initial.current.field.motion[field_motion_index(target)].x=140u<<8;
   MatchConfig config{};config.initial=initial;config.random_index=0; // Synthetic metadata, not an original capture.
   MatchContent content{};content.data=ShotContent{};
-  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->control_movement=ControlMovementContent{};content.data->action_menu=ActionMenuContent{};content.data->action_menu->directions[0][0]=1;}
+  if(demo){config.mode=MatchTimingMode::provisional_demo;config.seed=1;content.data->movement=FieldPhaseContent{};content.data->control_movement=ControlMovementContent{};content.data->action_menu=ActionMenuContent{};content.data->action_menu->directions[0][0]=1;content.data->field_players.skills.resize(1);content.data->field_players.skills[0].fill(20);content.data->attack.skill_selectors[1][0]=1;content.data->attack.moves[1].push_back({2,0,20,0});content.data->attack.strength_curve.fill(20);}
   try {
    auto started=create_match(config,content);
    if(started.unsupported) {std::cerr<<"owner "<<unsigned(owner)<<": create: "<<capability_name(*started.unsupported)<<'\n';++failures;continue;}
@@ -49,6 +50,10 @@ int main(int argc,char** argv) {
     if(!blocked)advance(confirm);
     if(!blocked && (!state.session.ordinary_pass_recipient || *state.session.ordinary_pass_recipient!=target)){
      std::cerr<<"owner "<<unsigned(owner)<<": wrong selected recipient\n";blocked=true;
+    }
+    if(!blocked)advance({MatchInputKind::tick,0});
+    if(!blocked && (state.session.phase!=FieldSessionPhase::ordinary_pass_prepared || state.session.current.field.roster[owner].stamina!=80)){
+     std::cerr<<"owner "<<unsigned(owner)<<": unopposed pass preparation differs\n";blocked=true;
     }
     if(!blocked)advance({MatchInputKind::tick,0});
     if(blocked){++failures;continue;}

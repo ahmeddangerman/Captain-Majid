@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Active checkpoint ? general unopposed pass preparation (2026-11-11)
+
+Provisional human menu/target routing reaches new general unopposed pass preparation, phase335, using shared attack/stamina kernels and an empty defense context in existing snapshot layout. The two synthetic human acceptance cases now stop at the subsequent unsupported dispatch; opponent AI remains unsupported. Compared preparation fields with 24 legacy cases previously matched to original empty-target behavior; single-teammate variants are constructed only. Snapshot roundtrip and defender rejection passed; Windows build and 64 registered checks passed. Next trace/implement unopposed dispatch and flight with real content, preserving explicit demo-mode differences. Full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Active checkpoint ? provisional human pass target (2026-11-11)
 
 Opt-in provisional runtime now routes original-backed human action menu, ordinary-pass selection, cursor movement and single-recipient confirmation. Demo synthetic acceptance selects intended recipients for both human-side cases and stops at phase332 because unopposed pass preparation is not generalized; opponent-side AI/action remains unsupported. Menu and confirmation state matched existing original-compared checkpoints after normalizing provisional random bytes; timing/random parity and presentation rendering not claimed. Windows build and all 64 checks passed. Next inspect controlled original unopposed-pass preparation and connect a general supported path; maintain explicit unsupported branches. Full match unsupported, overall progress unmeasured. Suggested model GPT-6.1 Terra High.

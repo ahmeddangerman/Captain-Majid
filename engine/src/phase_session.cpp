@@ -112,7 +112,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         }
         if (state.ordinary_pass_defenses) {
             const auto& defense = *state.ordinary_pass_defenses;
-            if (!field.selected_defenders || defense.count > field.selected_defenders ||
+            if ((!field.selected_defenders && phase!=335) || defense.count > field.selected_defenders ||
                 (phase==333 && defense.count >= field.selected_defenders) ||
                 (phase>=334 && defense.count != field.selected_defenders) ||
                 (phase>=336 && state.area_defender_cursor>=defense.count) ||

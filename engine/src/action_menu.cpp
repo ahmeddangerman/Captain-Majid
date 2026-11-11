@@ -1267,6 +1267,21 @@ PhaseSessionState prepare_sampled_score25_player7_pass(const PhaseSessionState& 
     auto state=input;state.action->power=prepared.action_power.power;state.current.field.roster[5].stamina=prepared.energy.stamina;
     state.phase=FieldSessionPhase::sampled_score25_pass_prepared;validate_phase_session(state);return state;
 }
+PhaseSessionState prepare_ordinary_unopposed_pass(const PhaseSessionState& input,
+    const FieldPlayerProfiles& players,const FieldDefenseContent& attack) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_human_pass_confirmed || input.current.field.selected_defenders ||
+       !input.action || !input.recovery || input.recovery->ball_variant)
+        throw std::invalid_argument("Unopposed pass requires a confirmed field pass with no defenders");
+    const auto& f=input.current.field;const auto& p=f.roster[f.ball_owner];
+    const auto prepared=prepare_attacking_action({{f.ball_owner,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},
+        1,0,0,0,0,f.random_first,f.random_second,false},players,attack);
+    auto state=input;state.current.field.roster[f.ball_owner].stamina=prepared.energy.stamina;
+    state.action->power=prepared.action_power.power;state.action->move_effect=prepared.preparation.move_effect;
+    state.action->move_flags=prepared.move_flags;state.recovery->attack_subtype=prepared.action_power.subtype;
+    state.current.clock.ball_mode=0;state.ordinary_pass_defenses=OrdinaryPassDefenseContext{};
+    state.phase=FieldSessionPhase::ordinary_pass_prepared;validate_phase_session(state);return state;
+}
 PhaseSessionState prepare_sampled_human_empty_pass(const PhaseSessionState& input,const FieldPlayerProfiles& players,const FieldDefenseContent& attack) {
     validate_phase_session(input);
     if(input.phase==FieldSessionPhase::sampled_score23_empty_confirmed) {
