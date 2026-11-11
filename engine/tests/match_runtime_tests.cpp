@@ -10,6 +10,22 @@
 #include <string>
 static int comparisons(int argc,char** argv) {
  using namespace captain;
+ if(argc==6 && std::string(argv[1])=="--compare-pass-cancel") {
+  std::ifstream source_file(argv[2],std::ios::binary),before_file(argv[3],std::ios::binary),expected_file(argv[4],std::ios::binary);
+  auto source=load_phase_session(source_file);auto expected=load_phase_session(expected_file);std::array<unsigned char,2048> before{};
+  if(!before_file.read(reinterpret_cast<char*>(before.data()),before.size()))throw std::runtime_error("Missing original target RAM");
+  auto target=begin_ordinary_human_pass_target(source);target.human_pass_cursor=before[0x624];
+  MatchRuntimeState state{};state.session=target;state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;
+  MatchContent content{};content.data=ShotContent{};MatchInput input{MatchInputKind::tick,1};input.pressed=static_cast<std::uint8_t>(std::stoul(argv[5]));
+  auto result=step_match(state,input,content);
+  if(result.unsupported || result.state.session.phase!=FieldSessionPhase::human_action_menu)throw std::runtime_error("Runtime pass cancellation unsupported");
+  result.state.session.current.field.random_first=expected.current.field.random_first;
+  result.state.session.current.field.random_second=expected.current.field.random_second;
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);
+  write_phase_session(actual_bytes,result.state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str())throw std::runtime_error("Runtime pass cancellation differs from original represented session");
+  return 0;
+ }
  if((argc==6 || argc==7 || argc==8 || argc==9 || argc==10 || argc==13) && (std::string(argv[1])=="--compare-field-ai-preparation" || std::string(argv[1])=="--compare-field-ai-clock" || std::string(argv[1])=="--compare-field-ai-handoff" || std::string(argv[1])=="--compare-field-ai-target" || std::string(argv[1])=="--compare-field-ai-flight" || std::string(argv[1])=="--compare-field-ai-crossing" || std::string(argv[1])=="--compare-field-ai-reception" || std::string(argv[1])=="--compare-field-ai-pass-control" || std::string(argv[1])=="--compare-field-ai-return" || std::string(argv[1])=="--compare-field-ai-control")) {
   const bool pass_control=std::string(argv[1])=="--compare-field-ai-pass-control";
   const bool through_crossing=std::string(argv[1])=="--compare-field-ai-crossing";
@@ -532,7 +548,11 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
  assert(repeated.unsupported==UnsupportedCapability::input_sequence);
  MatchInput cancel{MatchInputKind::tick,8};cancel.pressed=64;
  auto cancelled=step_match(aimed.state,cancel,content);
- assert(cancelled.unsupported==UnsupportedCapability::action && cancelled.state.last_sequence==7);
+ assert(!cancelled.unsupported && cancelled.state.last_sequence==8 && cancelled.state.session.phase==FieldSessionPhase::human_action_menu);
+ assert(!cancelled.state.session.human_pass_cursor && !cancelled.state.session.ordinary_pass_candidates && cancelled.state.session.action->cursor==0);
+ cancel.pressed=192;auto cancel_priority=step_match(aimed.state,cancel,content);
+ assert(!cancel_priority.unsupported && cancel_priority.state.session.phase==FieldSessionPhase::human_action_menu);
+ assert(aimed.state.session.human_pass_cursor && aimed.state.last_sequence==7);
  auto direct=ordinary;direct.target=7;
  auto direct_rejected=step_match(confirmed.state,direct,content);
  assert(direct_rejected.unsupported==UnsupportedCapability::action && direct_rejected.state.last_sequence==5);

@@ -947,6 +947,14 @@ OrdinaryPassCursorResult poll_ordinary_human_pass_cursor(const PhaseSessionState
     validate_phase_session(state);
     return {std::move(state), changed};
 }
+PhaseSessionState cancel_ordinary_human_pass_target(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::ordinary_human_pass_target || !input.action || !input.human_pass_cursor)
+        throw std::invalid_argument("Pass cancellation requires an active target screen");
+    auto state=input;state.action->cursor=0;state.human_pass_cursor.reset();state.human_pass_steps=0;
+    state.ordinary_pass_candidates.reset();state.phase=FieldSessionPhase::human_action_menu;
+    validate_phase_session(state);return state;
+}
 PhaseSessionState confirm_ordinary_human_pass_target(const PhaseSessionState& input) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::ordinary_human_pass_target || !input.ordinary_pass_candidates)

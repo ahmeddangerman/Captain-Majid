@@ -249,12 +249,13 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return result;
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
-  if(event.pressed&64u || ((event.pressed&128u) && (!input.session.ordinary_pass_candidates || input.session.ordinary_pass_candidates->candidates.allied_count>1))) {
+  if(!(event.pressed&64u) && (event.pressed&128u) && (!input.session.ordinary_pass_candidates || input.session.ordinary_pass_candidates->candidates.allied_count>1)) {
    result.unsupported=UnsupportedCapability::action;return result;
   }
   if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
   auto next=input;advance_demo_random(next);
-  next.session=(event.pressed&128u) ? confirm_ordinary_human_pass_target(next.session)
+  next.session=(event.pressed&64u) ? cancel_ordinary_human_pass_target(next.session)
+    : (event.pressed&128u) ? confirm_ordinary_human_pass_target(next.session)
     : poll_ordinary_human_pass_cursor(next.session,event.held,event.pressed).state;
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);
   result.state=std::move(next);return result;

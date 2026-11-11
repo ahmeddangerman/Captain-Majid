@@ -4,7 +4,7 @@
 #include <array>
 #include <string>
 
-// Explicitly failing milestone acceptance, invoked manually, not part of CTest.
+// Bounded milestone checks, invoked manually, not part of CTest.
 // Synthetic fixtures test runtime wiring; they are not original startup evidence.
 int main(int argc,char** argv) {
  const bool demo=argc==2 && std::string(argv[1])=="--demo";
@@ -12,7 +12,7 @@ int main(int argc,char** argv) {
  if(demo)std::cerr<<"PROVISIONAL DEMO: simplified timing and random values; synthetic content.\n";
  using namespace captain;
  unsigned failures=0;
- bool cancellation_checked=false,cancellation_unfinished=false;
+ bool cancellation_checked=false,cancellation_unfinished=false,multi_checked=false,multi_unfinished=false;
  const std::array<std::uint8_t,3> owners{{3,7,15}};
  const std::array<std::uint8_t,3> targets{{7,3,19}};
  unsigned fixture=0;
@@ -89,6 +89,16 @@ int main(int argc,char** argv) {
     MatchInput confirm{MatchInputKind::tick,0};confirm.pressed=128;if(!blocked)advance(confirm);
     MatchInput ordinary{MatchInputKind::action,0};ordinary.action=MatchAction::pass;if(!blocked)advance(ordinary);
     if(!blocked && !cancellation_checked){MatchInput cancel{MatchInputKind::tick,seq};cancel.pressed=64;auto result=step_match(state,cancel,content);cancellation_checked=true;cancellation_unfinished=bool(result.unsupported);}
+    if(!blocked && !multi_checked){
+     auto multi=state;const auto extra=static_cast<std::uint8_t>(owner==3 ? 8 : 4);
+     multi.session.current.field.motion[field_motion_index(extra)]=multi.session.current.field.motion[field_motion_index(target)];
+     MatchInput probe{MatchInputKind::tick,seq};probe.held=1;auto first=step_match(multi,probe,content);
+     probe.sequence++;auto second=step_match(first.state,probe,content);
+     MatchInput choose_multi{MatchInputKind::tick,probe.sequence+1};choose_multi.pressed=128;
+     auto result=step_match(second.state,choose_multi,content);
+     multi_checked=true;multi_unfinished=bool(first.unsupported) || bool(second.unsupported) ||
+      !second.state.session.ordinary_pass_candidates || second.state.session.ordinary_pass_candidates->candidates.allied_count<2 || bool(result.unsupported);
+    }
     MatchInput aim{MatchInputKind::tick,0};aim.held=1;if(!blocked)advance(aim);if(!blocked)advance(aim);
     if(!blocked)advance(confirm);
     if(!blocked && (!state.session.ordinary_pass_recipient || *state.session.ordinary_pass_recipient!=target)){
@@ -132,6 +142,7 @@ int main(int argc,char** argv) {
   } catch(const std::exception& error) {std::cerr<<"owner "<<unsigned(owner)<<": "<<error.what()<<'\n';++failures;}
  }
  if(demo && cancellation_unfinished){std::cerr<<"M1 still incomplete: ordinary pass target cancellation is unsupported\n";++failures;}
+ if(demo && multi_unfinished){std::cerr<<"M1 still incomplete: multi-teammate pass selection is unsupported\n";++failures;}
  std::cerr<<failures<<" exercised checks incomplete; other match routes remain unverified\n";
  return failures?1:0;
 }

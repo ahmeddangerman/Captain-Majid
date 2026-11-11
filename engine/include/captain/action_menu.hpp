@@ -119,6 +119,8 @@ PhaseSessionState acknowledge_sampled_unaffordable_shot(const PhaseSessionState&
 PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& input);
 struct OrdinaryPassCursorResult { PhaseSessionState state; bool cursor_changed = false; };
 OrdinaryPassCursorResult poll_ordinary_human_pass_cursor(const PhaseSessionState& input, std::uint8_t held, std::uint8_t pressed);
+// Return from the target screen after its cancellation presentation completes.
+PhaseSessionState cancel_ordinary_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState confirm_ordinary_human_pass_target(const PhaseSessionState& input);
 PhaseSessionState begin_ordinary_pass_defense_selection(const PhaseSessionState& input);
 PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
