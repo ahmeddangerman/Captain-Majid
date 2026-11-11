@@ -1191,6 +1191,15 @@ ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::u
     return result;
 }
 
+PhaseSessionState handoff_player2_opponent_pass(const PhaseSessionState& input) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_opponent_pass_prepared || input.current.field.random_first!=179 ||
+       input.current.field.random_second!=162 || input.current.clock.ball_mode!=192 || input.current.clock.script_flags!=128 ||
+       input.control->last_carrier_cell!=68)
+        throw std::invalid_argument("Opponent20 pass handoff requires its observed presentation boundary");
+    auto state=input;state.current.clock.ball_mode=0;state.current.clock.script_flags=0;state.control->last_carrier_cell=0;
+    state.phase=FieldSessionPhase::player2_opponent_pass_handoff;validate_phase_session(state);return state;
+}
 PhaseSessionState prepare_player2_opponent_pass(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& content) {
     validate_phase_session(input);
     if(input.phase!=FieldSessionPhase::player2_opponent_pass_choice)throw std::invalid_argument("Opponent20 pass preparation requires its captured choice");

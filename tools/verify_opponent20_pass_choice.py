@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 from export_phase_session import export_session
-from verify_captured_control_chain import trace_data
+from verify_captured_control_chain import trace_data, menu_wait_events
 from verify_player7_pass_end_to_end import compare_represented, prepare_output
 
 
@@ -46,11 +46,35 @@ def main():
     compare_represented(actual,export_session(ram(23461)),True,'opponent20','pass preparation')
     original=ram(23461)
     if actual[394:399]!=bytes((1,original[0x5fc],original[0x638],original[0x43f],original[0x440])):raise ValueError('Prepared pass recipient, target or cost differs')
+    run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(prepared),'--handoff-player2-opponent-pass','--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if run.returncode==0 or rejected.exists() or prepared.read_bytes()!=actual:raise ValueError('Early handoff did not reject atomically')
     run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(prepared),'--prepare-player2-opponent-pass','--capture',str(rejected)],capture_output=True,text=True,timeout=30)
     if run.returncode==0 or rejected.exists() or prepared.read_bytes()!=actual:raise ValueError('Repeated preparation did not reject atomically')
     prepared_roundtrip=out/'prepared-roundtrip.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(prepared),'--capture',str(prepared_roundtrip)],capture_output=True,text=True,timeout=30)
     if run.returncode or prepared_roundtrip.read_bytes()!=actual:raise ValueError('Prepared pass snapshot roundtrip differs')
-    print('Matched opponent20 cell refresh, captured pass to player21 and pass preparation; random index 144.')
+    rows,last=menu_wait_events(lines,pcs,ram,23461,23515);points=[i for i in range(23462,23515) if pcs[i] in ('C9C5','E3CA')]
+    if len(rows)!=20 or len(points)!=20 or last!=23511:raise ValueError('Unexpected pass presentation ordering')
+    mode=original[0x62d];samples=[];ordered=[]
+    for row,point in zip(rows,points):
+        value=ram(point)[0x62d]
+        if value!=mode:mode=value;samples.append(mode);ordered.append(f'B {mode}')
+        ordered.append(row)
+    if samples!=[192,128,192]:raise ValueError('Unexpected pass presentation ball-mode samples')
+    events=out/'presentation.events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(ordered)+'\n')
+    waiting=out/'presentation.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(prepared),'--advance-observed-nmi-sequence',str(events),'144','--capture',str(waiting)],capture_output=True,text=True,timeout=30)
+    if run.returncode:raise RuntimeError(run.stderr.strip())
+    if re.findall(r'final random index (\d+);',run.stdout)!=['154']:raise ValueError('Pass presentation random index differs')
+    compare_represented(waiting.read_bytes(),export_session(ram(last)),True,'opponent20','pass presentation')
+    handoff=out/'handoff.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(waiting),'--handoff-player2-opponent-pass','--capture',str(handoff)],capture_output=True,text=True,timeout=30)
+    if run.returncode:raise RuntimeError(run.stderr.strip())
+    actual=handoff.read_bytes()
+    if int.from_bytes(actual[258:260],'little')!=453:raise ValueError('Unexpected pass handoff phase')
+    compare_represented(actual,export_session(ram(23515)),True,'opponent20','pass handoff')
+    run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(handoff),'--handoff-player2-opponent-pass','--capture',str(rejected)],capture_output=True,text=True,timeout=30)
+    if run.returncode==0 or rejected.exists() or handoff.read_bytes()!=actual:raise ValueError('Repeated handoff did not reject atomically')
+    handoff_roundtrip=out/'handoff-roundtrip.cmjsession';run=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(handoff),'--capture',str(handoff_roundtrip)],capture_output=True,text=True,timeout=30)
+    if run.returncode or handoff_roundtrip.read_bytes()!=actual:raise ValueError('Handoff snapshot roundtrip differs')
+    print('Matched opponent20 pass preparation and captured presentation to field handoff; random index 154.')
 
 
 if __name__=='__main__':

@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 pass handoff
+
+Opponent20's pass presentation now matches ten observed NMI/travel pairs and three ball-mode samples through original C606, random index154. Phase453 snapshot: `../Captain-Majid-analysis/opponent20-pass-handoff-v2-20261111/handoff.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent20_pass_choice.py` checks represented state, early/repeated handoff rejection and roundtrip. Presentation is acknowledged, not emulated. Windows build and 62 checks passed. Next compare field update and pass flight; AI/timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 pass prepared
 
 Opponent20's captured pass to player21 matches original E1CB using the shared profiled attack kernel: base10, cost20, stamina0 and power6. Phase452 snapshot: `../Captain-Majid-analysis/opponent20-pass-prep-v2-20261111/prepared.cmjsession`; original trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. `tools/verify_opponent20_pass_choice.py` compares represented state and scratch, rejection and roundtrip. Windows build and 62 checks passed. Next compare pass presentation/dispatch; timing/AI supplied, full match unsupported and progress unmeasured. Suggested model GPT-6.1 Terra High.

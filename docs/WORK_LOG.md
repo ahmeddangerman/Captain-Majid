@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 pass presentation handoff
+
+The captured opponent20 pass now matches ten observed NMI/travel pairs and three ball-mode samples, then the original C606 field handoff, random index154. Phase453 explicitly acknowledges the observed presentation boundary and clears the original script/ball-mode and carrier-cell values; this does not run the original audiovisual presentation engine. `tools/verify_opponent20_pass_choice.py` compares represented session fields, rejects early/repeated handoffs atomically and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-pass-handoff-v2-20261111`; Windows build, original replay and all 62 checks passed. The following field movement/flight remains unmatched, AI/timing supplied, full match unsupported and overall progress unmeasured. Next compare the field update and pass flight. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 pass preparation
 
 The captured opponent20 pass to player21 now uses the shared profiled attack kernel and matches original E1CB: base strength10, cost20, stamina0 and power6. Phase452 retains the observed recipient, target scratch and cost. The verifier compares represented fields and original scratch, rejects repeated preparation atomically and roundtrips the snapshot. Evidence: `../Captain-Majid-analysis/opponent20-pass-prep-v2-20261111`; Windows build, original replay and all 62 registered checks passed. Original timing and pass choice remain supplied; pass presentation/flight and a full playable match remain unsupported, overall progress unmeasured. Next compare the pass presentation and dispatch. Suggested model GPT-6.1 Terra High.

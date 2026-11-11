@@ -97,6 +97,7 @@ ControlPollResult poll_session_control(const PhaseSessionState& input,
 PhaseSessionState capture_player2_opponent_action(const PhaseSessionState& input,std::uint8_t action);
 PhaseSessionState capture_player2_opponent_pass(const PhaseSessionState& input,std::uint8_t recipient,std::uint8_t target);
 PhaseSessionState prepare_player2_opponent_pass(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,const FieldDefenseContent& content);
+PhaseSessionState handoff_player2_opponent_pass(const PhaseSessionState& input);
 ControlPollResult poll_session_area_pass_capture(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed,
  const PlayerProfileMappings& primary,const FieldPhaseContent& movement,const ControlMovementContent& control_content);
 ControlPollResult poll_session_area_action4_control(const PhaseSessionState& input,std::uint8_t held,std::uint8_t pressed,
