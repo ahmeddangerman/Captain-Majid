@@ -453,6 +453,19 @@ PhaseSessionState finish_player2_opponent_defender(const PhaseSessionState& inpu
  auto state=input;state.area_defender_cursor=1;state.current.field.selected_defenders=0;state.scheduling->selected_ids.fill(0);state.current.field.elapsed=0;
  state.phase=FieldSessionPhase::player2_opponent_pass_defender_finished;validate_phase_session(state);return state;
 }
+PhaseSessionState receive_player2_opponent_pass(const PhaseSessionState& input) {
+ validate_phase_session(input);
+ if(input.phase!=FieldSessionPhase::player2_opponent_pass_defender_finished || input.area_ai_target->recipient!=21)
+  throw std::invalid_argument("Opponent20 reception requires completed defender");
+ const auto& recipient=input.current.field.motion[field_motion_index(21)];
+ const auto x=static_cast<std::uint8_t>(recipient.x>>8),y=static_cast<std::uint8_t>(recipient.y>>8);
+ if(x!=108 || y!=160 || field_cell_at(x,y)!=input.current.field.ball_cell)throw std::invalid_argument("Unobserved opponent20 pass recipient position");
+ auto state=input;state.current.field.ball_owner=21;state.current.field.ball_x=x;state.current.field.ball_y=y;
+ state.ball_trajectory->x=static_cast<std::uint16_t>((unsigned(x)<<8)|(state.ball_trajectory->x&255u));
+ state.ball_trajectory->y=static_cast<std::uint16_t>((unsigned(y)<<8)|(state.ball_trajectory->y&255u));
+ state.phase=FieldSessionPhase::player2_opponent_pass_received;validate_phase_session(state);return state;
+}
+
 
 PhaseSessionState compare_area_pass_defender(const PhaseSessionState& input,std::uint16_t captured_power,
  std::uint8_t captured_context,const AreaPassComparisonContent& content) {

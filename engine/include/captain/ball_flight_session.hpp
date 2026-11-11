@@ -60,6 +60,7 @@ PhaseSessionState compare_player2_opponent_pass_defender(const PhaseSessionState
 PhaseSessionState restore_player2_opponent_pass_variant(const PhaseSessionState& input);
 PhaseSessionState advance_player2_opponent_defender_clock(const PhaseSessionState&,const ContactPreludeContent&,const ExperienceContent&);
 PhaseSessionState finish_player2_opponent_defender(const PhaseSessionState&);
+PhaseSessionState receive_player2_opponent_pass(const PhaseSessionState&);
 PhaseSessionState compare_postgoal_return_defender(const PhaseSessionState& input,const FieldPlayerProfiles& profiles,
  const FieldDefenseContent& defense,const AreaPassComparisonContent& comparison);
 PhaseSessionState begin_postgoal_defender_result_wait(const PhaseSessionState& input);

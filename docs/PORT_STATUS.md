@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest match checkpoint (2026-11-11):** Opponent20's pass reception by player21 matches the captured original. Subsequent control remains unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
+
 **Latest match checkpoint (2026-11-11):** Opponent20 pass defender clock, power reduction and defender cleanup match the captured original. Player21 reception remains unmatched; all 62 Windows checks passed, full match unsupported and progress unmeasured.
 
 **Latest match checkpoint (2026-11-11):** 219 supplied defender presentation NMI/travel pairs match the original state and random index. Actual presentation, contact completion and full match remain unsupported; all 62 Windows checks passed and progress is unmeasured.

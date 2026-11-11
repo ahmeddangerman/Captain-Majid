@@ -72,10 +72,12 @@ def main():
     if re.findall(r'final random index (\d+);',result_text)!=[str(ram(last)[0xe1])]:raise ValueError('Contact clock wait random index differs')
     run('--finish-player2-opponent-defender',out/'finished.cmjsession');compare(25330,465,'defender cleanup')
     reject('--finish-player2-opponent-defender')
+    run('--receive-player2-opponent-pass',out/'received.cmjsession');compare(25332,466,'opponent pass reception')
+    reject('--receive-player2-opponent-pass')
     before=source.read_bytes();roundtrip=out/'roundtrip.cmjsession'
     attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--capture',str(roundtrip)],capture_output=True,text=True,timeout=30)
     if attempt.returncode or roundtrip.read_bytes()!=before:raise ValueError('Defender snapshot roundtrip differs')
-    print(f'Matched opponent pass defender2 result {result}, presentation wait and contact cleanup; random index {ram(last)[0xe1]}.')
+    print(f'Matched opponent pass defender2 result {result}, presentation wait contact cleanup and reception; random index {ram(last)[0xe1]}.')
 
 
 if __name__=='__main__':
