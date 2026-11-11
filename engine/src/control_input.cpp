@@ -1191,6 +1191,14 @@ ControlButtonResult apply_control_buttons(const PhaseSessionState& input, std::u
     return result;
 }
 
+PhaseSessionState capture_player2_opponent_action(const PhaseSessionState& input,std::uint8_t action) {
+    validate_phase_session(input);
+    if(input.phase!=FieldSessionPhase::player2_opponent_cell_decision || action!=2 ||
+       input.current.field.random_first!=59 || input.current.field.random_second!=202)
+        throw std::invalid_argument("Only the observed opponent20 action2 choice is supported");
+    auto state=input;state.action->action=action;state.phase=FieldSessionPhase::player2_opponent_action_captured;
+    validate_phase_session(state);return state;
+}
 ControlPollResult poll_session_control(const PhaseSessionState& input,
     std::uint8_t held, std::uint8_t pressed, const PlayerProfileMappings& primary,
     const FieldPhaseContent& movement, const ControlMovementContent& control_content) {

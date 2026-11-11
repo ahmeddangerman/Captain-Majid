@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 captured action2
+
+Opponent20's cell refresh matches E19B at (100,161)/cell82; separately supplied action2 matches E1B2, random index27. Phase439 checkpoint: `../Captain-Majid-analysis/opponent20-decision-v2-20261111/captured-choice.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. `tools/verify_opponent20_decision.py` checks both boundaries, atomic invalid-action rejection and snapshot roundtrip. The choice is captured, not autonomous AI. Windows build, affected replays and all 62 checks passed. Next compare the subsequent clock and field cycle; full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 next AI decision
 
 Ten captured opponent20 polls after the first field cycle match the original, random index26. Private checkpoint: `../Captain-Majid-analysis/opponent20-second-polls-v2-20261111/10.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. The next original poll refreshes ball (104,164)/cell94 to (100,161)/cell82 and writes action2 before the clock; the native guard rejects this decision until original behavior is compared. Verify using `tools/verify_player2_opponent_control.py --second-cycle-polls`. Windows build, both cycle replays and all 62 checks passed. Next trace the cell-change decision; events remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

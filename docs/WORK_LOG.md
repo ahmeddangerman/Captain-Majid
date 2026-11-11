@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 cell change and captured choice
+
+The next observed poll now matches the original E19B cell refresh, moving the ball from (104,164)/cell94 to (100,161)/cell82. The separately supplied action2 then matches the original E1B2 write. Phases438/439 retain the distinction between the cell decision and the explicitly captured choice; this does not calculate autonomous AI. The verifier compares represented session fields, cursor and flight flag, rejects unsupported action3 atomically, and roundtrips the captured snapshot. Evidence: `../Captain-Majid-analysis/opponent20-decision-v2-20261111`. Windows build, affected original replays and all 62 checks passed. Subsequent clock/field continuation and autonomous timing remain unmatched; a complete match is unsupported, progress unmeasured. Next compare the action2 control clock and field cycle. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 second-cycle polls
 
 Ten further opponent20 input polls match the original after the first field round, including captured ball-mode/random/travel events, ending at random index26. The next original decision refreshes the ball from (104,164)/cell94 to (100,161)/cell82 and writes action2; the new polling guard deliberately rejects that unmodeled decision without mutating the session. The verifier checks represented fields, cursor and flight flag at all ten polls. Private checkpoint: `../Captain-Majid-analysis/opponent20-second-polls-v2-20261111/10.cmjsession`; Windows build, both opponent-cycle replays and all 62 registered checks passed. AI decision and live timing remain unsupported; a complete playable match is unfinished and overall progress is unmeasured. Next trace the original cell-change/AI decision before implementing it. Suggested model GPT-6.1 Terra High.
