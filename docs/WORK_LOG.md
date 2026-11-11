@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent21 reception wait
+
+Replayed 14 captured NMI/travel pairs following player21 reception through original 80D9, matching represented state and trajectory, random index196. The event sequence is supplied and does not render the presentation. The defender verifier checks prior states, invalid operations and snapshot roundtrip. Evidence: `../Captain-Majid-analysis/opponent21-reception-wait-v1-20261111`. Windows CMake build and all 62 registered checks passed. Later presentation and resumed control remain unmatched; AI and timing supplied, complete match unsupported and progress unmeasured. Next trace the remaining reception presentation and handoff to control. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 pass reception
 
 The captured pass now matches original player21 reception at bank26:8107: possession changes from player20 to21, ball position becomes (108,160)/cell94, and trajectory fractions are retained. Phase466 computes the position from the recipient's field motion and retains the observed contexts. The defender verifier checks original represented state and trajectory, repeated reception rejection and snapshot roundtrip. Evidence: `../Captain-Majid-analysis/opponent20-reception-v1-20261111`. Windows CMake build and all 62 registered checks passed. Subsequent presentation and control remain unmatched; timing/AI are supplied, a complete match is unsupported and overall progress unmeasured. Next trace reception wait and resumed control. Suggested model GPT-6.1 Terra High.

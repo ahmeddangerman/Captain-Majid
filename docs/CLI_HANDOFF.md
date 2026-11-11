@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent21 reception wait
+
+14 supplied NMI/travel pairs after reception match original 80D9, random index196. Phase466 snapshot: `../Captain-Majid-analysis/opponent21-reception-wait-v1-20261111/reception-wait.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. Defender verifier and all 62 Windows checks passed. Next compare remaining reception presentation and control handoff; AI/timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent21 pass reception
 
 Player21 reception of opponent20's pass matches original 8107 at (108,160)/cell94, random index182. Phase466 snapshot: `../Captain-Majid-analysis/opponent20-reception-v1-20261111/received.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-opponent20-pass-20261111/trace`. The defender verifier checks original state, trajectory, invalid operations and roundtrip; Windows build and all 62 checks passed. Next compare reception presentation and resumed control; AI and timing supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

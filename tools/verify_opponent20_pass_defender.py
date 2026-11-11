@@ -74,10 +74,17 @@ def main():
     reject('--finish-player2-opponent-defender')
     run('--receive-player2-opponent-pass',out/'received.cmjsession');compare(25332,466,'opponent pass reception')
     reject('--receive-player2-opponent-pass')
+    if pcs[25404]!='80D9':raise ValueError('Unexpected reception presentation boundary')
+    rows,last=menu_wait_events(lines,pcs,ram,25332,25404)
+    if len(rows)!=28:raise ValueError('Expected 14 reception NMI/travel pairs')
+    events=out/'reception.events.txt';events.write_text('CMJNMISEQ1\n'+'\n'.join(rows)+'\n')
+    result_text=run('--advance-observed-nmi-sequence',out/'reception-wait.cmjsession',events,182)
+    if re.findall(r'final random index (\d+);',result_text)!=[str(ram(last)[0xe1])]:raise ValueError('Reception wait random index differs')
+    compare(25404,466,'opponent reception wait')
     before=source.read_bytes();roundtrip=out/'roundtrip.cmjsession'
     attempt=subprocess.run([str(args.exe.resolve()),str(args.pack.resolve()),str(source),'--capture',str(roundtrip)],capture_output=True,text=True,timeout=30)
     if attempt.returncode or roundtrip.read_bytes()!=before:raise ValueError('Defender snapshot roundtrip differs')
-    print(f'Matched opponent pass defender2 result {result}, presentation wait contact cleanup and reception; random index {ram(last)[0xe1]}.')
+    print(f'Matched opponent pass defender2 result {result}, presentation wait contact cleanup, reception and 14 reception waits; random index {ram(last)[0xe1]}.')
 
 
 if __name__=='__main__':
