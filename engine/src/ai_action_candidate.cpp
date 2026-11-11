@@ -2,6 +2,24 @@
 #include <stdexcept>
 #include "captain/defender_selection.hpp"
 namespace captain {
+AiKeeperChoice choose_opponent_keeper_action(const FieldPlayerRecord& player,const PlayerProfileMappings& profiles,
+ std::uint8_t route,std::uint8_t random,const AiKeeperContent& content) {
+ if(player.player_id!=11 || content.team_id<3 || content.team_id>6 || route>4 || route==2)
+  throw std::invalid_argument("Unsupported opponent keeper AI context");
+ auto type=player.type;
+ if(!type){const auto offset=profiles.generic_slot_offsets[0];if(offset>=profiles.team_types.size())throw std::invalid_argument("Missing keeper team profile");type=profiles.team_types[offset];}
+ if(player.flags&128u)type=player.alternate_type;
+ if(type<35 || unsigned(type-35)>=content.profile_rows.size())throw std::invalid_argument("Unsupported keeper AI type");
+ constexpr std::array<unsigned,5> categories{{0,1,0,2,0}};
+ const auto category=categories[route];const auto row=content.profile_rows[type-35][category];
+ if(row>=content.rows.size())throw std::invalid_argument("Unsupported keeper AI row");
+ std::array<std::uint8_t,4> candidates{};for(unsigned i=0;i<4;++i)candidates[i]=content.rows[row][4*category+i];
+ const auto action=choose_ai_action_candidate(candidates,random);
+ if(action>3)throw std::invalid_argument("Unsupported keeper AI action");
+ std::uint8_t subtype=0;
+ if(action==0){if(player.type>=content.special_options.size())throw std::invalid_argument("Missing keeper special options");const auto options=content.special_options[player.type];if(options[0] || options[1])subtype=options[0];}
+ return {action,subtype};
+}
 AiAreaChoice choose_ai_field_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiFieldChoiceContent& content) {
  if(!type)throw std::invalid_argument("AI generic team resolution is not captured");

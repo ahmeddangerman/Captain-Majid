@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese development data to a local CMJSHOTK/L/M/N/O pack."""
+"""Export private Japanese development data to a local CMJSHOTK/L/M/N/O/P pack."""
 import argparse
 import hashlib
 import struct
@@ -23,17 +23,20 @@ def selected_team_bytes(stats, team_id):
     return bytes(stats[pointer:pointer + size])
 
 
-def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False):
+def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False):
     if len(rom) != 393232 or rom[:4] != b'NES\x1a' or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
         raise ValueError('ROM does not match verified Japanese reference')
     prg = rom[16:262160]
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
+    if include_keeper_ai and team_id not in (3, 4, 5, 6):
+        raise ValueError('Keeper AI requires an explicit traced team ID 3..6')
+    include_pass_race = include_pass_race or include_keeper_ai
     include_pass_flight = include_pass_flight or include_pass_race
     include_field_ai_pass = include_field_ai_pass or include_pass_flight
     include_field_ai = include_field_ai or include_field_ai_pass
-    data = bytearray((b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
+    data = bytearray((b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -209,6 +212,14 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
         data.extend(gameplay[0x8294:0x8298])
     if include_pass_race:
         for profile in range(256):data.extend(stats[0xAFAE+12*profile+8:0xAFAE+12*profile+12])
+    if include_keeper_ai:
+        data.append(team_id)
+        for profile in range(221):data.extend(stats[0x9662+12*profile+4:0x9662+12*profile+7])
+        data.extend(stats[0xBA2E:0xBAB2])
+        for player_type in range(count):
+            group=word(stats,0x8E1B+2*player_type)
+            if not groups<=group<=0x934D-2:raise ValueError('Unsupported keeper AI special-option group')
+            data.extend(stats[group:group+2])
     return bytes(data)
 
 
@@ -221,11 +232,12 @@ def main():
     parser.add_argument('--include-field-ai-pass', action='store_true', help='Include field AI and zero-pass-option gates (CMJSHOTM)')
     parser.add_argument('--include-pass-flight', action='store_true', help='Include opponent ordinary pass flight comparison (CMJSHOTN)')
     parser.add_argument('--include-pass-race', action='store_true', help='Include free-pass race speeds (CMJSHOTO)')
+    parser.add_argument('--include-keeper-ai', action='store_true', help='Include team-specific opposing goalkeeper AI (CMJSHOTP)')
     args = parser.parse_args()
     if args.output.suffix != '.cmjpack':
         parser.error('Output must use the .cmjpack extension (ignored by Git)')
     try:
-        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race)
+        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError) as error:

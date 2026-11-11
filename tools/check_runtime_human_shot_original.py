@@ -12,8 +12,10 @@ from trace_action_menu import trace_menu
 from trace_ball_recovery_phase import trace_recovery
 from trace_field_loop import trace_loop
 from trace_shot_approach import trace_approach
+from check_scored_goal_original import observe_scored_goal
+from check_keeper_entry_original import observe as observe_keeper_entry
 from trace_field_script import ObservedCartridge
-from check_kickoff_flight_original import until
+from check_kickoff_flight_original import until, snapshot as flight_snapshot
 from py65.devices.mpu6502 import MPU
 from verify_action_strength import PAYLOAD_SHA256
 
@@ -26,8 +28,10 @@ def main():
     parser.add_argument('--flight', action='store_true', help='Also compare numeric flight setup')
     parser.add_argument('--defenders', action='store_true', help='Intervene on flight defenders and random bytes')
     parser.add_argument('--keeper', action='store_true', help='Compare unopposed arrival and normal keeper entry')
+    parser.add_argument('--end-to-end', action='store_true', help='Compare uninterrupted shot through an AI keeper and goal')
     parser.add_argument('--velocity', type=Path, help='Private ball velocity table for --flight')
     args = parser.parse_args()
+    if args.end_to_end: args.keeper = True
     if args.defenders and args.keeper: parser.error('Keeper survey needs an unopposed arrival')
     if args.defenders or args.keeper: args.flight = True
     if args.flight:
@@ -39,7 +43,7 @@ def main():
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):
         parser.error('Private temporary data must stay outside the checkout')
     prg = rom[16:262160]
-    matched = flight_boundaries = defended_arrivals = 0
+    matched = flight_boundaries = defended_arrivals = goals = 0
     with tempfile.TemporaryDirectory(prefix='human-shot-', dir=args.private_temp) as temp:
         before_file, after_file, raw_file, records_file = Path(temp) / 'before.cmjsession', Path(temp) / 'after.cmjsession', Path(temp) / 'approach.bin', Path(temp) / 'flight-records.bin'
         for fixture in range(4):
@@ -55,6 +59,7 @@ def main():
                 if report['boundary'] != 'attack_choice_pending' or before[0x43b] or before[0x600]:
                     raise RuntimeError('Expected unopposed ordinary shot choice')
                 _, after = trace_menu(prg, before, mode='basic-shot')
+                choice_source = export_session(before, 19)
                 before_file.write_bytes(export_session(before, 19))
                 after_file.write_bytes(export_session(after, 20))
                 result = subprocess.run([str(args.exe.resolve()), '--compare-human-shot', str(before_file),
@@ -134,9 +139,27 @@ def main():
                         if result.returncode:
                             raise RuntimeError(f'fixture={fixture}, stamina={stamina}, action={action} flight chain (exit {result.returncode}): {result.stderr}')
                         flight_boundaries += boundaries;defended_arrivals += int(defended_at_arrival)
+                        if args.end_to_end:
+                            for _ in range(2_000_000):
+                                if cpu.pc==0x8599:break
+                                if cpu.pc<0x8000:raise RuntimeError(f'Original keeper left PRG at {cpu.pc:04x}')
+                                if cpu.pc==0xcaae:
+                                    memory.instruction=None;memory[0x1b]|=128;memory[0x515]=0
+                                    if memory[0x498]:memory[0x498]-=1
+                                memory.instruction=(memory.bank_at(cpu.pc),cpu.pc);cpu.step()
+                            else:raise RuntimeError('Original keeper comparison instruction bound')
+                            keeper_result=bytes(memory.ram[:2048])
+                            if keeper_result[0x612]!=0: raise RuntimeError('End-to-end goal fixture did not produce a goal')
+                            goal,_=observe_scored_goal(prg,keeper_result)
+                            if goal[0x62d]:raise RuntimeError('End-to-end restart requires ball mode zero')
+                            restart,_,_=observe_keeper_entry(prg,goal,0x85bf,{0x85dd});before_file.write_bytes(choice_source);after_file.write_bytes(flight_snapshot(restart,60,False))
+                            result=subprocess.run([str(args.exe.resolve()),'--compare-human-shot-end-to-end',str(before_file),str(after_file),str(args.pack.resolve()),str(action),str(raw_file),str(args.velocity.resolve()),str(keeper_result[0x28]),str(keeper_result[0x29]),str(keeper_result[0x629])],capture_output=True,text=True)
+                            if result.returncode:raise RuntimeError(f'fixture={fixture}, stamina={stamina}, action={action} end-to-end: {result.stderr}')
+                            goals+=1
                 matched += 1
     print(f'{matched} constructed original unopposed shot preparations, dispatch clocks and field movements' + (', attack tails and approaches' if args.tail else '') + (', and flight setups' if args.flight and not args.defenders else '') + ' matched')
     if args.flight: print(f'{flight_boundaries} numeric flight/callback boundaries matched; {defended_arrivals} arrivals had defenders')
+    if args.end_to_end: print(f'{goals} uninterrupted native shot-to-restart sequences matched the original restart boundary')
 
 
 if __name__ == '__main__':

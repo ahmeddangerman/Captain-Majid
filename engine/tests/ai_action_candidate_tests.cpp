@@ -5,6 +5,18 @@
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) {
+ if(argc==3 && std::string(argv[1])=="--keeper-ai") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  if(!content.ai_keeper_choice)return 2;
+  unsigned type,flags,alt,route,random;
+  while(std::cin>>type>>flags>>alt>>route>>random){
+   if(type>255 || flags>255 || alt>255 || route>255 || random>255)return 2;
+   try {const auto result=captain::choose_opponent_keeper_action({11,static_cast<std::uint8_t>(type),static_cast<std::uint8_t>(flags),static_cast<std::uint8_t>(alt),0},content.goalkeepers,route,random,*content.ai_keeper_choice);
+    std::cout<<unsigned(result.action)<<' '<<unsigned(result.subtype)<<'\n';
+   } catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--field-plan") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   if(!content.ai_field_choice || !content.ai_area_choice)return 2;
@@ -131,6 +143,12 @@ int main(int argc,char** argv) {
   return std::cin.eof()?0:2;
  }
  if(argc!=1)return 2;
+ captain::AiKeeperContent keeper{};keeper.team_id=3;keeper.rows[0][0]=0x01;keeper.special_options[0]={{2,0}};
+ captain::PlayerProfileMappings mapping{};mapping.team_types={35};
+ auto keeper_special=captain::choose_opponent_keeper_action({11,0,0,0,0},mapping,0,0,keeper);
+ auto keeper_regular=captain::choose_opponent_keeper_action({11,0,0,0,0},mapping,0,1,keeper);
+ if(keeper_special.action!=0 || keeper_special.subtype!=2 || keeper_regular.action!=1 || keeper_regular.subtype)return 1;
+ try {captain::choose_opponent_keeper_action({11,0,0,0,0},mapping,2,0,keeper);return 1;}catch(const std::invalid_argument&){}
  captain::AiFieldChoiceContent field{};field.profile_rows.fill(255);field.profile_rows[23]=0;field.rows.resize(1);
  for(auto& pair:field.low_x_categories)pair={255,255};
  field.low_x_categories[0]={0,4};

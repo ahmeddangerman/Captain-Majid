@@ -3,7 +3,17 @@
 #include <cstdint>
 #include <vector>
 #include <optional>
+#include "captain/field_player_profile.hpp"
 namespace captain {
+struct AiKeeperContent {
+ std::uint8_t team_id=0;
+ std::array<std::array<std::uint8_t,3>,221> profile_rows{};
+ std::array<std::array<std::uint8_t,12>,11> rows{};
+ std::array<std::array<std::uint8_t,2>,118> special_options{};
+};
+struct AiKeeperChoice { std::uint8_t action=0,subtype=0; };
+AiKeeperChoice choose_opponent_keeper_action(const FieldPlayerRecord& player,const PlayerProfileMappings& profiles,
+ std::uint8_t menu_route,std::uint8_t random,const AiKeeperContent& content);
 struct AiRecipientResult {
  std::uint8_t action,random_first;
  std::optional<std::uint8_t> recipient{},cell{};

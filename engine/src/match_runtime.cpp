@@ -11,6 +11,8 @@
 #include "captain/approach_session.hpp"
 #include "captain/ball_flight_session.hpp"
 #include "captain/keeper_session.hpp"
+#include "captain/goal_session.hpp"
+#include "captain/keeper_save_session.hpp"
 #include <stdexcept>
 namespace captain {
 namespace {
@@ -203,6 +205,41 @@ MatchStepResult enter_human_shot_keeper(const MatchRuntimeState& input,const Mat
  try {
   result.state.session=input.session.phase==FieldSessionPhase::ball_arrival_callback ? continue_session_unopposed_arrival(input.session) : prepare_session_keeper_entry(input.session);
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult resolve_opponent_keeper_ai(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+ if(!content.data->ai_keeper_choice){result.unsupported=UnsupportedCapability::content;return result;}
+ if(!input.session.action || input.session.action->menu_route || input.session.current.field.roster[11].type!=0){result.unsupported=UnsupportedCapability::opponent_action;return result;}
+ try {
+  const auto& field=input.session.current.field;const auto& player=field.roster[11];
+  const FieldPlayerRecord record{11,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level};
+  const auto& ai=*content.data->ai_keeper_choice;const auto choice=choose_opponent_keeper_action(record,content.data->goalkeepers,input.session.action->menu_route,field.random_first,ai);
+  result.state.session=resolve_prepared_session_keeper(input.session,choice.action,choice.subtype,ai.team_id,*content.data);
+  result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::opponent_action;return result;}
+}
+MatchStepResult score_human_shot(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+ if(!input.session.keeper_decision){result.unsupported=UnsupportedCapability::phase;return result;}
+ if(!content.data->experience){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  if(input.session.keeper_decision->result_code==0){
+   if(!input.session.score){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+   result.state.session=prepare_session_scored_goal(input.session,*input.session.score,*content.data);
+  } else if(input.session.keeper_decision->result_code==2 || input.session.keeper_decision->result_code==3)result.state.session=resolve_session_keeper_save(input.session,*content.data).state;
+  else {result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+  result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+}
+MatchStepResult restart_after_human_goal(const MatchRuntimeState& input,const MatchInput& event) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+ try {
+  result.state.session=continue_prepared_goal_restart(input.session);result.state.last_sequence=event.sequence;
+  project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
 }
 }
@@ -482,6 +519,15 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ball_arrival_callback || input.session.phase==FieldSessionPhase::shot_keeper_entry) &&
     input.session.current.field.side==0 && input.session.action && input.session.action->action==0)
   return enter_human_shot_keeper(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_presentation_pending &&
+    input.session.current.field.side==0 && input.session.action && input.session.action->action==0)
+  return resolve_opponent_keeper_ai(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_decided &&
+    input.session.current.field.side==0 && input.session.action && input.session.action->action==0)
+  return score_human_shot(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::goal_celebration_pending &&
+    input.session.current.field.side==0 && input.session.action && input.session.action->action==0)
+  return restart_after_human_goal(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
   if(input.target_chooser){
    if(!input.demo_rng || !input.session.ordinary_pass_candidates){result.unsupported=UnsupportedCapability::phase;return result;}

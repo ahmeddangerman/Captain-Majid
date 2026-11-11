@@ -12,6 +12,79 @@
 #include <string>
 static int shot_comparisons(int argc,char** argv) {
  using namespace captain;
+ if(argc==11 && std::string(argv[1])=="--compare-human-shot-end-to-end") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary),raw_file(argv[6],std::ios::binary),velocity_file(argv[7]);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);content.ball_velocity=read_ball_velocity_content(velocity_file);
+  expected.kickoff_formation.reset(); // Starting development session has no formation metadata.
+  std::array<unsigned char,2048> raw{};if(!raw_file.read(reinterpret_cast<char*>(raw.data()),raw.size()))throw std::runtime_error("Missing original flight metadata");
+  before.score=MatchScoreContext{static_cast<std::uint8_t>(std::stoul(argv[8])),static_cast<std::uint8_t>(std::stoul(argv[9])),static_cast<std::uint8_t>(std::stoul(argv[10]))};
+  MatchConfig config{};config.initial=before;config.mode=MatchTimingMode::provisional_demo;config.seed=1;config.retained_defense_action=static_cast<std::uint8_t>(std::stoul(argv[5]));config.ball_fraction=MatchBallFraction{raw[0x634],raw[0x636]};
+  auto state=std::make_unique<MatchRuntimeState>(create_match(config,content).state);auto result=std::make_unique<MatchStepResult>();
+  for(unsigned turn=0;turn<200 && state->session.phase!=FieldSessionPhase::goal_kickoff_pending;++turn){
+   const auto phase=state->session.phase;
+   const bool presentation=phase==FieldSessionPhase::attack_prepared || phase==FieldSessionPhase::selected_attack_presentation || phase==FieldSessionPhase::ball_arrival_callback || phase==FieldSessionPhase::keeper_presentation_pending || phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending;
+   MatchInput input{phase==FieldSessionPhase::attack_choice_pending ? MatchInputKind::action : presentation ? MatchInputKind::presentation_complete : MatchInputKind::tick,state->last_sequence+1};
+   if(phase==FieldSessionPhase::attack_choice_pending)input.action=MatchAction::shot;
+   *result=step_match(*state,input,content);
+   if(result->unsupported)throw std::runtime_error(std::string("End-to-end shot unsupported: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(phase)));
+   *state=result->state;
+  }
+  if(state->session.phase!=FieldSessionPhase::goal_kickoff_pending)throw std::runtime_error("End-to-end shot did not reach restart");
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,state->session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("End-to-end shot differs at byte "+std::to_string(i));throw std::runtime_error("End-to-end shot session lengths differ");}
+  return 0;
+ }
+ if(argc==8 && std::string(argv[1])=="--compare-human-shot-goal-restart") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  expected.kickoff_formation.reset(); // Development input did not include the separately captured formation context.
+  before.score=MatchScoreContext{static_cast<std::uint8_t>(std::stoul(argv[5])),static_cast<std::uint8_t>(std::stoul(argv[6])),static_cast<std::uint8_t>(std::stoul(argv[7]))};
+  auto state=std::make_unique<MatchRuntimeState>();state->session=before;state->mode=MatchTimingMode::provisional_demo;state->demo_rng=1;
+  auto result=std::make_unique<MatchStepResult>(step_match(*state,{MatchInputKind::presentation_complete,1},content));if(result->unsupported)throw std::runtime_error("Restart fixture keeper AI unsupported");
+  *state=result->state;*result=step_match(*state,{MatchInputKind::presentation_complete,2},content);if(result->unsupported)throw std::runtime_error("Restart fixture goal unsupported");
+  *state=result->state;*result=step_match(*state,{MatchInputKind::presentation_complete,3},content);
+  if(result->unsupported || result->state.session.phase!=FieldSessionPhase::goal_kickoff_pending)throw std::runtime_error("Human goal restart unsupported");
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,result->state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Human goal restart differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Human goal restart session lengths differ");}
+  return 0;
+ }
+ if(argc==5 && std::string(argv[1])=="--compare-human-shot-keeper-save") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  auto state=std::make_unique<MatchRuntimeState>();state->session=before;state->mode=MatchTimingMode::provisional_demo;state->demo_rng=1;
+  auto result=std::make_unique<MatchStepResult>(step_match(*state,{MatchInputKind::presentation_complete,1},content));
+  if(result->unsupported || result->state.session.phase!=FieldSessionPhase::keeper_decided)throw std::runtime_error("Keeper-save fixture AI unsupported");
+  *state=result->state;*result=step_match(*state,{MatchInputKind::presentation_complete,2},content);
+  if(result->unsupported || result->state.session.phase!=expected.phase)throw std::runtime_error(std::string("Human shot keeper save unsupported: ")+(result->unsupported ? capability_name(*result->unsupported) : "different phase")+" expected="+std::to_string(static_cast<unsigned>(expected.phase))+" actual="+std::to_string(static_cast<unsigned>(result->state.session.phase)));
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,result->state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Human shot keeper save differs at byte "+std::to_string(i));throw std::runtime_error("Human shot keeper save session lengths differ");}
+  return 0;
+ }
+ if(argc==8 && std::string(argv[1])=="--compare-human-shot-goal") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  before.score=MatchScoreContext{static_cast<std::uint8_t>(std::stoul(argv[5])),static_cast<std::uint8_t>(std::stoul(argv[6])),static_cast<std::uint8_t>(std::stoul(argv[7]))};
+  auto state=std::make_unique<MatchRuntimeState>();state->session=before;state->mode=MatchTimingMode::provisional_demo;state->demo_rng=1;
+  auto result=std::make_unique<MatchStepResult>(step_match(*state,{MatchInputKind::presentation_complete,1},content));
+  if(result->unsupported || result->state.session.phase!=FieldSessionPhase::keeper_decided)throw std::runtime_error("Goal fixture keeper AI unsupported");
+  *state=result->state;*result=step_match(*state,{MatchInputKind::presentation_complete,2},content);
+  if(result->unsupported || result->state.session.phase!=FieldSessionPhase::goal_celebration_pending)throw std::runtime_error("Human goal registration unsupported");
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);
+  write_phase_session(actual_bytes,result->state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Human goal differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Human goal session lengths differ");}
+  return 0;
+ }
+ if(argc==5 && std::string(argv[1])=="--compare-human-shot-keeper") {
+  std::ifstream before_file(argv[2],std::ios::binary),after_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+  auto before=load_phase_session(before_file),expected=load_phase_session(after_file);MatchContent content{};content.data=load_shot_content(pack_file);
+  auto state=std::make_unique<MatchRuntimeState>();state->session=before;state->mode=MatchTimingMode::provisional_demo;state->demo_rng=1;
+  auto result=std::make_unique<MatchStepResult>(step_match(*state,{MatchInputKind::presentation_complete,1},content));
+  if(result->unsupported || result->state.session.phase!=FieldSessionPhase::keeper_decided)throw std::runtime_error("Human shot keeper AI resolution unsupported");
+  std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);
+  write_phase_session(actual_bytes,result->state.session);write_phase_session(expected_bytes,expected);
+  if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("Keeper AI result differs at byte "+std::to_string(i)+": "+std::to_string(static_cast<unsigned char>(actual_bytes.str()[i]))+" vs "+std::to_string(static_cast<unsigned char>(expected_bytes.str()[i])));throw std::runtime_error("Keeper AI result session lengths differ");}
+  return 0;
+ }
  if(argc==6 && std::string(argv[1])=="--compare-human-shot-flight-chain") {
   std::ifstream before_file(argv[2],std::ios::binary),raw_file(argv[3],std::ios::binary),records(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
   auto source=load_phase_session(before_file);MatchContent content{};content.data=load_shot_content(pack_file);std::array<unsigned char,2048> raw{};
