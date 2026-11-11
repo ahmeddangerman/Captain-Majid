@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Current stopping point - 2026-11-11: opponent20 fourth decision clock
+
+Opponent20's cell refresh to (93,154)/cell69, explicitly captured action2 and next control clock match original E407, clock124/random index112. Phase448 snapshot: `../Captain-Majid-analysis/opponent20-fourth-decision-v1-20261111/clock.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. Verify with `tools/verify_opponent20_third_decision.py --fourth-decision`. Invalid action rejects atomically and the snapshot roundtrips. Windows build, affected replays and 62 checks passed. Next compare the next field round; timing/AI remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.
+
 ## Current stopping point - 2026-11-11: opponent20 fourth-cycle decision
 
 Ten more opponent20 polls match, including the original defender switch and four interleaved waits in poll6; random index107. Phase445 checkpoint: `../Captain-Majid-analysis/opponent20-fourth-polls-v2-20261111/10.cmjsession`; trace: `../Captain-Majid-analysis/libretro-isolated-6d1ef9ee/built-player2-pass-race-20261110/trace`. `tools/verify_player2_opponent_control.py --fourth-cycle-polls` checks original state and incomplete-wait rejection. The next original poll changes ball cell; trace it before extending the guarded decision. Windows build, earlier V3 round replay and 62 checks passed. Timing/AI remain supplied, full match unsupported, progress unmeasured. Suggested model GPT-6.1 Terra High.

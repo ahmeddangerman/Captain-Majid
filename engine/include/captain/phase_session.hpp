@@ -129,7 +129,8 @@ enum class FieldSessionPhase : std::uint16_t {
     player2_opponent_action_captured = 439, player2_opponent_action_field_pending = 440,
     player2_opponent_action_field_complete = 441, player2_opponent_next_cell_decision = 442,
     player2_opponent_next_action_captured = 443, player2_opponent_next_field_pending = 444,
-    player2_opponent_next_field_complete = 445
+    player2_opponent_next_field_complete = 445, player2_opponent_fourth_cell_decision = 446,
+    player2_opponent_fourth_action_captured = 447, player2_opponent_fourth_field_pending = 448
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

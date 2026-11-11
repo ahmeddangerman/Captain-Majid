@@ -234,7 +234,7 @@ NmiClockResult advance_observed_nmi_control_clock(const PhaseSessionState& input
         case ObservedClockEventKind::ball_mode_sample:
             if (!input.score || input.score->left_goals != 1 || input.score->right_goals != 0 || input.score->kickoff != 4 ||
                 !((input.current.field.ball_owner==18 && (input.current.clock.remaining==160 || input.current.clock.remaining==159 || input.current.clock.remaining==155 || input.current.clock.remaining==154)) ||
-                  (input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127 || input.current.clock.remaining==126))) || input.current.clock.extra_time != 0 ||
+                  (input.current.field.ball_owner==20 && (input.current.clock.remaining==128 || input.current.clock.remaining==127 || input.current.clock.remaining==126 || input.current.clock.remaining==125))) || input.current.clock.extra_time != 0 ||
                 input.current.field.side != 11 ||
                 !((event.held == 192 && state.current.clock.ball_mode == 128) ||
                   (event.held == 128 && state.current.clock.ball_mode == 192)))
@@ -984,12 +984,14 @@ NmiControlPollResult advance_observed_player2_opponent_poll(const PhaseSessionSt
     const bool next_round=input.phase==FieldSessionPhase::player2_opponent_next_field_complete;
     const bool observed_switch=next_round && input.control->controlled_player==3 && input.control->decision_timer==5 &&
         sample.buttons.held==128 && sample.buttons.pressed==128 && sample.interleaved_waits.size()==4;
-    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later && !action_round && !next_round) || (next_round && !input.control->decision_timer) ||
+    if((input.phase!=FieldSessionPhase::player2_opponent_control_ready && !later && !action_round && !next_round) ||
        (sample.buttons.held!=0 && sample.buttons.held!=128) || (sample.buttons.pressed && !observed_switch))
         throw std::invalid_argument("Opponent20 poll requires the observed neutral or held-A input");
     auto normalized=input;normalized.phase=FieldSessionPhase::control_ready;normalized.area_defender_cursor=0;
     auto result=advance_observed_nmi_control_poll(normalized,primary,movement,control,initial_random_index,sample);
-    if(action_round && result.poll.state.phase==FieldSessionPhase::ai_cell_decision)
+    if(next_round && result.poll.state.phase==FieldSessionPhase::ai_cell_decision)
+        result.poll.state.phase=FieldSessionPhase::player2_opponent_fourth_cell_decision;
+    else if(action_round && result.poll.state.phase==FieldSessionPhase::ai_cell_decision)
         result.poll.state.phase=FieldSessionPhase::player2_opponent_next_cell_decision;
     else if(later && result.poll.state.phase==FieldSessionPhase::ai_cell_decision)
         result.poll.state.phase=FieldSessionPhase::player2_opponent_cell_decision;
@@ -1023,13 +1025,14 @@ NmiClockResult advance_observed_player2_opponent_clock(const PhaseSessionState& 
     validate_phase_session(input);
     const bool captured_action=input.phase==FieldSessionPhase::player2_opponent_action_captured;
     const bool next_action=input.phase==FieldSessionPhase::player2_opponent_next_action_captured;
-    if(input.phase!=FieldSessionPhase::player2_opponent_clock_pending && !captured_action && !next_action)
+    const bool fourth_action=input.phase==FieldSessionPhase::player2_opponent_fourth_action_captured;
+    if(input.phase!=FieldSessionPhase::player2_opponent_clock_pending && !captured_action && !next_action && !fourth_action)
         throw std::invalid_argument("Opponent20 control clock requires its pending phase");
     auto normalized=input;normalized.phase=FieldSessionPhase::control_clock_pending;normalized.area_defender_cursor=0;
     auto result=advance_observed_nmi_control_clock(normalized,field,keepers,content,initial_random_index,events);
     if(result.tick.state.phase!=FieldSessionPhase::field_round_pending)
         throw std::invalid_argument("Unobserved opponent20 clock continuation");
-    result.tick.state.phase=next_action ? FieldSessionPhase::player2_opponent_next_field_pending : captured_action ? FieldSessionPhase::player2_opponent_action_field_pending : FieldSessionPhase::player2_opponent_field_pending;
+    result.tick.state.phase=fourth_action ? FieldSessionPhase::player2_opponent_fourth_field_pending : next_action ? FieldSessionPhase::player2_opponent_next_field_pending : captured_action ? FieldSessionPhase::player2_opponent_action_field_pending : FieldSessionPhase::player2_opponent_field_pending;
     result.tick.state.area_defender_cursor=input.area_defender_cursor;
     validate_phase_session(result.tick.state);return result;
 }

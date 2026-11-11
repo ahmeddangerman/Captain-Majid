@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-11 - Opponent20 fourth cell decision and clock
+
+Opponent20's next cell refresh to (93,154)/cell69, explicitly captured action2 and subsequent clock now match the original E407: clock124, random index112. Phases446-448 save the separate cell decision, observed choice and pending field round. The verifier compares represented fields, cursor/flight flag, rejects unsupported action3 atomically and roundtrips the clock snapshot. Evidence: `../Captain-Majid-analysis/opponent20-fourth-decision-v1-20261111`; Windows build, earlier decision/poll replays and all 62 checks passed. Autonomous AI/timing and a complete match remain unsupported, overall progress unmeasured. Next compare the next field round. Suggested model GPT-6.1 Terra High.
+
 ## 2026-11-11 - Opponent20 fourth-cycle polls
 
 Ten further opponent20 polls match the original, including a player-controlled defender switch and four captured NMI/travel waits after the sixth poll; random index93 to107. `CMJPOLLNMI3` records those waits and the observed ball-mode changes, guarded to this captured scenario. The verifier compares represented fields, cursor/flag and rejects an incomplete wait sequence atomically; the earlier `CMJWORLDNMI3` replay still matches. Evidence: `../Captain-Majid-analysis/opponent20-fourth-polls-v2-20261111`; Windows build and all 62 checks passed. The next cell decision and autonomous match timing remain unsupported; complete match unfinished and overall progress unmeasured. Next trace and compare that decision. Suggested model GPT-6.1 Terra High.
