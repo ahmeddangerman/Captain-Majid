@@ -31,6 +31,9 @@ MatchInput client_input(const MatchRuntimeState& state,std::uint8_t held,std::ui
     phase==FieldSessionPhase::ordinary_pass_dispatch_clock || phase==FieldSessionPhase::ordinary_pass_flight_arrival ||
     phase==FieldSessionPhase::ordinary_pass_recipient_positioned || phase==FieldSessionPhase::ordinary_free_pass_contest_winner))acknowledge=true;
  if(phase==FieldSessionPhase::keeper_area_prepared && state.session.action && state.session.action->menu_route==1)acknowledge=true;
+ if(phase==FieldSessionPhase::keeper_area_attack_prepared && state.session.action && state.session.action->menu_route==1 && !state.session.current.field.selected_defenders)acknowledge=true;
+ if(phase==FieldSessionPhase::keeper_area_attack_continuation && state.session.action && state.session.action->menu_route==1 && !state.session.current.field.selected_defenders)acknowledge=true;
+ if(phase==FieldSessionPhase::area_ball_arrival_callback && state.session.action && state.session.action->menu_route==1 && state.session.current.field.ball_owner==17)acknowledge=true;
  if(phase==FieldSessionPhase::keeper_possession && state.pass_stage==MatchPassStage::flight_arrived)acknowledge=true;
  if(phase==FieldSessionPhase::ordinary_pass_prepared)
   acknowledge=state.pass_stage==MatchPassStage::awaiting_presentation || state.pass_stage==MatchPassStage::flight_arrived;

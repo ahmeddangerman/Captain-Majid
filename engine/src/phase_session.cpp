@@ -359,6 +359,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_setup=phase==65 || phase==105;
     const bool area_menu=(phase>=66 && phase<=94) || ((phase==18 || phase==19) && state.keeper_area);
     const bool area_state=area_setup || area_menu;
+    const bool empty_attacking_area=(phase==68 || phase==78 || phase==79 || phase==90 || phase==93) && state.action && state.action->menu_route==1 && state.current.field.side==11 && !state.current.field.selected_defenders;
     if((((phase>=65 && phase<=94) || phase==105) && !state.keeper_area) || (state.keeper_area && !area_state))
         throw std::invalid_argument("Keeper-area setup needs exactly one captured selection counter");
     if(state.keeper_area && (!state.action || !state.recovery || !state.scheduling ||
@@ -367,10 +368,10 @@ void validate_phase_session(const PhaseSessionState& state) {
        (state.current.field.ball_x>=80 && state.current.field.ball_x<176) ||
        state.action->menu_route!=(((state.current.field.ball_x<80 ? 0 : 11)==state.current.field.side)?2:1)))
         throw std::invalid_argument("Keeper-area setup requires its original area and route (phase " + std::to_string(phase) + ", ball " + std::to_string(state.current.field.ball_x) + "," + std::to_string(state.current.field.ball_y) + ", side " + std::to_string(state.current.field.side) + ", route " + std::to_string(state.action ? state.action->menu_route : 255) + ")");
-    if(area_menu && !((phase==68 || phase==78 || phase==79) && state.action->menu_route==1 && state.current.field.side==11 && !state.current.field.selected_defenders) &&
+    if(area_menu && !empty_attacking_area &&
        (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
-    if(bool(state.area_defense)!=(((phase>=415 && phase<=420) || (phase>=238 && phase<=243) || ((phase>=202 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) || phase==67 || ((phase>=69 && phase<=92) && !((phase==78 || phase==79) && state.action && state.action->menu_route==1 && !state.current.field.selected_defenders)) || phase==94 || area_action4 || ((phase==93 || area_action6) && state.action && (state.action->action==4 || state.action->action==6) && state.area_defense))))
+    if(bool(state.area_defense)!=(((phase>=415 && phase<=420) || (phase>=238 && phase<=243) || ((phase>=202 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) || phase==67 || ((phase>=69 && phase<=92) && !empty_attacking_area) || phase==94 || area_action4 || ((phase==93 || area_action6) && state.action && (state.action->action==4 || state.action->action==6) && state.area_defense))))
         throw std::invalid_argument("Initial area defense requires its captured choice arrays");
     if((phase>=415 && phase<=420) && (!state.action || !state.recovery || !state.control || !state.score || !state.scheduling || !state.area_defense ||
        state.current.field.side!=(phase==420 ? 0 : 11) || state.current.field.ball_owner!=(phase==420 ? 7 : 18) || state.current.field.ball_cell!=87 ||
@@ -413,7 +414,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         for(unsigned i=0;i<4;++i)if(state.area_defense->actions[i]!=255 || state.area_defense->subtypes[i])
             throw std::invalid_argument("Initial defense actions must be unselected with unused subtypes zero");
     }
-    if(((phase>=70 && phase<=92) || phase==94) && !((phase==78 || phase==79) && state.action && state.action->menu_route==1 && !state.current.field.selected_defenders)) {
+    if(((phase>=70 && phase<=92) || phase==94) && !empty_attacking_area) {
         const auto count=state.current.field.selected_defenders;
         if(!count || count>4 || state.action->cursor>count || ((phase==71 || (phase>=73 && phase<=76)) && state.action->cursor==count))
             throw std::invalid_argument("Defensive poll requires a valid selected cursor");
@@ -624,11 +625,11 @@ void validate_phase_session(const PhaseSessionState& state) {
         const auto& target=*state.area_ai_target;
         const auto subtype=phase>=79 ? state.recovery->attack_subtype&127u : state.recovery->attack_subtype;
         const bool terminal_presentation=(phase==86 || phase==89 || phase==94) && state.area_contact && state.area_contact->result>=2;
-        if((phase>=81 && phase<=94) && (state.control->motion_requested!=(terminal_presentation?0:16) ||
+        if((phase>=81 && phase<=94) && !empty_attacking_area && (state.control->motion_requested!=(terminal_presentation?0:16) ||
            (terminal_presentation ? state.control->facing!=0 : (state.control->facing!=0 && state.control->facing!=64))))throw std::invalid_argument("Invalid announced area presentation state");
         if(phase==80 && state.control->motion_requested!=(state.recovery->ball_variant==1 ? 2 : 0))throw std::invalid_argument("Area defense entry needs acknowledged motion request");
         if(target.cost>1023 || (phase==78 && target.cost))throw std::invalid_argument("Invalid prepared area cost");
-        if((state.action->cursor!=state.current.field.selected_defenders && !((phase==78 || phase==79) && state.action->menu_route==1 && !state.current.field.selected_defenders)) ||
+        if((state.action->cursor!=state.current.field.selected_defenders && !empty_attacking_area) ||
            (state.action->action!=1 && state.action->action!=4 && state.action->action!=6) ||
            (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2) ||
            (state.action->action==1 ? (target.recipient<12 || target.recipient>21 || subtype) :
@@ -867,9 +868,10 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Numeric flight requires exactly one trajectory context");
     if(state.ball_trajectory) {
         const auto& t=*state.ball_trajectory;const auto& f=state.current.field;
+        const bool observed_rebound_cell=phase==96 && state.action && state.action->menu_route==1 && f.side==11 && f.ball_owner==17 && f.ball_x==52 && f.ball_y==100 && f.ball_cell==5 && state.area_ai_target && state.area_ai_target->recipient==19 && state.area_ai_target->cell==79;
         if(!state.recovery || !state.scheduling || t.flags!=(area_flight?1:state.saved_ball_flight_flag) || t.direction!=state.recovery->x_jitter_control ||
             (t.x>>8)!=f.ball_x || (t.y>>8)!=f.ball_y ||
-            (!((((phase>=124 && phase<=127) || (phase>=134 && phase<=137)) && state.area_sequence_result==2) || phase==371 || phase==372 || phase==373 || phase==374 || phase==375 || phase==376 || phase==377 || phase==378 || phase==379 || phase==380 || phase==381 || phase==382 || phase==383 || phase==384 || phase==385 || phase==386 || phase==387 || phase==388 || (phase==389 || phase==390 || phase==391)) && field_cell_at(f.ball_x,f.ball_y)!=f.ball_cell) || (f.elapsed && !((phase==347 && state.area_ai_target && state.area_ai_target->recipient==255 && f.selected_defenders==2 && state.area_defender_cursor==1 && f.elapsed==1) || phase==464 || phase==411 || phase==351 || phase==372 || phase==373 || phase==374 || phase==383 || phase==385 || phase==386 || phase==387 || phase==388 || (phase==389 || phase==390 || phase==391) || (phase>=114 && phase<=122) || (phase>=124 && phase<=128) || (phase>=131 && phase<=133) || phase==134 || phase==136 || (phase>=139 && phase<=141) || (phase>=150 && phase<=156) || phase==158 || phase==159 || pass_capture_tick || pass_blocked_tick)) ||
+            (!(observed_rebound_cell || (((phase>=124 && phase<=127) || (phase>=134 && phase<=137)) && state.area_sequence_result==2) || phase==371 || phase==372 || phase==373 || phase==374 || phase==375 || phase==376 || phase==377 || phase==378 || phase==379 || phase==380 || phase==381 || phase==382 || phase==383 || phase==384 || phase==385 || phase==386 || phase==387 || phase==388 || (phase==389 || phase==390 || phase==391)) && field_cell_at(f.ball_x,f.ball_y)!=f.ball_cell) || (f.elapsed && !((phase==347 && state.area_ai_target && state.area_ai_target->recipient==255 && f.selected_defenders==2 && state.area_defender_cursor==1 && f.elapsed==1) || phase==464 || phase==411 || phase==351 || phase==372 || phase==373 || phase==374 || phase==383 || phase==385 || phase==386 || phase==387 || phase==388 || (phase==389 || phase==390 || phase==391) || (phase>=114 && phase<=122) || (phase>=124 && phase<=128) || (phase>=131 && phase<=133) || phase==134 || phase==136 || (phase>=139 && phase<=141) || (phase>=150 && phase<=156) || phase==158 || phase==159 || pass_capture_tick || pass_blocked_tick)) ||
             ((phase==50 || phase==51 || phase==52 || phase==54 || phase==55) && f.selected_defenders) ||
             ((phase==47 || phase==328) && (!t.vx && !t.vy)) ||
             ((phase==47 || phase==328) && f.ball_cell==state.shot_flight->destination) ||

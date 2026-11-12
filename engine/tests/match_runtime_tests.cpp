@@ -431,7 +431,7 @@ static int ordinary_flight_defender_check(int argc,char** argv) {
  std::cout<<"Flight defender16 retained and reached control-ready\n";return 0;
 }
 static int first_opponent_area_entry_check(int argc,char** argv) {
- using namespace captain;if(argc!=4)return 2;
+ using namespace captain;if(argc!=4 && argc!=5 && argc!=7)return 2;
  std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
  MatchContent content{};content.data=load_shot_content(pack);state.mode=MatchTimingMode::provisional_demo;state.demo_rng=212112563u;
  auto opened=step_match(state,client_input(state,0,0),content);
@@ -445,7 +445,43 @@ static int first_opponent_area_entry_check(int argc,char** argv) {
  if(prepared.unsupported || prepared.state.session.phase!=FieldSessionPhase::keeper_area_attack_prepared)throw std::runtime_error("Opponent goal-area pass did not prepare");
   std::ostringstream prepared_out(std::ios::binary);write_match_save(prepared_out,prepared.state,identity);std::istringstream prepared_in(prepared_out.str(),std::ios::binary);auto prepared_restored=load_match_save(prepared_in,identity);
   if(prepared_restored.session.phase!=FieldSessionPhase::keeper_area_attack_prepared || !prepared_restored.session.area_ai_target || prepared_restored.session.area_ai_target->recipient!=19)throw std::runtime_error("Prepared goal-area pass did not roundtrip");
+  auto dispatched=step_match(prepared_restored,client_input(prepared_restored,0,0),content);
+  if(dispatched.unsupported || dispatched.state.session.phase!=FieldSessionPhase::keeper_area_prefix_clock_done || dispatched.state.session.control->last_carrier_cell || dispatched.state.session.control->motion_requested!=2 || dispatched.state.session.area_sequence_result)throw std::runtime_error("Empty goal-area dispatch differs from original");
+  auto moved=step_match(dispatched.state,client_input(dispatched.state,0,0),content);
+  if(moved.unsupported || moved.state.session.phase!=FieldSessionPhase::keeper_area_attack_continuation)throw std::runtime_error("Goal-area movement dispatch stopped");
+  if(argc==5){std::ofstream a(std::string(argv[4])+"-dispatch.cmjsession",std::ios::binary),b(std::string(argv[4])+"-moved.cmjsession",std::ios::binary);write_phase_session(a,dispatched.state.session);write_phase_session(b,moved.state.session);}
+  if(argc==7){std::ifstream distance(argv[4],std::ios::binary),velocity(argv[5],std::ios::binary);content.pass_distance=read_pass_distance_content(distance);content.ball_velocity=read_ball_velocity_content(velocity);moved.state.ball_fraction=MatchBallFraction{21,207};
+   auto flight=step_match(moved.state,client_input(moved.state,0,0),content);
+   if(flight.unsupported || flight.state.session.phase!=FieldSessionPhase::area_ball_advance_ready || !flight.state.session.shot_flight || flight.state.session.shot_flight->distance!=4)throw std::runtime_error("Opponent goal-area pass flight did not begin: "+(flight.unsupported?std::string(capability_name(*flight.unsupported)):"phase or distance"));
+   std::ofstream out(argv[6],std::ios::binary);write_phase_session(out,flight.state.session);
+   auto crossed=step_match(flight.state,client_input(flight.state,0,0),content);
+   if(crossed.unsupported || crossed.state.session.phase!=FieldSessionPhase::area_ball_cell_callback || !crossed.state.ball_fraction || crossed.state.ball_fraction->x!=210 || crossed.state.ball_fraction->y!=108 || crossed.state.session.current.field.ball_cell!=2)throw std::runtime_error("First rebound pass crossing differs: "+(crossed.unsupported?std::string(capability_name(*crossed.unsupported)):std::to_string(crossed.state.session.current.field.ball_cell)+" "+std::to_string(crossed.state.ball_fraction?crossed.state.ball_fraction->x:999)+" "+std::to_string(crossed.state.ball_fraction?crossed.state.ball_fraction->y:999)));
+   for(unsigned crossing=2;crossing<=12;++crossing){
+    if(crossing!=2){crossed=step_match(crossed.state,client_input(crossed.state,0,0),content);if(crossed.unsupported)throw std::runtime_error("Rebound pass crossing stopped at "+std::to_string(crossing));}
+    if(crossed.state.session.phase!=FieldSessionPhase::area_ball_arrival_callback){
+     auto callback=step_match(crossed.state,client_input(crossed.state,0,0),content);
+     if(callback.unsupported || callback.state.session.phase!=FieldSessionPhase::area_ball_advance_ready)throw std::runtime_error("Rebound pass cell callback stopped at "+std::to_string(crossing));
+     crossed=std::move(callback);
+    }
+    std::ofstream crossed_out(std::string(argv[6])+"."+std::to_string(crossing),std::ios::binary);write_phase_session(crossed_out,crossed.state.session);
+    if(crossed.state.session.phase==FieldSessionPhase::area_ball_arrival_callback)break;
+   }
+   auto contact=step_match(crossed.state,client_input(crossed.state,0,0),content);
+   if(contact.unsupported || contact.state.session.phase!=FieldSessionPhase::area_pass_defenders_pending || contact.state.session.current.field.selected_defenders!=4)throw std::runtime_error("Rebound pass did not enter four-defender contact");
+   std::ofstream contact_out(std::string(argv[6])+".contact",std::ios::binary);write_phase_session(contact_out,contact.state.session);
+  }
   std::cout<<"Opponent goal-area entry and pass preparation roundtrip\n";return 0;
+}
+static int first_keeper_recovery_fraction_check(int argc,char** argv) {
+ using namespace captain;if(argc!=4)return 2;
+ std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
+ MatchContent content{};content.data=load_shot_content(pack);state.mode=MatchTimingMode::provisional_demo;state.demo_rng=1;
+ for(const auto x:{0,1,127,255})for(const auto y:{0,1,127,255}) {
+  state.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(x),static_cast<std::uint8_t>(y)};
+  auto result=step_match(state,{MatchInputKind::presentation_complete,1},content);
+  if(result.unsupported || !result.state.ball_fraction || result.state.ball_fraction->x!=x || result.state.ball_fraction->y!=y)throw std::runtime_error("Keeper rebound lost known original fractions");
+ }
+ return 0;
 }
 static int generic_defended_shot_choice_check(int argc,char** argv) {
  using namespace captain;if(argc!=5)return 2;
@@ -2383,7 +2419,7 @@ static int keeper_outlet_choices(int argc,char** argv) {
  if(records.peek()!=std::char_traits<char>::eof())throw std::runtime_error("Extra keeper outlet choice cases");return 0;
 }
 int main(int argc,char** argv) {
- if(argc!=1){if(std::string(argv[1])=="--check-first-opponent-area-entry")return first_opponent_area_entry_check(argc,argv);if(std::string(argv[1])=="--check-generic-defended-shot-choice")return generic_defended_shot_choice_check(argc,argv);if(std::string(argv[1])=="--check-generic-action2-field-ai")return generic_action2_field_ai_check(argc,argv);if(std::string(argv[1])=="--check-first-generic-field-ai")return first_generic_field_ai_check(argc,argv);if(std::string(argv[1])=="--check-continuous-flight-terminal")return continuous_flight_terminal_check(argc,argv);if(std::string(argv[1])=="--check-first-encounter-fraction")return first_encounter_fraction_check(argc,argv);if(std::string(argv[1])=="--check-first-defended-free-pass-runtime")return first_defended_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-free-pass-runtime")return first_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-match-create")return first_match_create_check(argc,argv);if(std::string(argv[1])=="--check-first-match-roster")return first_match_roster_check(argc,argv);if(std::string(argv[1])=="--check-initial-kickoff-runtime")return initial_kickoff_runtime_check(argc,argv);if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
+ if(argc!=1){if(std::string(argv[1])=="--check-first-keeper-recovery-fraction")return first_keeper_recovery_fraction_check(argc,argv);if(std::string(argv[1])=="--check-first-opponent-area-entry")return first_opponent_area_entry_check(argc,argv);if(std::string(argv[1])=="--check-generic-defended-shot-choice")return generic_defended_shot_choice_check(argc,argv);if(std::string(argv[1])=="--check-generic-action2-field-ai")return generic_action2_field_ai_check(argc,argv);if(std::string(argv[1])=="--check-first-generic-field-ai")return first_generic_field_ai_check(argc,argv);if(std::string(argv[1])=="--check-continuous-flight-terminal")return continuous_flight_terminal_check(argc,argv);if(std::string(argv[1])=="--check-first-encounter-fraction")return first_encounter_fraction_check(argc,argv);if(std::string(argv[1])=="--check-first-defended-free-pass-runtime")return first_defended_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-free-pass-runtime")return first_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-match-create")return first_match_create_check(argc,argv);if(std::string(argv[1])=="--check-first-match-roster")return first_match_roster_check(argc,argv);if(std::string(argv[1])=="--check-initial-kickoff-runtime")return initial_kickoff_runtime_check(argc,argv);if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
  const auto result=regular_tests();
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);
