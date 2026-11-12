@@ -842,7 +842,7 @@ static int player1_defended_shot_check(int argc,char** argv) {
    if(!goal_restored.session.score || goal_restored.session.score->left_goals!=1 || goal_restored.session.phase!=FieldSessionPhase::player3_area_goal_scored)throw std::runtime_error("Player3 goal did not roundtrip");
    std::ofstream goal_file(std::string(argv[4])+"-player3-goal.cmjsession",std::ios::binary);write_phase_session(goal_file,p3_goal.state.session);
    auto p3_restart=step_match(goal_restored,client_input(goal_restored,0,0),content);
-   if(p3_restart.unsupported || p3_restart.state.session.phase!=FieldSessionPhase::goal_kickoff_pending || p3_restart.state.session.current.field.side!=11 || p3_restart.state.session.score->kickoff!=4)throw std::runtime_error("Player3 goal restart stopped");
+   if(!p3_restart.state.ball_fraction || p3_restart.state.ball_fraction->x!=79 || p3_restart.state.ball_fraction->y!=152 || p3_restart.unsupported || p3_restart.state.session.phase!=FieldSessionPhase::goal_kickoff_pending || p3_restart.state.session.current.field.side!=11 || p3_restart.state.session.score->kickoff!=4)throw std::runtime_error("Player3 goal restart stopped");
    std::ofstream restart_file(std::string(argv[4])+"-player3-restart.cmjsession",std::ios::binary);write_phase_session(restart_file,p3_restart.state.session);
    auto kickoff_state=p3_restart.state;
    for(const auto& item:{std::pair<const char*,FieldSessionPhase>{"formation",FieldSessionPhase::kickoff_formation_placed},{"receiver",FieldSessionPhase::kickoff_receiver_selected},{"ball",FieldSessionPhase::kickoff_ball_placed},{"handoff",FieldSessionPhase::kickoff_control_pending}}) {
@@ -868,6 +868,37 @@ static int player1_defended_shot_check(int argc,char** argv) {
    if(opponent_round.unsupported)throw std::runtime_error("Player3 kickoff field round stopped");
    std::ofstream round_file(std::string(argv[4])+"-player3-kickoff-round.cmjsession",std::ios::binary);write_phase_session(round_file,opponent_round.state.session);
    std::ofstream round_random(std::string(argv[4])+"-player3-kickoff-round-random.bin",std::ios::binary);round_random.put(static_cast<char>(opponent_round.state.demo_rng));round_random.put(static_cast<char>(opponent_round.state.demo_rng>>8));
+   auto continuation=opponent_round.state;
+   std::ofstream sequence(std::string(argv[4])+"-player3-kickoff-sequence.txt");
+   for(int i=0;i<300;++i){
+    const auto phase=continuation.session.phase;
+    if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+    auto next=step_match(continuation,client_input(continuation,0,0),content);
+    if(next.unsupported)throw std::runtime_error("Player3 kickoff continuation stopped at "+std::to_string(i));
+    sequence<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next.state.demo_rng&255)<<' '<<static_cast<unsigned>((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<'\n';
+    std::ofstream f(std::string(argv[4])+"-player3-continuation-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);
+    continuation=std::move(next.state);
+   }
+   if(continuation.session.phase!=FieldSessionPhase::ai_cell_decision)throw std::runtime_error("Expected player16 AI decision");
+   auto opponent_choice=step_match(continuation,client_input(continuation,0,0),content);
+   std::ofstream choice_info(std::string(argv[4])+"-player3-opponent-choice.txt");
+   choice_info<<static_cast<unsigned>(opponent_choice.unsupported ? *opponent_choice.unsupported : UnsupportedCapability::initialization)<<' '<<opponent_choice.state.demo_rng<<' '<<static_cast<unsigned>(opponent_choice.state.session.phase)<<' '<<static_cast<unsigned>(opponent_choice.state.session.action->action)<<'\n';
+   if(opponent_choice.unsupported || !opponent_choice.state.defense_menu || !opponent_choice.state.defense_menu->ai_pass_target || opponent_choice.state.defense_menu->ai_pass_target->recipient!=21 || opponent_choice.state.defense_menu->ai_pass_target->cell!=119)throw std::runtime_error("Player16 observed pass choice stopped");
+   std::ofstream choice_file(std::string(argv[4])+"-player3-opponent-choice.cmjsession",std::ios::binary);write_phase_session(choice_file,opponent_choice.state.session);
+   auto pass_state=opponent_choice.state;bool saw_defender6=false;
+   std::ofstream pass_sequence(std::string(argv[4])+"-player3-opponent-pass-sequence.txt");
+   for(int i=0;i<100;++i){
+    auto pass_step=step_match(pass_state,client_input(pass_state,0,0),content);
+    pass_sequence<<i<<' '<<static_cast<unsigned>(pass_state.session.phase)<<' '<<(pass_state.defense_menu ? static_cast<int>(pass_state.defense_menu->stage) : -1)<<' '<<(pass_step.unsupported ? static_cast<int>(*pass_step.unsupported) : -1)<<' '<<static_cast<unsigned>(pass_step.state.session.phase)<<' '<<(pass_step.state.defense_menu ? static_cast<int>(pass_step.state.defense_menu->stage) : -1)<<' '<<pass_step.state.flight_defenders.size()<<' '<<(pass_step.state.defense_menu && pass_step.state.defense_menu->ai_ball_cell ? static_cast<int>(*pass_step.state.defense_menu->ai_ball_cell) : -1)<<'\n';
+    if(pass_step.unsupported)break;
+    if(pass_step.state.flight_defenders==std::vector<std::uint8_t>{6})saw_defender6=true;
+    std::ofstream f(std::string(argv[4])+"-player3-opponent-pass-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,pass_step.state.session);
+    pass_state=std::move(pass_step.state);
+    if(pass_state.session.phase==FieldSessionPhase::control_ready)break;
+   }
+   if(!saw_defender6 || pass_state.session.phase!=FieldSessionPhase::control_ready || pass_state.session.current.field.ball_owner!=21 || pass_state.session.current.field.side!=11)throw std::runtime_error("Player16 defended pass did not reach player21");
+
+
 
 
 

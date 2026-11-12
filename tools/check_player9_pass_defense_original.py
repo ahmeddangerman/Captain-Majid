@@ -6,6 +6,8 @@ from pathlib import Path
 from check_generic_pass_defense_original import original
 from export_phase_session import export_session
 from trace_ball_recovery_phase import trace_recovery
+from check_ai_field_candidate_original import original_candidate
+from check_ai_field_plan_original import original_choice
 from verify_action_strength import PAYLOAD_SHA256
 from verify_player7_pass_end_to_end import compare_represented
 
@@ -111,4 +113,26 @@ injected=bytearray(raw);injected[0xe2:0xe4]=(a.trace/'native-player3-kickoff-rou
 observed,raw=trace_recovery(rom[16:262160],injected,world_inputs=[(0,0)]*22)
 if observed['boundary']!='player_control_ready':raise ValueError('Unexpected kickoff field-round boundary')
 compare_represented(round_state,export_session(raw,0),False,'player3 kickoff control','field round')
+for line in (a.trace/'native-player3-kickoff-sequence.txt').read_text().splitlines():
+ i,phase,first,second,next_phase=map(int,line.split())
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ params={9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase]
+ observed,raw=trace_recovery(rom[16:262160],injected,**params)
+ state=(a.trace/f'native-player3-continuation-{i}.cmjsession').read_bytes()
+ compare_represented(state,export_session(raw,0),False,'player16 continuation',str(i))
+ expected='player_control_ready' if phase==13 and next_phase==9 else {9:'control_poll_wait',10:'control_clock_pending',12:'ai_cell_decision',13:'field_round_pending'}[next_phase]
+ if observed['boundary']!=expected:raise ValueError('Unexpected original player16 boundary')
+choice_info=(a.trace/'native-player3-opponent-choice.txt').read_text().split();seed=int(choice_info[1])
+injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
+if original_candidate(rom[16:262160],injected)[2]!=2:raise ValueError('Unexpected player16 original candidate')
+choice=original_choice(rom[16:262160],injected)
+if (choice[0x43b],choice[0x43c],choice[0x5fc],choice[0x638])!=(1,0,21,119):raise ValueError('Unexpected original player16 pass')
+compare_represented((a.trace/'native-player3-opponent-choice.cmjsession').read_bytes(),export_session(choice,0),False,'player16 continuation','pass choice')
+for index,name in ((0,'prepared'),(1,'preclock'),(3,'handoff'),(4,'target'),(5,'flight'),(17,'post-contact'),(18,'control'),(19,'ready')):
+ raw=(a.player3_shot/f'opponent-pass-{name}.bin').read_bytes()
+ compare_represented((a.trace/f'native-player3-opponent-pass-{index}.cmjsession').read_bytes(),export_session(raw,0),False,'player16 pass',name)
+arrival=(a.player3_shot/'opponent-pass-arrival.bin').read_bytes()
+contact=(a.player3_shot/'opponent-pass-contact-compared.bin').read_bytes()
+ready=(a.player3_shot/'opponent-pass-ready.bin').read_bytes()
+if (arrival[0x600],arrival[0x601],contact[0x612],ready[0x441],ready[0x5fb])!=(1,6,0,21,11):raise ValueError('Unexpected original defender contact or pass owner')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

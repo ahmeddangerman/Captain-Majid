@@ -1,5 +1,13 @@
 # Development log
 
+## 2026-11-13 - Player16 pass survives defender6 contact
+
+Fixed a continuity gap in the sampled same-cell goal: the post-goal restart now retains the known fractional ball coordinates instead of discarding them when no trajectory was created. A saved goal reload followed by kickoff retains fractions (79,152). This lets the sampled opponent pass begin without fabricating a position.
+
+The private original/native chain continues through player16's AI pass choice, movement, pass preparation and flight. Defender6 is selected along the path and the original contact result is 0; both sides continue the pass, and side11 player21 receives the ball at (119,172), with clock88. Compared represented states match at preparation, clock, handoff, target, flight, after contact and control. Native regression checks selected defender6 and player21 possession.
+
+Windows CMake build, all 65 tests, private end-to-end replay and original comparisons passed. The original trace uses injected sampled random inputs and presentation acknowledgements; live frame/random timing, rendering and audio remain unverified. Next continue from player21's possession. A complete match remains unfinished and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Opponent kickoff reaches the first field round
 
 Extended the private original/native integration sequence after player3's 1-0 goal. Opponent kickoff formation, receiver selection, ball placement, presentation handoff and control setup match represented original state; side11 player16 controls the ball at (148,148). Eleven idle control polls expire the decision timer, the clock advances from 91 to 90, and the next field round returns to player16 control. All compared represented state matches, including movement. The original receives the same sampled random inputs as the native provisional generator; the field-round input is captured before the original consumes it.

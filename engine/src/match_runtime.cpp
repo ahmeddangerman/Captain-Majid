@@ -294,7 +294,10 @@ MatchStepResult restart_after_human_goal(const MatchRuntimeState& input,const Ma
  MatchStepResult result{input};
  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
  try {
-  result.state.session=continue_prepared_goal_restart(input.session);use_trajectory_fraction(result.state,input.session.ball_trajectory);result.state.last_sequence=event.sequence;
+  result.state.session=continue_prepared_goal_restart(input.session);
+  // This observed same-cell goal never initializes a new flight; the original retains both ball fractions.
+  if(input.session.phase!=FieldSessionPhase::player3_area_goal_scored)use_trajectory_fraction(result.state,input.session.ball_trajectory);
+  result.state.last_sequence=event.sequence;
   project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
 }
