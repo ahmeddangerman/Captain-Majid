@@ -43,7 +43,7 @@ def main():
         parser.error('Expected verified Japanese ROM')
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):
         parser.error('Private temporary data must stay outside checkout')
-    prg = rom[16:262160];counts = Counter();stats=ReferenceCartridge(prg);stats.registers[6:8]=[28,29];shot_gates=args.pack.read_bytes()[:8]==b'CMJSHOTS'
+    prg = rom[16:262160];counts = Counter();stats=ReferenceCartridge(prg);stats.registers[6:8]=[28,29];shot_gates=args.pack.read_bytes()[:8] in (b'CMJSHOTS', b'CMJSHOTT')
     with tempfile.TemporaryDirectory(prefix='ai-cell-', dir=args.private_temp) as temporary:
         source, expected, metadata = (Path(temporary) / name for name in ('source.cmjsession', 'expected.cmjsession', 'metadata.bin'))
         for fixture in range(4):

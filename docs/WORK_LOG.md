@@ -1,5 +1,13 @@
 # Development log
 
+## 2026-11-12 - Home goalkeeper menu and kickoff after an opponent goal
+
+The provisional runtime accepts ordinary catch and punch selections at the home goalkeeper prompt, compares the shot, and continues a supported opponent goal through scoring and a home kickoff to control. The T private content pack extends S with original goalkeeper menu direction and icon bytes; S remains readable and stops where the missing menu data is needed. The Windows development window labels the keeper choices. This is a bounded development-snapshot path, not a complete match or live original presentation.
+
+`tools/check_human_keeper_menu_original.py` compared 504 constructed goalkeeper choices against the original, including 384 goal results through score, restart, formation, receiver, ball placement and control. Four related snapshots, two shot positions, three stamina values, three provisional seeds and catch/punch selections were used; presentation-facing fields were excluded. Original execution acknowledges cooperative waits without live NMI/audio/PPU. The T pack preserves the S payload, matches all six added original menu bytes, and rejects malformed inputs. A Windows stack overflow in the large runtime test was resolved by moving the new menu handler into a separate function; the Windows build and all 65 registered checks then passed by direct invocation because CTest is unavailable.
+
+Successful home goalkeeper saves, other defensive outcomes, fresh startup, live window interaction and a complete playable match remain unfinished. Overall progress is unmeasured. Next compare and connect supported home goalkeeper save outcomes. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Opponent shot through nonterminal field defenders
 
 The provisional runtime now resolves a bounded opponent shot against one or two selected field defenders when each ordinary action-0 block leaves the shot traveling. It uses original-backed defender preparation, comparison, attacker experience and contact-clock kernels; result 1 weakens shot power, and the resulting shot continues to home-goalkeeper entry. Known ball fractions and the newly observed retained block action are saved. Multiple defender attempts are computed as one atomic acknowledged step: if any attempt requires an unsupported terminal block/redirect, special roll, other move or period transition, the input remains unchanged. Three or more selected defenders and loose shots remain unsupported.

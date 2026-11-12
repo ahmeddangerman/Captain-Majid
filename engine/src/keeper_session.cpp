@@ -82,7 +82,7 @@ PhaseSessionState resolve_prepared_session_keeper(const PhaseSessionState& input
  const auto& p=field.roster[keeper];const auto& status=field.keepers[field.side==0?1:0];
  const GoalkeeperInput comparison{input.action->power,
   {0,field.random_first,field.random_second,content.keeper_range,content.keeper_offset,
-   false,false,input.action->menu_route,keeper,subtype},0,status.timer,
+   false,false,static_cast<std::uint8_t>(field.side==11 ? 3 : input.action->menu_route),keeper,subtype},0,status.timer,
   input.shot_flight->distance,status.penalty,content.keeper_thresholds};
  const auto prepared=prepare_goalkeeper({{keeper,p.type,static_cast<std::uint8_t>(p.stamina),
   static_cast<std::uint8_t>(p.stamina>>8),p.level},field.side,action,subtype,

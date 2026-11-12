@@ -8,6 +8,8 @@ struct ActionMenuContent {
     std::array<std::array<std::uint8_t, 4>, 6> directions;
     std::array<std::uint8_t, 10> icons;
     std::array<std::uint8_t, 6> titles, backgrounds;
+    std::optional<std::array<std::uint8_t,4>> keeper_directions{};
+    std::optional<std::array<std::uint8_t,2>> keeper_icons{};
 };
 struct AreaDefenseSpecialOption {
     std::uint8_t subtype=0;

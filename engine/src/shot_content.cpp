@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -267,6 +267,11 @@ ShotContent load_shot_content(std::istream& input) {
     if(version>='S') {
         auto& ai=*content.ai_field_choice;ai.no_variant_zero_shot_options=std::array<std::uint8_t,118>{};reader.bytes(*ai.no_variant_zero_shot_options);
         for(auto value:*ai.no_variant_zero_shot_options)if(value>1)throw std::invalid_argument("Invalid field AI shot-option gate");
+    }
+    if(version>='T') {
+        auto& menu=*content.action_menu;menu.keeper_directions=std::array<std::uint8_t,4>{};menu.keeper_icons=std::array<std::uint8_t,2>{};
+        reader.bytes(*menu.keeper_directions);reader.bytes(*menu.keeper_icons);
+        for(auto value:*menu.keeper_directions)if(value>2 && value!=255)throw std::invalid_argument("Invalid home goalkeeper menu action");
     }
     reader.end();
     return content;

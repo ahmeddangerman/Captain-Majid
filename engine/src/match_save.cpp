@@ -44,7 +44,7 @@ void validate_runtime(const MatchRuntimeState& s) {
   const bool shot=(f.side==0 || f.side==11) && !f.selected_defenders && s.session.action && s.session.action->action==0 &&
    (phase==FieldSessionPhase::attack_choice_pending || phase==FieldSessionPhase::attack_prepared || phase==FieldSessionPhase::shot_dispatch_ready || phase==FieldSessionPhase::selected_attack_presentation);
   const bool goal=f.side==0 && (phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending);
-  const bool kickoff=f.side==11 && phase>=FieldSessionPhase::goal_kickoff_pending && phase<=FieldSessionPhase::kickoff_control_pending;
+  const bool kickoff=(f.side==11 || (f.side==0 && *s.retained_defense_action<=1)) && phase>=FieldSessionPhase::goal_kickoff_pending && phase<=FieldSessionPhase::kickoff_control_pending;
   const bool control=!f.selected_defenders && (phase==FieldSessionPhase::control_ready || phase==FieldSessionPhase::control_clock_pending || phase==FieldSessionPhase::field_round_pending ||
    (f.side==11 && phase==FieldSessionPhase::ai_cell_decision) ||
    phase==FieldSessionPhase::player_control ||
@@ -53,7 +53,7 @@ void validate_runtime(const MatchRuntimeState& s) {
    static_cast<unsigned>(s.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen) && s.flight_defenders.empty() && s.processed_flight_defenders.empty();
   const bool defense_skip=f.side==11 && *s.retained_defense_action==6 && phase==FieldSessionPhase::field_contact_pending && s.defense_menu && s.defense_menu->defender_count;
   const bool skip_return=f.side==11 && *s.retained_defense_action==6 && phase==FieldSessionPhase::player_control && s.session.action && s.session.action->action==2 && !s.defense_menu;
-  const bool opponent_shot_keeper=f.side==11 && *s.retained_defense_action==0 && (phase==FieldSessionPhase::shot_keeper_entry || phase==FieldSessionPhase::keeper_presentation_pending) && s.session.action && s.session.action->action==0;
+  const bool opponent_shot_keeper=f.side==11 && *s.retained_defense_action<=1 && (phase==FieldSessionPhase::shot_keeper_entry || phase==FieldSessionPhase::keeper_presentation_pending || phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending) && s.session.action && s.session.action->action==0;
   const bool pass=f.side==0 && !f.selected_defenders && s.session.action && s.session.action->action==1 && !s.target_chooser &&
    s.flight_defenders.empty() && s.processed_flight_defenders.empty() &&
    (phase==FieldSessionPhase::ordinary_human_pass_target || ((phase==FieldSessionPhase::ordinary_human_pass_confirmed || phase==FieldSessionPhase::ordinary_pass_prepared) &&

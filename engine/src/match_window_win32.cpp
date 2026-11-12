@@ -69,6 +69,7 @@ std::wstring phase_text(const App& app) {
  if(phase==FieldSessionPhase::human_action_menu)return L"Choose an action";
  if(phase==FieldSessionPhase::ordinary_human_pass_target)return s.target_chooser ? L"Choose a teammate" : L"Choose a pass target";
  if(phase==FieldSessionPhase::field_contact_pending && s.session.current.field.side==11 && s.defense_menu && s.defense_menu->stage==MatchDefenseStage::polling)return L"Choose a defense";
+ if(phase==FieldSessionPhase::keeper_presentation_pending && s.session.current.field.side==11 && s.session.action && s.session.action->menu_route==4)return L"Choose a goalkeeper action";
  if(phase==FieldSessionPhase::control_ready)return s.session.current.field.side==0 ? L"Your possession" : L"Opponent possession";
  if(phase==FieldSessionPhase::goal_celebration_pending)return L"Goal";
  if(phase>=FieldSessionPhase::goal_kickoff_pending && phase<=FieldSessionPhase::kickoff_control_pending)return L"Kickoff";
@@ -121,6 +122,12 @@ void render(HDC dc,const App& app) {
    for(unsigned i=0;i<candidates.allied_count && i<candidates.ids.size();++i){const bool selected=i==state.target_chooser->index;
     label(dc,std::wstring(selected?L">  Player ":L"   Player ")+std::to_wstring(candidates.ids[i]),880,446+static_cast<int>(i)*27,270,25,17,selected?RGB(147,72,20):ink,selected);
    }
+  }
+ } else if(state.session.phase==FieldSessionPhase::keeper_presentation_pending && state.session.current.field.side==11 && state.session.action && state.session.action->menu_route==4 && app.content.data->action_menu && app.content.data->action_menu->keeper_directions) {
+  const auto& choices=*app.content.data->action_menu->keeper_directions;const wchar_t* names[]={L"Right",L"Left",L"Down",L"Up"};
+  for(unsigned i=0;i<4;++i){const auto action=choices[i];const bool selected=(state.session.action->cursor&128u) && (state.session.action->cursor&3u)==i;
+   const auto description=action==0?L"Catch":action==1?L"Punch":L"Unavailable";
+   label(dc,std::wstring(selected?L">  ":L"   ")+names[i]+L"   "+description,880,355+static_cast<int>(i)*29,290,27,17,selected?RGB(147,72,20):ink,selected);
   }
  } else if(state.session.phase==FieldSessionPhase::field_contact_pending && state.defense_menu) {
   const auto& menu=*state.defense_menu;

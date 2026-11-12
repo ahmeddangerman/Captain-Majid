@@ -82,7 +82,7 @@ static int shot_comparisons(int argc,char** argv) {
   std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);write_phase_session(actual_bytes,state->session);write_phase_session(expected_bytes,expected);
   if(actual_bytes.str()!=expected_bytes.str()){for(std::size_t i=0;i<actual_bytes.str().size() && i<expected_bytes.str().size();++i)if(actual_bytes.str()[i]!=expected_bytes.str()[i])throw std::runtime_error("End-to-end shot differs at byte "+std::to_string(i));throw std::runtime_error("End-to-end shot session lengths differ");}
   if(argc>=16 && std::string(argv[15])=="post"){
-   unsigned decisions=0,received=0,prompts=0;bool passed=false;
+   unsigned decisions=0,received=0,prompts=0;bool passed=false,home_restart=false;
    for(unsigned turn=0;turn<5000;++turn){
     const auto phase=state->session.phase;std::uint8_t pressed=0;
     if(argc>=18 && state->defense_menu && state->defense_menu->stage==MatchDefenseStage::polling){
@@ -91,7 +91,8 @@ static int shot_comparisons(int argc,char** argv) {
      else if(content.data->area_defense_menu){for(unsigned i=0;i<4;++i)if(content.data->area_defense_menu->directions[0][i]==6){pressed=static_cast<std::uint8_t>(1u<<i);break;}}
      if(!pressed)throw std::runtime_error("Cannot select skip in the defense prompt");
     }
-    if(argc>=18 && phase==FieldSessionPhase::field_contact_pending && !state->defense_menu)++prompts;
+    if(argc>=18 && phase==FieldSessionPhase::keeper_presentation_pending && state->session.current.field.side==11 && state->session.action && state->session.action->menu_route==4)pressed=(state->session.action->cursor&128u) ? 128 : 1;
+    if(argc>=18 && phase==FieldSessionPhase::field_contact_pending && state->session.current.field.side==11 && !state->defense_menu)++prompts;
     *result=step_match(*state,client_input(*state,0,pressed),content);
     if(result->unsupported){
      std::cout<<"post: unsupported "<<capability_name(*result->unsupported)<<" phase "<<static_cast<unsigned>(phase)<<" after "<<decisions<<" fallbacks, "<<received<<" passes and "<<prompts<<" defense prompts";
@@ -105,8 +106,10 @@ static int shot_comparisons(int argc,char** argv) {
     }
     if(phase==FieldSessionPhase::ai_cell_decision && result->state.defense_menu && !result->state.defense_menu->defender_count)passed=true;
     *state=result->state;
+    if(phase==FieldSessionPhase::goal_celebration_pending && state->session.phase==FieldSessionPhase::goal_kickoff_pending && state->session.current.field.side==0)home_restart=true;
     if(argc>=17){MatchContentIdentity identity{};identity[0]=42;std::ostringstream saved(std::ios::binary);write_match_save(saved,*state,identity);std::istringstream in(saved.str(),std::ios::binary);*state=load_match_save(in,identity);}
     if(passed && phase==FieldSessionPhase::player_control && state->session.phase==FieldSessionPhase::control_ready){++received;passed=false;if(argc<18){std::cout<<"post: pass received after "<<decisions<<" fallbacks\n";return 0;}}
+    if(home_restart && state->session.phase==FieldSessionPhase::control_ready && state->session.current.field.side==0){std::cout<<"post: home kickoff control after "<<decisions<<" fallbacks, "<<received<<" passes and "<<prompts<<" defense prompts\n";return 0;}
     if(phase==FieldSessionPhase::ai_cell_decision && state->session.phase==FieldSessionPhase::control_clock_pending && ++decisions==3 && argc<18){std::cout<<"post: three fallbacks\n";return 0;}
    }
    const auto& field=state->session.current.field;
@@ -285,6 +288,36 @@ static int shot_comparisons(int argc,char** argv) {
   return 0;
  }
  return 2;
+}
+static int human_keeper_menu_comparison(int argc,char** argv) {
+ using namespace captain;if(argc!=8)return 2;
+ std::ifstream source_file(argv[2],std::ios::binary),records_file(argv[3],std::ios::binary),pack_file(argv[4],std::ios::binary);
+ auto state=std::make_unique<MatchRuntimeState>();state->session=load_phase_session(source_file);auto content=std::make_unique<MatchContent>();content->data=load_shot_content(pack_file);
+ std::array<std::array<unsigned char,2048>,12> raw{};for(auto& item:raw)if(!records_file.read(reinterpret_cast<char*>(item.data()),item.size()))throw std::runtime_error("Missing home keeper menu checkpoint");
+ const auto word=[&](unsigned at){return static_cast<std::uint16_t>(raw[0][at]|(unsigned(raw[0][at+1])<<8));};
+ state->session.phase=FieldSessionPhase::shot_keeper_entry;state->session.saved_ball_flight_flag=raw[0][0x61b];
+ state->session.shot_flight=ShotFlightContext{raw[0][0x62b],raw[0][0x638],raw[0][0x61a],false};
+ state->session.ball_trajectory=BallTrajectoryContext{word(0x634),word(0x636),word(0x639),word(0x63b),raw[0][0x62c],raw[0][0x61b]};
+ state->session.score=MatchScoreContext{raw[0][0x28],raw[0][0x29],raw[0][0x629]};
+ state->mode=MatchTimingMode::provisional_demo;state->demo_rng=std::stoul(argv[6]);state->ball_fraction=MatchBallFraction{raw[0][0x634],raw[0][0x636]};
+ MatchContentIdentity identity{};identity[0]=42;auto result=std::make_unique<MatchStepResult>();const std::string names[]={"entry","open","selected","confirmed","compared","goal","restart","formation","receiver","ball","handoff","control"};
+ const auto advance=[&](std::uint8_t pressed){*result=step_match(*state,client_input(*state,0,pressed),*content);if(result->unsupported)throw std::runtime_error(std::string("Home goalkeeper stopped: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(state->session.phase)));*state=result->state;std::ostringstream out(std::ios::binary);write_match_save(out,*state,identity);std::istringstream in(out.str(),std::ios::binary);*state=load_match_save(in,identity);};
+ const auto compare=[&](unsigned index){std::ifstream in(std::string(argv[7])+"/"+names[index]+".cmjsession",std::ios::binary);auto expected=load_phase_session(in),actual=state->session;expected.saved_ball_flight_flag=raw[index][0x61b];
+  if(!actual.score || actual.score->left_goals!=raw[index][0x28] || actual.score->right_goals!=raw[index][0x29] || actual.score->kickoff!=raw[index][0x629])throw std::runtime_error("Home keeper score differs");
+  actual.phase=FieldSessionPhase::field;actual.shot_flight.reset();actual.ball_trajectory.reset();actual.keeper_decision.reset();actual.score.reset();actual.kickoff_formation.reset();actual.kickoff_receiver.reset();actual.current.field.selected_defenders=0;actual.scheduling->selected_ids.fill(0);
+  if(index>=1 && expected.control && actual.control)expected.control->facing=actual.control->facing;
+  std::ostringstream a(std::ios::binary),b(std::ios::binary);write_phase_session(a,actual);write_phase_session(b,expected);
+  if(a.str()!=b.str()){for(std::size_t i=0;i<a.str().size() && i<b.str().size();++i)if(a.str()[i]!=b.str()[i])throw std::runtime_error("Home keeper "+names[index]+" differs at byte "+std::to_string(i)+" actual "+std::to_string(static_cast<unsigned char>(a.str()[i]))+" expected "+std::to_string(static_cast<unsigned char>(b.str()[i])));throw std::runtime_error("Home keeper session lengths differ");}
+ };
+ advance(0);compare(0);advance(0);compare(1);advance(static_cast<std::uint8_t>(std::stoul(argv[5])));compare(2);
+ if(!state->retained_defense_action || *state->retained_defense_action!=raw[2][0x43d])throw std::runtime_error("Home keeper selection differs: actual "+std::to_string(state->retained_defense_action.value_or(255))+" expected "+std::to_string(raw[2][0x43d]));
+ advance(128);compare(4);
+ if(!state->session.keeper_decision || state->session.keeper_decision->result_code!=raw[4][0x612] || state->session.keeper_decision->defense_action!=raw[4][0x43d] || state->session.keeper_decision->defense_subtype!=raw[4][0x43e] || state->session.keeper_decision->effect!=raw[4][0x445])throw std::runtime_error("Home keeper comparison differs");
+ if(raw[4][0x612]==0){advance(0);if(state->session.phase!=FieldSessionPhase::goal_celebration_pending)throw std::runtime_error("Opponent goal phase differs");compare(5);advance(0);if(state->session.phase!=FieldSessionPhase::goal_kickoff_pending)throw std::runtime_error("Opponent goal restart phase differs");compare(6);
+  const FieldSessionPhase phases[]={FieldSessionPhase::kickoff_formation_placed,FieldSessionPhase::kickoff_receiver_selected,FieldSessionPhase::kickoff_ball_placed,FieldSessionPhase::kickoff_control_pending,FieldSessionPhase::control_ready};
+  for(unsigned i=0;i<5;++i){advance(0);if(state->session.phase!=phases[i])throw std::runtime_error("Opponent goal kickoff phase differs");compare(i+7);if(!state->ball_fraction || state->ball_fraction->x!=raw[i+7][0x634] || state->ball_fraction->y!=raw[i+7][0x636] || !state->retained_defense_action || *state->retained_defense_action!=raw[i+7][0x43d])throw std::runtime_error("Opponent goal kickoff lost original metadata");}
+ }
+ return 0;
 }
 static int opponent_shot_defender_comparison(int argc,char** argv) {
  using namespace captain;if(argc!=6)return 2;
@@ -1836,7 +1869,7 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
 }
 
 int main(int argc,char** argv) {
- if(argc!=1){if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
+ if(argc!=1){if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
  const auto result=regular_tests();
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);

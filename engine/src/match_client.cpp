@@ -15,6 +15,7 @@ MatchInput client_input(const MatchRuntimeState& state,std::uint8_t held,std::ui
  if(state.last_sequence==std::numeric_limits<std::uint64_t>::max())throw std::overflow_error("Input sequence exhausted");
  MatchInput input{MatchInputKind::tick,state.last_sequence+1,held,pressed};
  const auto phase=state.session.phase;
+ if(phase==FieldSessionPhase::keeper_presentation_pending && state.session.current.field.side==11 && state.session.action && state.session.action->menu_route==4)return input;
  if(phase==FieldSessionPhase::attack_choice_pending && state.session.current.field.side==0 && state.session.action && state.session.action->menu_route==0) {
   if(state.session.action->action==0 || state.session.action->action==1){
    input.kind=MatchInputKind::action;input.action=state.session.action->action==0 ? MatchAction::shot : MatchAction::pass;

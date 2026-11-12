@@ -1075,7 +1075,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Invalid sampled home goalkeeper comparison");
     if(phase==226 && (state.current.field.keepers[0].timer || state.current.field.keepers[0].penalty || state.current.field.keepers[0].stun))
         throw std::invalid_argument("Invalid sampled opponent goal restart");
-    const bool keeper_selected=phase==388 || (phase==389 || phase==390 || phase==391) || score23_keeper || player19_return_keeper || (phase>=219 && phase<=226) || phase==53 || phase==56 || ((phase>=169 && phase<=187) || phase==190 || phase==191 || phase==192 || phase==193) || (phase==59 && !state.current.field.keepers[1].stun);
+    const bool keeper_selected=phase==388 || (phase==389 || phase==390 || phase==391) || score23_keeper || player19_return_keeper || (phase>=219 && phase<=226) || phase==53 || phase==56 || ((phase>=169 && phase<=187) || phase==190 || phase==191 || phase==192 || phase==193) || (phase==59 && !state.current.field.keepers[state.current.field.side==0?1:0].stun);
     if((phase==388 || (phase==389 || phase==390 || phase==391)) && (state.current.field.selected_defenders!=1 || state.scheduling->selected_ids[0]!=11 || state.current.field.keepers[1].stun || ((phase==389 || phase==390 || phase==391) && state.recovery->opposing_player!=11)))
         throw std::invalid_argument("Same-cell goalkeeper arrival requires the selected unstunned keeper");
     const bool keeper_possession=phase==57;
@@ -1113,7 +1113,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     if(kickoff_placed && !sampled_right_goal_formation && !sampled_draw_formation && (!state.score || (state.score->kickoff!=0 && state.score->kickoff!=4) || !state.scheduling ||
        (phase==64 ? state.current.field.ball_owner!=*state.kickoff_receiver :
                     state.current.field.ball_owner!=state.current.field.side+8) || state.current.field.elapsed ||
-       state.current.field.selected_defenders>1 || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=11)))
+       state.current.field.selected_defenders>1 || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=state.current.field.side)))
         throw std::invalid_argument("Prepared kickoff formation requires the selected side and initial carrier");
     if(phase==64 && (!state.control || state.control->controlled_player!=1))
         throw std::invalid_argument("Kickoff control handoff needs the initialized controlled player");
@@ -1134,11 +1134,11 @@ void validate_phase_session(const PhaseSessionState& state) {
        !state.recovery || state.recovery->opposing_player!=11))
         throw std::invalid_argument("Punch recovery requires the prepared empty no-jitter handoff");
     if(phase==59 && (!state.score || !state.keeper_decision || state.keeper_decision->result_code>1 ||
-       !state.recovery || state.recovery->opposing_player!=11 ||
+       !state.recovery || state.recovery->opposing_player!=(state.current.field.side^11u) ||
        (state.keeper_decision->result_code==1 && (state.recovery->attack_subtype&63u)>=3) ||
-       state.current.field.selected_defenders!=(state.current.field.keepers[1].stun?0:1) ||
-       (state.current.field.selected_defenders && (!state.scheduling || state.scheduling->selected_ids[0]!=11)) ||
-       (state.current.field.keepers[1].stun && (state.keeper_decision->defense_action || state.keeper_decision->defense_subtype || state.keeper_decision->effect))))
+       state.current.field.selected_defenders!=(state.current.field.keepers[state.current.field.side==0?1:0].stun?0:1) ||
+       (state.current.field.selected_defenders && (!state.scheduling || state.scheduling->selected_ids[0]!=(state.current.field.side^11u))) ||
+       (state.current.field.keepers[state.current.field.side==0?1:0].stun && (state.keeper_decision->defense_action || state.keeper_decision->defense_subtype || state.keeper_decision->effect))))
         throw std::invalid_argument("Goal celebration needs a scored keeper result and matching normal/stunned prefix");
     const bool sampled_right_goal_restart=goal_restart && state.score && state.score->left_goals==0 && state.score->right_goals==1 && state.score->kickoff==4 &&
        state.current.clock.ball_mode==0 && state.current.field.side==0 && state.current.field.ball_owner==12 && state.current.field.elapsed==1 &&
@@ -1147,10 +1147,10 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.scheduling && state.scheduling->selected_ids[0]==0 && state.recovery && state.recovery->opposing_player==0 &&
        !state.current.field.keepers[0].timer && !state.current.field.keepers[0].penalty && !state.current.field.keepers[0].stun;
     if(goal_restart && !sampled_right_goal_restart && (!state.score || state.score->kickoff!=4 || state.current.clock.ball_mode!=0 ||
-       state.current.field.side!=11 || state.current.field.ball_owner<1 || state.current.field.ball_owner>10 ||
+       (state.current.field.side==11 ? (state.current.field.ball_owner<1 || state.current.field.ball_owner>10) : (state.current.field.side!=0 || state.current.field.ball_owner<12 || state.current.field.ball_owner>21)) ||
        state.current.field.elapsed || state.current.field.selected_defenders>1 || !state.scheduling || !state.recovery ||
-       state.recovery->opposing_player!=11 || state.current.field.keepers[1].timer || state.current.field.keepers[1].penalty ||
-       state.current.field.keepers[1].stun || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=11)))
+       state.recovery->opposing_player!=state.current.field.side || state.current.field.keepers[state.current.field.side==0?0:1].timer || state.current.field.keepers[state.current.field.side==0?0:1].penalty ||
+       state.current.field.keepers[state.current.field.side==0?0:1].stun || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=state.current.field.side)))
         throw std::invalid_argument("Post-goal kickoff requires switched side, saved score and cleared keeper");
     const bool restart_options = phase >= 40 && phase <= 42;
     if (bool(state.restart_options) != restart_options)
@@ -1272,7 +1272,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     const bool generic_opponent_shot=state.current.field.side==11 && state.current.field.ball_owner>=12 && state.current.field.ball_owner<=21 && state.action && state.action->action==0 &&
-        (phase==20 || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53);
+        (phase==20 || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53 || phase==56 || phase==59);
     if (state.shot_progress) {
         const auto& p = *state.shot_progress;
         const auto count = state.current.field.selected_defenders;
