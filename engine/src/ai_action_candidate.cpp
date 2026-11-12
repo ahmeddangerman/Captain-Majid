@@ -1,5 +1,6 @@
 #include "captain/ai_action_candidate.hpp"
 #include <stdexcept>
+#include <algorithm>
 #include "captain/defender_selection.hpp"
 namespace captain {
 AiKeeperChoice choose_opponent_keeper_action(const FieldPlayerRecord& player,const PlayerProfileMappings& profiles,
@@ -138,6 +139,19 @@ AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t fla
  if(category>44)throw std::invalid_argument("Pass-defense AI category outside row");
  std::array<std::uint8_t,4> choices{};for(unsigned i=0;i<4;++i)choices[i]=content.rows[row][category+i];
  return {static_cast<std::uint8_t>(category),row,choose_ai_action_candidate(choices,random)};
+}
+std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
+ const std::array<std::uint8_t,10>& home_types,const AiPassDefenseContent& content) {
+ const auto choice=choose_ai_pass_defense_candidate(type,flags,alternate,x,y,random,content);
+ if(choice.candidate!=0)throw std::invalid_argument("Unsupported pass-defense candidate");
+ if(!ball_variant){
+  if(type>=content.tackle_options.size())throw std::invalid_argument("Missing pass-defense special options");
+  const auto& rule=content.tackle_options[type];
+  if(rule && (!rule->teammate_type || std::find(home_types.begin(),home_types.end(),*rule->teammate_type)!=home_types.end()))
+   throw std::invalid_argument("Pass-defense special move is not implemented");
+ }
+ return 1;
 }
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiAreaChoiceContent& content) {

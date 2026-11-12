@@ -125,11 +125,12 @@ void validate_phase_session(const PhaseSessionState& state) {
                     throw std::invalid_argument("Only explicitly captured ordinary action-one defenses are supported");
         }
         if ((phase>=336 && phase<=344) && (!state.area_contact || state.area_defender_cursor>=field.selected_defenders ||
-            (phase<342 && ((phase<=338) != (state.area_defender_cursor==0))) || state.area_sequence_result!=((phase==336 || phase==339) ? 255 : 0) ||
+            (phase<342 && ((phase<=338) != (state.area_defender_cursor==0))) ||
+            ((phase==337 && state.area_contact->result==3) ? state.area_sequence_result!=3 : state.area_sequence_result!=((phase==336 || phase==339) ? 255 : 0)) ||
             state.area_contact->cursor!=state.area_defender_cursor || state.area_contact->defense_action!=1 || state.area_contact->defense_subtype ||
             ((phase==336 || phase==339) && (state.area_contact->strength || state.area_contact->loss || state.area_contact->score)) ||
             ((phase==337 || phase==338 || phase==340 || phase==341 || phase==342 || phase==343 || phase==344) && state.area_contact->loss!=state.area_contact->strength/4) ||
-            state.area_contact->result || state.area_contact->weakened || state.control->facing!=64 ||
+            (state.area_contact->result && !(phase==337 && state.area_contact->result==3)) || state.area_contact->weakened || state.control->facing!=64 ||
             state.control->last_carrier_cell!=128 || state.control->motion_requested ||
             (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2)))
             throw std::invalid_argument("Invalid ordinary pass defender preparation");
@@ -677,7 +678,8 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool sampled_pass_cursor_residue=(phase==1 || phase==9 || phase==10 || phase==13 || phase==15 || phase==18 || phase==19 || (phase==20 && state.human_defense_choices)) && state.area_defender_cursor==1 &&
        state.score && state.score->left_goals==2 && state.score->right_goals==2 && state.score->kickoff==4 &&
        state.current.field.side==0 && state.current.field.ball_owner==5 && state.saved_ball_flight_flag==1;
-    const bool ordinary_pass_control_cursor=(phase==1 || phase==9) && state.area_defender_cursor<=5 && state.current.field.side==0 &&
+    const bool ordinary_pass_control_cursor=(phase==1 || phase==9 || phase==10 || phase==11 || phase==13 || phase==18 || phase==19) &&
+       ((phase==1 || phase==9) ? state.area_defender_cursor<=5 : state.area_defender_cursor==1) && state.current.field.side==0 &&
        state.current.field.ball_owner>=1 && state.current.field.ball_owner<=10 && !state.current.field.selected_defenders &&
        state.saved_ball_flight_flag==1 && !state.shot_flight && !state.ball_trajectory;
     const bool score23_recovery_cursor=(phase==1 || phase==2 || phase==6 || phase==9 || phase==10 || phase==12 || phase==13) && state.area_defender_cursor==1 && state.score &&

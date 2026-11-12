@@ -27,6 +27,9 @@ MatchInput client_input(const MatchRuntimeState& state,std::uint8_t held,std::ui
   phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending ||
   phase==FieldSessionPhase::ball_recovery || phase==FieldSessionPhase::keeper_punch_recovery ||
   phase==FieldSessionPhase::recovered_owner || phase==FieldSessionPhase::kickoff_ball_placed;
+ if(state.mode==MatchTimingMode::provisional_demo && (phase==FieldSessionPhase::ordinary_pass_defender_compared ||
+    phase==FieldSessionPhase::ordinary_pass_dispatch_clock || phase==FieldSessionPhase::ordinary_pass_flight_arrival ||
+    phase==FieldSessionPhase::ordinary_pass_recipient_positioned))acknowledge=true;
  if(phase==FieldSessionPhase::keeper_possession && state.pass_stage==MatchPassStage::flight_arrived)acknowledge=true;
  if(phase==FieldSessionPhase::ordinary_pass_prepared)
   acknowledge=state.pass_stage==MatchPassStage::awaiting_presentation || state.pass_stage==MatchPassStage::flight_arrived;

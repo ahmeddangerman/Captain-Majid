@@ -21,6 +21,7 @@ struct RuntimeKickoffContent { KickoffFormationContent formation{}; std::array<s
 struct ShotContent {
     std::shared_ptr<const AiKeeperContent> ai_keeper_choice{};
     std::optional<AiPassDefenseContent> ai_pass_defense{};
+    std::optional<FieldComparisonSelection> ordinary_pass_defender_comparison{};
     std::shared_ptr<const RuntimeKickoffContent> kickoff{};
     std::optional<AiAreaChoiceContent> ai_area_choice{};
     std::optional<AiFieldChoiceContent> ai_field_choice{};
@@ -49,7 +50,7 @@ struct ShotContent {
     std::optional<AreaDefenseMenuContent> area_defense_menu{};
 };
 
-// Development CMJSHOT1..9/A..R content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..9/A..W content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

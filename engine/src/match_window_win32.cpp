@@ -185,7 +185,7 @@ LRESULT CALLBACK window_proc(HWND window,UINT message,WPARAM wparam,LPARAM lpara
    try {
     const auto keys=app->buttons.take();const auto input=client_input(app->state,keys.held,keys.pressed);
     auto result=std::make_unique<MatchStepResult>(step_match(app->state,input,app->content));
-    if(result->unsupported){app->paused=true;app->buttons.clear();app->problem=L"Unsupported: "+widen(capability_name(*result->unsupported))+L". The previous state is preserved.";}
+    if(result->unsupported){app->paused=true;app->buttons.clear();app->problem=L"Unsupported: "+widen(capability_name(*result->unsupported))+L" at phase "+std::to_wstring(static_cast<unsigned>(app->state.session.phase))+L". The previous state is preserved.";}
     else app->state=std::move(result->state);
    } catch(const std::exception& error){app->paused=true;app->buttons.clear();app->problem=L"Stopped: "+widen(error.what());}
    InvalidateRect(window,nullptr,FALSE);

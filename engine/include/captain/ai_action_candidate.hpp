@@ -62,15 +62,21 @@ AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t
 AiAreaAction choose_ai_area_action(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
  const AiAreaChoiceContent& content);
+struct AiPassDefenseSpecial { std::uint8_t subtype=0; std::optional<std::uint8_t> teammate_type{}; };
 struct AiPassDefenseContent {
  std::vector<std::uint8_t> profile_rows;
  std::array<std::array<std::uint8_t,2>,128> cells{};
  std::vector<std::array<std::uint8_t,48>> rows;
+ std::vector<std::optional<AiPassDefenseSpecial>> tackle_options;
 };
 // Pass-defense candidate only; generic types and final special-move adjustments are not represented.
 AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
  const AiPassDefenseContent& content);
+// Returns an ordinary action-1 defense only when the original special-option lookup is provably empty.
+std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
+ const std::array<std::uint8_t,10>& home_types,const AiPassDefenseContent& content);
 // Direct opponent types only; generic team resolution and final adjustments pending.
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,

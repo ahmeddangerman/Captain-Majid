@@ -33,6 +33,15 @@ int main() {
   state.pass_stage=stage;assert(client_input(state,0,0).kind==MatchInputKind::presentation_complete);
  }
  state.pass_stage=MatchPassStage::flight_cell;assert(client_input(state,1,128).kind==MatchInputKind::tick);
+ state.pass_stage=MatchPassStage::none;
+ for(const auto phase:{FieldSessionPhase::ordinary_pass_defender_compared,FieldSessionPhase::ordinary_pass_dispatch_clock,
+      FieldSessionPhase::ordinary_pass_flight_arrival,FieldSessionPhase::ordinary_pass_recipient_positioned}) {
+  state.session.phase=phase;assert(client_input(state,1,128).kind==MatchInputKind::presentation_complete);
+ }
+ state.session.phase=FieldSessionPhase::ordinary_pass_flight_callback;
+ assert(client_input(state,0,0).kind==MatchInputKind::tick);
+ state.session.ball_trajectory=BallTrajectoryContext{0x7162,0x8f6d,0,0,0,1};state.session.current.field.ball_cell=103;
+ auto view=match_ball_view(state);assert(view.in_flight && view.x==113 && view.y==143 && view.cell==103);
  state.session.phase=FieldSessionPhase::field_contact_pending;state.session.current.field.side=11;
  assert(client_input(state,0,0).kind==MatchInputKind::presentation_complete);
  state.defense_menu=MatchDefenseMenu{};

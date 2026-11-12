@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -278,6 +278,21 @@ ShotContent load_shot_content(std::istream& input) {
         for(auto& pair:ai.cells)reader.bytes(pair);ai.profile_rows=reader.vector(117,117);
         ai.rows.resize(reader.count(1,64));for(auto& row:ai.rows)reader.bytes(row);
         for(auto row:ai.profile_rows)if(row>=ai.rows.size())throw std::invalid_argument("Invalid pass-defense AI profile row");
+    }
+    if(version>='V') {
+        auto& ai=*content.ai_pass_defense;
+        ai.tackle_options.resize(reader.count(118,118));for(auto& rule:ai.tackle_options){const auto present=reader.byte();
+            if(present>1)throw std::invalid_argument("Invalid pass-defense special-option flag");
+            if(present){AiPassDefenseSpecial option{};option.subtype=reader.byte();const auto conditional=reader.byte(),teammate=reader.byte();
+                if(option.subtype>127 || conditional>1)throw std::invalid_argument("Invalid pass-defense special option");
+                if(conditional)option.teammate_type=teammate;rule=option;}
+        }
+    }
+    if(version>='W') {
+        FieldComparisonSelection choice{};choice.table_index=5;choice.range=reader.byte();choice.offset=reader.byte();
+        const auto eligible=reader.byte();if(!choice.range || eligible>1)throw std::invalid_argument("Invalid ordinary pass defender comparison");
+        choice.eligible=eligible!=0;reader.bytes(choice.thresholds);classify_score(0,choice.thresholds);
+        content.ordinary_pass_defender_comparison=choice;
     }
     reader.end();
     return content;

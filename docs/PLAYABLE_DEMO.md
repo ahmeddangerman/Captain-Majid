@@ -2,6 +2,8 @@
 
 This Windows-only window is an early way to inspect and control supported parts of the native runtime. It starts from an explicitly supplied development snapshot; it is **not a fresh match, a complete playable match, or verified original timing**. It uses placeholder graphics, simplified timing/random values and automatic acknowledgements of presentation requests. Unimplemented paths stop visibly with the last valid state intact.
 
+The W content format adds the original-sourced comparison data for a guarded ordinary pass against one defender. A preconfirmed developer snapshot has shown player7 receiving the pass and opening the next menu; controlled headless tests also cover defender17 interception. Other choices and flight contacts can still stop, and the final full menu-to-interception window run has not been visually verified.
+
 Build from the repository root with the already configured Windows CMake environment:
 
 ```powershell

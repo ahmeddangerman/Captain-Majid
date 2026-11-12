@@ -18,6 +18,10 @@ from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
 
+def has_shot_gates(magic):
+    return magic in (b'CMJSHOTS', b'CMJSHOTT', b'CMJSHOTU', b'CMJSHOTV', b'CMJSHOTW')
+
+
 def original_decision(prg, raw):
     memory = ObservedCartridge(prg, raw, None, {0x43d, 0x634, 0x636})
     memory.registers[6:8] = [26, 27]
@@ -43,7 +47,7 @@ def main():
         parser.error('Expected verified Japanese ROM')
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):
         parser.error('Private temporary data must stay outside checkout')
-    prg = rom[16:262160];counts = Counter();stats=ReferenceCartridge(prg);stats.registers[6:8]=[28,29];shot_gates=args.pack.read_bytes()[:8] in (b'CMJSHOTS', b'CMJSHOTT', b'CMJSHOTU')
+    prg = rom[16:262160];counts = Counter();stats=ReferenceCartridge(prg);stats.registers[6:8]=[28,29];shot_gates=has_shot_gates(args.pack.read_bytes()[:8])
     with tempfile.TemporaryDirectory(prefix='ai-cell-', dir=args.private_temp) as temporary:
         source, expected, metadata = (Path(temporary) / name for name in ('source.cmjsession', 'expected.cmjsession', 'metadata.bin'))
         for fixture in range(4):

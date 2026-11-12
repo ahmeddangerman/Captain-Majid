@@ -5,6 +5,17 @@
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) {
+ if(argc==3 && std::string(argv[1])=="--pass-defender-final") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);if(!content.ai_pass_defense)return 2;
+  unsigned type,flags,alternate,x,y,random,variant;std::array<std::uint8_t,10> teammates{};
+  while(std::cin>>type>>flags>>alternate>>x>>y>>random>>variant){
+   for(auto& t:teammates){unsigned value;if(!(std::cin>>value) || value>255)return 2;t=static_cast<std::uint8_t>(value);}
+   if(type>255 || flags>255 || alternate>255 || x>255 || y>255 || random>255 || variant>255)return 2;
+   try{std::cout<<unsigned(captain::choose_ordinary_ai_pass_defense(type,flags,alternate,x,y,random,variant,teammates,*content.ai_pass_defense))<<'\n';}
+   catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--pass-defender") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   if(!content.ai_pass_defense)return 2;

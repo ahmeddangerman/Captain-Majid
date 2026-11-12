@@ -1076,7 +1076,7 @@ static PhaseSessionState compare_ordinary_pass_defender(const PhaseSessionState&
     contact.eligible = comparison.eligible;
     contact.thresholds = comparison.thresholds;
     const auto result = compare_defender_contact(contact);
-    if (result.result_code != 0 || result.special || result.subtype != 0)
+    if ((result.result_code != 0 && !(input.phase==FieldSessionPhase::ordinary_pass_defender_prepared && result.result_code==3)) || result.special || result.subtype != 0)
         throw std::invalid_argument("Only observed ordinary nonterminal defender comparisons are supported: score=" +
             std::to_string(result.score) + " result=" + std::to_string(result.result_code) +
             " special=" + std::to_string(result.special) + " subtype=" + std::to_string(result.subtype) +
