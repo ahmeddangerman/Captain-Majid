@@ -469,6 +469,25 @@ static int first_opponent_area_entry_check(int argc,char** argv) {
    auto contact=step_match(crossed.state,client_input(crossed.state,0,0),content);
    if(contact.unsupported || contact.state.session.phase!=FieldSessionPhase::area_pass_defenders_pending || contact.state.session.current.field.selected_defenders!=4)throw std::runtime_error("Rebound pass did not enter four-defender contact");
    std::ofstream contact_out(std::string(argv[6])+".contact",std::ios::binary);write_phase_session(contact_out,contact.state.session);
+   auto announced=step_match(contact.state,client_input(contact.state,0,0),content);
+   if(announced.unsupported || announced.state.session.phase!=FieldSessionPhase::area_pass_defender_announced)throw std::runtime_error("First rebound defender announcement stopped");
+   auto defender=step_match(announced.state,client_input(announced.state,0,0),content);
+   if(defender.unsupported || defender.state.session.phase!=FieldSessionPhase::area_pass_defender_prepared || defender.state.session.recovery->opposing_player!=1)throw std::runtime_error("First rebound defender preparation stopped");
+   auto compared=step_match(defender.state,client_input(defender.state,0,0),content);
+   if(compared.unsupported || compared.state.session.phase!=FieldSessionPhase::area_pass_defender_compared || compared.state.session.area_sequence_result!=3)throw std::runtime_error("First rebound defender result differs from original");
+   auto restored_contact=step_match(compared.state,client_input(compared.state,0,0),content);
+   if(restored_contact.unsupported || restored_contact.state.session.phase!=FieldSessionPhase::area_pass_variant_restored)throw std::runtime_error("Rebound pass variant restoration stopped");
+   auto result_entry=step_match(restored_contact.state,client_input(restored_contact.state,0,0),content);
+   if(result_entry.unsupported || result_entry.state.session.phase!=FieldSessionPhase::area_pass_result_handler_entry)throw std::runtime_error("Rebound pass result presentation stopped");
+   auto clocked=step_match(result_entry.state,client_input(result_entry.state,0,0),content);
+   if(clocked.unsupported || clocked.state.session.phase!=FieldSessionPhase::area_pass_terminal_clock_done)throw std::runtime_error("Rebound pass terminal clock stopped");
+   auto captured=step_match(clocked.state,client_input(clocked.state,0,0),content);
+   if(captured.unsupported || captured.state.session.phase!=FieldSessionPhase::area_pass_defender_captured || captured.state.session.current.field.ball_owner!=1)throw std::runtime_error("Player1 rebound pass capture stopped");
+   auto control=step_match(captured.state,client_input(captured.state,0,0),content);
+   if(control.unsupported || control.state.session.phase!=FieldSessionPhase::area_pass_capture_control_entry || control.state.session.current.field.side!=0)throw std::runtime_error("Player1 rebound pass control entry stopped");
+   auto ready=step_match(control.state,client_input(control.state,0,0),content);
+   if(ready.unsupported || ready.state.session.phase!=FieldSessionPhase::control_ready || ready.state.session.current.field.ball_owner!=1 || ready.state.session.current.field.side!=0)throw std::runtime_error("Player1 did not return to control-ready");
+   for(const auto& pair:{std::pair<const char*,const MatchRuntimeState&>{"announced",announced.state},{"defender",defender.state},{"compared",compared.state},{"restored",restored_contact.state},{"result",result_entry.state},{"clocked",clocked.state},{"captured",captured.state},{"control",control.state},{"ready",ready.state}}){std::ofstream file(std::string(argv[6])+"."+pair.first,std::ios::binary);write_phase_session(file,pair.second.session);}
   }
   std::cout<<"Opponent goal-area entry and pass preparation roundtrip\n";return 0;
 }

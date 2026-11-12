@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-12 - Player1 intercepts the rebound pass
+
+The provisional first-fixture rebound pass now processes the first of four selected flight defenders. Controlled original/native represented states matched defender announcement, preparation, comparison, ball-variant restoration, result presentation, terminal clock, possession transfer, field movement and player1 control-ready. Both produce result3 and give the home side player1 possession; the other three selected defenders do not act after this terminal outcome. The original control-ready setup retains the previous action byte, which the runtime now preserves.
+
+An uninterrupted seed-3 provisional replay from the first-fixture constructor reaches the same interception, returns to player1 control, and advances through neutral control/field cycles to another action menu with five selected defenders at clock151. This replay uses provisional RNG and automatic presentation acknowledgements; the controlled original comparison injects random bytes and acknowledges waits. The full Windows build, all 65 registered tests and the private original comparison passed. Next trace a chosen action through that five-defender encounter and compare each new contact with the original. Live timing, other contact results, remaining match routes and a complete match remain unverified. Overall progress is unmeasured; suggested model GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/first-opponent-area-pass-original-20261112 and first-opponent-area-contact-original-20261112.
+
+
 ## 2026-11-12 - Rebound pass reaches four-defender contact
 
 The first-fixture opponent17 rebound pass now continues through empty-area dispatch, movement, flight setup, ten cell crossings and four-defender contact entry. Controlled original/native represented state matched at each boundary, including exact trajectory bytes; defender IDs 1, 3, 4 and 9 were selected in order. A stale original ball-cell byte after the rebound is handled only for the observed state, and the first crossing follows the original single velocity addition. Sixteen controlled original recoveries using varied position fractions preserved both bytes; the runtime retains known fractions for this narrowly identified rebound. The original-only continuation resolves the first contact with result3 and reaches player1 control entry, but native contact resolution and player1 control are not yet claimed.

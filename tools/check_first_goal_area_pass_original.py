@@ -36,4 +36,14 @@ if s[345:355] != r[0x634:0x638] + r[0x639:0x63d] + bytes((r[0x62c], r[0x61b])):
 s = (a.trace / 'native-flight.cmjsession.contact').read_bytes()
 r = (a.contact / '8840-1.bin').read_bytes()
 compare_represented(s, export_session(r, 0), False, 'first fixture', 'defender entry')
-print('Matched dispatch, movement, setup, 10 crossings, arrival and four-defender entry')
+for name, original in (('announced', '8845-1.bin'), ('defender', '886d-1.bin'),
+                       ('compared', '8870-1.bin'), ('restored', '8874-1.bin'),
+                       ('result', '88b0-1.bin'), ('clocked', '88dc-1.bin'),
+                       ('captured', '88e2-1.bin'), ('control', '88e5-1.bin'),
+                       ('ready', 'control-ready.bin')):
+    s = (a.trace / ('native-flight.cmjsession.' + name)).read_bytes()
+    r = (a.contact / original).read_bytes()
+    compare_represented(s, export_session(r, 0), False, 'first fixture', name)
+if r[0x441] != 1 or r[0x5fb] != 0:
+    raise ValueError('Original control-ready owner differs')
+print('Matched dispatch, flight, contact result3 and player1 control-ready')

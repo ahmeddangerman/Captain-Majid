@@ -13,7 +13,7 @@ This constructs the original first lineup, level-zero stamina, 0–0 score and o
 
 The W content format adds the original-sourced comparison data for a guarded ordinary pass against one defender. A preconfirmed developer snapshot has shown player7 receiving the pass and opening the next menu; controlled headless tests also cover defender17 interception. Other choices and flight contacts can still stop, and the final full menu-to-interception window run has not been visually verified.
 
-The optional `--include-goal-area-ai` export produces CMJSHOTb and includes the preceding extensions. It supports a bounded opponent goal-area pass through flight and four-defender contact entry; contact resolution and most other choices remain unsupported.
+The optional `--include-goal-area-ai` export produces CMJSHOTb and includes the preceding extensions. It supports a bounded opponent goal-area pass through a four-defender flight and a result3 interception by player1; other contact results and most goal-area choices remain unsupported.
 
 The optional `--include-pass-action2` export produces CMJSHOTa for the first fixture. It supports verified nonterminal action-2 choices across multiple selected defenders and a bounded free-target winner route; other action results and multiple flight defenders can still stop.
 

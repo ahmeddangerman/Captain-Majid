@@ -34,6 +34,9 @@ MatchInput client_input(const MatchRuntimeState& state,std::uint8_t held,std::ui
  if(phase==FieldSessionPhase::keeper_area_attack_prepared && state.session.action && state.session.action->menu_route==1 && !state.session.current.field.selected_defenders)acknowledge=true;
  if(phase==FieldSessionPhase::keeper_area_attack_continuation && state.session.action && state.session.action->menu_route==1 && !state.session.current.field.selected_defenders)acknowledge=true;
  if(phase==FieldSessionPhase::area_ball_arrival_callback && state.session.action && state.session.action->menu_route==1 && state.session.current.field.ball_owner==17)acknowledge=true;
+ if(phase==FieldSessionPhase::area_pass_defenders_pending && state.session.action && state.session.action->menu_route==1 && state.session.current.field.ball_owner==17)acknowledge=true;
+ if(phase==FieldSessionPhase::area_pass_variant_restored && state.session.action && state.session.action->menu_route==1 && state.session.current.field.ball_owner==17)acknowledge=true;
+ if(phase==FieldSessionPhase::area_pass_defender_captured && state.session.action && state.session.action->menu_route==1 && state.session.current.field.ball_owner==1)acknowledge=true;
  if(phase==FieldSessionPhase::keeper_possession && state.pass_stage==MatchPassStage::flight_arrived)acknowledge=true;
  if(phase==FieldSessionPhase::ordinary_pass_prepared)
   acknowledge=state.pass_stage==MatchPassStage::awaiting_presentation || state.pass_stage==MatchPassStage::flight_arrived;
