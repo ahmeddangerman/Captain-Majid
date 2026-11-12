@@ -56,6 +56,25 @@ static void continue_home_after_action3(const captain::MatchRuntimeState& initia
  if(state->session.phase!=FieldSessionPhase::control_ready || state->session.current.field.ball_owner!=4 || state->session.current.field.side!=0 || state->session.current.field.ball_x!=84 || state->session.current.field.ball_y!=140 || state->session.current.clock.remaining!=68)throw std::runtime_error("Home player3 pass did not reach player4");
  std::ostringstream home_save(std::ios::binary);write_match_save(home_save,*state,identity);std::istringstream home_in(home_save.str(),std::ios::binary);auto home_restored=std::make_unique<MatchRuntimeState>(load_match_save(home_in,identity));
  if(home_restored->session.current.field.ball_owner!=4 || home_restored->session.phase!=FieldSessionPhase::control_ready)throw std::runtime_error("Home player4 possession did not roundtrip");
+ std::ofstream home4_log(std::string(prefix)+"-home4-journey.txt");
+ for(int i=0;i<500;++i){
+  const auto phase=home_restored->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+  auto next=std::make_unique<MatchStepResult>(step_match(*home_restored,client_input(*home_restored,1,0),content));
+  home4_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next->state.demo_rng&255)<<' '<<static_cast<unsigned>((next->state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<next->state.demo_rng<<'\n';home4_log.flush();
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-home4-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*home_restored=std::move(next->state);
+ }
+ if(home_restored->session.phase!=FieldSessionPhase::field_contact_pending || home_restored->session.current.field.selected_defenders!=5 || home_restored->session.area_defender_cursor!=2)throw std::runtime_error("Home player4 observed contact stopped");
+ auto home4_menu=std::make_unique<MatchStepResult>(step_match(*home_restored,client_input(*home_restored,0,0),content));
+ if(home4_menu->unsupported || home4_menu->state.session.phase!=FieldSessionPhase::human_action_menu)throw std::runtime_error("Home player4 contact menu stopped");
+ std::ofstream home4_menu_file(std::string(prefix)+"-home4-menu.cmjsession",std::ios::binary);write_phase_session(home4_menu_file,home4_menu->state.session);
+ std::ofstream home4_seed(std::string(prefix)+"-home4-menu-seed.txt");home4_seed<<home4_menu->state.demo_rng;
+ std::ostringstream home4_save(std::ios::binary);write_match_save(home4_save,home4_menu->state,identity);std::istringstream home4_in(home4_save.str(),std::ios::binary);auto home4_restored=std::make_unique<MatchRuntimeState>(load_match_save(home4_in,identity));
+ if(home4_restored->session.phase!=FieldSessionPhase::human_action_menu || home4_restored->session.area_defender_cursor!=2 || home4_restored->session.current.field.selected_defenders!=5)throw std::runtime_error("Home player4 contact menu did not roundtrip");
+
+
+
 
 
 }

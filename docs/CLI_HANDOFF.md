@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player4 reaches five-defender contact
+
+Continued player4's sampled possession with rightward input from clock68 to clock63. All 65 native/original control and field-update boundaries match represented state. Player4 meets opponents12,14,17,18,19 at (101,140), and the original action menu matches and saves/reloads.
+
+The previous pass leaves the original's defender cursor at 2 even after player4 receives the ball. The engine previously threw an exception when this carried-over cursor reached the next contact. Validation now accepts this precisely observed five-defender context without inventing a reset. Windows CMake build, all 65 registered tests, private integration and original comparisons passed. Inputs and random samples are controlled; live NMI, timing, rendering and audio remain unverified. Next trace player4's chosen action and the five defenders. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Home player3 passes through two defenders
 
 Continued from player3's interception with an explicit rightward input. At clock71 player3 meets opponents15 and16 and chooses an ordinary pass to player4. In the controlled original, both defender comparisons return 0; the pass reaches player4 at (84,140), clock68. Original/native represented states match movement, menu, target initialization, AI choices, both contact preparations/results/clocks, dispatch, flight and control. Player4's control state saves/reloads.
