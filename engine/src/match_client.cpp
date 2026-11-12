@@ -22,7 +22,7 @@ MatchInput client_input(const MatchRuntimeState& state,std::uint8_t held,std::ui
    input.held=input.pressed=0;return input;
   }
  }
- if(phase==FieldSessionPhase::attack_choice_pending && state.session.current.field.ball_owner==8 && state.session.action && state.session.action->menu_route==1 && state.session.action->action==0){input.kind=MatchInputKind::action;input.action=MatchAction::shot;input.held=input.pressed=0;return input;}
+ if(phase==FieldSessionPhase::attack_choice_pending && (state.session.current.field.ball_owner==8 || state.session.current.field.ball_owner==6) && state.session.action && state.session.action->menu_route==1 && state.session.action->action==0){input.kind=MatchInputKind::action;input.action=MatchAction::shot;input.held=input.pressed=0;return input;}
  bool acknowledge=phase==FieldSessionPhase::attack_prepared || phase==FieldSessionPhase::selected_attack_presentation ||
   phase==FieldSessionPhase::ball_arrival_callback || phase==FieldSessionPhase::keeper_presentation_pending ||
   phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending ||
@@ -31,7 +31,7 @@ MatchInput client_input(const MatchRuntimeState& state,std::uint8_t held,std::ui
  if(state.mode==MatchTimingMode::provisional_demo && (phase==FieldSessionPhase::ordinary_pass_defender_compared || phase==FieldSessionPhase::ordinary_pass_next_defender_compared ||
     phase==FieldSessionPhase::ordinary_pass_dispatch_clock || phase==FieldSessionPhase::ordinary_pass_flight_arrival ||
     phase==FieldSessionPhase::ordinary_pass_recipient_positioned || phase==FieldSessionPhase::ordinary_free_pass_contest_winner))acknowledge=true;
- if(phase==FieldSessionPhase::player8_area_shot_prepared || phase==FieldSessionPhase::player8_area_recovered_owner || (phase==FieldSessionPhase::keeper_area_prepared && state.session.action && state.session.action->menu_route==1))acknowledge=true;
+ if(phase==FieldSessionPhase::player8_area_shot_prepared || phase==FieldSessionPhase::player6_area_shot_prepared || phase==FieldSessionPhase::player8_area_recovered_owner || (phase==FieldSessionPhase::keeper_area_prepared && state.session.action && state.session.action->menu_route==1))acknowledge=true;
  if(phase==FieldSessionPhase::keeper_area_attack_prepared && state.session.action && state.session.action->menu_route==1 && !state.session.current.field.selected_defenders)acknowledge=true;
  if(phase==FieldSessionPhase::keeper_area_attack_continuation && state.session.action && state.session.action->menu_route==1 && !state.session.current.field.selected_defenders)acknowledge=true;
  if(phase==FieldSessionPhase::area_ball_arrival_callback && state.session.action && state.session.action->menu_route==1 && state.session.current.field.ball_owner==17)acknowledge=true;

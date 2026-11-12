@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-13 - Player6 goal-area shot reaches dispatch
+
+The observed player6 ordinary shot from the attacking goal-area menu now reaches its shot dispatch. Controlled original/native represented states match selection with subtype2, preparation at power9, first clock, field movement and the second clock/dispatch; runtime save/reload preserves that dispatch. The next original-only trace reaches shot target cell233 at distance27 and flies to the goalkeeper boundary; that flight and outcome have not yet been connected in the native route.
+
+The original trace supplies sampled random bytes 34/217 and acknowledges presentation; it does not simulate NMI, rendering or audio. A Windows CMake build, all 65 registered tests and the focused original comparison passed. Continue with original-compared target, flight and goalkeeper resolution. Complete match behavior remains unfinished and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player6-shot-original-20261113.
+
+
 ## 2026-11-13 - Player6 reaches attacking goal-area menu
 
 The player9 pass timeout now continues into player6's attacking goal-area setup and action menu. The controlled original/native represented states match at recovery area entry, route1 setup and the menu, where no defender or goalkeeper is selected for the sampled position. The menu survives runtime save/reload. The runtime acknowledges the original facing change before displaying it. The previous pass action and original retained defender cursor and flight flag survive the entry; the selection guard is restricted to this observed state.

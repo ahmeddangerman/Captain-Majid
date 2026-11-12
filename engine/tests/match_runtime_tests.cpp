@@ -724,6 +724,23 @@ static int player1_defended_shot_check(int argc,char** argv) {
    if(menu6.unsupported || menu6.state.session.phase!=FieldSessionPhase::human_action_menu || menu6.state.session.current.field.selected_defenders)throw std::runtime_error("Player6 attacking area menu stopped: "+(menu6.unsupported ? std::string(capability_name(*menu6.unsupported)) : std::to_string(menu6.state.session.current.field.selected_defenders)));
    std::ostringstream menu6_save(std::ios::binary);write_match_save(menu6_save,menu6.state,identity);std::istringstream menu6_in(menu6_save.str(),std::ios::binary);auto menu6_restored=load_match_save(menu6_in,identity);
    if(menu6_restored.session.phase!=FieldSessionPhase::human_action_menu || menu6_restored.session.current.field.ball_owner!=6)throw std::runtime_error("Player6 area menu did not roundtrip");
+   auto shot6_direction=step_match(menu6_restored,client_input(menu6_restored,1,1),content);
+   auto shot6_confirmed=step_match(shot6_direction.state,client_input(shot6_direction.state,128,128),content);
+   if(shot6_direction.unsupported || shot6_confirmed.unsupported || shot6_confirmed.state.session.phase!=FieldSessionPhase::attack_choice_pending || shot6_confirmed.state.session.action->action!=0 || shot6_confirmed.state.session.recovery->attack_subtype!=2)throw std::runtime_error("Player6 attacking area shot selection stopped");
+   std::ofstream shot6(std::string(argv[4])+"-player6-shot-confirmed.cmjsession",std::ios::binary);write_phase_session(shot6,shot6_confirmed.state.session);
+   auto shot6_prepared=step_match(shot6_confirmed.state,client_input(shot6_confirmed.state,0,0),content);
+   if(shot6_prepared.unsupported || shot6_prepared.state.session.phase!=FieldSessionPhase::player6_area_shot_prepared || shot6_prepared.state.session.action->power!=9)throw std::runtime_error("Player6 attacking area shot preparation stopped");
+   std::ofstream prep6(std::string(argv[4])+"-player6-shot-prepared.cmjsession",std::ios::binary);write_phase_session(prep6,shot6_prepared.state.session);
+   auto clock6=step_match(shot6_prepared.state,client_input(shot6_prepared.state,0,0),content);
+   if(clock6.unsupported || clock6.state.session.phase!=FieldSessionPhase::player6_area_shot_clocked || clock6.state.session.current.clock.remaining!=100)throw std::runtime_error("Player6 area shot clock stopped");
+   auto moved6=step_match(clock6.state,client_input(clock6.state,0,0),content);
+   if(moved6.unsupported || moved6.state.session.phase!=FieldSessionPhase::player6_area_shot_field_moved || moved6.state.session.current.field.random_first!=0)throw std::runtime_error("Player6 area shot field movement stopped");
+   std::ofstream clock6f(std::string(argv[4])+"-player6-shot-clocked.cmjsession",std::ios::binary),moved6f(std::string(argv[4])+"-player6-shot-moved.cmjsession",std::ios::binary);write_phase_session(clock6f,clock6.state.session);write_phase_session(moved6f,moved6.state.session);
+   auto dispatch6=step_match(moved6.state,client_input(moved6.state,0,0),content);
+   if(dispatch6.unsupported || dispatch6.state.session.phase!=FieldSessionPhase::player6_area_shot_dispatch || dispatch6.state.session.current.clock.remaining!=99)throw std::runtime_error("Player6 area shot dispatch stopped");
+   std::ostringstream shot6_save(std::ios::binary);write_match_save(shot6_save,dispatch6.state,identity);std::istringstream shot6_in(shot6_save.str(),std::ios::binary);auto shot6_restored=load_match_save(shot6_in,identity);
+   if(shot6_restored.session.phase!=FieldSessionPhase::player6_area_shot_dispatch || shot6_restored.session.action->power!=9)throw std::runtime_error("Player6 shot dispatch did not roundtrip");
+   std::ofstream dispatch6f(std::string(argv[4])+"-player6-shot-dispatch.cmjsession",std::ios::binary);write_phase_session(dispatch6f,dispatch6.state.session);
    std::ofstream a6(std::string(argv[4])+"-player6-area.cmjsession",std::ios::binary),p6(std::string(argv[4])+"-player6-area-prepared.cmjsession",std::ios::binary),m6(std::string(argv[4])+"-player6-menu.cmjsession",std::ios::binary);write_phase_session(a6,area6.state.session);write_phase_session(p6,prepared6.state.session);write_phase_session(m6,menu6.state.session);
   }
   std::ofstream kre(std::string(argv[4])+"-area-recovery-entry.cmjsession",std::ios::binary),kr(std::string(argv[4])+"-area-recovered.cmjsession",std::ios::binary);write_phase_session(kre,recovery_entry.state.session);write_phase_session(kr,area_recovered.state.session);

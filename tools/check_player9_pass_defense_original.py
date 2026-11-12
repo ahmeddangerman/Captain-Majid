@@ -9,7 +9,7 @@ from verify_action_strength import PAYLOAD_SHA256
 from verify_player7_pass_end_to_end import compare_represented
 
 p=argparse.ArgumentParser(description=__doc__)
-for name in ('rom','injected','trace','menu','contacts','prepared','player6-area'):p.add_argument('--'+name,type=Path,required=True)
+for name in ('rom','injected','trace','menu','contacts','prepared','player6-area','player6-shot'):p.add_argument('--'+name,type=Path,required=True)
 a=p.parse_args();rom=a.rom.read_bytes();base=bytearray(a.injected.read_bytes())
 if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256 or len(base)!=2048:raise ValueError('Expected verified original ROM and private RAM')
 menu=(a.trace/'native-player9-menu.cmjsession').read_bytes();compare_represented(menu,export_session(a.menu.read_bytes(),0),False,'player9','five-defender menu')
@@ -34,4 +34,8 @@ for name,pc in (('area','8b4a-1'),('area-prepared','8b73-1'),('menu','d5e5-1')):
  raw=(a.player6_area/f'{pc}.bin').read_bytes()
  compare_represented((a.trace/f'native-player6-{name}.cmjsession').read_bytes(),export_session(raw,0),False,'player6',name)
  if raw[0x441]!=6 or raw[0x600]!=0:raise ValueError('Unexpected player6 goal-area state')
+for name,pc,extended in (('confirmed','8b8f-1',False),('prepared','82a0-1',True),('clocked','83f5-1',True),('moved','83f8-1',True),('dispatch','c618-1',True)):
+ raw=(a.player6_shot/f'{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-player6-shot-{name}.cmjsession').read_bytes(),export_session(raw,0),extended,'player6 shot',name)
+ if raw[0x441]!=6 or raw[0x43b]!=0 or raw[0x43c]!=2:raise ValueError('Unexpected player6 shot state')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

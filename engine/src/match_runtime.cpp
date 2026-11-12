@@ -933,10 +933,55 @@ MatchStepResult recover_player8_area_shot(const MatchRuntimeState& input,const M
   validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::defender_contact;return result;}
 }
+MatchStepResult prepare_player6_area_shot(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::action || event.action!=MatchAction::shot || event.target){result.unsupported=UnsupportedCapability::action;return result;}
+ try {
+  auto next=input;auto& field=next.session.current.field;const auto& p=field.roster[6];
+  const auto prepared=prepare_attacking_action({{6,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},0,2,2,field.side,field.selected_defenders,field.random_first,field.random_second,false},content.data->field_players,content.data->attack);
+  const auto remaining=static_cast<std::uint16_t>(unsigned(p.stamina)-prepared.preparation.stamina_cost);
+  if((remaining&32768u) || prepared.action_power.subtype!=2 || prepared.action_power.power!=9)throw std::invalid_argument("Unobserved player6 area shot");
+  field.roster[6].stamina=prepared.energy.stamina;next.session.action->power=prepared.action_power.power;next.session.action->move_effect=prepared.preparation.move_effect;next.session.action->move_flags=prepared.move_flags;next.session.recovery->attack_subtype=prepared.action_power.subtype;next.session.phase=FieldSessionPhase::player6_area_shot_prepared;
+  validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult advance_player6_area_shot(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ const bool clocked=input.session.phase==FieldSessionPhase::player6_area_shot_prepared;
+ if(event.kind!=(clocked ? MatchInputKind::presentation_complete : MatchInputKind::tick)){result.unsupported=clocked ? UnsupportedCapability::presentation : UnsupportedCapability::action;return result;}
+ if(!clocked && !content.data->movement){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  auto next=input;auto& s=next.session;
+  if(clocked) {
+   s.current.field.elapsed=static_cast<std::uint8_t>(unsigned(s.current.field.elapsed)+1);
+   const auto recovery=advance_keeper_recovery({s.current.field.keepers,s.current.shared_recovery_flags,s.current.shared_recovery_timer},1);
+   s.current.field.keepers=recovery.keepers;s.current.shared_recovery_flags=recovery.shared_flags;s.current.shared_recovery_timer=recovery.shared_timer;
+   const auto clock=advance_match_clock(s.current.clock,1,s.current.field.random_first);if(clock.continuation!=ClockContinuation::ready || clock.state.remaining!=100)throw std::invalid_argument("Unobserved player6 area clock");
+   s.current.clock=clock.state;s.control->facing=64;s.control->last_carrier_cell=0;s.area_sequence_result=0;s.phase=FieldSessionPhase::player6_area_shot_clocked;
+  } else {
+   s.current.field=advance_field_phase(s.current.field,content.data->field_players,*content.data->movement).state;s.phase=FieldSessionPhase::player6_area_shot_field_moved;
+  }
+  validate_phase_session(s);next.last_sequence=event.sequence;project_field_random_memory(s.current.field,next.random_memory);result.state=std::move(next);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
+MatchStepResult dispatch_player6_area_shot(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+ if(!content.data->contact){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  const auto clock=apply_contact_prelude({input.session.current,16,0,true},*content.data->contact);
+  if(clock.elapsed_step!=1 || clock.clock.continuation!=ClockContinuation::ready || clock.state.clock.remaining!=99)throw std::invalid_argument("Unobserved player6 shot dispatch clock");
+  auto next=input;next.session.current=clock.state;next.session.action->menu_route=0;next.session.control->facing=0;next.session.keeper_area.reset();next.session.phase=FieldSessionPhase::player6_area_shot_dispatch;
+  validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
 MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player6_area_shot_field_moved)return dispatch_player6_area_shot(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::player6_area_shot_prepared || input.session.phase==FieldSessionPhase::player6_area_shot_clocked))return advance_player6_area_shot(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::attack_choice_pending && input.session.keeper_area && input.session.action && input.session.action->menu_route==1 && input.session.action->action==0 && input.session.current.field.side==0 && input.session.current.field.ball_owner==6 && input.session.current.field.ball_x==180 && input.session.current.field.ball_y==156)return prepare_player6_area_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_control_entry && input.session.current.field.side==0 && input.session.current.field.ball_owner==6 && input.session.current.field.ball_x==180 && input.session.current.field.ball_y==156) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
   try {result.state.session.phase=FieldSessionPhase::keeper_interaction;validate_phase_session(result.state.session);result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;}
@@ -1162,7 +1207,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto menu=(next.session.phase==FieldSessionPhase::action_menu_pending || next.session.phase==FieldSessionPhase::field_contact_pending)
     ? open_human_action_menu(next.session,*content.data->action_menu)
     : poll_human_action_menu(next.session,event.pressed,*content.data->action_menu);
-  if(menu.confirmed && menu.state.keeper_area && menu.state.action->menu_route==1 && menu.state.action->action==0 && menu.state.current.field.ball_owner==8 && menu.state.current.field.ball_x==196 && menu.state.current.field.ball_y==124 && menu.state.recovery->ball_variant==2)menu.state.recovery->attack_subtype=2;
+  if(menu.confirmed && menu.state.keeper_area && menu.state.action->menu_route==1 && menu.state.action->action==0 && ((menu.state.current.field.ball_owner==8 && menu.state.current.field.ball_x==196 && menu.state.current.field.ball_y==124) || (menu.state.current.field.ball_owner==6 && menu.state.current.field.ball_x==180 && menu.state.current.field.ball_y==156)) && menu.state.recovery->ball_variant==2)menu.state.recovery->attack_subtype=2;
   next.session=menu.state;next.last_sequence=event.sequence;
   if(input.session.phase==FieldSessionPhase::field_contact_pending || next.session.current.field.selected_defenders)next.retained_defense_action.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);

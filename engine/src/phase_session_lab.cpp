@@ -50,6 +50,10 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::player8_area_keeper_field_moved: return "player8 goal-area goalkeeper contact field moved";
     case captain::FieldSessionPhase::player8_area_recovery_entry: return "player8 goal-area loose ball recovery entry";
     case captain::FieldSessionPhase::player8_area_recovered_owner: return "player8 goal-area loose ball recovered";
+    case captain::FieldSessionPhase::player6_area_shot_prepared: return "player6 attacking goal-area shot prepared";
+    case captain::FieldSessionPhase::player6_area_shot_clocked: return "player6 attacking goal-area shot clocked";
+    case captain::FieldSessionPhase::player6_area_shot_field_moved: return "player6 attacking goal-area shot field moved";
+    case captain::FieldSessionPhase::player6_area_shot_dispatch: return "player6 attacking goal-area shot dispatch";
     case captain::FieldSessionPhase::player7_shot_defender_prepared: return "player7 shot defender prepared";
     case captain::FieldSessionPhase::player7_shot_defender_compared: return "player7 shot defender compared";
     case captain::FieldSessionPhase::player7_shot_contact_clocked: return "player7 terminal shot contact clocked";
