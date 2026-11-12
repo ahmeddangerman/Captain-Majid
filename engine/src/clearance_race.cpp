@@ -89,6 +89,20 @@ PhaseSessionState resolve_ordinary_free_pass_contest(const PhaseSessionState& in
     }
     auto numeric=resolve_field_loose_ball_race(state.current.field,state.recovery->opposing_player,state.shot_flight->distance,
         mappings,movement,content);
+    const bool observed_player2_timeout=input.phase==FieldSessionPhase::ordinary_pass_flight_ready && input.current.field.side==0 && input.current.field.ball_owner==2 && input.current.field.ball_cell==99 && state.current.field.ball_x==116 && state.current.field.ball_y==100 && state.shot_flight->destination==98 && numeric.rounds==4 && !numeric.winner;
+    if(observed_player2_timeout) {
+        state.current.field=advance_field_phase(numeric.field,mappings,movement).state;
+        const auto& f=state.current.field;BallRecoveryInput recovery{};
+        recovery.ball_x=f.ball_x;recovery.ball_y=f.ball_y;recovery.ball_owner=f.ball_owner;recovery.opposing_player=state.recovery->opposing_player;
+        recovery.random_e2=f.random_first;recovery.random_e3=f.random_second;recovery.ball_update_active=f.elapsed!=0;
+        for(unsigned i=0;i<f.motion.size();++i){const auto& p=f.motion[i];recovery.players[i]={static_cast<std::uint8_t>(p.x>>8),static_cast<std::uint8_t>(p.y>>8),p.status!=0};}
+        const auto recovered=recover_stationary_ball(recovery);
+        if(recovered.ball_owner!=1 || recovered.possession_side!=0)throw std::invalid_argument("Unobserved player2 timeout recovery");
+        state.current.field.ball_owner=recovered.ball_owner;state.current.field.side=recovered.possession_side;state.recovery->attack_subtype=recovered.attack_subtype;
+        auto& owner=state.current.field.motion[field_motion_index(recovered.ball_owner)];
+        owner.x=static_cast<std::uint16_t>((owner.x&255u)|(unsigned(f.ball_x)<<8));owner.y=static_cast<std::uint16_t>((owner.y&255u)|(unsigned(f.ball_y)<<8));
+        state.area_ai_target.reset();state.shot_flight.reset();state.ball_trajectory.reset();state.phase=FieldSessionPhase::ordinary_pass_control_entry;validate_phase_session(state);return state;
+    }
     const bool observed_player3_race=input.phase==FieldSessionPhase::ordinary_pass_flight_ready && input.current.field.side==0 && input.current.field.ball_owner==3 && input.current.field.ball_cell==81 && state.current.field.ball_x==100 && state.current.field.ball_y==164 && state.shot_flight->destination==82 && numeric.rounds==3 && numeric.winner && *numeric.winner==2;
     if((numeric.rounds>2 && !observed_player3_race) || !numeric.winner || *numeric.winner<1 || *numeric.winner>10)
         throw std::invalid_argument("Free pass contest winner or timeout requires further evidence: rounds="+

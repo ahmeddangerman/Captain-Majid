@@ -556,6 +556,7 @@ MatchStepResult handle_contested_pass_progress(const MatchRuntimeState& input,co
     if(step.event!=BallStepEvent::cell_changed && !session.current.field.selected_defenders) {
      if(!content.data->movement || !content.data->pass_race){result.unsupported=UnsupportedCapability::content;return result;}
      next.session=resolve_ordinary_free_pass_contest(session,content.data->field_players,*content.data->movement,*content.data->pass_race);
+     if(next.session.phase==FieldSessionPhase::ordinary_pass_control_entry)next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(step.x),static_cast<std::uint8_t>(step.y)};
     } else next.session=advance_ordinary_pass_ball_cell(session).state;
    } else next.session=session.phase==FieldSessionPhase::ordinary_pass_flight_ready ? advance_ordinary_pass_ball_cell(session).state : resolve_ordinary_pass_ball_cell(session);
   }

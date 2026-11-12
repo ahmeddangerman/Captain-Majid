@@ -1,5 +1,12 @@
 # Port status and completion checkpoints
 
+## 2026-11-12 - Player2 free pass times out to player1
+
+In the continued provisional fixture, player2's defended pass reaches an open target; a four-round race times out and player1 recovers the ball. Controlled original/native represented states match the recovery handoff and control-ready state, including position fractions 173/87. The timeout path is guarded to this observed state and winner. The subsequent defender12 contact and action menu match the original with injected provisional random bytes; the original retains defender cursor1 through both, so validation now accepts that observed continuation. The fresh seed-3 replay reaches the new action menu at clock128.
+
+Original traces inject represented flight/field states and acknowledge presentation waits; live timing, rendering and audio remain unverified. The full Windows build, all 65 registered tests and the private timeout/contact comparisons passed. Next choose and trace player1's encounter, while retaining guards for other timeout outcomes. Overall progress remains unmeasured; a complete match is unfinished. Suggested model GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player2-second-flight-original-20261112 and player1-second-contact-original-20261112.bin.
+
+
 ## 2026-11-12 - Player3 pass reaches player2 and next encounter
 
 In the provisional first-fixture continuation, player3's defended ordinary pass reaches an open target. The existing numeric race takes three rounds and gives the ball to player2; controlled original/native represented states match the race winner, control handoff and control-ready state. The scoped runtime guard now admits this observed three-round case. Continued neutral play reaches defender16 at clock135. The original retains the prior defender cursor into field contact and the action menu; validation now allows this captured state instead of throwing. Both contact and menu represented states match controlled original execution, with the provisional random bytes injected. Known ball fractions 109/215 survive the encounter.
