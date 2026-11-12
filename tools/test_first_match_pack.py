@@ -29,4 +29,13 @@ if z_path:
             path=Path(tmp)/(name+'.cmjpack');path.write_bytes(data)
             assert not accepts(path),name+' accepted'
     print('Z preserves Y and rejects malformed generic profiles')
+    with tempfile.TemporaryDirectory(prefix='action2-pass-pack-',dir=private) as tmp:
+        a=b'CMJSHOTa'+z[8:]+bytes((5,3,1,3,2,1,0))
+        path=Path(tmp)/'action2.cmjpack';path.write_bytes(a)
+        assert accepts(path),'action2 pack rejected'
+        for name,data in (('truncated',a[:-1]),('trailing',a+b'\0'),('zero-range',a[:-7]+bytes(7)),('mislabelled',b'CMJSHOTZ'+a[8:])):
+            path=Path(tmp)/(name+'.cmjpack');path.write_bytes(data)
+            assert not accepts(path),name+' accepted'
+    print('action2 pack preserves Z and rejects malformed comparison data')
+
 print('Y preserves X, and truncated, trailing, invalid and mislabelled variants are rejected')

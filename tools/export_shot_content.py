@@ -43,10 +43,11 @@ def selected_team_bytes(stats, team_id):
     return bytes(stats[pointer:pointer + size])
 
 
-def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False, include_kickoff=False, include_cell_ai=False, include_cell_shots=False, include_keeper_menu=False, include_pass_defense=False, include_first_match=False, include_generic_pass_defense=False):
+def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False, include_kickoff=False, include_cell_ai=False, include_cell_shots=False, include_keeper_menu=False, include_pass_defense=False, include_first_match=False, include_generic_pass_defense=False, include_pass_action2=False):
     if len(rom) != 393232 or rom[:4] != b'NES\x1a' or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
         raise ValueError('ROM does not match verified Japanese reference')
     prg = rom[16:262160]
+    include_generic_pass_defense = include_generic_pass_defense or include_pass_action2
     include_first_match = include_first_match or include_generic_pass_defense
     if include_first_match and team_id!=3:
         raise ValueError('The traced first fixture requires opponent team ID 3')
@@ -65,7 +66,7 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
     include_pass_flight = include_pass_flight or include_pass_race
     include_field_ai_pass = include_field_ai_pass or include_pass_flight
     include_field_ai = include_field_ai or include_field_ai_pass
-    data = bytearray((b'CMJSHOTZ' if include_generic_pass_defense else b'CMJSHOTY' if include_first_match else b'CMJSHOTX' if include_pass_defense else b'CMJSHOTT' if include_keeper_menu else b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
+    data = bytearray((b'CMJSHOTa' if include_pass_action2 else b'CMJSHOTZ' if include_generic_pass_defense else b'CMJSHOTY' if include_first_match else b'CMJSHOTX' if include_pass_defense else b'CMJSHOTT' if include_keeper_menu else b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -304,6 +305,9 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
         extra=bytes(stats[0x9662+12*((kind-35)&255)+7] for kind in range(118,121))
         if any(row>=rows for row in extra):raise ValueError('Generic pass-defense row outside existing table')
         data.extend(extra)
+    if include_pass_action2:
+        data.extend((gameplay[direct+12],gameplay[direct+13],int(bool(gameplay[0x827C+6]&128))))
+        data.extend(gameplay[0x8290:0x8294])
     return bytes(data)
 
 
@@ -324,11 +328,12 @@ def main():
     parser.add_argument('--include-pass-defense', action='store_true', help='Include opponent pass-defense candidate, special-option and comparison tables (CMJSHOTX)')
     parser.add_argument('--include-first-match', action='store_true', help='Include the traced first-match home lineup (CMJSHOTY)')
     parser.add_argument('--include-generic-pass-defense', action='store_true', help='Include first-fixture generic pass-defense profiles (CMJSHOTZ)')
+    parser.add_argument('--include-pass-action2', action='store_true', help='Include ordinary pass action2 comparison (CMJSHOTa)')
     args = parser.parse_args()
     if args.output.suffix != '.cmjpack':
         parser.error('Output must use the .cmjpack extension (ignored by Git)')
     try:
-        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai, args.include_kickoff, args.include_cell_ai, args.include_cell_shots, args.include_keeper_menu, args.include_pass_defense, args.include_first_match, args.include_generic_pass_defense)
+        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai, args.include_kickoff, args.include_cell_ai, args.include_cell_shots, args.include_keeper_menu, args.include_pass_defense, args.include_first_match, args.include_generic_pass_defense, args.include_pass_action2)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError) as error:

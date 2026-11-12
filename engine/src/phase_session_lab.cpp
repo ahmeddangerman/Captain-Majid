@@ -2185,9 +2185,10 @@ int main(int argc, char** argv) {
         if(ordinary_defender_variant) state=captain::prepare_first_ordinary_pass_defender(state,
             static_cast<std::uint8_t>(*ordinary_defender_variant),content.field_players,content.defense);
         if(compare_first_ordinary_defender) {
+            if(!state.area_contact)throw std::invalid_argument("Missing ordinary pass contact");
             const auto& c=*compare_first_ordinary_defender;
             state=captain::compare_first_ordinary_pass_defender(state,captain::FieldComparisonSelection{
-                5,static_cast<std::uint8_t>(c[0]),static_cast<std::uint8_t>(c[1]),bool(c[2]),
+                static_cast<std::uint8_t>(4+state.area_contact->defense_action),static_cast<std::uint8_t>(c[0]),static_cast<std::uint8_t>(c[1]),bool(c[2]),
                 {static_cast<std::uint8_t>(c[3]),static_cast<std::uint8_t>(c[4]),static_cast<std::uint8_t>(c[5]),static_cast<std::uint8_t>(c[6])}});
         }
         if(advance_first_ordinary_contact) {
@@ -2196,9 +2197,10 @@ int main(int argc, char** argv) {
         }
         if(prepare_next_ordinary_defender) state=captain::prepare_next_ordinary_pass_defender(state,content.field_players,content.defense);
         if(compare_next_ordinary_defender) {
+            if(!state.area_contact)throw std::invalid_argument("Missing ordinary pass contact");
             const auto& c=*compare_next_ordinary_defender;
             state=captain::compare_next_ordinary_pass_defender(state,captain::FieldComparisonSelection{
-                5,static_cast<std::uint8_t>(c[0]),static_cast<std::uint8_t>(c[1]),bool(c[2]),
+                static_cast<std::uint8_t>(4+state.area_contact->defense_action),static_cast<std::uint8_t>(c[0]),static_cast<std::uint8_t>(c[1]),bool(c[2]),
                 {static_cast<std::uint8_t>(c[3]),static_cast<std::uint8_t>(c[4]),static_cast<std::uint8_t>(c[5]),static_cast<std::uint8_t>(c[6])}});
         }
         if(advance_next_ordinary_contact) {

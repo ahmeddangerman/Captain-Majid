@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -315,6 +315,12 @@ ShotContent load_shot_content(std::istream& input) {
     if(version>='Z') {
         auto& ai=*content.ai_pass_defense;
         for(unsigned i=0;i<3;++i){const auto row=reader.byte();if(row>=ai.rows.size())throw std::invalid_argument("Invalid generic pass-defense profile row");ai.profile_rows.push_back(row);}
+    }
+    if(version>='a') {
+        FieldComparisonSelection choice{};choice.table_index=6;choice.range=reader.byte();choice.offset=reader.byte();
+        const auto eligible=reader.byte();if(!choice.range || eligible>1)throw std::invalid_argument("Invalid ordinary pass action2 comparison");
+        choice.eligible=eligible!=0;reader.bytes(choice.thresholds);classify_score(0,choice.thresholds);
+        content.ordinary_pass_intercept_comparison=choice;
     }
     reader.end();
     return content;

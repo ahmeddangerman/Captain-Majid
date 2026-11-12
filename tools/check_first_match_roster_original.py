@@ -23,7 +23,7 @@ def main():
     if raw[0x2a]!=0 or any(raw[0x303+12*i] for i in range(11)):
         p.error('Expected the captured initial campaign and level-zero roster')
     pack=a.pack.read_bytes()
-    if pack[:8] not in (b'CMJSHOTY',b'CMJSHOTZ'):p.error('Expected a first-match Y or Z pack')
+    if pack[:8] not in (b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa'):p.error('Expected a first-match Y or Z pack')
     for i in range(11):raw[0x300+12*i:0x303+12*i]=bytes(3)
     memory=ObservedCartridge(rom[16:262160],raw,None,set())
     def run(pc,banks,x=0):
@@ -41,7 +41,7 @@ def main():
         off=0x300+12*slot
         if bytes(memory.ram[off:off+4])!=expected[off:off+4]:
             raise RuntimeError(f'Original roster differs from captured startup at player {slot}')
-    if (pack[-14:-3] if pack[:8]==b'CMJSHOTZ' else pack[-11:])!=bytes(memory.ram[0x300+12*i] for i in range(11)):
+    if (pack[-21:-10] if pack[:8]==b'CMJSHOTa' else pack[-14:-3] if pack[:8]==b'CMJSHOTZ' else pack[-11:])!=bytes(memory.ram[0x300+12*i] for i in range(11)):
         raise RuntimeError('Y pack lineup differs from original roster writes')
     result=subprocess.run([str(a.exe.resolve()),'--check-first-match-roster',str(a.session.resolve()),str(a.pack.resolve())],
                           capture_output=True,text=True,check=True)

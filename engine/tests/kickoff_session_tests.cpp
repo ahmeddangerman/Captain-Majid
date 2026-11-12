@@ -2279,7 +2279,7 @@ int main(){try{using namespace captain;
  rejects([&]{validate_phase_session(forged_shot_movement);});
  rejects([&]{prepare_ordinary_pass(first_choice,sampled_attack_profiles,ordinary_pass_content);});
  rejects([&]{record_ordinary_pass_defense(selection,20,1,0);});
- rejects([&]{record_ordinary_pass_defense(selection,19,2,0);});
+ rejects([&]{record_ordinary_pass_defense(selection,19,3,0);});
  rejects([&]{confirm_ordinary_human_pass_target(legacy_target);});
  auto multiple=general_move.state;multiple.ordinary_pass_candidates->candidates.count=2;
  multiple.ordinary_pass_candidates->candidates.allied_count=2;multiple.ordinary_pass_candidates->candidates.ids[1]=3;

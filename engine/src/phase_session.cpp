@@ -122,7 +122,7 @@ void validate_phase_session(const PhaseSessionState& state) {
                 (defense.count && state.recovery->opposing_player != state.scheduling->selected_ids[phase>=336 ? state.area_defender_cursor : defense.count-1]))
                 throw std::invalid_argument("Invalid ordinary pass defender selection cursor");
             for (unsigned i=0; i<5; ++i)
-                if (defense.subtypes[i] || (i < defense.count ? (defense.actions[i]!=1 && !(field.selected_defenders==1 && defense.actions[i]==0)) : defense.actions[i]!=0))
+                if (defense.subtypes[i] || (i < defense.count ? (defense.actions[i]!=1 && defense.actions[i]!=2 && !(field.selected_defenders==1 && defense.actions[i]==0)) : defense.actions[i]!=0))
                     throw std::invalid_argument("Only explicitly captured ordinary defenses are supported");
         }
         if ((phase>=336 && phase<=344) && (!state.area_contact || state.area_defender_cursor>=field.selected_defenders ||
@@ -680,7 +680,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.score && state.score->left_goals==2 && state.score->right_goals==2 && state.score->kickoff==4 &&
        state.current.field.side==0 && state.current.field.ball_owner==5 && state.saved_ball_flight_flag==1;
     const bool ordinary_pass_control_cursor=(phase==1 || phase==9 || phase==10 || phase==11 || phase==13 || phase==18 || phase==19) &&
-       ((phase==1 || phase==9) ? state.area_defender_cursor<=5 : state.area_defender_cursor==1) && state.current.field.side==0 &&
+       ((phase==1 || phase==9) ? state.area_defender_cursor<=5 : (phase==10 || phase==13) ? state.area_defender_cursor<=2 : state.area_defender_cursor==1) && state.current.field.side==0 &&
        state.current.field.ball_owner>=1 && state.current.field.ball_owner<=10 && !state.current.field.selected_defenders &&
        state.saved_ball_flight_flag==1 && !state.shot_flight && !state.ball_trajectory;
     const bool score23_recovery_cursor=(phase==1 || phase==2 || phase==6 || phase==9 || phase==10 || phase==12 || phase==13) && state.area_defender_cursor==1 && state.score &&

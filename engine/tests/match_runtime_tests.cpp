@@ -430,6 +430,22 @@ static int ordinary_flight_defender_check(int argc,char** argv) {
   throw std::runtime_error("Flight defender16 did not reach control-ready");
  std::cout<<"Flight defender16 retained and reached control-ready\n";return 0;
 }
+static int first_free_pass_runtime_check(int argc,char** argv) {
+ using namespace captain;if(argc!=4)return 2;
+ std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
+ MatchContent content{};content.data=load_shot_content(pack);state.mode=MatchTimingMode::provisional_demo;state.demo_rng=3;state.ball_fraction=MatchBallFraction{0,0};
+ auto winner=step_match(state,client_input(state,0,0),content);
+ if(winner.unsupported || winner.state.session.phase!=FieldSessionPhase::ordinary_free_pass_contest_winner || winner.state.session.current.field.ball_owner!=2)throw std::runtime_error("Free pass did not reach player2 winner");
+ auto entry=step_match(winner.state,client_input(winner.state,0,0),content);
+ if(entry.unsupported || entry.state.session.phase!=FieldSessionPhase::ordinary_pass_control_entry || entry.state.session.current.field.ball_owner!=2)throw std::runtime_error("Free pass winner did not reach control entry");
+ auto ready=step_match(entry.state,client_input(entry.state,0,0),content);
+ if(ready.unsupported || ready.state.session.phase!=FieldSessionPhase::control_ready || ready.state.session.current.field.ball_owner!=2)throw std::runtime_error("Free pass winner did not reach control ready");
+ auto running=ready.state;for(unsigned i=0;i<11 && running.session.phase==FieldSessionPhase::control_ready;++i){auto poll=step_match(running,client_input(running,0,0),content);if(poll.unsupported)throw std::runtime_error("Player2 control poll stopped");running=std::move(poll.state);}
+ if(running.session.phase!=FieldSessionPhase::control_clock_pending || running.session.area_defender_cursor!=2)throw std::runtime_error("Two-defender cursor lost at control clock");
+ auto clock=step_match(running,client_input(running,0,0),content);
+ if(clock.unsupported || clock.state.session.phase!=FieldSessionPhase::field_round_pending || clock.state.session.area_defender_cursor!=2)throw std::runtime_error("Two-defender cursor lost at field round");
+ std::cout<<"Free pass player2 reached control-ready\n";return 0;
+}
 static int pass_defense_runtime_check(int argc,char** argv) {
  using namespace captain;if(argc!=6)return 2;
  std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);auto base=std::make_unique<MatchRuntimeState>();
@@ -442,6 +458,37 @@ static int pass_defense_runtime_check(int argc,char** argv) {
  base->session.scheduling->selected_ids.fill(0);base->session.scheduling->selected_ids[0]=17;validate_phase_session(base->session);
  auto started=std::make_unique<MatchStepResult>(step_match(*base,client_input(*base,0,0),*content));
  if(started->unsupported || started->state.session.phase!=FieldSessionPhase::ordinary_pass_defense_selection)throw std::runtime_error("Pass defender selection did not begin");
+ {
+  auto pair=*base;pair.session.current.field.selected_defenders=2;pair.session.scheduling->selected_ids[0]=19;pair.session.scheduling->selected_ids[1]=20;
+  pair.session.current.field.roster[19].type=0;pair.session.current.field.roster[20].type=0;
+  auto pair_content=*content;auto& ai=*pair_content.data->ai_pass_defense;
+  ai.profile_rows.resize(120,0);for(auto& row:ai.rows)row.fill(0x11);
+  auto first=step_match(pair,client_input(pair,0,0),pair_content);
+  if(first.unsupported || first.state.session.phase!=FieldSessionPhase::ordinary_pass_defense_selection)throw std::runtime_error("Two-defender selection did not begin");
+  auto second=step_match(first.state,client_input(first.state,0,0),pair_content);
+  if(second.unsupported || second.state.session.phase!=FieldSessionPhase::ordinary_pass_defense_selection || second.state.session.ordinary_pass_defenses->count!=1 || second.state.session.ordinary_pass_defenses->actions[0]!=2 || second.state.session.recovery->opposing_player!=19)throw std::runtime_error("First generic defense did not record");
+  auto third=step_match(second.state,client_input(second.state,0,0),pair_content);
+  if(third.unsupported || third.state.session.phase!=FieldSessionPhase::ordinary_pass_defenses_recorded || third.state.session.ordinary_pass_defenses->count!=2 || third.state.session.ordinary_pass_defenses->actions[1]!=2 || third.state.session.recovery->opposing_player!=20)throw std::runtime_error("Second generic defense did not record");
+  MatchContentIdentity identity{};identity[0]=42;std::ostringstream out(std::ios::binary);write_match_save(out,third.state,identity);std::istringstream in(out.str(),std::ios::binary);auto restored=load_match_save(in,identity);
+  if(restored.session.ordinary_pass_defenses->count!=2 || restored.session.ordinary_pass_defenses->actions[0]!=2)throw std::runtime_error("Two-defender choices did not roundtrip");
+  auto attack=step_match(restored,client_input(restored,0,0),pair_content);
+  if(attack.unsupported || attack.state.session.phase!=FieldSessionPhase::ordinary_pass_prepared)throw std::runtime_error("Two-defender attack did not prepare");
+  attack.state.session.current.field.random_first=0;attack.state.session.current.field.random_second=0;attack.state.session.action->power=15;
+  auto prep1=step_match(attack.state,{MatchInputKind::presentation_complete,attack.state.last_sequence+1},pair_content);
+  if(prep1.unsupported || prep1.state.session.phase!=FieldSessionPhase::ordinary_pass_defender_prepared || prep1.state.session.area_contact->defense_action!=2)throw std::runtime_error("First action2 defender did not prepare");
+  auto cmp1=step_match(prep1.state,{MatchInputKind::tick,prep1.state.last_sequence+1},pair_content);
+  if(cmp1.unsupported || cmp1.state.session.area_sequence_result!=0)throw std::runtime_error("First action2 defender did not compare: " + (cmp1.unsupported ? std::string(capability_name(*cmp1.unsupported)) : std::to_string(cmp1.state.session.area_sequence_result)));
+  auto contact1=step_match(cmp1.state,{MatchInputKind::presentation_complete,cmp1.state.last_sequence+1},pair_content);
+  if(contact1.unsupported || contact1.state.session.phase!=FieldSessionPhase::ordinary_pass_first_contact_clock)throw std::runtime_error("First action2 contact did not advance");
+  auto prep2=step_match(contact1.state,{MatchInputKind::tick,contact1.state.last_sequence+1},pair_content);
+  if(prep2.unsupported || prep2.state.session.phase!=FieldSessionPhase::ordinary_pass_next_defender_prepared || prep2.state.session.area_contact->defense_action!=2)throw std::runtime_error("Second action2 defender did not prepare");
+  auto cmp2=step_match(prep2.state,{MatchInputKind::tick,prep2.state.last_sequence+1},pair_content);
+  if(cmp2.unsupported || cmp2.state.session.area_sequence_result!=0)throw std::runtime_error("Second action2 defender did not compare");
+  auto contact2=step_match(cmp2.state,{MatchInputKind::presentation_complete,cmp2.state.last_sequence+1},pair_content);
+  if(contact2.unsupported || contact2.state.session.phase!=FieldSessionPhase::ordinary_pass_next_contact_clock)throw std::runtime_error("Second action2 contact did not advance");
+  auto dispatch=step_match(contact2.state,{MatchInputKind::tick,contact2.state.last_sequence+1},pair_content);
+  if(dispatch.unsupported || dispatch.state.session.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock)throw std::runtime_error("Two-defender pass did not dispatch");
+ }
  if(content->data->ai_pass_defense && !content->data->ai_pass_defense->block_options.empty()) {
   auto block_input=started->state.session;block_input.current.field.random_first=6;block_input.current.field.random_second=0;
   auto block=record_ordinary_pass_defense(block_input,17,0,0);
@@ -2228,7 +2275,7 @@ static int keeper_outlet_choices(int argc,char** argv) {
  if(records.peek()!=std::char_traits<char>::eof())throw std::runtime_error("Extra keeper outlet choice cases");return 0;
 }
 int main(int argc,char** argv) {
- if(argc!=1){if(std::string(argv[1])=="--check-first-match-create")return first_match_create_check(argc,argv);if(std::string(argv[1])=="--check-first-match-roster")return first_match_roster_check(argc,argv);if(std::string(argv[1])=="--check-initial-kickoff-runtime")return initial_kickoff_runtime_check(argc,argv);if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
+ if(argc!=1){if(std::string(argv[1])=="--check-first-free-pass-runtime")return first_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-match-create")return first_match_create_check(argc,argv);if(std::string(argv[1])=="--check-first-match-roster")return first_match_roster_check(argc,argv);if(std::string(argv[1])=="--check-initial-kickoff-runtime")return initial_kickoff_runtime_check(argc,argv);if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
  const auto result=regular_tests();
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);
