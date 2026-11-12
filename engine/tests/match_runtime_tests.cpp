@@ -6,6 +6,7 @@
 #include "captain/field_state_io.hpp"
 #include "captain/defender_selection.hpp"
 #include "captain/field_player_profile.hpp"
+#include "captain/kickoff_selection.hpp"
 #include "captain/staged_shot.hpp"
 #include <cassert>
 #include <stdexcept>
@@ -289,6 +290,80 @@ static int shot_comparisons(int argc,char** argv) {
   return 0;
  }
  return 2;
+}
+static int initial_kickoff_runtime_check(int argc,char** argv) {
+ using namespace captain;if(argc!=4)return 2;
+ std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);
+ auto state=std::make_unique<MatchRuntimeState>();state->session=load_phase_session(source);
+ state->mode=MatchTimingMode::provisional_demo;state->demo_rng=1;
+ auto content=std::make_unique<MatchContent>();content->data=load_shot_content(pack);
+ MatchConfig config{};config.initial=state->session;config.mode=MatchTimingMode::provisional_demo;config.seed=1;
+ auto created=create_match(config,*content);if(created.unsupported)throw std::runtime_error("Captured kickoff initialization rejected");
+ *state=std::move(created.state);
+ const bool before_formation=state->session.phase==FieldSessionPhase::goal_kickoff_pending;
+ if((!before_formation && state->session.phase!=FieldSessionPhase::kickoff_formation_placed) || !state->session.score || state->session.score->kickoff!=0)
+  throw std::runtime_error("Expected captured initial kickoff state");
+ for(unsigned i=0;i<(before_formation?5u:4u);++i){
+  const auto kind=state->session.phase==FieldSessionPhase::kickoff_ball_placed ? MatchInputKind::presentation_complete : MatchInputKind::tick;
+  auto next=step_match(*state,{kind,state->last_sequence+1},*content);
+  if(next.unsupported)throw std::runtime_error("Initial kickoff runtime stopped");
+  *state=std::move(next.state);
+  MatchContentIdentity identity{};identity[0]=42;std::ostringstream save(std::ios::binary);write_match_save(save,*state,identity);
+  std::istringstream saved(save.str(),std::ios::binary);*state=load_match_save(saved,identity);
+  if(state->session.phase==FieldSessionPhase::kickoff_control_pending && state->session.control->facing!=64)
+   throw std::runtime_error("Initial kickoff facing differs from observed presentation");
+ }
+ if(state->session.phase!=FieldSessionPhase::control_ready || state->session.current.field.ball_owner!=9)
+  throw std::runtime_error("Initial kickoff did not reach player9 control");
+ std::cout<<"Captured initial kickoff reached player9 control-ready\n";return 0;
+}
+static int first_match_roster_check(int argc,char** argv) {
+ using namespace captain;if(argc!=4)return 2;
+ std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);
+ auto captured=load_phase_session(source);auto content=load_shot_content(pack);
+ if(!content.first_match_lineup || !content.world_step)throw std::runtime_error("Missing first-match content");
+ auto source_field=captured.current.field;
+ for(unsigned i=0;i<11;++i){source_field.roster[i].type=0;source_field.roster[i].stamina=0;}
+ auto initialized=initialize_first_match_roster(source_field,*content.first_match_lineup,content.field_players,content.goalkeepers,*content.world_step);
+ for(unsigned i=0;i<22;++i) {
+  const auto& actual=initialized.roster[i];const auto& expected=captured.current.field.roster[i];
+  if(actual.type!=expected.type || actual.level!=expected.level || actual.stamina!=expected.stamina)
+   throw std::runtime_error("Initial roster differs at player "+std::to_string(i));
+ }
+ std::cout<<"First match lineup and stamina match captured kickoff roster\n";return 0;
+}
+static int first_match_create_check(int argc,char** argv) {
+ using namespace captain;if(argc!=4)return 2;
+ std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);
+ auto expected=load_phase_session(source);auto content=std::make_unique<MatchContent>();content->data=load_shot_content(pack);
+ auto created=create_first_match(3,*content);
+ if(created.unsupported)throw std::runtime_error("First match creation rejected available original content");
+ expected.current.field.random_first=created.state.session.current.field.random_first;
+ expected.current.field.random_second=created.state.session.current.field.random_second;
+ expected.saved_ball_flight_flag=0;
+ std::ostringstream actual_bytes(std::ios::binary),expected_bytes(std::ios::binary);
+ write_phase_session(actual_bytes,created.state.session);write_phase_session(expected_bytes,expected);
+ if(actual_bytes.str()!=expected_bytes.str()) {
+  const auto a=actual_bytes.str(),b=expected_bytes.str();std::size_t i=0;while(i<a.size() && i<b.size() && a[i]==b[i])++i;
+  throw std::runtime_error("First match initialization differs from original at byte "+std::to_string(i));
+ }
+ if(create_first_match(0,*content).unsupported!=UnsupportedCapability::initialization)throw std::runtime_error("Zero demo seed accepted");
+ auto missing=std::make_unique<MatchContent>(*content);missing->data->first_match_lineup.reset();
+ if(create_first_match(3,*missing).unsupported!=UnsupportedCapability::content)throw std::runtime_error("Missing lineup accepted");
+ auto state=created.state;
+ for(unsigned i=0;i<5;++i){const auto kind=state.session.phase==FieldSessionPhase::kickoff_ball_placed ? MatchInputKind::presentation_complete : MatchInputKind::tick;
+  auto next=step_match(state,{kind,state.last_sequence+1},*content);if(next.unsupported)throw std::runtime_error("Created first match stopped before control");state=std::move(next.state);}
+ if(state.session.phase!=FieldSessionPhase::control_ready || state.session.current.field.ball_owner!=9)throw std::runtime_error("Created first match did not reach player9 control");
+ for(std::uint32_t seed=1;seed<=8;++seed){
+  auto candidate=create_first_match(seed,*content);if(candidate.unsupported)throw std::runtime_error("First match seed rejected");
+  auto current=candidate.state;
+  const auto receiver=select_kickoff_receiver(0,current.session.current.field.random_first,content->data->kickoff->receivers);
+  for(unsigned i=0;i<5;++i){const auto kind=current.session.phase==FieldSessionPhase::kickoff_ball_placed ? MatchInputKind::presentation_complete : MatchInputKind::tick;
+   auto next=step_match(current,{kind,current.last_sequence+1},*content);if(next.unsupported)throw std::runtime_error("First match seed stopped before control");current=std::move(next.state);}
+  if(current.session.phase!=FieldSessionPhase::control_ready || current.session.current.field.ball_owner!=receiver || current.session.control->facing!=64)
+   throw std::runtime_error("First match kickoff receiver differs from original");
+ }
+ std::cout<<"Fresh first-match state matched original and reached player9 control with provisional RNG\n";return 0;
 }
 static int ordinary_flight_special_check(int argc,char** argv) {
  using namespace captain;if(argc!=4)return 2;
@@ -2153,7 +2228,7 @@ static int keeper_outlet_choices(int argc,char** argv) {
  if(records.peek()!=std::char_traits<char>::eof())throw std::runtime_error("Extra keeper outlet choice cases");return 0;
 }
 int main(int argc,char** argv) {
- if(argc!=1){if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
+ if(argc!=1){if(std::string(argv[1])=="--check-first-match-create")return first_match_create_check(argc,argv);if(std::string(argv[1])=="--check-first-match-roster")return first_match_roster_check(argc,argv);if(std::string(argv[1])=="--check-initial-kickoff-runtime")return initial_kickoff_runtime_check(argc,argv);if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
  const auto result=regular_tests();
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);

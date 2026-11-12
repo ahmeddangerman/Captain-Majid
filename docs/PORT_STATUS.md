@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+## 2026-11-12 - First fixture startup
+
+The provisional engine can construct the original first fixture without a RAM snapshot using private Y content and reach opening kickoff/control. Original lineup and stamina routines matched the captured roster; eight controlled original kickoff choices matched all five receivers through represented control, with presentation RNG normalized. The window exposes `--first-match`; only an off-screen render has been checked. A neutral native run reached a two-defender encounter, where general opponent choices remain unfinished. Real timing, other fixtures and a complete playable match remain unverified. Fresh Windows build and all 65 tests passed. Next compare generic opponents and multiple-defender encounters. Overall progress is unmeasured; suggested model GPT-6.1 Terra High.
+
 ## 2026-11-12 - Defended ordinary-pass flight
 
 A selected flight defender is retained across ball cells, with a guarded single-defender result0 continuing to player7 and result3 handing control to defender16. The original CPU comparison uses explicitly injected flight-start state and acknowledged waits; ordinary and subtype128 interception samples matched represented possession. A constructed 4,096-seed menu survey reached control-ready throughout, which is not proof of live timing or a complete match. Multiple flight defenders and other results remain guarded. Fresh Windows build and all 65 registered tests passed. Next broaden original-compared branches and verify the window route. Overall progress is unmeasured; suggested model GPT-6.1 Terra High.

@@ -33,6 +33,8 @@ struct MatchStepResult { MatchRuntimeState state{}; std::vector<MatchEvent> even
 // Runtime trajectory is authoritative for the visible ball while a pass is in flight.
 MatchBallView match_ball_view(const MatchRuntimeState&);
 MatchStepResult create_match(const MatchConfig&,const MatchContent&);
+// Starts only the original campaign's first fixture with provisional demo timing.
+MatchStepResult create_first_match(std::uint32_t seed,const MatchContent&);
 MatchStepResult step_match(const MatchRuntimeState&,const MatchInput&,const MatchContent&);
 const char* capability_name(UnsupportedCapability);
 }

@@ -10,6 +10,12 @@ PhaseSessionState continue_prepared_session_kickoff(const PhaseSessionState& inp
  auto state=input;
  state.current.field.ball_owner=*state.kickoff_receiver;
  state.control->controlled_player=1;
+ // Captured first kickoff: the acknowledged original display sets facing64.
+ if(state.score && state.score->kickoff==0 && !state.score->left_goals && !state.score->right_goals &&
+    state.current.clock.remaining==180 && state.current.field.side==0 &&
+    (*state.kickoff_receiver==5 || *state.kickoff_receiver==6 || *state.kickoff_receiver==7 || *state.kickoff_receiver==9 || *state.kickoff_receiver==10) &&
+    state.current.field.roster[9].type==1 && state.experience && state.experience->campaign==0 && state.experience->opponent_stage==0)
+  state.control->facing=64;
  // The sampled 1-1 restart acknowledges the original kickoff display's facing write.
  if(state.score && state.score->kickoff==4 &&
     ((state.score->left_goals==1 && state.score->right_goals==1 && ((state.current.clock.remaining==434 && state.current.clock.extra_time==5) || (state.current.clock.remaining==418 && state.current.clock.extra_time==9))) ||

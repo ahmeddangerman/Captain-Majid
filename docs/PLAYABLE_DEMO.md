@@ -1,6 +1,15 @@
 # Provisional match development window
 
-This Windows-only window is an early way to inspect and control supported parts of the native runtime. It starts from an explicitly supplied development snapshot; it is **not a fresh match, a complete playable match, or verified original timing**. It uses placeholder graphics, simplified timing/random values and automatic acknowledgements of presentation requests. Unimplemented paths stop visibly with the last valid state intact.
+This Windows-only window is an early way to inspect and control supported parts of the native runtime. It can start from an explicitly supplied development snapshot or construct the first fixture described below. It is **not a complete playable match or verified original timing**. It uses placeholder graphics, simplified timing/random values and automatic acknowledgements of presentation requests. Unimplemented paths stop visibly with the last valid state intact.
+
+For the bounded first-fixture startup, export a private Y pack using the verified Japanese reference and the traced opponent team ID 3, then provide the private distance and velocity tables:
+
+```powershell
+python tools/export_shot_content.py PRIVATE_ROM PRIVATE_Y_PACK --team-id 3 --include-first-match
+build/captain-match-window.exe PRIVATE_Y_PACK --first-match --distance PRIVATE_DISTANCE_TABLE --velocity PRIVATE_VELOCITY_TABLE
+```
+
+This constructs the original first lineup, level-zero stamina, 0–0 score and opening kickoff without a RAM snapshot. Controlled emulator comparisons cover all five possible kickoff receivers; display and random timing are provisional. Normal play still contains unsupported encounters and is not a full match. Press Space to begin. The default seed is 3, and `--seed N` selects a different provisional sequence.
 
 The W content format adds the original-sourced comparison data for a guarded ordinary pass against one defender. A preconfirmed developer snapshot has shown player7 receiving the pass and opening the next menu; controlled headless tests also cover defender17 interception. Other choices and flight contacts can still stop, and the final full menu-to-interception window run has not been visually verified.
 

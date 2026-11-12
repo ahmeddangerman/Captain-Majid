@@ -23,6 +23,7 @@ struct ShotContent {
     std::optional<AiPassDefenseContent> ai_pass_defense{};
     std::optional<FieldComparisonSelection> ordinary_pass_defender_comparison{};
     std::optional<FieldComparisonSelection> ordinary_pass_block_comparison{};
+    std::optional<std::array<std::uint8_t,11>> first_match_lineup{};
     std::shared_ptr<const RuntimeKickoffContent> kickoff{};
     std::optional<AiAreaChoiceContent> ai_area_choice{};
     std::optional<AiFieldChoiceContent> ai_field_choice{};
@@ -51,7 +52,7 @@ struct ShotContent {
     std::optional<AreaDefenseMenuContent> area_defense_menu{};
 };
 
-// Development CMJSHOT1..9/A..W content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..9/A..Y content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

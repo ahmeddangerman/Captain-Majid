@@ -9,6 +9,9 @@ struct WorldStepContent {
     std::array<std::uint16_t, 256> chase_speeds;
     std::array<std::uint16_t, 96> stamina_curve;
 };
+// Reconstruct the traced first-match home lineup and initial stamina; other field data is retained.
+FieldPhaseState initialize_first_match_roster(const FieldPhaseState& input,const std::array<std::uint8_t,11>& lineup,
+    const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content);
 struct ControlTickResult {
     PhaseSessionState state;
     std::optional<MatchClockResult> clock{};

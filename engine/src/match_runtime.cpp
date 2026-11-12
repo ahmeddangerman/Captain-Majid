@@ -373,6 +373,27 @@ MatchStepResult create_match(const MatchConfig& config,const MatchContent& conte
  project_field_random_memory(result.state.session.current.field,result.state.random_memory);
  return result;
 }
+MatchStepResult create_first_match(std::uint32_t seed,const MatchContent& content) {
+ MatchStepResult result{};
+ if(!seed){result.unsupported=UnsupportedCapability::initialization;return result;}
+ if(!content.data || !content.data->first_match_lineup || !content.data->world_step || !content.data->kickoff ||
+    !content.data->ai_keeper_choice || content.data->ai_keeper_choice->team_id!=3){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  auto& state=result.state;auto& s=state.session;auto& field=s.current.field;
+  field.ball_owner=0;field.ball_x=0;field.ball_y=0;field.ball_cell=0;
+  field=initialize_first_match_roster(field,*content.data->first_match_lineup,content.data->field_players,content.data->goalkeepers,*content.data->world_step);
+  s.current.clock.remaining=180;s.phase=FieldSessionPhase::goal_kickoff_pending;
+  s.experience=ExperienceState{};
+  // Original match display initialization writes $0469=1; this byte is
+  // retained in the current snapshot model as the high byte of slot10.
+  s.experience->totals[10]=256;
+  s.recovery=RecoveryContext{};s.control=ControlContext{};s.scheduling=SchedulingContext{};
+  s.action=ActionContext{};s.score=MatchScoreContext{};
+  state.mode=MatchTimingMode::provisional_demo;state.demo_rng=seed;state.ball_fraction=MatchBallFraction{0,0};
+  advance_demo_random(state);project_field_random_memory(s.current.field,state.random_memory);validate_phase_session(s);
+  return result;
+ }catch(const std::invalid_argument&){result=MatchStepResult{};result.unsupported=UnsupportedCapability::content;return result;}
+}
 namespace {
 MatchStepResult handle_human_keeper_menu(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
@@ -952,7 +973,12 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return prepare_keeper_save_area(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::goal_kickoff_pending || input.session.phase==FieldSessionPhase::kickoff_formation_placed ||
     input.session.phase==FieldSessionPhase::kickoff_receiver_selected || input.session.phase==FieldSessionPhase::kickoff_ball_placed || input.session.phase==FieldSessionPhase::kickoff_control_pending) &&
-    input.session.score && input.session.score->kickoff==4)
+    input.session.score && (input.session.score->kickoff==4 ||
+     (input.session.score->kickoff==0 && input.session.score->left_goals==0 && input.session.score->right_goals==0 &&
+      input.session.current.clock.remaining==180 && input.session.current.field.side==0 && input.session.experience &&
+      input.session.experience->campaign==0 && input.session.experience->opponent_stage==0 && input.session.current.field.roster[9].type==1 &&
+      (!input.session.kickoff_receiver || *input.session.kickoff_receiver==5 || *input.session.kickoff_receiver==6 ||
+       *input.session.kickoff_receiver==7 || *input.session.kickoff_receiver==9 || *input.session.kickoff_receiver==10))))
   return advance_goal_kickoff(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
   if(input.session.current.field.ball_owner==0 && (event.pressed!=0 || (event.held!=0 && event.held!=1 && event.held!=2 && event.held!=4 && event.held!=8))){result.unsupported=UnsupportedCapability::action;return result;}

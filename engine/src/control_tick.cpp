@@ -168,6 +168,19 @@ ControlTickResult after_clock(PhaseSessionState state, const FieldPlayerProfiles
 }
 }
 
+FieldPhaseState initialize_first_match_roster(const FieldPhaseState& input,const std::array<std::uint8_t,11>& lineup,
+    const FieldPlayerProfiles& profiles,const GoalkeeperProfiles& keepers,const WorldStepContent& content) {
+    auto field=input;
+    for(unsigned id=0;id<11;++id) {
+        if(lineup[id]==0 || lineup[id]>=35 || field.roster[id].level!=0)
+            throw std::invalid_argument("Unobserved first-match roster type or level");
+        field.roster[id].type=lineup[id];
+    }
+    for(unsigned id=0;id<11;++id)
+        field.roster[id].stamina=maximum_stamina(field,static_cast<std::uint8_t>(id),profiles,keepers,content);
+    return field;
+}
+
 static ControlTickResult begin_control_clock(const PhaseSessionState& input) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::control_clock_pending || !input.scheduling)

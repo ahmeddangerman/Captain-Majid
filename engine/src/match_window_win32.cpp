@@ -143,7 +143,7 @@ void render(HDC dc,const App& app) {
   }
  }
  label(dc,L"Blue: home    Red: opponent",40,654,600,24,17,ink);
- label(dc,L"Placeholder view  /  private development snapshot",40,688,780,24,16,RGB(71,94,82));
+ label(dc,L"Placeholder view  /  private original-derived content",40,688,780,24,16,RGB(71,94,82));
  if(app.paused){
   fill(dc,288,292,520,158,ink);outline(dc,288,292,520,158,gold,3);
   label(dc,app.problem.empty()?L"Paused":L"Play stopped",312,309,470,38,27,paper,true);
@@ -213,10 +213,12 @@ int WINAPI WinMain(HINSTANCE instance,HINSTANCE,LPSTR,int show) {
  int argc=0;auto argv=CommandLineToArgvW(GetCommandLineW(),&argc);
  if(!argv)return 1;
  try {
-  if(argc<3)throw std::invalid_argument("Usage: captain-match-window PACK SNAPSHOT --distance FILE --velocity FILE [--seed N] [--ball-fractions X Y] [--retained-defense-action N] [--home-keeper-y N] [--score LEFT RIGHT KICKOFF]");
+  if(argc<3)throw std::invalid_argument("Usage: captain-match-window PACK SNAPSHOT|--first-match --distance FILE --velocity FILE [--seed N] [--ball-fractions X Y] [--retained-defense-action N] [--home-keeper-y N] [--score LEFT RIGHT KICKOFF]");
   auto app=std::make_unique<App>();MatchConfig config{};config.mode=MatchTimingMode::provisional_demo;config.seed=1;
   auto pack=open_file(argv[1]);app->content.data=load_shot_content(pack);
-  auto snapshot=open_file(argv[2]);config.initial=load_phase_session(snapshot);
+  const bool first_match=std::wstring(argv[2])==L"--first-match";
+  if(first_match)config.seed=3;
+  else {auto snapshot=open_file(argv[2]);config.initial=load_phase_session(snapshot);}
   bool have_distance=false,have_velocity=false,have_seed=false,have_score=false;std::optional<std::filesystem::path> render_output;
   for(int i=3;i<argc;){const std::wstring option=argv[i++];
    if(option==L"--distance" && i<argc && !have_distance){auto file=open_file(argv[i++]);app->content.pass_distance=read_pass_distance_content(file);have_distance=true;}
@@ -226,7 +228,7 @@ int WINAPI WinMain(HINSTANCE instance,HINSTANCE,LPSTR,int show) {
    else if(option==L"--retained-defense-action" && i<argc && !config.retained_defense_action)config.retained_defense_action=static_cast<std::uint8_t>(number(argv[i++],6,"Retained action must be 0..6"));
    else if(option==L"--home-keeper-y" && i<argc && !config.home_keeper_y)config.home_keeper_y=static_cast<std::uint8_t>(number(argv[i++],255,"Home keeper Y must be 0..255"));
    else if(option==L"--score" && i+2<argc && !have_score){
-    if(config.initial->score)throw std::invalid_argument("Snapshot already contains score metadata");
+    if(first_match || config.initial->score)throw std::invalid_argument("First match or snapshot already contains score metadata");
     const auto left=number(argv[i++],255,"Score bytes must be 0..255");const auto right=number(argv[i++],255,"Score bytes must be 0..255");const auto kickoff=number(argv[i++],255,"Kickoff byte must be 0..255");
     config.initial->score=MatchScoreContext{static_cast<std::uint8_t>(left),static_cast<std::uint8_t>(right),static_cast<std::uint8_t>(kickoff)};have_score=true;
    }
@@ -234,7 +236,9 @@ int WINAPI WinMain(HINSTANCE instance,HINSTANCE,LPSTR,int show) {
    else throw std::invalid_argument("Invalid, incomplete or repeated option");
   }
   if(!have_distance || !have_velocity || !config.seed)throw std::invalid_argument("Distance, velocity and a nonzero seed are required");
-  auto start=std::make_unique<MatchStepResult>(create_match(config,app->content));
+  if(first_match && (config.ball_fraction || config.retained_defense_action || config.home_keeper_y))
+   throw std::invalid_argument("First-match startup supplies its own initial metadata");
+  auto start=std::make_unique<MatchStepResult>(first_match ? create_first_match(config.seed,app->content) : create_match(config,app->content));
   if(start->unsupported)throw std::runtime_error(std::string("Cannot start: ")+capability_name(*start->unsupported));
   app->state=std::move(start->state);
   if(render_output){render_check(*app,*render_output);LocalFree(argv);return 0;}

@@ -2,6 +2,7 @@
 #include "captain/defender_selection.hpp"
 #include "captain/defense_affordability.hpp"
 #include "captain/pass_target.hpp"
+#include <algorithm>
 #include <stdexcept>
 #include <string>
 #include <utility>
@@ -1149,7 +1150,13 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.current.field.random_first==127 && state.current.field.random_second==128 && state.current.field.selected_defenders==1 &&
        state.scheduling && state.scheduling->selected_ids[0]==0 && state.recovery && state.recovery->opposing_player==0 &&
        !state.current.field.keepers[0].timer && !state.current.field.keepers[0].penalty && !state.current.field.keepers[0].stun;
-    if(goal_restart && !sampled_right_goal_restart && (!state.score || state.score->kickoff!=4 || state.current.clock.ball_mode!=0 ||
+    const bool captured_initial_kickoff=goal_restart && state.score && !state.score->kickoff && !state.score->left_goals && !state.score->right_goals &&
+       state.current.clock.remaining==180 && !state.current.clock.extra_time && !state.current.clock.ball_mode && state.current.field.side==0 &&
+       state.current.field.ball_owner==0 && !state.current.field.selected_defenders && !state.current.field.elapsed && state.scheduling && state.recovery &&
+       state.experience && !state.experience->campaign && !state.experience->opponent_stage &&
+       std::all_of(state.current.field.motion.begin(),state.current.field.motion.end(),[](const auto& player){return player.status==0;}) &&
+       std::all_of(state.current.field.keepers.begin(),state.current.field.keepers.end(),[](const auto& keeper){return keeper.penalty==0 && keeper.stun==0;});
+    if(goal_restart && !captured_initial_kickoff && !sampled_right_goal_restart && (!state.score || state.score->kickoff!=4 || state.current.clock.ball_mode!=0 ||
        (state.current.field.side==11 ? (state.current.field.ball_owner<1 || state.current.field.ball_owner>10) : (state.current.field.side!=0 || state.current.field.ball_owner<12 || state.current.field.ball_owner>21)) ||
        state.current.field.elapsed || state.current.field.selected_defenders>1 || !state.scheduling || !state.recovery ||
        state.recovery->opposing_player!=state.current.field.side || state.current.field.keepers[state.current.field.side==0?0:1].timer || state.current.field.keepers[state.current.field.side==0?0:1].penalty ||
@@ -1335,12 +1342,12 @@ void validate_phase_session(const PhaseSessionState& state) {
         state.current.field.selected_defenders != 0)
         throw std::invalid_argument("Recovery continuation requires zero selected defenders");
     if (static_cast<unsigned>(state.phase) >= 6 && state.phase != FieldSessionPhase::selected_boundary_restart) {
-        if(!keeper_possession && !((state.phase==FieldSessionPhase::control_ready || state.phase==FieldSessionPhase::action_menu_pending || state.phase==FieldSessionPhase::human_action_menu || state.phase==FieldSessionPhase::attack_choice_pending || state.phase==FieldSessionPhase::ordinary_human_pass_target) && state.current.field.side==0 && state.current.field.ball_owner==0)) field_motion_index(state.current.field.ball_owner);
+        if(!keeper_possession && !captured_initial_kickoff && !((state.phase==FieldSessionPhase::control_ready || state.phase==FieldSessionPhase::action_menu_pending || state.phase==FieldSessionPhase::human_action_menu || state.phase==FieldSessionPhase::attack_choice_pending || state.phase==FieldSessionPhase::ordinary_human_pass_target) && state.current.field.side==0 && state.current.field.ball_owner==0)) field_motion_index(state.current.field.ball_owner);
         if (!transitional_clearance && !goal_restart && !player19_goal_possession && phase!=301 && phase!=302 && phase!=225 && phase!=226 && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;
         // Before kickoff placement, the original can still hold an uninitialized ball position.
-        if (phase!=61 && phase!=62 && phase!=177 && phase!=178 && phase!=179 && (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176))
+        if (!captured_initial_kickoff && phase!=61 && phase!=62 && phase!=177 && phase!=178 && phase!=179 && (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176))
             throw std::invalid_argument("Recovered-owner continuation requires an interior ball");
     }
     if (static_cast<unsigned>(state.phase) >= 9 && (!state.control || !state.experience))

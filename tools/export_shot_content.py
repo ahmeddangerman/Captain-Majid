@@ -43,13 +43,16 @@ def selected_team_bytes(stats, team_id):
     return bytes(stats[pointer:pointer + size])
 
 
-def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False, include_kickoff=False, include_cell_ai=False, include_cell_shots=False, include_keeper_menu=False, include_pass_defense=False):
+def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False, include_kickoff=False, include_cell_ai=False, include_cell_shots=False, include_keeper_menu=False, include_pass_defense=False, include_first_match=False):
     if len(rom) != 393232 or rom[:4] != b'NES\x1a' or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
         raise ValueError('ROM does not match verified Japanese reference')
     prg = rom[16:262160]
+    if include_first_match and team_id!=3:
+        raise ValueError('The traced first fixture requires opponent team ID 3')
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
+    include_pass_defense = include_pass_defense or include_first_match
     include_keeper_menu = include_keeper_menu or include_pass_defense
     include_cell_shots = include_cell_shots or include_keeper_menu
     include_cell_ai = include_cell_ai or include_cell_shots
@@ -61,7 +64,7 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
     include_pass_flight = include_pass_flight or include_pass_race
     include_field_ai_pass = include_field_ai_pass or include_pass_flight
     include_field_ai = include_field_ai or include_field_ai_pass
-    data = bytearray((b'CMJSHOTX' if include_pass_defense else b'CMJSHOTT' if include_keeper_menu else b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
+    data = bytearray((b'CMJSHOTY' if include_first_match else b'CMJSHOTX' if include_pass_defense else b'CMJSHOTT' if include_keeper_menu else b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -293,6 +296,9 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
                 data.extend((value&127,int(conditional),stats[pointer+1] if conditional else 0))
         data.extend((gameplay[direct+8],gameplay[direct+9],int(bool(gameplay[0x827C+4]&128))))
         data.extend(gameplay[0x8290:0x8294])
+    if include_first_match:
+        opening=ReferenceCartridge(prg);opening.registers[6:8]=[0,2]
+        data.extend(opening[0xAA47:0xAA52])
     return bytes(data)
 
 
@@ -311,11 +317,12 @@ def main():
     parser.add_argument('--include-cell-shots', action='store_true', help='Include safe variant-zero opponent shot gates (CMJSHOTS)')
     parser.add_argument('--include-keeper-menu', action='store_true', help='Include home goalkeeper menu tables (CMJSHOTT)')
     parser.add_argument('--include-pass-defense', action='store_true', help='Include opponent pass-defense candidate, special-option and comparison tables (CMJSHOTX)')
+    parser.add_argument('--include-first-match', action='store_true', help='Include the traced first-match home lineup (CMJSHOTY)')
     args = parser.parse_args()
     if args.output.suffix != '.cmjpack':
         parser.error('Output must use the .cmjpack extension (ignored by Git)')
     try:
-        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai, args.include_kickoff, args.include_cell_ai, args.include_cell_shots, args.include_keeper_menu, args.include_pass_defense)
+        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai, args.include_kickoff, args.include_cell_ai, args.include_cell_shots, args.include_keeper_menu, args.include_pass_defense, args.include_first_match)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError) as error:

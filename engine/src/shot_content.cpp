@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -307,6 +307,10 @@ ShotContent load_shot_content(std::istream& input) {
         const auto eligible=reader.byte();if(!choice.range || eligible>1)throw std::invalid_argument("Invalid ordinary pass block comparison");
         choice.eligible=eligible!=0;reader.bytes(choice.thresholds);classify_score(0,choice.thresholds);
         content.ordinary_pass_block_comparison=choice;
+    }
+    if(version>='Y') {
+        content.first_match_lineup=std::array<std::uint8_t,11>{};reader.bytes(*content.first_match_lineup);
+        for(auto type:*content.first_match_lineup)if(!type || type>=35)throw std::invalid_argument("Invalid first-match lineup type");
     }
     reader.end();
     return content;
