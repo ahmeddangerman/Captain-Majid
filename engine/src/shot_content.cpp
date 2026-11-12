@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -311,6 +311,10 @@ ShotContent load_shot_content(std::istream& input) {
     if(version>='Y') {
         content.first_match_lineup=std::array<std::uint8_t,11>{};reader.bytes(*content.first_match_lineup);
         for(auto type:*content.first_match_lineup)if(!type || type>=35)throw std::invalid_argument("Invalid first-match lineup type");
+    }
+    if(version>='Z') {
+        auto& ai=*content.ai_pass_defense;
+        for(unsigned i=0;i<3;++i){const auto row=reader.byte();if(row>=ai.rows.size())throw std::invalid_argument("Invalid generic pass-defense profile row");ai.profile_rows.push_back(row);}
     }
     reader.end();
     return content;

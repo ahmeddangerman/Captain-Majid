@@ -4,7 +4,18 @@
 #include <fstream>
 #include <iostream>
 #include <string>
-int main(int argc,char** argv) {
+int main(int argc,char** argv) try {
+ if(argc==3 && std::string(argv[1])=="--pass-defender-generic") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);if(!content.ai_pass_defense)return 2;
+  unsigned id,flags,alternate,x,y,random,variant;std::array<std::uint8_t,10> teammates{};
+  while(std::cin>>id>>flags>>alternate>>x>>y>>random>>variant){
+   for(auto& t:teammates){unsigned value;if(!(std::cin>>value) || value>255)return 2;t=static_cast<std::uint8_t>(value);}
+   if(id>255 || flags>255 || alternate>255 || x>255 || y>255 || random>255 || variant>255)return 2;
+   try{std::cout<<unsigned(captain::choose_generic_ai_pass_defense(id,flags,alternate,x,y,random,variant,teammates,content.field_players,*content.ai_pass_defense))<<'\n';}
+   catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--pass-defender-final") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);if(!content.ai_pass_defense)return 2;
   unsigned type,flags,alternate,x,y,random,variant;std::array<std::uint8_t,10> teammates{};
@@ -197,6 +208,15 @@ int main(int argc,char** argv) {
  pass_defense.rows[0][16]=0x22;
  std::array<std::uint8_t,10> home_types{};
  if(captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,1,home_types,pass_defense)!=0)return 1;
+ captain::PlayerProfileMappings generic_map{};generic_map.generic_slot_offsets[8]=0;generic_map.team_types={119};
+ pass_defense.profile_rows.resize(120);pass_defense.tackle_options.resize(118);
+ pass_defense.rows[0][16]=0x00;
+ if(captain::choose_generic_ai_pass_defense(19,0,0,108,124,0,0,home_types,generic_map,pass_defense)!=1)return 1;
+ pass_defense.rows[0][16]=0x11;
+ if(captain::choose_generic_ai_pass_defense(19,0,0,108,124,0,0,home_types,generic_map,pass_defense)!=2)return 1;
+ generic_map.team_types.clear();
+ try {captain::choose_generic_ai_pass_defense(19,0,0,108,124,0,0,home_types,generic_map,pass_defense);return 1;}catch(const std::invalid_argument&){}
+ pass_defense.rows[0][16]=0x22;
  try {captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,0,home_types,pass_defense);return 1;}catch(const std::invalid_argument&){}
  pass_defense.block_options.resize(118);
  if(captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,0,home_types,pass_defense)!=0)return 1;
@@ -219,4 +239,4 @@ int main(int argc,char** argv) {
  if(first.action!=4 || first.subtype || second.action!=6 || second.subtype || third.action!=6 || third.subtype!=1)return 1;
  try {captain::choose_ai_area_action(35,0,0,51,124,3,synthetic);return 1;}catch(const std::invalid_argument&){}
  std::cout<<"AI candidate selection checks passed\n";
-}
+} catch(const std::exception& e) { std::cerr << e.what() << "\n"; return 2; }

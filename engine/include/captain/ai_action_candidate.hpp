@@ -78,6 +78,10 @@ AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t fla
 std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
  const std::array<std::uint8_t,10>& home_types,const AiPassDefenseContent& content);
+// Generic opposing records use team mapping for candidate selection, but raw type0 for special options.
+std::uint8_t choose_generic_ai_pass_defense(std::uint8_t id,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
+ const std::array<std::uint8_t,10>& home_types,const PlayerProfileMappings& profiles,const AiPassDefenseContent& content);
 // Direct opponent types only; generic team resolution and final adjustments pending.
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,

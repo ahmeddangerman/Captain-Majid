@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-12 - First-fixture generic pass-defense choices
+
+Z content packs extend Y with the original three generic pass-defense profile rows for team 3. The generic selector resolves the selected opponent through the team mapping for candidate choice while preserving raw type zero for the original special-option lookup. A 6,400-case original CPU comparison covered players 12?21, two roster flag/alternate setups, 20 positions, eight random inputs and two ball variants: 1,120 action-0, 4,080 action-1 and 1,200 action-2 choices matched; none were out of scope. These are constructed inputs, not probabilities or live presentation. Y and earlier content remain supported; Z table bytes and malformed/truncated/mislabelled packs were independently checked.
+
+An original-only cooperative trace started from a captured first-fixture action menu with carrier 9 and defenders 19 and 20. After explicit menu inputs and random-byte intervention at target confirmation, both defenders selected action 2, the pass continued, and player 2 controlled the ball at the final observed handoff. Waits were acknowledged; this is not hardware timing, and the runtime does not yet execute the two-defender or action-2 route. Next compare individual action-2 preparation, comparison, clock and movement boundaries before connecting that route. Private evidence: ../Captain-Majid-analysis/first-encounter-pass-original-20261112. Windows build and 65 registered tests passed; the generic survey and pack checks passed. Overall progress is unmeasured; a complete playable match remains unverified. Suggested model: GPT-6.1 Terra High.
+
+
 ## 2026-11-12 - Constructed first fixture and opening kickoff
 
 Added a provisional first-match constructor and Windows `--first-match` entry using private Y content. Y retains X and exports the first original home lineup; the engine computes level-zero stamina from existing profile and stamina-curve tables. Original CPU routines A8B7 and DB62 matched all 22 roster records in the first-match emulator capture. Instrumented original startup showed presentation initialization writes $0469=1; the snapshot model currently stores that shared byte as the high byte of experience slot10. This is a captured first-fixture initialization, not general campaign setup.

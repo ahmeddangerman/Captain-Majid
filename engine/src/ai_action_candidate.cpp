@@ -140,10 +140,11 @@ AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t fla
  std::array<std::uint8_t,4> choices{};for(unsigned i=0;i<4;++i)choices[i]=content.rows[row][category+i];
  return {static_cast<std::uint8_t>(category),row,choose_ai_action_candidate(choices,random)};
 }
-std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+static std::uint8_t choose_pass_defense_with_candidate_type(std::uint8_t type,std::uint8_t candidate_type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
  const std::array<std::uint8_t,10>& home_types,const AiPassDefenseContent& content) {
- const auto choice=choose_ai_pass_defense_candidate(type,flags,alternate,x,y,random,content);
+ const auto choice=choose_ai_pass_defense_candidate(candidate_type,flags,alternate,x,y,random,content);
+ if(choice.candidate==1 && type==0)return 2;
  // The original option lookup bypasses field action 0 when the area variant is nonzero.
  if(choice.candidate==2) {
   if(ball_variant)return 0;
@@ -161,6 +162,19 @@ std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flag
    throw std::invalid_argument("Pass-defense special move is not implemented");
  }
  return 1;
+}
+std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
+ const std::array<std::uint8_t,10>& home_types,const AiPassDefenseContent& content) {
+ return choose_pass_defense_with_candidate_type(type,type,flags,alternate,x,y,random,ball_variant,home_types,content);
+}
+std::uint8_t choose_generic_ai_pass_defense(std::uint8_t id,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
+ const std::array<std::uint8_t,10>& home_types,const PlayerProfileMappings& profiles,const AiPassDefenseContent& content) {
+ if(id<12 || id>21)throw std::invalid_argument("Generic pass defender must be an opposing field player");
+ const auto offset=profiles.generic_slot_offsets[id-11];
+ if(offset>=profiles.team_types.size())throw std::invalid_argument("Missing generic pass-defense team profile");
+ return choose_pass_defense_with_candidate_type(0,profiles.team_types[offset],flags,alternate,x,y,random,ball_variant,home_types,content);
 }
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiAreaChoiceContent& content) {

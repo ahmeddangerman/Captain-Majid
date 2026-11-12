@@ -1,5 +1,12 @@
 # Port status and completion checkpoints
 
+## 2026-11-12 - First-fixture generic pass-defense choices
+
+Z content packs extend Y with the original three generic pass-defense profile rows for team 3. The generic selector resolves the selected opponent through the team mapping for candidate choice while preserving raw type zero for the original special-option lookup. A 6,400-case original CPU comparison covered players 12?21, two roster flag/alternate setups, 20 positions, eight random inputs and two ball variants: 1,120 action-0, 4,080 action-1 and 1,200 action-2 choices matched; none were out of scope. These are constructed inputs, not probabilities or live presentation. Y and earlier content remain supported; Z table bytes and malformed/truncated/mislabelled packs were independently checked.
+
+An original-only cooperative trace started from a captured first-fixture action menu with carrier 9 and defenders 19 and 20. After explicit menu inputs and random-byte intervention at target confirmation, both defenders selected action 2, the pass continued, and player 2 controlled the ball at the final observed handoff. Waits were acknowledged; this is not hardware timing, and the runtime does not yet execute the two-defender or action-2 route. Next compare individual action-2 preparation, comparison, clock and movement boundaries before connecting that route. Private evidence: ../Captain-Majid-analysis/first-encounter-pass-original-20261112. Windows build and 65 registered tests passed; the generic survey and pack checks passed. Overall progress is unmeasured; a complete playable match remains unverified. Suggested model: GPT-6.1 Terra High.
+
+
 ## 2026-11-12 - First fixture startup
 
 The provisional engine can construct the original first fixture without a RAM snapshot using private Y content and reach opening kickoff/control. Original lineup and stamina routines matched the captured roster; eight controlled original kickoff choices matched all five receivers through represented control, with presentation RNG normalized. The window exposes `--first-match`; only an off-screen render has been checked. A neutral native run reached a two-defender encounter, where general opponent choices remain unfinished. Real timing, other fixtures and a complete playable match remain unverified. Fresh Windows build and all 65 tests passed. Next compare generic opponents and multiple-defender encounters. Overall progress is unmeasured; suggested model GPT-6.1 Terra High.
