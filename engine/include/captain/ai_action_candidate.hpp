@@ -68,12 +68,13 @@ struct AiPassDefenseContent {
  std::array<std::array<std::uint8_t,2>,128> cells{};
  std::vector<std::array<std::uint8_t,48>> rows;
  std::vector<std::optional<AiPassDefenseSpecial>> tackle_options;
+ std::vector<std::optional<AiPassDefenseSpecial>> block_options;
 };
 // Pass-defense candidate only; generic types and final special-move adjustments are not represented.
 AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
  const AiPassDefenseContent& content);
-// Returns an ordinary action-1 defense only when the original special-option lookup is provably empty.
+// Returns supported ordinary defense choices only when the original special-option lookup is empty or bypassed.
 std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
  const std::array<std::uint8_t,10>& home_types,const AiPassDefenseContent& content);

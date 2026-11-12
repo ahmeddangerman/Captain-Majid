@@ -193,6 +193,20 @@ int main(int argc,char** argv) {
  const auto retry=captain::choose_ai_area_recipient(41,19,120,1,0,teammates);
  if(retry.action!=4 || retry.random_first!=128 || retry.recipient)return 1;
  const std::array<std::uint8_t,4> candidates{{0x01,0x23,0x45,0x67}};
+ captain::AiPassDefenseContent pass_defense{};pass_defense.profile_rows.resize(23);pass_defense.rows.resize(1);
+ pass_defense.rows[0][16]=0x22;
+ std::array<std::uint8_t,10> home_types{};
+ if(captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,1,home_types,pass_defense)!=0)return 1;
+ try {captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,0,home_types,pass_defense);return 1;}catch(const std::invalid_argument&){}
+ pass_defense.block_options.resize(118);
+ if(captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,0,home_types,pass_defense)!=0)return 1;
+ pass_defense.block_options[23]=captain::AiPassDefenseSpecial{1,{}};
+ try {captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,0,home_types,pass_defense);return 1;}catch(const std::invalid_argument&){}
+ pass_defense.block_options[23]=captain::AiPassDefenseSpecial{2,24};
+ if(captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,0,home_types,pass_defense)!=0)return 1;
+ home_types[9]=24;
+ try {captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,0,home_types,pass_defense);return 1;}catch(const std::invalid_argument&){}
+ if(captain::choose_ordinary_ai_pass_defense(23,0,0,108,124,0,1,home_types,pass_defense)!=0)return 1;
  for(unsigned r=0;r<256;++r)
   if(captain::choose_ai_action_candidate(candidates,r)!=(r&7u))return 1;
  const std::array<std::uint8_t,4> duplicates{{0x99,0x99,0x99,0x92}};

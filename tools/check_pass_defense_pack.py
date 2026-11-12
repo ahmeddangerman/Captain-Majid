@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check V/W pass-defense tables, T compatibility, and malformed-pack rejection."""
+"""Check V/W/X pass-defense tables, T compatibility, and malformed-pack rejection."""
 import argparse
 import hashlib
 import subprocess
@@ -26,11 +26,22 @@ def main():
             value=m[pointer];conditional=not bool(value&128);rules.extend((value&127,int(conditional),m[pointer+1] if conditional else 0))
     tail+=rules
     version=new[:8]
-    if version==b'CMJSHOTW':
+    if version in (b'CMJSHOTW',b'CMJSHOTX'):
         m.registers[6:8]=[26,27]
         direct=m[0x8d93]|m[0x8d94]<<8
         tail+=bytes((m[direct+10],m[direct+11],int(bool(m[0x827c+5]&128)),*m[0x8290:0x8294]))
-    if old[:8]!=b'CMJSHOTT' or version not in (b'CMJSHOTV',b'CMJSHOTW') or old[8:]!=new[8:-len(tail)] or new[-len(tail):]!=tail:raise RuntimeError('Pass-defense pack does not preserve T and match original tables')
+    if version==b'CMJSHOTX':
+        m.registers[6:8]=[28,29]
+        tail+=(118).to_bytes(2,'little')
+        for kind in range(118):
+            group=m[0x8e1b+2*kind]|m[0x8e1c+2*kind]<<8;pointer=m[group+8]|m[group+9]<<8
+            tail+=bytes((int(bool(pointer)),))
+            if pointer:
+                value=m[pointer];conditional=not bool(value&128)
+                tail+=bytes((value&127,int(conditional),m[pointer+1] if conditional else 0))
+        m.registers[6:8]=[26,27]
+        tail+=bytes((m[direct+8],m[direct+9],int(bool(m[0x827c+4]&128)),*m[0x8290:0x8294]))
+    if old[:8]!=b'CMJSHOTT' or version not in (b'CMJSHOTV',b'CMJSHOTW',b'CMJSHOTX') or old[8:]!=new[8:-len(tail)] or new[-len(tail):]!=tail:raise RuntimeError('Pass-defense pack does not preserve T and match original tables')
     def launch(pack):return subprocess.run([str(a.exe.resolve()),'--field',str(pack)],input='',capture_output=True,text=True).returncode
     if launch(a.old_pack.resolve()) or launch(a.new_pack.resolve()):raise RuntimeError('Valid T/V/W pack rejected')
     with tempfile.TemporaryDirectory(prefix='pass-defense-pack-',dir=a.private_temp) as temp:

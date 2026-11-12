@@ -121,13 +121,13 @@ void validate_phase_session(const PhaseSessionState& state) {
                 (defense.count && state.recovery->opposing_player != state.scheduling->selected_ids[phase>=336 ? state.area_defender_cursor : defense.count-1]))
                 throw std::invalid_argument("Invalid ordinary pass defender selection cursor");
             for (unsigned i=0; i<5; ++i)
-                if (defense.subtypes[i] || defense.actions[i] != (i < defense.count ? 1 : 0))
-                    throw std::invalid_argument("Only explicitly captured ordinary action-one defenses are supported");
+                if (defense.subtypes[i] || (i < defense.count ? (defense.actions[i]!=1 && !(field.selected_defenders==1 && defense.actions[i]==0)) : defense.actions[i]!=0))
+                    throw std::invalid_argument("Only explicitly captured ordinary defenses are supported");
         }
         if ((phase>=336 && phase<=344) && (!state.area_contact || state.area_defender_cursor>=field.selected_defenders ||
             (phase<342 && ((phase<=338) != (state.area_defender_cursor==0))) ||
             ((phase==337 && state.area_contact->result==3) ? state.area_sequence_result!=3 : state.area_sequence_result!=((phase==336 || phase==339) ? 255 : 0)) ||
-            state.area_contact->cursor!=state.area_defender_cursor || state.area_contact->defense_action!=1 || state.area_contact->defense_subtype ||
+            state.area_contact->cursor!=state.area_defender_cursor || state.area_contact->defense_action!=state.ordinary_pass_defenses->actions[state.area_defender_cursor] || state.area_contact->defense_subtype ||
             ((phase==336 || phase==339) && (state.area_contact->strength || state.area_contact->loss || state.area_contact->score)) ||
             ((phase==337 || phase==338 || phase==340 || phase==341 || phase==342 || phase==343 || phase==344) && state.area_contact->loss!=state.area_contact->strength/4) ||
             (state.area_contact->result && !(phase==337 && state.area_contact->result==3)) || state.area_contact->weakened || state.control->facing!=64 ||

@@ -433,10 +433,11 @@ MatchStepResult handle_contested_pass_progress(const MatchRuntimeState& input,co
  MatchStepResult result{input};
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_defender_prepared) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
-  if(!content.data->ordinary_pass_defender_comparison){result.unsupported=UnsupportedCapability::content;return result;}
   if(!input.session.area_contact || input.session.area_contact->effect){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+  const auto& comparison=input.session.area_contact->defense_action==0 ? content.data->ordinary_pass_block_comparison : content.data->ordinary_pass_defender_comparison;
+  if(!comparison){result.unsupported=UnsupportedCapability::content;return result;}
   auto next=input;
-  try {next.session=compare_first_ordinary_pass_defender(next.session,*content.data->ordinary_pass_defender_comparison);}
+  try {next.session=compare_first_ordinary_pass_defender(next.session,*comparison);}
   catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }
@@ -450,7 +451,7 @@ MatchStepResult handle_contested_pass_progress(const MatchRuntimeState& input,co
    auto next=input;auto& session=next.session;
    try {
     session.experience=award_player_experience(*session.experience,session.current.field.roster[defender].type,2,*content.data->experience).state;
-    const auto contact=apply_contact_prelude({session.current,defender,1,false},*content.data->contact);
+    const auto contact=apply_contact_prelude({session.current,defender,session.area_contact->defense_action,false},*content.data->contact);
     if(contact.clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
     session.current=contact.state;
     session.current.field=advance_field_phase(session.current.field,content.data->field_players,*content.data->movement).state;
@@ -983,7 +984,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   if(input.session.current.field.selected_defenders==1) {
    if(!input.session.recovery || !input.session.control || !input.session.ordinary_pass_defenses ||
       input.session.ordinary_pass_defenses->count!=1 || input.session.recovery->ball_variant ||
-      input.session.ordinary_pass_defenses->actions[0]!=1 || input.session.ordinary_pass_defenses->subtypes[0]!=0) {
+      input.session.ordinary_pass_defenses->actions[0]>1 || input.session.ordinary_pass_defenses->subtypes[0]!=0) {
     result.unsupported=UnsupportedCapability::defender_contact;return result;
    }
    auto next=input;

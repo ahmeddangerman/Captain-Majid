@@ -19,7 +19,7 @@ from verify_action_strength import PAYLOAD_SHA256
 
 
 def has_shot_gates(magic):
-    return magic in (b'CMJSHOTS', b'CMJSHOTT', b'CMJSHOTU', b'CMJSHOTV', b'CMJSHOTW')
+    return magic in (b'CMJSHOTS', b'CMJSHOTT', b'CMJSHOTU', b'CMJSHOTV', b'CMJSHOTW', b'CMJSHOTX')
 
 
 def original_decision(prg, raw):

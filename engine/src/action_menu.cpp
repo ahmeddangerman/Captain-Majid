@@ -996,7 +996,7 @@ PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
     std::uint8_t defender, std::uint8_t action, std::uint8_t subtype) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::ordinary_pass_defense_selection || !input.ordinary_pass_defenses ||
-        !input.scheduling || action != 1 || subtype != 0)
+        !input.scheduling || (action != 1 && !(action == 0 && input.current.field.selected_defenders == 1)) || subtype != 0)
         throw std::invalid_argument("Unsupported observed ordinary pass defender choice");
     auto state = input;
     auto& defense = *state.ordinary_pass_defenses;
@@ -1041,15 +1041,16 @@ PhaseSessionState prepare_first_ordinary_pass_defender(const PhaseSessionState& 
         throw std::invalid_argument("First ordinary pass defender requires recorded presentation and variant");
     const auto defender = input.scheduling->selected_ids[0];
     const auto& player = input.current.field.roster[defender];
+    const auto defense_action=input.ordinary_pass_defenses->actions[0];
     const auto prepared = prepare_profiled_field_defender({defender, player.type,
         static_cast<std::uint8_t>(player.stamina), static_cast<std::uint8_t>(player.stamina >> 8), player.level},
-        players, 1, 0, 0, defense);
+        players, defense_action, 0, 0, defense);
     auto state = input;
     state.recovery->opposing_player = defender;
     state.recovery->ball_variant = observed_ball_variant;
     state.control->last_carrier_cell = 128;
     state.area_defender_cursor = 0;
-    state.area_contact = AreaContactContext{0,1,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
+    state.area_contact = AreaContactContext{0,defense_action,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
     state.area_sequence_result = 255;
     state.phase = FieldSessionPhase::ordinary_pass_defender_prepared;
     validate_phase_session(state);
@@ -1069,8 +1070,9 @@ static PhaseSessionState compare_ordinary_pass_defender(const PhaseSessionState&
     contact.context = 0;
     contact.defender_slot = input.recovery->opposing_player;
     contact.subtype = 0;
-    if (comparison.table_index != 5)
-        throw std::invalid_argument("Ordinary pass action-one defense requires direct comparison table index 5");
+    const auto action=input.area_contact->defense_action;
+    if (comparison.table_index != 4+action)
+        throw std::invalid_argument("Ordinary pass defense requires its direct comparison table entry");
     contact.range = comparison.range;
     contact.offset = comparison.offset;
     contact.eligible = comparison.eligible;
@@ -1102,13 +1104,14 @@ PhaseSessionState compare_next_ordinary_pass_defender(const PhaseSessionState& i
 static PhaseSessionState advance_ordinary_pass_contact(const PhaseSessionState& input,
     const ContactPreludeContent& prelude, const ExperienceContent& experience) {
     validate_phase_session(input);
+    const auto defense_action=static_cast<std::uint8_t>(input.area_contact ? input.area_contact->defense_action : 255);
     if ((input.phase != FieldSessionPhase::ordinary_pass_defender_compared && input.phase != FieldSessionPhase::ordinary_pass_next_defender_compared) || !input.experience ||
         input.current.field.motion[field_motion_index(input.recovery->opposing_player)].status ||
-        prelude.field_elapsed[3]!=1 || prelude.defender_status[1]!=6)
+        defense_action>1 || prelude.field_elapsed[2*defense_action+1]!=1 || prelude.defender_status[defense_action]!=6)
         throw std::invalid_argument("Unsupported ordinary pass contact clock");
     const auto reward=award_player_experience(*input.experience,
         input.current.field.roster[input.current.field.ball_owner].type,1,experience);
-    const auto applied=apply_contact_prelude({input.current,input.recovery->opposing_player,1,true},prelude);
+    const auto applied=apply_contact_prelude({input.current,input.recovery->opposing_player,defense_action,true},prelude);
     if (applied.elapsed_step!=1 || applied.clock.continuation!=ClockContinuation::ready)
         throw std::invalid_argument("Ordinary pass contact requires a ready clock continuation");
     auto state=input;

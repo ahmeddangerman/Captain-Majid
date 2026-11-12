@@ -49,8 +49,9 @@ def main():
     counts=Counter()
     for sample,expected,line in zip(samples,wanted,lines):
         if line=='unsupported':counts['unsupported']+=1;continue
-        if line!='1' or expected!=(1,0):raise RuntimeError(f'Incorrect supported final defense {sample}: original {expected}, native {line}')
+        if line not in ('0','1') or expected!=(int(line),0):raise RuntimeError(f'Incorrect supported final defense {sample}: original {expected}, native {line}')
         counts['matched']+=1
+        counts['matched-action-'+line]+=1
         if sample[0]==23:counts['matched-type23']+=1
     if not counts['matched'] or not counts['matched-type23']:raise RuntimeError('No supported cases for the playtest defender type')
     print('Final original/native pass-defense survey:',dict(counts),'skipped original boundaries',dict(skipped),'constructed cases; unsupported cases remain guarded')

@@ -61,7 +61,7 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
     include_pass_flight = include_pass_flight or include_pass_race
     include_field_ai_pass = include_field_ai_pass or include_pass_flight
     include_field_ai = include_field_ai or include_field_ai_pass
-    data = bytearray((b'CMJSHOTW' if include_pass_defense else b'CMJSHOTT' if include_keeper_menu else b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
+    data = bytearray((b'CMJSHOTX' if include_pass_defense else b'CMJSHOTT' if include_keeper_menu else b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -282,6 +282,17 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
         direct=word(gameplay,0x8D93)
         data.extend((gameplay[direct+10],gameplay[direct+11],int(bool(gameplay[0x827C+5]&128))))
         data.extend(gameplay[0x8290:0x8294])
+        data.extend(struct.pack('<H',count))
+        for kind in range(count):
+            group=word(stats,0x8E1B+2*kind);pointer=word(stats,group+8)
+            data.append(int(bool(pointer)))
+            if pointer:
+                if not 0x934D<=pointer<0x9460:raise ValueError('Unsupported pass-defense block-option pointer')
+                value=stats[pointer];conditional=not bool(value&128)
+                if conditional and pointer+1>=0x9460:raise ValueError('Truncated pass-defense block teammate condition')
+                data.extend((value&127,int(conditional),stats[pointer+1] if conditional else 0))
+        data.extend((gameplay[direct+8],gameplay[direct+9],int(bool(gameplay[0x827C+4]&128))))
+        data.extend(gameplay[0x8290:0x8294])
     return bytes(data)
 
 
@@ -299,7 +310,7 @@ def main():
     parser.add_argument('--include-cell-ai', action='store_true', help='Include field action2 option gates (CMJSHOTR)')
     parser.add_argument('--include-cell-shots', action='store_true', help='Include safe variant-zero opponent shot gates (CMJSHOTS)')
     parser.add_argument('--include-keeper-menu', action='store_true', help='Include home goalkeeper menu tables (CMJSHOTT)')
-    parser.add_argument('--include-pass-defense', action='store_true', help='Include opponent pass-defense candidate, special-option and comparison tables (CMJSHOTW)')
+    parser.add_argument('--include-pass-defense', action='store_true', help='Include opponent pass-defense candidate, special-option and comparison tables (CMJSHOTX)')
     args = parser.parse_args()
     if args.output.suffix != '.cmjpack':
         parser.error('Output must use the .cmjpack extension (ignored by Git)')

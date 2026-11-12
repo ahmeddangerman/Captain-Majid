@@ -302,6 +302,26 @@ static int pass_defense_runtime_check(int argc,char** argv) {
  base->session.scheduling->selected_ids.fill(0);base->session.scheduling->selected_ids[0]=17;validate_phase_session(base->session);
  auto started=std::make_unique<MatchStepResult>(step_match(*base,client_input(*base,0,0),*content));
  if(started->unsupported || started->state.session.phase!=FieldSessionPhase::ordinary_pass_defense_selection)throw std::runtime_error("Pass defender selection did not begin");
+ if(content->data->ai_pass_defense && !content->data->ai_pass_defense->block_options.empty()) {
+  auto block_input=started->state.session;block_input.current.field.random_first=6;block_input.current.field.random_second=0;
+  auto block=record_ordinary_pass_defense(block_input,17,0,0);
+  if(!block.ordinary_pass_defenses || block.ordinary_pass_defenses->actions[0]!=0)throw std::runtime_error("Ordinary block choice was not recorded");
+  block=prepare_ordinary_pass(block,content->data->field_players,content->data->attack);
+  block.control->facing=64;block.control->motion_requested=0;
+  block=prepare_first_ordinary_pass_defender(block,1,content->data->field_players,content->data->defense);
+  if(!block.area_contact || block.area_contact->defense_action!=0 || block.area_contact->defender_power!=19 || block.area_contact->cost!=70)
+   throw std::runtime_error("Ordinary block preparation differs from original");
+  if(!content->data->ordinary_pass_block_comparison)throw std::runtime_error("Missing original block comparison content");
+  block=compare_first_ordinary_pass_defender(block,*content->data->ordinary_pass_block_comparison);
+  if(!block.area_contact || block.area_contact->score!=255 || block.area_contact->result!=0 || block.area_contact->strength!=0)
+   throw std::runtime_error("Ordinary block comparison differs from original");
+  auto wrong_block_prelude=*content->data->contact;wrong_block_prelude.field_elapsed[1]=2;
+  try {advance_first_ordinary_pass_contact(block,wrong_block_prelude,*content->data->experience);throw std::runtime_error("Unobserved block contact clock accepted");}
+  catch(const std::invalid_argument&){}
+  auto block_contact=advance_first_ordinary_pass_contact(block,*content->data->contact,*content->data->experience);
+  if(block_contact.phase!=FieldSessionPhase::ordinary_pass_first_contact_clock || block_contact.area_contact->defense_action!=0)
+   throw std::runtime_error("Ordinary block contact did not advance");
+ }
  auto missing=std::make_unique<ShotContent>(*content->data);missing->ai_pass_defense.reset();auto limited=std::make_unique<MatchContent>(*content);limited->data=*missing;
  auto unavailable=std::make_unique<MatchStepResult>(step_match(started->state,client_input(started->state,0,0),*limited));
  if(unavailable->unsupported!=UnsupportedCapability::content || unavailable->state.last_sequence!=started->state.last_sequence)throw std::runtime_error("Missing defense content did not stop atomically");
@@ -309,6 +329,39 @@ static int pass_defense_runtime_check(int argc,char** argv) {
  for(unsigned seed=1;seed<=128;++seed){auto input=std::make_unique<MatchRuntimeState>(started->state);input->demo_rng=seed;
   auto selected=std::make_unique<MatchStepResult>(step_match(*input,client_input(*input,0,0),*content));
   if(selected->unsupported){if(selected->state.last_sequence!=input->last_sequence)throw std::runtime_error("Unsupported defense changed state");++unsupported;continue;}
+  if(selected->state.session.ordinary_pass_defenses && selected->state.session.ordinary_pass_defenses->actions[0]==0) {
+   auto attack=step_match(selected->state,client_input(selected->state,0,0),*content);
+   if(attack.unsupported)throw std::runtime_error("Block choice did not reach attack preparation");
+   attack.state.session.current.field.random_first=6;attack.state.session.current.field.random_second=0;
+   auto block_prep=step_match(attack.state,{MatchInputKind::presentation_complete,attack.state.last_sequence+1},*content);
+   if(block_prep.unsupported || block_prep.state.session.phase!=FieldSessionPhase::ordinary_pass_defender_prepared)
+    throw std::runtime_error("Ordinary block defender did not prepare");
+   auto block_terminal=block_prep.state;block_terminal.session.current.field.random_first=100;block_terminal.session.current.field.random_second=100;
+   auto block_intercept=step_match(block_terminal,{MatchInputKind::tick,block_terminal.last_sequence+1},*content);
+   if(block_intercept.unsupported || block_intercept.state.session.area_sequence_result!=3)
+    throw std::runtime_error("Ordinary block interception comparison did not complete");
+   auto block_winner=step_match(block_intercept.state,{MatchInputKind::presentation_complete,block_intercept.state.last_sequence+1},*content);
+   if(block_winner.unsupported || block_winner.state.session.current.field.side!=11 || block_winner.state.session.current.field.ball_owner!=17)
+    throw std::runtime_error("Ordinary block interception did not transfer possession");
+   auto block_ready=step_match(block_winner.state,client_input(block_winner.state,0,0),*content);
+   if(block_ready.unsupported || block_ready.state.session.phase!=FieldSessionPhase::control_ready || block_ready.state.session.current.field.ball_owner!=17)
+    throw std::runtime_error("Ordinary block interceptor did not become control-ready");
+   auto block_comparison=step_match(block_prep.state,{MatchInputKind::tick,block_prep.state.last_sequence+1},*content);
+   if(block_comparison.unsupported || block_comparison.state.session.area_sequence_result!=0)
+    throw std::runtime_error("Ordinary block defender did not match nonterminal comparison");
+   auto block_contact=step_match(block_comparison.state,{MatchInputKind::presentation_complete,block_comparison.state.last_sequence+1},*content);
+   if(block_contact.unsupported || block_contact.state.session.phase!=FieldSessionPhase::ordinary_pass_first_contact_clock)
+    throw std::runtime_error("Ordinary block contact did not reach clock");
+   auto block_state=block_contact.state;
+   for(unsigned i=0;i<32 && block_state.session.phase!=FieldSessionPhase::control_ready;++i) {
+    auto next=step_match(block_state,client_input(block_state,0,0),*content);
+    if(next.unsupported)throw std::runtime_error("Ordinary block continuation stopped before control");
+    block_state=std::move(next.state);
+   }
+   if(block_state.session.phase!=FieldSessionPhase::control_ready || block_state.session.current.field.ball_owner!=7)
+    throw std::runtime_error("Ordinary block continuation did not reach recipient control");
+   ++matched;continue;
+  }
   if(selected->state.session.phase!=FieldSessionPhase::ordinary_pass_defenses_recorded || !selected->state.session.ordinary_pass_defenses || selected->state.session.ordinary_pass_defenses->actions[0]!=1)throw std::runtime_error("Ordinary pass defense choice differs");
   MatchContentIdentity identity{};identity[0]=42;std::ostringstream out(std::ios::binary);write_match_save(out,selected->state,identity);std::istringstream in(out.str(),std::ios::binary);auto restored=std::make_unique<MatchRuntimeState>(load_match_save(in,identity));
   auto prepared=std::make_unique<MatchStepResult>(step_match(*restored,client_input(*restored,0,0),*content));

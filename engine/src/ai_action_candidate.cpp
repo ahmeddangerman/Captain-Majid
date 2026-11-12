@@ -144,6 +144,15 @@ std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flag
  std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
  const std::array<std::uint8_t,10>& home_types,const AiPassDefenseContent& content) {
  const auto choice=choose_ai_pass_defense_candidate(type,flags,alternate,x,y,random,content);
+ // The original option lookup bypasses field action 0 when the area variant is nonzero.
+ if(choice.candidate==2) {
+  if(ball_variant)return 0;
+  if(type>=content.block_options.size())throw std::invalid_argument("Missing pass-defense block options");
+  const auto& rule=content.block_options[type];
+  if(rule && (!rule->teammate_type || std::find(home_types.begin(),home_types.end(),*rule->teammate_type)!=home_types.end()))
+   throw std::invalid_argument("Pass-defense special block is not implemented");
+  return 0;
+ }
  if(choice.candidate!=0)throw std::invalid_argument("Unsupported pass-defense candidate");
  if(!ball_variant){
   if(type>=content.tackle_options.size())throw std::invalid_argument("Missing pass-defense special options");

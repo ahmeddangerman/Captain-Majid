@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## 2026-11-12 - Action-0 ordinary pass defender
+
+The provisional one-defender pass also supports ordinary action0, including result0 continuing to player7 and result3 giving defender17 possession. X packs add original action0 special-option and comparison data after W; earlier formats remain readable, and unavailable rules, other results and special effects stay guarded. Twelve represented original/native action0 boundaries matched through player7 control entry and six constructed interceptions matched defender17 player-control state. Defender selection/random inputs were intervened, waits acknowledged and the final loop cursor normalized, so this is not live timing parity. The fresh Windows build and all 65 registered tests passed. See the latest WORK_LOG entry for evidence and limits. Next investigate remaining defensive and flight guards and repeat the visible window route. Overall progress remains unmeasured; a full match is unfinished. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Contested pass to control
 
 The provisional runtime now connects one ordinary pass against one action-1 defender through contact. In a controlled defender17 scenario, 14 represented original/native boundaries matched through player7 control entry; later controlled checks reached control-ready and opened the next action menu. Six controlled result-3 cases matched the original through interception and defender17 control-ready. Original waits were acknowledged, random inputs and the single-defender list were intervened, and the defender-loop cursor was normalized at dispatch; these are not live timing or presentation-engine parity. The result-0 recipient-facing continuation is guarded to the captured player7 location. Other defense actions, result codes, special effects and intervening flight defenders remain guarded.

@@ -4,6 +4,8 @@ This Windows-only window is an early way to inspect and control supported parts 
 
 The W content format adds the original-sourced comparison data for a guarded ordinary pass against one defender. A preconfirmed developer snapshot has shown player7 receiving the pass and opening the next menu; controlled headless tests also cover defender17 interception. Other choices and flight contacts can still stop, and the final full menu-to-interception window run has not been visually verified.
 
+The newer X format also supplies the original action0 option and comparison data, enabling its guarded nonterminal and interception routes in controlled tests. It does not establish live random or presentation timing.
+
 Build from the repository root with the already configured Windows CMake environment:
 
 ```powershell
