@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Opponent kickoff reaches the first field round
+
+Extended the private original/native integration sequence after player3's 1-0 goal. Opponent kickoff formation, receiver selection, ball placement, presentation handoff and control setup match represented original state; side11 player16 controls the ball at (148,148). Eleven idle control polls expire the decision timer, the clock advances from 91 to 90, and the next field round returns to player16 control. All compared represented state matches, including movement. The original receives the same sampled random inputs as the native provisional generator; the field-round input is captured before the original consumes it.
+
+Windows CMake build, focused private integration and controlled original comparisons passed. Kickoff/field behavior reuses the existing implementation; this increment extends end-to-end coverage rather than claiming a new general rule. Traces acknowledge presentations and do not simulate NMI, rendering, audio or live timing. Next continue player16's possession to the next original decision or contact. A complete match remains unfinished and progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player3 goal and opponent kickoff handoff
 
 The sampled player3 shot now continues past four defenders into a goalkeeper decision and a goal. The original's stored ball cell already equals the target, so this observed route reaches the keeper without inventing a flight. Represented original/native states match movement, dispatch, target, keeper entry, choice, result, goal and kickoff handoff. The keeper chooses action1 and result0; the score becomes 1-0 and player3 gains 15 experience. The scored state saves and reloads, and the restart switches to side11 with kickoff marker4.

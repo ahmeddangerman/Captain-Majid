@@ -844,6 +844,34 @@ static int player1_defended_shot_check(int argc,char** argv) {
    auto p3_restart=step_match(goal_restored,client_input(goal_restored,0,0),content);
    if(p3_restart.unsupported || p3_restart.state.session.phase!=FieldSessionPhase::goal_kickoff_pending || p3_restart.state.session.current.field.side!=11 || p3_restart.state.session.score->kickoff!=4)throw std::runtime_error("Player3 goal restart stopped");
    std::ofstream restart_file(std::string(argv[4])+"-player3-restart.cmjsession",std::ios::binary);write_phase_session(restart_file,p3_restart.state.session);
+   auto kickoff_state=p3_restart.state;
+   for(const auto& item:{std::pair<const char*,FieldSessionPhase>{"formation",FieldSessionPhase::kickoff_formation_placed},{"receiver",FieldSessionPhase::kickoff_receiver_selected},{"ball",FieldSessionPhase::kickoff_ball_placed},{"handoff",FieldSessionPhase::kickoff_control_pending}}) {
+    auto advance=step_match(kickoff_state,client_input(kickoff_state,0,0),content);
+    if(advance.unsupported || advance.state.session.phase!=item.second)throw std::runtime_error(std::string("Player3 opponent kickoff stopped at ")+item.first);
+    kickoff_state=std::move(advance.state);
+    std::ofstream f(std::string(argv[4])+"-player3-kickoff-"+item.first+".cmjsession",std::ios::binary);write_phase_session(f,kickoff_state.session);
+   }
+   auto opponent_control=step_match(kickoff_state,client_input(kickoff_state,0,0),content);
+   if(opponent_control.unsupported || opponent_control.state.session.phase!=FieldSessionPhase::control_ready || opponent_control.state.session.current.field.ball_owner!=16)throw std::runtime_error("Player3 kickoff control stopped");
+   std::ofstream ready_file(std::string(argv[4])+"-player3-kickoff-control.cmjsession",std::ios::binary);write_phase_session(ready_file,opponent_control.state.session);
+   auto poll_state=opponent_control.state;
+   for(int i=0;i<11;++i){
+    auto poll=step_match(poll_state,client_input(poll_state,0,0),content);
+    if(poll.unsupported)throw std::runtime_error("Player3 kickoff opponent poll stopped at "+std::to_string(i));
+    poll_state=std::move(poll.state);
+    std::ofstream f(std::string(argv[4])+"-player3-kickoff-poll-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,poll_state.session);
+   }
+   auto opponent_clock=step_match(poll_state,client_input(poll_state,0,0),content);
+   if(opponent_clock.unsupported)throw std::runtime_error("Player3 kickoff control clock stopped");
+   std::ofstream clock_file(std::string(argv[4])+"-player3-kickoff-clock.cmjsession",std::ios::binary);write_phase_session(clock_file,opponent_clock.state.session);
+   auto opponent_round=step_match(opponent_clock.state,client_input(opponent_clock.state,0,0),content);
+   if(opponent_round.unsupported)throw std::runtime_error("Player3 kickoff field round stopped");
+   std::ofstream round_file(std::string(argv[4])+"-player3-kickoff-round.cmjsession",std::ios::binary);write_phase_session(round_file,opponent_round.state.session);
+   std::ofstream round_random(std::string(argv[4])+"-player3-kickoff-round-random.bin",std::ios::binary);round_random.put(static_cast<char>(opponent_round.state.demo_rng));round_random.put(static_cast<char>(opponent_round.state.demo_rng>>8));
+
+
+
+
 
    std::ofstream p3a(std::string(argv[4])+"-player3-area.cmjsession",std::ios::binary),p3p(std::string(argv[4])+"-player3-area-prepared.cmjsession",std::ios::binary),p3m(std::string(argv[4])+"-player3-menu.cmjsession",std::ios::binary);write_phase_session(p3a,player3_area.state.session);write_phase_session(p3p,player3_prepared.state.session);write_phase_session(p3m,player3_menu.state.session);
    std::ofstream p4a(std::string(argv[4])+"-player4-area.cmjsession",std::ios::binary),p4p(std::string(argv[4])+"-player4-area-prepared.cmjsession",std::ios::binary),p4m(std::string(argv[4])+"-player4-menu.cmjsession",std::ios::binary);write_phase_session(p4a,player4_area.state.session);write_phase_session(p4p,player4_prepared.state.session);write_phase_session(p4m,player4_menu.state.session);

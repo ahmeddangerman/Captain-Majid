@@ -5,6 +5,7 @@ import hashlib
 from pathlib import Path
 from check_generic_pass_defense_original import original
 from export_phase_session import export_session
+from trace_ball_recovery_phase import trace_recovery
 from verify_action_strength import PAYLOAD_SHA256
 from verify_player7_pass_end_to_end import compare_represented
 
@@ -87,4 +88,27 @@ for name,pc in (('shot-moved','83f8-3'),('shot-dispatch','c618-2'),('shot-target
  compare_represented((a.trace/f'native-player3-{name}.cmjsession').read_bytes(),expected,name!='restart','player3 same-cell shot',name)
  if name=='goal' and (raw[0x28],raw[0x29]) != (1,0):
   raise ValueError('Unexpected original score')
+for name,pc in (('formation','daf5-1'),('receiver','db0b-1'),('ball','db0e-1'),('handoff','db1e-1'),('control','control-ready')):
+ raw=bytearray((a.player3_shot/f'{pc}.bin').read_bytes());keeper=(raw[0x600]==1 and raw[0x601]==11)
+ if keeper:raw[0x600]=0
+ expected=bytearray(export_session(raw,0))
+ if keeper:expected[28]=1;expected[309]=11
+ compare_represented((a.trace/f'native-player3-kickoff-{name}.cmjsession').read_bytes(),expected,False,'player3 opponent kickoff',name)
+raw=(a.player3_shot/'control-ready.bin').read_bytes()
+for i in range(11):
+ state=(a.trace/f'native-player3-kickoff-poll-{i}.cmjsession').read_bytes()
+ injected=bytearray(raw);injected[0xe2:0xe4]=state[26:28]
+ observed,raw=trace_recovery(rom[16:262160],injected,control_input=(0,0))
+ compare_represented(state,export_session(raw,0),False,'player3 kickoff control',f'poll {i+1}')
+ if observed['boundary']!=('control_clock_pending' if i==10 else 'control_poll_wait'):raise ValueError('Unexpected original kickoff control boundary')
+clock=(a.trace/'native-player3-kickoff-clock.cmjsession').read_bytes()
+injected=bytearray(raw);injected[0xe2:0xe4]=clock[26:28]
+observed,raw=trace_recovery(rom[16:262160],injected,control_tick=True)
+if observed['boundary']!='field_round_pending':raise ValueError('Unexpected kickoff clock boundary')
+compare_represented(clock,export_session(raw,0),False,'player3 kickoff control','clock')
+round_state=(a.trace/'native-player3-kickoff-round.cmjsession').read_bytes()
+injected=bytearray(raw);injected[0xe2:0xe4]=(a.trace/'native-player3-kickoff-round-random.bin').read_bytes()
+observed,raw=trace_recovery(rom[16:262160],injected,world_inputs=[(0,0)]*22)
+if observed['boundary']!='player_control_ready':raise ValueError('Unexpected kickoff field-round boundary')
+compare_represented(round_state,export_session(raw,0),False,'player3 kickoff control','field round')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
