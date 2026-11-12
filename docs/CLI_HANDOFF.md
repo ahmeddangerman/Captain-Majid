@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Two skipped defenders and player19 fallback
+
+The sampled player19 possession reaches a field-defense prompt at clock80 with defenders3 and5. With both set to skip, controlled original/native comparisons match both confirmations, the generic opponent's candidate3/action2 choice, preparation, clock, handoff and control setup. Player19 keeps possession on side11 at clock79. The original menu confirmations and subsequent CPU routine were run from the captured field state with explicit choices and random bytes.
+
+Fixed the generic opponent action router to accept the observed empty-option action2 after a defensive menu, instead of rejecting it. For the captured sequence, also preserve the original menu cursor and carrier-cell changes. The broader original presentation and live timing remain unverified; this trace acknowledges waits and does not simulate NMI, rendering or audio. Windows CMake build, all 65 tests (before the final defensive null guard), focused replay and original comparisons passed. Next continue from player19 control. A complete match remains unfinished and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player21 passes to player19
 
 Continued the sampled side11 possession after player16's pass to player21. Original/native comparisons cover 37 idle and world-step boundaries, two action2 decisions, another movement cycle, and an ordinary pass choice by player21 to player19. The pass encounters no defender in this observation; player19 controls the ball at (98,140), clock84.

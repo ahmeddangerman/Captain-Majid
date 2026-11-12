@@ -944,6 +944,32 @@ static int player1_defended_shot_check(int argc,char** argv) {
     if(journey.session.phase==FieldSessionPhase::control_ready)break;
    }
    if(journey.session.phase!=FieldSessionPhase::control_ready || journey.session.current.field.side!=11 || journey.session.current.field.ball_owner!=19)throw std::runtime_error("Player21 pass did not reach player19");
+   std::ofstream p19_log(std::string(argv[4])+"-player19-journey.txt");
+   for(int i=0;i<500;++i){
+    const auto phase=journey.session.phase;
+    if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending && phase!=FieldSessionPhase::ai_cell_decision)break;
+    auto next=step_match(journey,client_input(journey,0,0),content);
+    p19_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next.state.demo_rng&255)<<' '<<static_cast<unsigned>((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<'\n';
+    if(next.unsupported)break;
+    std::ofstream f(std::string(argv[4])+"-player19-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);journey=std::move(next.state);
+   }
+   if(journey.session.phase!=FieldSessionPhase::field_contact_pending || journey.session.current.field.selected_defenders!=2 || journey.session.scheduling->selected_ids[0]!=3 || journey.session.scheduling->selected_ids[1]!=5)throw std::runtime_error("Expected player19 contact with defenders3 and5");
+   std::ofstream p19_contact_log(std::string(argv[4])+"-player19-contact-sequence.txt");
+   for(int i=0;i<100;++i){
+    std::uint8_t pressed=0;
+    if(journey.defense_menu && journey.defense_menu->stage==MatchDefenseStage::polling){
+     const auto& menu=*journey.defense_menu;
+     if(menu.poll.cursor==menu.defender_count || menu.poll.defense.actions[menu.poll.cursor]==6)pressed=128;
+     else for(unsigned j=0;j<4;++j)if(content.data->area_defense_menu->directions[0][j]==6){pressed=static_cast<std::uint8_t>(1u<<j);break;}
+    }
+    auto next=step_match(journey,client_input(journey,0,pressed),content);
+    p19_contact_log<<i<<' '<<static_cast<unsigned>(journey.session.phase)<<' '<<(journey.defense_menu ? static_cast<int>(journey.defense_menu->stage) : -1)<<' '<<static_cast<unsigned>(pressed)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<(next.state.defense_menu ? static_cast<int>(next.state.defense_menu->stage) : -1)<<' '<<next.state.demo_rng<<'\n';
+    if(next.unsupported)break;
+    std::ofstream f(std::string(argv[4])+"-player19-contact-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);journey=std::move(next.state);
+    if(journey.session.phase==FieldSessionPhase::control_ready)break;
+   }
+   if(journey.session.phase!=FieldSessionPhase::control_ready || journey.session.current.field.side!=11 || journey.session.current.field.ball_owner!=19 || journey.session.current.clock.remaining!=79)throw std::runtime_error("Player19 skipped defense did not return to control");
+
 
 
 

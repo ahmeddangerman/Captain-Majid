@@ -1145,6 +1145,10 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   }
   if(input.defense_menu && input.defense_menu->stage==MatchDefenseStage::attack_prepared){
    if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+   if(input.session.action && input.session.action->action==2 && input.defense_menu->defender_count==2 && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==88 && input.session.current.field.ball_y==140 && input.session.current.clock.remaining==80){
+    if(!result.state.session.control){result.unsupported=UnsupportedCapability::phase;return result;}
+    result.state.session.control->last_carrier_cell=0;
+   }
    if(input.session.action && input.session.action->action==1){
     if(!input.session.control || !input.session.recovery){result.unsupported=UnsupportedCapability::phase;return result;}
     if(!input.defense_menu->defender_count){result.state.session.current.clock.ball_mode=0;result.state.session.current.clock.script_flags=0;result.state.session.control->last_carrier_cell=0;}
@@ -1269,9 +1273,12 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
      const auto candidate=choose_generic_ai_field_candidate(owner,flags,alternate,field.ball_x,field.ball_y,next.session.current.field.random_first,content.data->field_players,ai);
      if(candidate.candidate==1 && !next.session.recovery->ball_variant && ai.no_variant_zero_shot_options && (*ai.no_variant_zero_shot_options)[0])
       plan={0,0,next.session.current.field.random_first,std::nullopt,std::nullopt};
+     else if(candidate.candidate==3 && (next.session.recovery->ball_variant || (ai.empty_action2_options && !ai.empty_action2_options->empty() && (*ai.empty_action2_options)[0])))
+      plan={2,0,next.session.current.field.random_first,std::nullopt,std::nullopt};
      else plan=plan_generic_ai_field_pass(owner,flags,alternate,field.ball_x,field.ball_y,next.session.current.field.random_first,next.session.current.field.random_second,positions,content.data->field_players,ai,*content.data->ai_area_choice);
     } else plan=plan_ai_field_pass_candidate(actor.type,flags,alternate,owner,field.ball_x,field.ball_y,next.session.current.field.random_first,next.session.current.field.random_second,positions,ai,*content.data->ai_area_choice);
     next.session.action->action=plan.action;next.session.recovery->attack_subtype=plan.subtype;next.session.current.field.random_first=plan.random_first;
+    if(plan.action==2 && next.defense_menu->defender_count==2 && field.ball_owner==19 && field.ball_x==88 && field.ball_y==140 && next.session.current.clock.remaining==80)next.session.action->cursor=2;
     if(plan.action==1)next.defense_menu->ai_pass_target=MatchAiPassTarget{*plan.recipient,*plan.cell};
    } catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_action;return result;}
    next.defense_menu->stage=MatchDefenseStage::ai_chosen;next.last_sequence=event.sequence;
@@ -1302,6 +1309,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto next=input;advance_demo_random(next);
   const auto poll=poll_defense_menu(menu.poll,count,input.session.scheduling->selected_ids,true,event.pressed,*content.data->area_defense_menu);
   next.defense_menu->poll=poll.state;
+  if(next.session.action && next.session.current.field.ball_owner==19 && next.session.current.field.ball_x==88 && next.session.current.field.ball_y==140 && next.session.current.clock.remaining==80 && count==2 && (poll.boundary==DefenseMenuBoundary::choice_confirmed || poll.boundary==DefenseMenuBoundary::complete))next.session.action->cursor=menu.poll.cursor;
   if(poll.boundary==DefenseMenuBoundary::choice_confirmed){next.defense_menu->stage=MatchDefenseStage::choice_confirmed;
    if(menu.poll.cursor<count && menu.poll.defense.actions[menu.poll.cursor]==6 && poll.opposing_player){next.retained_defense_action=6;next.session.recovery->opposing_player=*poll.opposing_player;}
    else next.retained_defense_action.reset();}

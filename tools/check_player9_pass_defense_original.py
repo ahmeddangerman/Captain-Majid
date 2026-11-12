@@ -8,6 +8,8 @@ from export_phase_session import export_session
 from trace_ball_recovery_phase import trace_recovery
 from check_ai_field_candidate_original import original_candidate
 from check_ai_field_plan_original import original_choice
+from check_field_defense_provenance_original import confirmed_skip
+from check_ai_field_preparation_original import original_preparation
 from verify_action_strength import PAYLOAD_SHA256
 from verify_player7_pass_end_to_end import compare_represented
 
@@ -172,4 +174,24 @@ for index,name in ((0,'prepared'),(1,'preclock'),(3,'handoff'),(4,'target'),(5,'
  original=(a.player3_shot/f'player21-pass-{name}.bin').read_bytes()
  compare_represented((a.trace/f'native-player21-pass-{index}.cmjsession').read_bytes(),export_session(original,0),False,'player21 pass',name)
  if name=='ready' and (original[0x441],original[0x5fb])!=(19,11):raise ValueError('Unexpected player21 pass owner')
+raw=(a.player3_shot/'player21-pass-ready.bin').read_bytes()
+for line in (a.trace/'native-player19-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Native player19 continuation stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ if phase==12:raw=original_choice(rom[16:262160],injected)
+ else:observed,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-player19-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'player19 journey',str(i))
+if (raw[0x600],raw[0x601],raw[0x602])!=(2,3,5):raise ValueError('Unexpected original player19 defenders')
+base=bytearray(raw);base[0x60b:0x60d]=bytes((6,6))
+for index,cursor in ((2,0),(5,1)):
+ line=(a.trace/'native-player19-contact-sequence.txt').read_text().splitlines()[index].split();seed=int(line[-1]);base[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));base[0x61e]=cursor
+ base=bytearray(confirmed_skip(rom[16:262160],base)[0])
+ compare_represented((a.trace/f'native-player19-contact-{index}.cmjsession').read_bytes(),export_session(base,0),False,'player19 skip',str(cursor))
+line=(a.trace/'native-player19-contact-sequence.txt').read_text().splitlines()[8].split();seed=int(line[-1]);base[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));base[0x61e]=2
+if original_candidate(rom[16:262160],base)[2]!=3 or original_choice(rom[16:262160],base)[0x43b]!=2:raise ValueError('Unexpected player19 fallback')
+for index,name,kwargs in ((9,'prepared',{}),(11,'clock',{'through_clock':True}),(12,'handoff',{'through_return':True}),(13,'ready',{'through_return':True,'through_control':True})):
+ original=original_preparation(rom[16:262160],base,**kwargs)
+ compare_represented((a.trace/f'native-player19-contact-{index}.cmjsession').read_bytes(),export_session(original,0),False,'player19 fallback',name)
+ if name=='ready' and (original[0x441],original[0x5fb],original[0x5f7])!=(19,11,79):raise ValueError('Unexpected player19 possession')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
