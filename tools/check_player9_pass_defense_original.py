@@ -12,6 +12,8 @@ from check_ai_field_candidate_original import original_candidate
 from check_ai_field_plan_original import original_choice
 from check_field_defense_provenance_original import confirmed_skip
 from check_ai_field_preparation_original import original_preparation
+from check_human_keeper_menu_original import menu_trace
+from check_keeper_saves_original import observe_keeper_save
 from verify_action_strength import PAYLOAD_SHA256
 from verify_player7_pass_end_to_end import compare_represented
 
@@ -279,4 +281,30 @@ for index,name,kwargs in ((6,'prepared',{}),(8,'clock',{'through_clock':True}),(
 original=original_preparation(rom[16:262160],base,through_return=True,through_control=True)
 compare_represented((a.trace/'native-player14-recipient-control.cmjsession').read_bytes(),export_session(original,0),False,'player14 pass','recipient control')
 if (original[0x441],original[0x5fb],original[0x635],original[0x637],original[0x5f7])!=(21,11,69,167,54):raise ValueError('Unexpected player14 pass recipient')
+raw=original
+for line in (a.trace/'native-player21-return-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Player21 return continuation stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ if phase==12:raw=original_choice(rom[16:262160],injected)
+ else:observed,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-player21-return-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'player21 return',str(i))
+if (raw[0x441],raw[0x5f7],raw[0x616],raw[0x600],raw[0x601])!=(21,49,1,1,2):raise ValueError('Unexpected player21 contact')
+lines=(a.trace/'native-player21-return-contact.txt').read_text().splitlines();seed=int(lines[2].split()[-1]);base=bytearray(raw);base[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));base[0x61e]=0;base[0x60b]=6;base=bytearray(confirmed_skip(rom[16:262160],base)[0])
+seed=int(lines[5].split()[-1]);base[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));base[0x61e]=1
+if (original_candidate(rom[16:262160],base)[2],original_choice(rom[16:262160],base)[0x43b])!=(1,0):raise ValueError('Unexpected player21 shot choice')
+for index,pc in ((6,'804f-1'),(8,'80ed-1'),(9,'c618-1'),(10,'dd08-1'),(11,'e773-1'),(13,'e773-2'),(15,'e773-3'),(17,'e773-4'),(19,'e773-5'),(21,'e773-6'),(22,'e7cc-1'),(23,'dd1c-1')):
+ original=(a.player3_shot/f'player21-shot-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-player21-return-contact-{index}.cmjsession').read_bytes(),export_session(original,0),False,'player21 shot',pc)
+ if pc=='e7cc-1' and (original[0x600],original[0x601])!=(1,5):raise ValueError('Unexpected shot flight defender')
+entry=(a.player3_shot/'player21-shot-dd1c-1.bin').read_bytes();stages=menu_trace(rom[16:262160],entry,1,seed)
+for index,name in ((0,'open'),(1,'selected'),(2,'compared')):
+ original=bytearray(stages[name]);original[0x600]=0;expected=bytearray(export_session(original,0));expected[28]=1;expected[309]=0
+ compare_represented((a.trace/f'native-player21-shot-keeper-{index}.cmjsession').read_bytes(),expected,False,'player21 shot goalkeeper',name)
+if (stages['compared'][0x43d],stages['compared'][0x612])!=(0,2):raise ValueError('Unexpected goalkeeper save result')
+saved,phase,_=observe_keeper_save(rom[16:262160],stages['compared'])
+compare_represented((a.trace/'native-player21-shot-save.cmjsession').read_bytes(),export_session(saved,0),False,'player21 shot','save')
+observed,out=trace_recovery(rom[16:262160],saved)
+if observed['boundary']!='boundary_restart' or (out[0x635],out[0x637],out[0x634],out[0x636])!=(44,116,7,91):raise ValueError('Unexpected original keeper rebound boundary')
+compare_represented((a.trace/'native-player21-shot-recovery.cmjsession').read_bytes(),export_session(out,0),False,'player21 shot','boundary restart')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

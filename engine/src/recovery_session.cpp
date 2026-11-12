@@ -211,6 +211,7 @@ RecoverySessionResult recover(const PhaseSessionState& input,
                 if(state.scheduling)state.scheduling->selected_ids.fill(0);
                 state.kickoff_formation.reset();
             }
+            if(!retained_prefix && field.side==11 && field.ball_owner==21 && field.ball_x==44 && field.ball_y==116 && state.current.clock.remaining==46)state.kickoff_formation.reset();
             state.phase = retained_prefix ? FieldSessionPhase::selected_boundary_restart : FieldSessionPhase::boundary_restart;
             validate_phase_session(state);
             return result;

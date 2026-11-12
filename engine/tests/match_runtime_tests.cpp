@@ -48,6 +48,52 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream ready_file(std::string(prefix)+"-player14-recipient-control.cmjsession",std::ios::binary);write_phase_session(ready_file,ready->state.session);
  std::ostringstream saved(std::ios::binary);write_match_save(saved,ready->state,identity);std::istringstream saved_input(saved.str(),std::ios::binary);auto restored=std::make_unique<MatchRuntimeState>(load_match_save(saved_input,identity));
  if(restored->session.current.field.ball_owner!=21 || restored->session.area_defender_cursor!=1)throw std::runtime_error("Player21 pass control did not roundtrip");
+ std::ofstream journey21(std::string(prefix)+"-player21-return-journey.txt");
+ for(int i=0;i<500;++i){
+  const auto phase=restored->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending && phase!=FieldSessionPhase::ai_cell_decision)break;
+  auto next=std::make_unique<MatchStepResult>(step_match(*restored,client_input(*restored,0,0),content));
+  journey21<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next->state.demo_rng&255)<<' '<<static_cast<unsigned>((next->state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<next->state.demo_rng<<'\n';journey21.flush();
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-player21-return-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*restored=std::move(next->state);
+ }
+
+ if(restored->session.phase!=FieldSessionPhase::field_contact_pending || restored->session.current.field.selected_defenders!=1 || restored->session.scheduling->selected_ids[0]!=2)throw std::runtime_error("Player21 return contact stopped");
+ std::ofstream return_contact(std::string(prefix)+"-player21-return-contact.txt");
+ for(int i=0;i<40;++i){
+  std::uint8_t pressed=0;
+  if(restored->defense_menu && restored->defense_menu->stage==MatchDefenseStage::polling){const auto& m=*restored->defense_menu;if(m.poll.cursor==m.defender_count || m.poll.defense.actions[m.poll.cursor]==6)pressed=128;else for(unsigned j=0;j<4;++j)if(content.data->area_defense_menu->directions[0][j]==6){pressed=static_cast<std::uint8_t>(1u<<j);break;}}
+  auto next=std::make_unique<MatchStepResult>(step_match(*restored,client_input(*restored,0,pressed),content));
+  return_contact<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->state.defense_menu ? static_cast<int>(next->state.defense_menu->stage) : -1)<<' '<<next->state.demo_rng<<'\n';return_contact.flush();
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-player21-return-contact-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*restored=std::move(next->state);
+  if(restored->session.phase==FieldSessionPhase::control_ready || restored->session.phase==FieldSessionPhase::player_control || restored->session.phase==FieldSessionPhase::keeper_presentation_pending)break;
+ }
+ if(restored->session.phase!=FieldSessionPhase::keeper_presentation_pending || restored->session.current.field.side!=11 || restored->session.current.field.ball_owner!=21 || restored->session.current.clock.remaining!=46)throw std::runtime_error("Player21 shot did not reach goalkeeper");
+ std::ostringstream shot_save(std::ios::binary);write_match_save(shot_save,*restored,identity);std::istringstream shot_in(shot_save.str(),std::ios::binary);auto shot_restored=std::make_unique<MatchRuntimeState>(load_match_save(shot_in,identity));
+ if(shot_restored->session.phase!=FieldSessionPhase::keeper_presentation_pending)throw std::runtime_error("Player21 shot keeper state did not roundtrip");
+ std::ofstream keeper_log(std::string(prefix)+"-player21-shot-keeper.txt");
+ for(int i=0;i<5;++i){
+  const std::uint8_t pressed=i==1 ? 1 : i==2 ? 128 : 0;
+  auto next=std::make_unique<MatchStepResult>(step_match(*shot_restored,client_input(*shot_restored,0,pressed),content));
+  keeper_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';keeper_log.flush();
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-player21-shot-keeper-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*shot_restored=std::move(next->state);
+  if(shot_restored->session.phase!=FieldSessionPhase::keeper_presentation_pending)break;
+ }
+ if(shot_restored->session.phase!=FieldSessionPhase::keeper_decided || !shot_restored->session.keeper_decision || shot_restored->session.keeper_decision->result_code!=2)throw std::runtime_error("Player21 goalkeeper comparison stopped");
+ auto saved_shot=std::make_unique<MatchStepResult>(step_match(*shot_restored,client_input(*shot_restored,0,0),content));
+ if(saved_shot->unsupported || saved_shot->state.session.phase!=FieldSessionPhase::ball_recovery)throw std::runtime_error("Player21 goalkeeper save stopped");
+ std::ofstream save_file(std::string(prefix)+"-player21-shot-save.cmjsession",std::ios::binary);write_phase_session(save_file,saved_shot->state.session);
+ auto recovery=std::make_unique<MatchStepResult>(step_match(saved_shot->state,client_input(saved_shot->state,0,0),content));
+ if(recovery->unsupported)throw std::runtime_error(std::string("Player21 goalkeeper recovery stopped: ")+capability_name(*recovery->unsupported));
+ std::ofstream recovery_file(std::string(prefix)+"-player21-shot-recovery.cmjsession",std::ios::binary);write_phase_session(recovery_file,recovery->state.session);
+ if(recovery->state.session.phase!=FieldSessionPhase::boundary_restart || recovery->state.session.current.field.ball_x!=44 || recovery->state.session.current.field.ball_y!=116 || !recovery->state.ball_fraction || recovery->state.ball_fraction->x!=7 || recovery->state.ball_fraction->y!=91)throw std::runtime_error("Player21 goalkeeper boundary differs from original");
+ std::ostringstream boundary_save(std::ios::binary);write_match_save(boundary_save,recovery->state,identity);std::istringstream boundary_in(boundary_save.str(),std::ios::binary);auto boundary_restore=std::make_unique<MatchRuntimeState>(load_match_save(boundary_in,identity));
+ if(boundary_restore->session.phase!=FieldSessionPhase::boundary_restart || !boundary_restore->ball_fraction)throw std::runtime_error("Player21 boundary restart did not roundtrip");
+
+
+
 
 }
 static void continue_home_after_action3(const captain::MatchRuntimeState& initial,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {

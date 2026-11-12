@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Player21 shot saved out of bounds
+
+The observed player21 continuation reaches defender2 at clock49; with that defender explicitly set to skip, the original selects an ordinary shot. The shot meets defender5, whose comparison result is 0, and reaches the home goalkeeper at clock46. With goalkeeper action0, original and native comparison result is 2. The original then sends the loose ball out at (44,116), preserving fractional bytes (7,91). Native represented states match the controlled original through the keeper decision, save and boundary restart; the boundary state saves/reloads.
+
+Fixed the captured shot variant and presentation state, carried cursor validation, and the previously rejected rebound boundary when kickoff context remained. The boundary change is restricted to the observed case; an existing unrelated unsupported boundary still rejects atomically. Windows CMake build, all 65 tests, focused replay and original comparisons passed. The trace uses explicit skipped defense, goalkeeper choice, sampled randomness and presentation acknowledgements; it does not establish live NMI, rendering, audio or timing. The restart after the out-of-bounds boundary is not yet implemented for this sequence and is next. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player14 passes after defender skip
 
 Following the interception, player14 advances to clock55 and meets defender3. The original retains the earlier defender cursor value1 through this contact and the following pass. Validation now accepts the observed carried state through the defender menu, flight and player21 control, rather than throwing or resetting it. With defender3 explicitly set to skip, original and native choose a pass to player21; player21 receives at (69,167), clock54, and the saved control state reloads.

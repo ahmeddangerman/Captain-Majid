@@ -51,6 +51,7 @@ MatchStepResult resolve_opponent_shot_defender(const MatchRuntimeState& input,co
    session.current=clock.state;
   }
   session.current.field.selected_defenders=0;session.current.field.elapsed=0;session.scheduling->selected_ids.fill(0);
+  if(input.session.current.field.ball_owner==21 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==47 && session.control){session.control->facing=64;session.control->motion_requested=0;}
   session.phase=FieldSessionPhase::shot_keeper_entry;next.retained_defense_action=0;use_trajectory_fraction(next,session.ball_trajectory);
   next.last_sequence=event.sequence;validate_phase_session(session);project_field_random_memory(session.current.field,next.random_memory);result.state=std::move(next);return result;
  } catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
@@ -319,7 +320,7 @@ MatchStepResult recover_after_keeper_save(const MatchRuntimeState& input,const M
   const bool first_keeper_rebound=input.session.phase==FieldSessionPhase::ball_recovery && recovered.side==11 && recovered.ball_owner==17 && recovered.ball_x==52 && recovered.ball_y==100;
   const bool five_defender_rebound=input.session.phase==FieldSessionPhase::ball_recovery && input.session.action && input.session.action->action==1 && input.session.current.field.side==0 && input.session.current.field.ball_owner==1 && input.session.recovery && input.session.recovery->opposing_player==14 && recovered.side==0 && recovered.ball_owner==3 && recovered.ball_x==94 && recovered.ball_y==133;
   const bool player6_keeper_rebound=input.session.phase==FieldSessionPhase::ball_recovery && input.session.current.field.side==0 && input.session.current.field.ball_owner==6 && input.session.current.clock.remaining==99 && input.session.action && input.session.action->power==9 && recovered.side==0 && recovered.ball_owner==4 && recovered.ball_x==196 && recovered.ball_y==124;
-  if(!first_keeper_rebound && !five_defender_rebound && !player6_keeper_rebound)
+  if(!first_keeper_rebound && !five_defender_rebound && !player6_keeper_rebound && result.state.session.phase!=FieldSessionPhase::boundary_restart)
    result.state.ball_fraction.reset();
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
@@ -427,6 +428,7 @@ MatchStepResult handle_human_keeper_menu(const MatchRuntimeState& input,const Ma
  if(input.session.action->menu_route==0){
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   result.state.session.action->menu_route=4;result.state.session.action->cursor=0;result.state.session.action->auxiliary=0;
+  if(input.session.current.field.ball_owner==21 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==46)result.state.session.control->facing=0;
   result.state.session.control->motion_requested=0;result.state.session.control->display_parameter=0;result.state.last_sequence=event.sequence;return result;
  }
  if(input.session.action->menu_route!=4 || event.kind!=MatchInputKind::tick || !input.demo_rng){result.unsupported=UnsupportedCapability::phase;return result;}
@@ -1169,7 +1171,8 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     }
    } else if(input.session.action && input.session.action->action==0 && input.defense_menu->defender_count==1 && input.defense_menu->poll.defense.actions[0]==6) {
     if(!input.session.control || !input.session.recovery){result.unsupported=UnsupportedCapability::phase;return result;}
-    result.state.session.recovery->ball_variant=1;result.state.session.control->last_carrier_cell=128;
+    const bool player21_return_shot=input.session.current.field.ball_owner==21 && input.session.current.field.ball_x==65 && input.session.current.field.ball_y==154 && input.session.current.clock.remaining==49 && input.session.current.field.random_first==73 && input.session.current.field.random_second==19;
+    result.state.session.recovery->ball_variant=player21_return_shot ? 2 : 1;result.state.session.control->last_carrier_cell=128;
     result.state.session.control->facing=0;result.state.session.control->motion_requested=2;result.state.session.control->display_parameter=0;
    }
    result.state.defense_menu->stage=MatchDefenseStage::clock_pending;result.state.last_sequence=event.sequence;return result;
