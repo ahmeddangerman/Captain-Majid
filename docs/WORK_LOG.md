@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-13 - Player8 blocked goal-area shot recovered by player9
+
+The seeded player8 shot now continues from goalkeeper action3/result2 through the original contact clock, field movement, goalkeeper stun and loose-ball recovery. Controlled original/native represented states match at the clock, movement, recovery entry and recovered owner: player9 on the same side controls the rebound at 172,124, with the original retained goalkeeper selection and jitter byte. Recovery saves and reloads. The clock and movement use shared engine calculations, while observed presentation changes are acknowledged. Windows CMake build, all 65 registered tests, and the private original comparison passed.
+
+A controlled original-only continuation reaches the next player9 control entry with facing64; native control after this recovery is the next task. The original run injects random bytes and acknowledges presentation without live NMI, rendering or audio; other random outcomes are guarded. A complete playable match remains unfinished and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player8-goal-area-seeded-original-20261112 and player9-after-rebound-original-20261113.
+
+
 ## 2026-11-13 - Player8 shot goalkeeper contact compared
 
 The seeded attacking goal-area shot now calculates goalkeeper11's action3 contact using an optional private CMJSHOTc comparison extension. Original/native represented state matches the controlled comparison boundary: the keeper's rolled strength is 9, comparison score 78 and result 2. The continuation is guarded to the observed sample; the subsequent loose ball and recovery remain unimplemented. The goalkeeper comparison survives a runtime save/reload, and missing comparison data rejects atomically. C packs preserve earlier payloads; older formats still load and omit the new comparison. The exporter reads its selected values from the verified original cartridge and keeps the pack outside Git.

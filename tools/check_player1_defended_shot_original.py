@@ -58,4 +58,13 @@ if a.seeded_area_trace:
         compare_represented((a.trace / ('native-' + name + '.cmjsession')).read_bytes(), expected, True, 'player8 goal-area', name)
         if name == 'area-compared' and (raw[0x612], raw[0x616], raw[0x619]) != (2, 0, 2):
             raise ValueError('Unexpected original goalkeeper comparison result')
+    for name, pc in (('area-clocked','83f5-1'), ('area-moved','83f8-1'), ('area-recovery-entry','8bdf-1'), ('area-recovered','8c31-2')):
+        raw = bytearray((a.seeded_area_trace / (pc + '.bin')).read_bytes())
+        if (raw[0x600], raw[0x601], raw[0x612]) != (1, 11, 2):
+            raise ValueError('Unexpected original goalkeeper recovery boundary')
+        if name == 'area-recovered' and (raw[0x441], raw[0x5fb], raw[0x62c]) != (9, 0, 131):
+            raise ValueError('Unexpected original goalkeeper rebound owner')
+        raw[0x600] = 0
+        expected = bytearray(export_session(raw, 0)); expected[28] = 1; expected[309] = 11
+        compare_represented((a.trace / ('native-' + name + '.cmjsession')).read_bytes(), expected, True, 'player8 goal-area', name)
 print('Matched defended shot, player8 recovery and attacking goal-area keeper menu')
