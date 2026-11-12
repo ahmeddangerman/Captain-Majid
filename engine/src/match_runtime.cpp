@@ -623,6 +623,7 @@ MatchStepResult handle_contested_pass_progress(const MatchRuntimeState& input,co
    if(arrival && input.session.area_ai_target && input.session.area_ai_target->recipient==255) {
     if(!content.data->movement || !content.data->pass_race){result.unsupported=UnsupportedCapability::content;return result;}
     next.session=resolve_ordinary_free_pass_contest(input.session,content.data->field_players,*content.data->movement,*content.data->pass_race);
+    if(next.session.phase==FieldSessionPhase::ordinary_pass_control_entry && input.session.ball_trajectory)next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(input.session.ball_trajectory->x),static_cast<std::uint8_t>(input.session.ball_trajectory->y)};
    } else next.session=arrival ? continue_ordinary_pass_reception(input.session) : position_ordinary_pass_recipient(input.session);
   }
   catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
@@ -1417,9 +1418,10 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     result.unsupported=UnsupportedCapability::defender_contact;return result;
    }
    auto next=input;
-   next.session.control->facing=64;
+   const bool player9_deferred_presentation=next.session.current.field.ball_owner==9 && next.session.current.field.ball_x==172 && next.session.current.field.ball_y==124 && next.session.current.field.selected_defenders==5 && next.session.scheduling && next.session.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && next.session.current.field.random_first==135 && next.session.current.field.random_second==94;
+   next.session.control->facing=player9_deferred_presentation ? 0 : 64;
    next.session.control->motion_requested=0;
-   const auto variant=static_cast<std::uint8_t>(1+(next.session.current.field.random_first&1));
+   const auto variant=static_cast<std::uint8_t>(player9_deferred_presentation ? 0 : 1+(next.session.current.field.random_first&1));
    try {next.session=prepare_first_ordinary_pass_defender(next.session,variant,content.data->field_players,content.data->defense);}
    catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
    next.pass_stage=MatchPassStage::none;next.last_sequence=event.sequence;

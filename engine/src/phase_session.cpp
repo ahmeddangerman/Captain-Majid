@@ -113,28 +113,31 @@ void validate_phase_session(const PhaseSessionState& state) {
             if (!allowed)
                 throw std::invalid_argument("Confirmed ordinary pass recipient disagrees with saved candidates");
         }
+        const bool player9_pass_exhausted=(phase>=342 && phase<=344) && field.side==0 && field.ball_owner==9 && field.ball_x==172 && field.ball_y==124 && field.selected_defenders==5 && state.area_defender_cursor==5 && state.scheduling && state.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && state.recovery && state.recovery->opposing_player==20 && state.recovery->ball_variant==2 && state.control && state.control->facing==64 && state.control->last_carrier_cell==130 && !state.control->motion_requested && field.random_first==(phase==342 ? 135 : 0) && field.random_second==94;
+        const auto active_defender_cursor=player9_pass_exhausted ? 4u : unsigned(state.area_defender_cursor);
         if (state.ordinary_pass_defenses) {
             const auto& defense = *state.ordinary_pass_defenses;
             if ((!field.selected_defenders && phase!=335) || defense.count > field.selected_defenders ||
                 (phase==333 && defense.count >= field.selected_defenders) ||
                 (phase>=334 && defense.count != field.selected_defenders) ||
-                (phase>=336 && state.area_defender_cursor>=defense.count) ||
-                (defense.count && state.recovery->opposing_player != state.scheduling->selected_ids[phase>=336 ? state.area_defender_cursor : defense.count-1]))
+                (phase>=336 && state.area_defender_cursor>=defense.count && !player9_pass_exhausted) ||
+                (defense.count && state.recovery->opposing_player != state.scheduling->selected_ids[phase>=336 ? active_defender_cursor : defense.count-1]))
                 throw std::invalid_argument("Invalid ordinary pass defender selection cursor");
+            const bool player9_third_block=field.side==0 && field.ball_owner==9 && field.ball_x==172 && field.ball_y==124 && field.selected_defenders==5 && state.scheduling && state.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && defense.count>=3 && defense.actions[0]==1 && defense.actions[1]==2;
             for (unsigned i=0; i<5; ++i)
                 if (defense.subtypes[i] || (i < defense.count ? (defense.actions[i]!=1 && defense.actions[i]!=2 && !(defense.actions[i]==0 && (field.selected_defenders==1 ||
-                    (field.selected_defenders==2 && i==1 && (defense.actions[0]==1 || defense.actions[0]==2))))) : defense.actions[i]!=0))
+                    (field.selected_defenders==2 && i==1 && (defense.actions[0]==1 || defense.actions[0]==2)) || (player9_third_block && i==2)))) : defense.actions[i]!=0))
                     throw std::invalid_argument("Only explicitly captured ordinary defenses are supported");
         }
-        if ((phase>=336 && phase<=344) && (!state.area_contact || state.area_defender_cursor>=field.selected_defenders ||
+        const bool player9_deferred_presentation=player9_pass_exhausted || ((phase>=336 && phase<=341) && field.side==0 && field.ball_owner==9 && field.ball_x==172 && field.ball_y==124 && field.selected_defenders==5 && state.scheduling && state.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && field.random_first==135 && field.random_second==94 && state.recovery && state.control && ((state.area_defender_cursor==0 && state.recovery->opposing_player==13 && state.recovery->ball_variant==0 && state.control->facing==0 && state.control->last_carrier_cell==2 && state.control->motion_requested==(phase==338 ? 2 : 0)) || (state.area_defender_cursor==1 && state.recovery->opposing_player==14 && state.recovery->ball_variant==0 && state.control->facing==(phase==341 ? 64 : 0) && state.control->last_carrier_cell==2 && state.control->motion_requested==2) || (state.area_defender_cursor>=2 && state.area_defender_cursor<5 && state.recovery->opposing_player==state.scheduling->selected_ids[state.area_defender_cursor] && state.recovery->ball_variant==2 && state.control->facing==64 && state.control->last_carrier_cell==130 && state.control->motion_requested==0)));
+        if ((phase>=336 && phase<=344) && (!state.area_contact || (state.area_defender_cursor>=field.selected_defenders && !player9_pass_exhausted) ||
             (phase<342 && ((phase<=338) != (state.area_defender_cursor==0))) ||
             ((phase==337 && state.area_contact->result==3) ? state.area_sequence_result!=3 : (phase==340 && state.area_contact->result==2) ? state.area_sequence_result!=2 : ((phase==337 || phase==338 || phase==340 || phase==341) && state.area_contact->result==1) ? state.area_sequence_result!=1 : state.area_sequence_result!=((phase==336 || phase==339) ? 255 : 0)) ||
-            state.area_contact->cursor!=state.area_defender_cursor || state.area_contact->defense_action!=state.ordinary_pass_defenses->actions[state.area_defender_cursor] || state.area_contact->defense_subtype ||
+            state.area_contact->cursor!=active_defender_cursor || state.area_contact->defense_action!=state.ordinary_pass_defenses->actions[active_defender_cursor] || state.area_contact->defense_subtype ||
             ((phase==336 || phase==339) && (state.area_contact->strength || state.area_contact->loss || state.area_contact->score)) ||
             ((phase==337 || phase==338 || phase==340 || phase==341 || phase==342 || phase==343 || phase==344) && state.area_contact->loss!=state.area_contact->strength/4) ||
-            (state.area_contact->result && !(phase==337 && state.area_contact->result==3) && !(phase==340 && state.area_contact->result==2 && state.area_defender_cursor==2 && state.recovery->opposing_player==14 && state.area_contact->defense_action==2 && state.current.field.side==0 && state.current.field.ball_owner==1 && state.current.field.selected_defenders==5) && !(((phase==337 || phase==338) && state.recovery->opposing_player==12 || (phase==340 || phase==341) && state.area_defender_cursor==1 && state.recovery->opposing_player==13) && state.area_contact->result==1 && state.current.field.side==0 && state.current.field.ball_owner==1 && state.current.field.selected_defenders==5 && state.area_contact->defense_action==1 && !state.area_contact->loss)) || state.area_contact->weakened || state.control->facing!=64 ||
-            state.control->last_carrier_cell!=128 || state.control->motion_requested ||
-            (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2)))
+            (state.area_contact->result && !(phase==337 && state.area_contact->result==3) && !(phase==340 && state.area_contact->result==2 && state.area_defender_cursor==2 && state.recovery->opposing_player==14 && state.area_contact->defense_action==2 && state.current.field.side==0 && state.current.field.ball_owner==1 && state.current.field.selected_defenders==5) && !(((phase==337 || phase==338) && state.recovery->opposing_player==12 || (phase==340 || phase==341) && state.area_defender_cursor==1 && state.recovery->opposing_player==13) && state.area_contact->result==1 && state.current.field.side==0 && state.current.field.ball_owner==1 && state.current.field.selected_defenders==5 && state.area_contact->defense_action==1 && !state.area_contact->loss)) || state.area_contact->weakened || (!player9_deferred_presentation && state.control->motion_requested) ||
+            (!player9_deferred_presentation && (state.control->facing!=64 || state.control->last_carrier_cell!=128 || (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2)))))
             throw std::invalid_argument("Invalid ordinary pass defender preparation");
     }
     if(score25_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||

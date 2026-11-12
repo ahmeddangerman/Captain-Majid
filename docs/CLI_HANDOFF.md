@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player9 five-defender pass recovered by player6
+
+From the provisional rebound continuation, player9's ordinary free pass now crosses five defenders and reaches player6 at 180,156 after a three-round timeout. Controlled original/native comparisons match the injected encounter menu, each original AI choice (1,2,0,1,1), pass preparation, all five contact preparations/comparisons/clocks, dispatch, field movement, target, each flight cell, arrival defender16 contact and the player6 recovery. The recovered ball fractions 16/17 survive runtime save/reload. The original selects its pass-presentation defender by the random-derived index; this sample waits until defender3, so the earlier contacts retain ball variant0 and the later presentation retains cursor130. The completed defender prefix retains cursor5. The engine now handles these observed boundaries without prematurely applying presentation.
+
+The original trace injects represented native state, random bytes and target scratch values; presentation is acknowledged, not live NMI, rendering or audio. It does not establish general five-defender behavior. An initial trace omitted the target scratch byte and led to a different apparent recipient; it was corrected before the final comparisons. A Windows CMake build, all 65 registered tests and the focused original checks passed. Next trace player6's recovered goal-area entry and continue toward a complete playable match. Overall progress remains unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player9-pass-contact-original-20261113.
+
+
 ## 2026-11-13 - Rebound continues through player9 control
 
 The player9 rebound now proceeds through acknowledged control entry and normal control setup. Both represented states match controlled original execution, including the goalkeeper selection retained until control setup; control-ready saves and reloads. Continued neutral provisional play reaches another five-defender contact with selected opponents13,14,18,19,20 at clock108. The separately continued original also reaches those five IDs at clock108, but field positions and random bytes differ because its cooperative observer does not simulate the provisional RNG timing; this is not claimed as contact-state parity. Next inject matching native state at the original contact and trace the menu and the player's next action.

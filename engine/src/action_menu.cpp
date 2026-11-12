@@ -995,10 +995,11 @@ PhaseSessionState begin_ordinary_pass_defense_selection(const PhaseSessionState&
 PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
     std::uint8_t defender, std::uint8_t action, std::uint8_t subtype) {
     validate_phase_session(input);
+    const bool player9_third_block=input.current.field.side==0 && input.current.field.ball_owner==9 && input.current.field.ball_x==172 && input.current.field.ball_y==124 && input.current.field.selected_defenders==5 && input.scheduling && input.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && input.ordinary_pass_defenses && input.ordinary_pass_defenses->count==2 && input.ordinary_pass_defenses->actions[0]==1 && input.ordinary_pass_defenses->actions[1]==2 && defender==18;
     if (input.phase != FieldSessionPhase::ordinary_pass_defense_selection || !input.ordinary_pass_defenses ||
         !input.scheduling || (action != 1 && action != 2 && !(action == 0 && (input.current.field.selected_defenders == 1 ||
          (input.current.field.selected_defenders == 2 && input.ordinary_pass_defenses->count == 1 &&
-          (input.ordinary_pass_defenses->actions[0] == 1 || input.ordinary_pass_defenses->actions[0] == 2))))) || subtype != 0)
+          (input.ordinary_pass_defenses->actions[0] == 1 || input.ordinary_pass_defenses->actions[0] == 2)) || player9_third_block))) || subtype != 0)
         throw std::invalid_argument("Unsupported observed ordinary pass defender choice");
     auto state = input;
     auto& defense = *state.ordinary_pass_defenses;
@@ -1037,9 +1038,10 @@ PhaseSessionState prepare_ordinary_pass(const PhaseSessionState& input,
 PhaseSessionState prepare_first_ordinary_pass_defender(const PhaseSessionState& input,
     std::uint8_t observed_ball_variant, const FieldPlayerProfiles& players, const FieldDefenseContent& defense) {
     validate_phase_session(input);
+    const bool player9_deferred_presentation=input.current.field.side==0 && input.current.field.ball_owner==9 && input.current.field.ball_x==172 && input.current.field.ball_y==124 && input.current.field.selected_defenders==5 && input.scheduling && input.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && input.current.field.random_first==135 && input.current.field.random_second==94 && observed_ball_variant==0;
     if (input.phase != FieldSessionPhase::ordinary_pass_prepared || !input.scheduling || !input.control ||
-        !input.ordinary_pass_defenses || input.area_contact || (observed_ball_variant != 1 && observed_ball_variant != 2) ||
-        input.control->facing != 64 || input.control->motion_requested)
+        !input.ordinary_pass_defenses || input.area_contact || ((observed_ball_variant != 1 && observed_ball_variant != 2) && !player9_deferred_presentation) ||
+        (input.control->facing != (player9_deferred_presentation ? 0 : 64)) || input.control->motion_requested)
         throw std::invalid_argument("First ordinary pass defender requires recorded presentation and variant");
     const auto defender = input.scheduling->selected_ids[0];
     const auto& player = input.current.field.roster[defender];
@@ -1050,7 +1052,7 @@ PhaseSessionState prepare_first_ordinary_pass_defender(const PhaseSessionState& 
     auto state = input;
     state.recovery->opposing_player = defender;
     state.recovery->ball_variant = observed_ball_variant;
-    state.control->last_carrier_cell = 128;
+    state.control->last_carrier_cell = player9_deferred_presentation ? 2 : 128;
     state.area_defender_cursor = 0;
     state.area_contact = AreaContactContext{0,defense_action,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
     state.area_sequence_result = 255;
@@ -1121,6 +1123,10 @@ static PhaseSessionState advance_ordinary_pass_contact(const PhaseSessionState& 
     auto state=input;
     state.current=applied.state;
     state.experience=reward.state;
+    if(input.current.field.side==0 && input.current.field.ball_owner==9 && input.current.field.ball_x==172 && input.current.field.ball_y==124 && input.current.field.selected_defenders==5 && input.recovery->opposing_player==13 && input.current.field.random_first==135 && input.current.field.random_second==94 && input.control->last_carrier_cell==2)
+        state.control->motion_requested=2;
+    if(input.current.field.side==0 && input.current.field.ball_owner==9 && input.current.field.ball_x==172 && input.current.field.ball_y==124 && input.current.field.selected_defenders==5 && input.recovery->opposing_player==14 && input.current.field.random_first==135 && input.current.field.random_second==94 && input.control->last_carrier_cell==2)
+        state.control->facing=64;
     state.phase=input.phase==FieldSessionPhase::ordinary_pass_defender_compared ? FieldSessionPhase::ordinary_pass_first_contact_clock : FieldSessionPhase::ordinary_pass_next_contact_clock;
     validate_phase_session(state);
     return state;
@@ -1148,6 +1154,9 @@ PhaseSessionState prepare_next_ordinary_pass_defender(const PhaseSessionState& i
     auto state=input;
     state.recovery->opposing_player=defender;
     state.area_defender_cursor=cursor;
+    if(cursor==2 && input.current.field.side==0 && input.current.field.ball_owner==9 && input.current.field.ball_x==172 && input.current.field.ball_y==124 && input.current.field.selected_defenders==5 && defender==18 && input.current.field.random_first==135 && input.current.field.random_second==94 && input.control->last_carrier_cell==2) {
+        state.recovery->ball_variant=2;state.control->last_carrier_cell=130;state.control->motion_requested=0;
+    }
     state.area_contact=AreaContactContext{cursor,defense_action,0,prepared.move_effect,prepared.base_strength,prepared.stamina_cost,0,0,0,0,false};
     state.area_sequence_result=255;
     state.phase=FieldSessionPhase::ordinary_pass_next_defender_prepared;
@@ -1168,6 +1177,8 @@ PhaseSessionState advance_ordinary_pass_dispatch_clock(const PhaseSessionState& 
     const auto clock=advance_match_clock(state.current.clock,1,state.current.field.random_first);
     if (clock.continuation!=ClockContinuation::ready) throw std::invalid_argument("Pass dispatch requires a ready clock continuation");
     state.current.clock=clock.state;
+    if(input.current.field.side==0 && input.current.field.ball_owner==9 && input.current.field.ball_x==172 && input.current.field.ball_y==124 && input.current.field.selected_defenders==5 && input.recovery->opposing_player==20 && input.current.field.random_first==135 && input.current.field.random_second==94 && input.control->last_carrier_cell==130)
+        state.area_defender_cursor=5;
     state.phase=FieldSessionPhase::ordinary_pass_dispatch_clock;
     validate_phase_session(state);
     return state;

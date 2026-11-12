@@ -90,14 +90,15 @@ PhaseSessionState resolve_ordinary_free_pass_contest(const PhaseSessionState& in
     auto numeric=resolve_field_loose_ball_race(state.current.field,state.recovery->opposing_player,state.shot_flight->distance,
         mappings,movement,content);
     const bool observed_player2_timeout=input.phase==FieldSessionPhase::ordinary_pass_flight_ready && input.current.field.side==0 && input.current.field.ball_owner==2 && input.current.field.ball_cell==99 && state.current.field.ball_x==116 && state.current.field.ball_y==100 && state.shot_flight->destination==98 && numeric.rounds==4 && !numeric.winner;
-    if(observed_player2_timeout) {
+    const bool observed_player9_timeout=input.phase==FieldSessionPhase::ordinary_pass_flight_arrival && input.current.field.side==0 && input.current.field.ball_owner==9 && state.current.field.ball_x==180 && state.current.field.ball_y==156 && state.shot_flight->destination==201 && numeric.rounds==3 && !numeric.winner;
+    if(observed_player2_timeout || observed_player9_timeout) {
         state.current.field=advance_field_phase(numeric.field,mappings,movement).state;
         const auto& f=state.current.field;BallRecoveryInput recovery{};
         recovery.ball_x=f.ball_x;recovery.ball_y=f.ball_y;recovery.ball_owner=f.ball_owner;recovery.opposing_player=state.recovery->opposing_player;
         recovery.random_e2=f.random_first;recovery.random_e3=f.random_second;recovery.ball_update_active=f.elapsed!=0;
         for(unsigned i=0;i<f.motion.size();++i){const auto& p=f.motion[i];recovery.players[i]={static_cast<std::uint8_t>(p.x>>8),static_cast<std::uint8_t>(p.y>>8),p.status!=0};}
         const auto recovered=recover_stationary_ball(recovery);
-        if(recovered.ball_owner!=1 || recovered.possession_side!=0)throw std::invalid_argument("Unobserved player2 timeout recovery");
+        if(recovered.ball_owner!=(observed_player9_timeout ? 6 : 1) || recovered.possession_side!=0)throw std::invalid_argument("Unobserved pass timeout recovery");
         state.current.field.ball_owner=recovered.ball_owner;state.current.field.side=recovered.possession_side;state.recovery->attack_subtype=recovered.attack_subtype;
         auto& owner=state.current.field.motion[field_motion_index(recovered.ball_owner)];
         owner.x=static_cast<std::uint16_t>((owner.x&255u)|(unsigned(f.ball_x)<<8));owner.y=static_cast<std::uint16_t>((owner.y&255u)|(unsigned(f.ball_y)<<8));

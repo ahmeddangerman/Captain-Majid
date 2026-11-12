@@ -562,7 +562,7 @@ static int player2_free_pass_timeout_check(int argc,char** argv) {
  std::ofstream a(std::string(argv[4])+"-handoff.cmjsession",std::ios::binary),b(std::string(argv[4])+"-ready.cmjsession",std::ios::binary);write_phase_session(a,handoff.state.session);write_phase_session(b,ready.state.session);return 0;
 }
 static int player1_defended_shot_check(int argc,char** argv) {
- using namespace captain;if(argc!=5 && argc!=6)return 2;
+ using namespace captain;if(argc!=5 && argc!=6 && argc!=7)return 2;
  std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
  MatchContent content{};content.data=load_shot_content(pack);state.mode=MatchTimingMode::provisional_demo;state.demo_rng=3387922246u;state.ball_fraction=MatchBallFraction{173,87};
  auto selected=step_match(state,{MatchInputKind::action,1,0,0,MatchAction::shot},content);
@@ -582,7 +582,7 @@ static int player1_defended_shot_check(int argc,char** argv) {
  if(moved.unsupported || moved.state.session.phase!=FieldSessionPhase::ordinary_return_shot_field_moved)throw std::runtime_error("Player1 shot movement stopped");
  auto target=step_match(moved.state,{MatchInputKind::tick,8},content);
  if(target.unsupported || target.state.session.phase!=FieldSessionPhase::ordinary_return_shot_target)throw std::runtime_error("Player1 shot targeting stopped");
- if(argc==6){std::ifstream velocity(argv[5],std::ios::binary);content.ball_velocity=read_ball_velocity_content(velocity);
+ if(argc>=6){std::ifstream velocity(argv[5],std::ios::binary);content.ball_velocity=read_ball_velocity_content(velocity);
   auto flight=step_match(target.state,{MatchInputKind::tick,9},content);
   if(flight.unsupported || flight.state.session.phase!=FieldSessionPhase::ordinary_return_shot_flight_ready)throw std::runtime_error("Player1 loose shot flight setup stopped");
   std::ofstream file(std::string(argv[4])+"-flight.cmjsession",std::ios::binary);write_phase_session(file,flight.state.session);
@@ -643,6 +643,80 @@ static int player1_defended_shot_check(int argc,char** argv) {
   for(unsigned i=0;i<1000 && continued.session.phase!=FieldSessionPhase::field_contact_pending;++i){auto tick=step_match(continued,client_input(continued,0,0),content);if(tick.unsupported)throw std::runtime_error("Player9 rebound continuation stopped at phase "+std::to_string(static_cast<unsigned>(continued.session.phase))+": "+capability_name(*tick.unsupported));continued=std::move(tick.state);}
   if(continued.session.phase!=FieldSessionPhase::field_contact_pending || continued.session.current.field.ball_owner!=9)throw std::runtime_error("Player9 rebound continuation did not reach next contact");
   std::ofstream cc(std::string(argv[4])+"-player9-contact.cmjsession",std::ios::binary);write_phase_session(cc,continued.session);
+  auto next_menu=step_match(continued,client_input(continued,0,0),content);
+  if(next_menu.unsupported || next_menu.state.session.phase!=FieldSessionPhase::human_action_menu || next_menu.state.session.current.field.selected_defenders!=5)throw std::runtime_error("Player9 five-defender menu stopped");
+  std::ofstream cm(std::string(argv[4])+"-player9-menu.cmjsession",std::ios::binary);write_phase_session(cm,next_menu.state.session);
+  auto pass_direction=step_match(next_menu.state,client_input(next_menu.state,2,2),content);
+  auto pass_confirmed=step_match(pass_direction.state,client_input(pass_direction.state,128,128),content);
+  if(pass_direction.unsupported || pass_confirmed.unsupported || pass_confirmed.state.session.phase!=FieldSessionPhase::attack_choice_pending || pass_confirmed.state.session.action->action!=1)throw std::runtime_error("Player9 five-defender pass selection stopped");
+  auto pass_target=step_match(pass_confirmed.state,client_input(pass_confirmed.state,0,0),content);
+  if(pass_target.unsupported || pass_target.state.session.phase!=FieldSessionPhase::ordinary_human_pass_target)throw std::runtime_error("Player9 five-defender pass target stopped");
+  auto target_input=pass_target.state;
+  for(auto buttons:{1,4,4,4,4,128}){auto chosen=step_match(target_input,client_input(target_input,buttons,buttons),content);if(chosen.unsupported)throw std::runtime_error("Player9 pass target input stopped: "+std::string(capability_name(*chosen.unsupported)));target_input=std::move(chosen.state);}
+  {auto started=step_match(target_input,client_input(target_input,0,0),content);if(started.unsupported)throw std::runtime_error("Player9 pass defense start stopped: "+std::string(capability_name(*started.unsupported)));target_input=std::move(started.state);}
+  if(target_input.session.phase!=FieldSessionPhase::ordinary_pass_defense_selection)throw std::runtime_error("Player9 pass did not reach defender selection, phase "+std::to_string(static_cast<unsigned>(target_input.session.phase)));
+  std::ofstream selection(std::string(argv[4])+"-player9-defense-start.cmjsession",std::ios::binary);write_phase_session(selection,target_input.session);
+  for(unsigned i=0;i<5;++i){auto picked=step_match(target_input,client_input(target_input,0,0),content);if(picked.unsupported)throw std::runtime_error("Player9 pass defender "+std::to_string(i)+" stopped: "+std::string(capability_name(*picked.unsupported)));target_input=std::move(picked.state);std::ofstream step(std::string(argv[4])+"-player9-defense-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(step,target_input.session);}
+  if(target_input.session.phase!=FieldSessionPhase::ordinary_pass_defenses_recorded)throw std::runtime_error("Player9 pass defenders not recorded");
+  std::ofstream defenses(std::string(argv[4])+"-player9-defenses.cmjsession",std::ios::binary);write_phase_session(defenses,target_input.session);
+  auto pass_prepared=step_match(target_input,client_input(target_input,0,0),content);
+  if(pass_prepared.unsupported || pass_prepared.state.session.phase!=FieldSessionPhase::ordinary_pass_prepared)throw std::runtime_error("Player9 pass preparation stopped");
+  std::ofstream prep(std::string(argv[4])+"-player9-pass-prepared.cmjsession",std::ios::binary);write_phase_session(prep,pass_prepared.state.session);
+  auto first_defender=step_match(pass_prepared.state,client_input(pass_prepared.state,0,0),content);
+  if(first_defender.unsupported || first_defender.state.session.phase!=FieldSessionPhase::ordinary_pass_defender_prepared || first_defender.state.session.recovery->ball_variant!=0 || first_defender.state.session.control->facing!=0 || first_defender.state.session.control->last_carrier_cell!=2)throw std::runtime_error("Player9 first pass defender preparation differs from original");
+  auto first_compare=step_match(first_defender.state,client_input(first_defender.state,0,0),content);
+  if(first_compare.unsupported || first_compare.state.session.phase!=FieldSessionPhase::ordinary_pass_defender_compared)throw std::runtime_error("Player9 first pass defender comparison stopped");
+  std::ofstream fp(std::string(argv[4])+"-player9-first-prepared.cmjsession",std::ios::binary),fc(std::string(argv[4])+"-player9-first-compared.cmjsession",std::ios::binary);write_phase_session(fp,first_defender.state.session);write_phase_session(fc,first_compare.state.session);
+  auto first_clock=step_match(first_compare.state,client_input(first_compare.state,0,0),content);
+  if(first_clock.unsupported || first_clock.state.session.phase!=FieldSessionPhase::ordinary_pass_first_contact_clock || first_clock.state.session.control->motion_requested!=2)throw std::runtime_error("Player9 first pass contact clock differs from original");
+  std::ofstream fclock(std::string(argv[4])+"-player9-first-clocked.cmjsession",std::ios::binary);write_phase_session(fclock,first_clock.state.session);
+  auto second_defender=step_match(first_clock.state,client_input(first_clock.state,0,0),content);
+  if(second_defender.unsupported || second_defender.state.session.phase!=FieldSessionPhase::ordinary_pass_next_defender_prepared || second_defender.state.session.recovery->opposing_player!=14)throw std::runtime_error("Player9 second pass defender preparation stopped");
+  auto second_compare=step_match(second_defender.state,client_input(second_defender.state,0,0),content);
+  if(second_compare.unsupported || second_compare.state.session.phase!=FieldSessionPhase::ordinary_pass_next_defender_compared || second_compare.state.session.area_sequence_result!=0)throw std::runtime_error("Player9 second pass defender comparison stopped");
+  auto second_clock=step_match(second_compare.state,client_input(second_compare.state,0,0),content);
+  if(second_clock.unsupported || second_clock.state.session.phase!=FieldSessionPhase::ordinary_pass_next_contact_clock || second_clock.state.session.control->facing!=64)throw std::runtime_error("Player9 second pass contact clock stopped");
+  std::ofstream sp(std::string(argv[4])+"-player9-second-prepared.cmjsession",std::ios::binary),sc(std::string(argv[4])+"-player9-second-compared.cmjsession",std::ios::binary),sclock(std::string(argv[4])+"-player9-second-clocked.cmjsession",std::ios::binary);write_phase_session(sp,second_defender.state.session);write_phase_session(sc,second_compare.state.session);write_phase_session(sclock,second_clock.state.session);
+  auto third_defender=step_match(second_clock.state,client_input(second_clock.state,0,0),content);
+  if(third_defender.unsupported || third_defender.state.session.phase!=FieldSessionPhase::ordinary_pass_next_defender_prepared || third_defender.state.session.recovery->opposing_player!=18 || third_defender.state.session.recovery->ball_variant!=2 || third_defender.state.session.control->last_carrier_cell!=130)throw std::runtime_error("Player9 third pass defender presentation stopped");
+  auto third_compare=step_match(third_defender.state,client_input(third_defender.state,0,0),content);
+  if(third_compare.unsupported || third_compare.state.session.phase!=FieldSessionPhase::ordinary_pass_next_defender_compared || third_compare.state.session.area_sequence_result!=0)throw std::runtime_error("Player9 third pass defender comparison stopped");
+  auto third_clock=step_match(third_compare.state,client_input(third_compare.state,0,0),content);
+  if(third_clock.unsupported || third_clock.state.session.phase!=FieldSessionPhase::ordinary_pass_next_contact_clock)throw std::runtime_error("Player9 third pass contact clock stopped");
+  std::ofstream tp(std::string(argv[4])+"-player9-third-prepared.cmjsession",std::ios::binary),tc(std::string(argv[4])+"-player9-third-compared.cmjsession",std::ios::binary),tclock(std::string(argv[4])+"-player9-third-clocked.cmjsession",std::ios::binary);write_phase_session(tp,third_defender.state.session);write_phase_session(tc,third_compare.state.session);write_phase_session(tclock,third_clock.state.session);
+  auto contact=third_clock.state;
+  for(unsigned i=3;i<5;++i){
+   auto prepared_contact=step_match(contact,client_input(contact,0,0),content);if(prepared_contact.unsupported || prepared_contact.state.session.phase!=FieldSessionPhase::ordinary_pass_next_defender_prepared)throw std::runtime_error("Player9 later defender preparation stopped");
+   auto compared_contact=step_match(prepared_contact.state,client_input(prepared_contact.state,0,0),content);if(compared_contact.unsupported || compared_contact.state.session.area_sequence_result!=0)throw std::runtime_error("Player9 later defender comparison stopped");
+   auto clocked_contact=step_match(compared_contact.state,client_input(compared_contact.state,0,0),content);if(clocked_contact.unsupported || clocked_contact.state.session.phase!=FieldSessionPhase::ordinary_pass_next_contact_clock)throw std::runtime_error("Player9 later defender clock stopped");
+   for(const auto& pair:{std::pair<const char*,const MatchRuntimeState&>{"prepared",prepared_contact.state},{"compared",compared_contact.state},{"clocked",clocked_contact.state}}){std::ofstream f(std::string(argv[4])+"-player9-contact-"+std::to_string(i+1)+"-"+pair.first+".cmjsession",std::ios::binary);write_phase_session(f,pair.second.session);}contact=std::move(clocked_contact.state);
+  }
+  auto pass_dispatch=step_match(contact,client_input(contact,0,0),content);
+  if(pass_dispatch.unsupported || pass_dispatch.state.session.phase!=FieldSessionPhase::ordinary_pass_dispatch_clock || pass_dispatch.state.session.area_defender_cursor!=5)throw std::runtime_error("Player9 pass dispatch clock stopped");
+  auto pass_moved=step_match(pass_dispatch.state,client_input(pass_dispatch.state,0,0),content);
+  if(pass_moved.unsupported || pass_moved.state.session.phase!=FieldSessionPhase::ordinary_pass_field_moved || pass_moved.state.session.current.field.random_first!=0)throw std::runtime_error("Player9 pass dispatch movement stopped");
+  std::ofstream pd(std::string(argv[4])+"-player9-dispatch.cmjsession",std::ios::binary),pm(std::string(argv[4])+"-player9-pass-moved.cmjsession",std::ios::binary);write_phase_session(pd,pass_dispatch.state.session);write_phase_session(pm,pass_moved.state.session);
+  if(argc==7){std::ifstream distances(argv[6],std::ios::binary);content.pass_distance=read_pass_distance_content(distances);
+   auto destination=step_match(pass_moved.state,client_input(pass_moved.state,0,0),content);
+   if(destination.unsupported || destination.state.session.phase!=FieldSessionPhase::ordinary_pass_flight_target || !destination.state.session.sampled_field_pass || destination.state.session.sampled_field_pass->recipient!=255 || destination.state.session.sampled_field_pass->destination!=201 || destination.state.session.sampled_field_pass->distance!=3)throw std::runtime_error("Player9 pass destination differs from original");
+   std::ofstream dt(std::string(argv[4])+"-player9-pass-target.cmjsession",std::ios::binary);write_phase_session(dt,destination.state.session);
+   auto flight9=step_match(destination.state,client_input(destination.state,0,0),content);
+   if(flight9.unsupported || flight9.state.session.phase!=FieldSessionPhase::ordinary_pass_flight_ready)throw std::runtime_error("Player9 pass flight setup stopped");
+   std::ofstream fs(std::string(argv[4])+"-player9-flight.cmjsession",std::ios::binary);write_phase_session(fs,flight9.state.session);
+   for(unsigned i=0;i<30 && flight9.state.session.phase!=FieldSessionPhase::ordinary_pass_flight_arrival && flight9.state.session.phase!=FieldSessionPhase::ordinary_free_pass_contest_winner;++i){
+    auto advance=step_match(flight9.state,client_input(flight9.state,0,0),content);if(advance.unsupported)throw std::runtime_error("Player9 pass flight stopped at phase "+std::to_string(static_cast<unsigned>(flight9.state.session.phase))+": "+capability_name(*advance.unsupported));flight9=std::move(advance);
+    std::ofstream ff(std::string(argv[4])+"-player9-flight-step-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(ff,flight9.state.session);
+   }
+   if(flight9.state.session.phase!=FieldSessionPhase::ordinary_pass_flight_arrival && flight9.state.session.phase!=FieldSessionPhase::ordinary_free_pass_contest_winner)throw std::runtime_error("Player9 pass flight did not finish");
+   auto arrival9=step_match(flight9.state,client_input(flight9.state,0,0),content);
+   if(arrival9.unsupported)throw std::runtime_error("Player9 pass arrival stopped: "+std::string(capability_name(*arrival9.unsupported)));
+   {std::ofstream ar(std::string(argv[4])+"-player9-arrival.cmjsession",std::ios::binary);write_phase_session(ar,arrival9.state.session);}
+   auto race9=step_match(arrival9.state,client_input(arrival9.state,0,0),content);
+   if(race9.unsupported || race9.state.session.current.field.ball_owner!=6 || !race9.state.ball_fraction || race9.state.ball_fraction->x!=16 || race9.state.ball_fraction->y!=17)throw std::runtime_error("Player9 pass recovery stopped: "+(race9.unsupported ? std::string(capability_name(*race9.unsupported)) : std::to_string(race9.state.session.current.field.ball_owner)));
+   std::ostringstream race_save(std::ios::binary);write_match_save(race_save,race9.state,identity);std::istringstream race_in(race_save.str(),std::ios::binary);auto race_restored=load_match_save(race_in,identity);
+   if(race_restored.session.current.field.ball_owner!=6 || !race_restored.ball_fraction || race_restored.ball_fraction->x!=16 || race_restored.ball_fraction->y!=17)throw std::runtime_error("Player6 pass recovery did not roundtrip");
+   std::ofstream rr(std::string(argv[4])+"-player9-race.cmjsession",std::ios::binary);write_phase_session(rr,race9.state.session);
+  }
   std::ofstream kre(std::string(argv[4])+"-area-recovery-entry.cmjsession",std::ios::binary),kr(std::string(argv[4])+"-area-recovered.cmjsession",std::ios::binary);write_phase_session(kre,recovery_entry.state.session);write_phase_session(kr,area_recovered.state.session);
   std::ofstream kc(std::string(argv[4])+"-area-compared.cmjsession",std::ios::binary);write_phase_session(kc,compared_keeper.state.session);
   std::ofstream kf(std::string(argv[4])+"-area-keeper.cmjsession",std::ios::binary),sf(std::string(argv[4])+"-area-shot.cmjsession",std::ios::binary);write_phase_session(kf,keeper.state.session);write_phase_session(sf,shot.state.session);
