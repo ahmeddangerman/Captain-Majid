@@ -6,6 +6,8 @@ The W content format adds the original-sourced comparison data for a guarded ord
 
 The newer X format also supplies the original action0 option and comparison data, enabling its guarded nonterminal and interception routes in controlled tests. It does not establish live random or presentation timing.
 
+Ordinary pass flight can now retain an intervening opponent, with selected single-defender result0 and result3 routes compared against controlled original CPU traces. Other arrival outcomes and multiple-defender arrivals can still stop.
+
 Build from the repository root with the already configured Windows CMake environment:
 
 ```powershell

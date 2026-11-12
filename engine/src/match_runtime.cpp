@@ -511,6 +511,40 @@ MatchStepResult handle_contested_pass_progress(const MatchRuntimeState& input,co
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ordinary_pass_flight_arrival || input.session.phase==FieldSessionPhase::ordinary_pass_received)) {
   const auto arrival=input.session.phase==FieldSessionPhase::ordinary_pass_flight_arrival;
   if(event.kind!=(arrival ? MatchInputKind::presentation_complete : MatchInputKind::tick)){result.unsupported=UnsupportedCapability::action;return result;}
+  if(arrival && input.session.current.field.selected_defenders) {
+   const auto& session=input.session;const auto& field=session.current.field;
+   if(field.selected_defenders!=1 || !session.scheduling || !session.area_ai_target || !session.ball_trajectory || !session.recovery || !session.experience ||
+      !session.action || !session.saved_ball_flight_flag){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+   if(!content.data->pass_flight_comparison || !content.data->contact || !content.data->experience || !content.data->movement){result.unsupported=UnsupportedCapability::content;return result;}
+   const auto id=session.scheduling->selected_ids[0];if(id<12 || id>21 || field.elapsed){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+   try {
+    const auto& player=field.roster[id];const FieldPlayerRecord record{id,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level};
+    const auto prep=prepare_profiled_field_defender(record,content.data->field_players,2,0,0,content.data->defense);
+    const auto& rules=*content.data->pass_flight_comparison;
+    const auto comparison=compare_defender_contact({session.action->power,prep.base_strength,field.random_first,field.random_second,rules.range,rules.offset,false,bool(rules.eligibility&128u),0,id,0,rules.thresholds});
+    if(prep.move_effect || (comparison.special && !(comparison.result_code==3 && comparison.subtype==128)) ||
+       (comparison.result_code!=0 && comparison.result_code!=3)){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+    if(comparison.result_code==0) {
+     if(content.data->contact->field_elapsed[5]!=1 || field.motion[field_motion_index(id)].status){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+     auto next=input;auto& s=next.session;s.recovery->opposing_player=id;
+     s.experience=award_player_experience(*s.experience,field.roster[field.ball_owner].type,1,*content.data->experience).state;
+     auto clock=apply_contact_prelude({s.current,id,2,true},*content.data->contact);
+     if(clock.clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+     s.current=clock.state;s.current.field.selected_defenders=0;s.current.field.elapsed=0;s.scheduling->selected_ids.fill(0);s.area_defender_cursor=1;
+     next.last_sequence=event.sequence;validate_phase_session(s);project_field_random_memory(s.current.field,next.random_memory);result.state=std::move(next);return result;
+    }
+    auto next=input;auto& s=next.session;const auto trajectory=*s.ball_trajectory;
+    s.recovery->opposing_player=id;s.experience=award_player_experience(*s.experience,player.type,2,*content.data->experience).state;
+    auto clock=apply_contact_prelude({s.current,id,2,false},*content.data->contact);
+    if(clock.clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+    s.current=clock.state;s.current.field.side=11;s.current.field.ball_owner=id;
+    s.current.field=advance_field_phase(s.current.field,content.data->field_players,*content.data->movement).state;
+    s.human_pass_cursor.reset();s.human_pass_steps=0;s.ordinary_pass_candidates.reset();s.ordinary_pass_recipient.reset();s.ordinary_pass_defenses.reset();
+    s.area_ai_target.reset();s.shot_flight.reset();s.ball_trajectory.reset();s.area_contact.reset();s.area_defender_cursor=0;s.area_sequence_result=255;
+    s.phase=FieldSessionPhase::player_control;next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(trajectory.x),static_cast<std::uint8_t>(trajectory.y)};
+    next.last_sequence=event.sequence;validate_phase_session(s);project_field_random_memory(s.current.field,next.random_memory);result.state=std::move(next);return result;
+   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+  }
   auto next=input;
   try {next.session=arrival ? continue_ordinary_pass_reception(input.session) : position_ordinary_pass_recipient(input.session);}
   catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}

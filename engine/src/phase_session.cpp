@@ -515,9 +515,9 @@ void validate_phase_session(const PhaseSessionState& state) {
         state.saved_ball_flight_flag==1 && state.area_ai_target && state.area_ai_target->recipient==7 && state.area_ai_target->cell==103;
     const bool ordinary_home_flight=((phase>=345 && phase<=349) || phase==351) && state.current.field.side==0 && state.saved_ball_flight_flag==1 && state.area_ai_target &&
         (state.area_ai_target->recipient==255 || (state.area_ai_target->recipient>=1 && state.area_ai_target->recipient<=10)) && !state.area_ai_target->cost;
-    if(area_flight && (!state.action || state.action->action!=1 || !state.area_ai_target || (!sampled_player7_flight && !ordinary_home_flight && (state.area_ai_target->recipient<12 || state.area_ai_target->recipient>21)) || state.area_ai_target->cell>=240 || state.area_ai_target->cost>1023 || (!sampled_player7_flight && !ordinary_home_flight && phase<135 && state.current.field.side!=((phase>=128 && phase<=133) ? 0 : 11)) || ((pass_capture_tick || pass_blocked_tick) && state.current.field.side!=0) || state.current.field.selected_defenders>4 || (phase<114 && state.area_defender_cursor && !sampled_player7_flight && !ordinary_home_flight) || (ordinary_home_flight && state.area_defender_cursor>5) || (((phase>=117 && phase<=122) || (phase>=124 && phase<=149)) ? state.area_sequence_result>((phase>=120 && phase<=122) ? 1 : 3) : state.area_sequence_result!=255)))
+    if(area_flight && (!state.action || state.action->action!=1 || !state.area_ai_target || (!sampled_player7_flight && !ordinary_home_flight && (state.area_ai_target->recipient<12 || state.area_ai_target->recipient>21)) || state.area_ai_target->cell>=240 || state.area_ai_target->cost>1023 || (!sampled_player7_flight && !ordinary_home_flight && phase<135 && state.current.field.side!=((phase>=128 && phase<=133) ? 0 : 11)) || ((pass_capture_tick || pass_blocked_tick) && state.current.field.side!=0) || state.current.field.selected_defenders>(ordinary_home_flight ? 5 : 4) || (phase<114 && state.area_defender_cursor && !sampled_player7_flight && !ordinary_home_flight) || (ordinary_home_flight && state.area_defender_cursor>5) || (((phase>=117 && phase<=122) || (phase>=124 && phase<=149)) ? state.area_sequence_result>((phase>=120 && phase<=122) ? 1 : 3) : state.area_sequence_result!=255)))
         throw std::invalid_argument("Area flight requires its captured recipient and cleared sequence");
-    if (phase>=345 && phase<=349 && (!ordinary_home_flight || state.current.field.selected_defenders ||
+    if (phase>=345 && phase<=349 && (!ordinary_home_flight || (phase>=348 && state.current.field.selected_defenders) ||
         (phase>=347 && state.area_ai_target->recipient==255) || (phase>=348 && state.current.field.ball_owner!=state.area_ai_target->recipient)))
         throw std::invalid_argument("Unsupported ordinary pass flight context");
     if (phase==351 && (!ordinary_home_flight || !state.shot_flight || state.area_ai_target->recipient!=255 || state.current.field.selected_defenders ||
@@ -1369,7 +1369,7 @@ void validate_phase_session(const PhaseSessionState& state) {
             field.selected_defenders > (field.side == 0 || post_possession ? 5 : 4))
             throw std::invalid_argument("Field-contact continuation needs a selected opposing prefix");
         for (unsigned i = 0; i < field.selected_defenders; ++i)
-            if (area_flight && (state.scheduling->selected_ids[i]<1 || state.scheduling->selected_ids[i]>10))
+            if (area_flight && (ordinary_home_flight ? (state.scheduling->selected_ids[i]<12 || state.scheduling->selected_ids[i]>21) : (state.scheduling->selected_ids[i]<1 || state.scheduling->selected_ids[i]>10)))
                 throw std::invalid_argument("Area flight selected players must oppose possession");
             else if (!post_possession &&
                 (state.scheduling->selected_ids[i] < 11 ? 0 : 11) == field.side)

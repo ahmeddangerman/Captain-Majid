@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+## 2026-11-12 - Defended ordinary-pass flight
+
+A selected flight defender is retained across ball cells, with a guarded single-defender result0 continuing to player7 and result3 handing control to defender16. The original CPU comparison uses explicitly injected flight-start state and acknowledged waits; ordinary and subtype128 interception samples matched represented possession. A constructed 4,096-seed menu survey reached control-ready throughout, which is not proof of live timing or a complete match. Multiple flight defenders and other results remain guarded. Fresh Windows build and all 65 registered tests passed. Next broaden original-compared branches and verify the window route. Overall progress is unmeasured; suggested model GPT-6.1 Terra High.
+
 ## 2026-11-12 - Ordinary pass action0
 
 The bounded one-defender ordinary pass now also supports action0: a controlled result0 continues to player7, and six controlled result3 cases matched original represented defender17 possession. Twelve action0 boundaries matched through control entry. These are intervened CPU traces with acknowledged waits, not live presentation or timing parity. X adds original action0 option and comparison data; older formats remain readable. Other outcomes and special effects remain guarded. The fresh Windows build and all 65 registered tests passed. Overall progress is unmeasured and a complete match remains unfinished. Next expand original-compared outcomes and repeat the window route. Suggested model: GPT-6.1 Terra High.

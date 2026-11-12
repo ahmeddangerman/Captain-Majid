@@ -839,16 +839,17 @@ PhaseSessionState resolve_session_area_ball_cell(const PhaseSessionState& input)
 }
 PhaseSessionState resolve_ordinary_pass_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::ordinary_pass_flight_callback || input.current.field.selected_defenders)
-  throw std::invalid_argument("Ordinary pass callback requires an empty defender prefix");
+ if(input.phase!=FieldSessionPhase::ordinary_pass_flight_callback)
+  throw std::invalid_argument("Ordinary pass callback requires its flight boundary");
  FlightDefenderSelectionInput selection{};const auto& field=input.current.field;
  selection.possession_side=field.side;selection.ball_cell=field.ball_cell;
  selection.random_first=field.random_first;selection.random_second=field.random_second;
  selection.threshold=input.shot_flight->counter;
  for(unsigned i=0;i<field.motion.size();++i){const auto& m=field.motion[i];
   selection.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};}
- if(!select_flight_defenders(selection).empty())throw std::invalid_argument("Ordinary pass defended flight callback is unsupported");
- auto state=input;state.phase=FieldSessionPhase::ordinary_pass_flight_ready;validate_phase_session(state);return state;
+ auto state=input;auto& count=state.current.field.selected_defenders;
+ for(auto id:select_flight_defenders(selection)){if(count>=5)break;state.scheduling->selected_ids[count++]=id;}
+ state.phase=FieldSessionPhase::ordinary_pass_flight_ready;validate_phase_session(state);return state;
 }
 PhaseSessionState continue_ordinary_pass_reception(const PhaseSessionState& input) {
  validate_phase_session(input);
@@ -884,8 +885,8 @@ PhaseSessionState continue_ordinary_pass_control(const PhaseSessionState& input,
 }
 SessionBallStepResult advance_ordinary_pass_ball_cell(const PhaseSessionState& input) {
  validate_phase_session(input);
- if(input.phase!=FieldSessionPhase::ordinary_pass_flight_ready || input.current.field.selected_defenders)
-  throw std::invalid_argument("Ordinary ball step requires an empty flight boundary");
+ if(input.phase!=FieldSessionPhase::ordinary_pass_flight_ready)
+  throw std::invalid_argument("Ordinary ball step requires a flight boundary");
  auto state=input;auto& t=*state.ball_trajectory;
  const auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},state.current.field.ball_cell,state.shot_flight->destination});
  if(step.event!=BallStepEvent::cell_changed && state.area_ai_target->recipient==255)
