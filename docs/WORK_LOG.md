@@ -6,6 +6,8 @@ The provisional runtime now follows successful ordinary home goalkeeper catches 
 
 The new save handoff does not yet complete goalkeeper possession or all punch recovery routes. Fresh startup, live window interaction and a complete match remain unfinished. Overall progress is unmeasured. Next compare and connect what happens after the home keeper catches or punches. Suggested model: GPT-6.1 Terra High.
 
+Follow-up: all 48 constructed home-punch cases continued through the existing native recovery to the original recovered-owner handoff, matching represented state with save/reload. This does not cover the subsequent possession tail or home keeper catches.
+
 ## 2026-11-12 - Home goalkeeper menu and kickoff after an opponent goal
 
 The provisional runtime accepts ordinary catch and punch selections at the home goalkeeper prompt, compares the shot, and continues a supported opponent goal through scoring and a home kickoff to control. The T private content pack extends S with original goalkeeper menu direction and icon bytes; S remains readable and stops where the missing menu data is needed. The Windows development window labels the keeper choices. This is a bounded development-snapshot path, not a complete match or live original presentation.

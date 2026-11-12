@@ -2,7 +2,7 @@
 
 ## Latest - 2026-11-12 home goalkeeper save handoffs
 
-The provisional runtime resolves successful ordinary home keeper catches and punches through the original save/reward handoff. Original comparisons covered 72 catches, 48 punches and 384 goal cases, using constructed related snapshots and cooperative waits; live presentation remains unverified. Windows build/all 65 registered checks passed. Catch possession and punch recovery continuations, fresh startup and complete match remain unfinished; overall progress is unmeasured. Next follow the home keeper save into possession or recovery. Suggested model: GPT-6.1 Terra High.
+The provisional runtime resolves successful ordinary home keeper catches and punches through the original save/reward handoff. Original comparisons covered 72 catches, 48 punches and 384 goal cases, using constructed related snapshots and cooperative waits; all 48 punches also matched the recovered-owner handoff. Live presentation remains unverified. Windows build/all 65 registered checks passed. Catch possession, the recovery possession tail, fresh startup and complete match remain unfinished; overall progress is unmeasured. Next follow the home keeper save into possession or recovery. Suggested model: GPT-6.1 Terra High.
 
 ## Latest - 2026-11-12 home goalkeeper and opposing goal kickoff
 
