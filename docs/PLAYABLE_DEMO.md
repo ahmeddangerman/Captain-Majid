@@ -31,7 +31,7 @@ The optional `--ball-fractions`, `--retained-defense-action` and `--score` argum
 
 The window begins paused. Press **Space** to run or pause, the **arrow keys** to move or choose, **X** to open the action menu or go back, and **Z** to confirm. Losing window focus pauses play and clears held keys. The current supported attack choices are ordinary shot and pass; the development view identifies other options as unsupported. It renders outfield-player positions, the runtime ball, the pass cursor and available selections; original sprites, animation, sound and live PPU/NMI scheduling are not implemented.
 
-Some opponent cell decisions now continue through an ordinary unopposed pass or shot. Other decisions, special moves, shot-flight defender interactions and the home goalkeeper prompt may still stop; this remains a development snapshot rather than a complete match.
+Some opponent cell decisions now continue through an ordinary pass or shot, including one or two nonterminal field-defender attempts on a shot. Other decisions, special moves, terminal blocks and redirects, and the home goalkeeper prompt may still stop; this remains a development snapshot rather than a complete match.
 
 `tools/export_shot_content.py ROM PRIVATE_PACK --team-id N --include-cell-shots` creates the optional S pack for explicitly selected opposing team 3..6. `tools/export_pass_distance.py`, `tools/export_ball_velocity.py` and `tools/export_phase_session.py` can create the other private development files from verified local inputs. Preserve original RAM, ROM and derived output outside the Git checkout. The RAM used for a phase-9 export must be an actual compatible control-ready checkpoint, not an arbitrary snapshot.
 

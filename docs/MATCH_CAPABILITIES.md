@@ -1,5 +1,9 @@
 ﻿# Match runtime capability map — 2026-11-11
 
+## Provisional opponent shot through field defenders (2026-11-12)
+
+One or two original-selected field defenders can attempt ordinary action-0 blocks against an opponent shot. When each result is nonterminal, the provisional runtime applies compared power, experience and contact clocks and continues to home-keeper entry. The entire defender prefix is one atomic acknowledged step; terminal blocks/redirects, special rolls, loose shots and larger prefixes stop unchanged. Original CPU comparisons matched 144 constructed nonterminal cases and verified atomic rejection of 144 terminal cases, excluding intermediate presentation-facing/motion/display. Fifty-six native post-kickoff integrations now reach the unimplemented home goalkeeper prompt; these are not uninterrupted original comparisons.
+
 ## Provisional opponent ordinary shot (2026-11-12)
 
 With a private S content pack and a proven empty variant-zero special-option set, supported opponent cell decisions reach shot preparation, numeric flight and normal home-keeper entry when no field defender intervenes. Known fractions and a confirmed skip action survive the supported defensive fallback. Original CPU checks matched 108 constructed shots and 1,476 flight/keeper boundaries, plus 108 skip confirmations; 24 original fallback cases preserved metadata. Intermediate presentation-facing, motion and display are excluded from shot parity. A separate 948-case original option-routine survey checked the 79 allowed gates. In 56 native post-kickoff continuations, a test-driven skip led to a shot that stopped at field-defender contact; this continuation was not an uninterrupted original comparison. Special shots, defended flight, the human goalkeeper prompt, fresh startup and a complete match remain unfinished.

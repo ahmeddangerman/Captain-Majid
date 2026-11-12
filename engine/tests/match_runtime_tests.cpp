@@ -100,6 +100,7 @@ static int shot_comparisons(int argc,char** argv) {
       const auto& field=state->session.current.field;const auto& actor=field.roster[field.ball_owner];
       try{const auto choice=choose_ai_field_candidate(actor.type,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),field.ball_x,field.ball_y,static_cast<std::uint8_t>(random),*content.data->ai_field_choice);std::cout<<" candidate "<<static_cast<unsigned>(choice.candidate)<<" actor "<<static_cast<unsigned>(actor.type)<<" variant "<<static_cast<unsigned>(state->session.recovery->ball_variant)<<" random "<<static_cast<unsigned>(static_cast<std::uint8_t>(random))<<" position "<<static_cast<unsigned>(field.ball_x)<<","<<static_cast<unsigned>(field.ball_y);}catch(const std::invalid_argument&){std::cout<<" candidate unavailable";}
      }
+     if(phase==FieldSessionPhase::ball_arrival_callback && state->session.current.field.side==11){const auto& f=state->session.current.field;std::cout<<" defenders "<<static_cast<unsigned>(f.selected_defenders)<<" elapsed "<<static_cast<unsigned>(f.elapsed)<<" flag "<<static_cast<unsigned>(state->session.saved_ball_flight_flag);if(f.selected_defenders && state->session.scheduling)std::cout<<" first "<<static_cast<unsigned>(state->session.scheduling->selected_ids[0]);}
      std::cout<<'\n';return 0;
     }
     if(phase==FieldSessionPhase::ai_cell_decision && result->state.defense_menu && !result->state.defense_menu->defender_count)passed=true;
@@ -284,6 +285,35 @@ static int shot_comparisons(int argc,char** argv) {
   return 0;
  }
  return 2;
+}
+static int opponent_shot_defender_comparison(int argc,char** argv) {
+ using namespace captain;if(argc!=6)return 2;
+ std::ifstream source_file(argv[2],std::ios::binary),expected_file(argv[3],std::ios::binary),records_file(argv[4],std::ios::binary),pack_file(argv[5],std::ios::binary);
+ auto state=std::make_unique<MatchRuntimeState>();state->session=load_phase_session(source_file);auto expected=load_phase_session(expected_file);auto content=std::make_unique<MatchContent>();content->data=load_shot_content(pack_file);
+ std::array<std::array<unsigned char,2048>,4> raw{};for(auto& item:raw)if(!records_file.read(reinterpret_cast<char*>(item.data()),item.size()))throw std::runtime_error("Missing opponent shot defender checkpoints");
+ const auto word=[&](unsigned index,unsigned at){return static_cast<std::uint16_t>(raw[index][at]|(unsigned(raw[index][at+1])<<8));};
+ state->session.phase=FieldSessionPhase::ball_arrival_callback;state->session.saved_ball_flight_flag=raw[0][0x61b];
+ state->session.shot_flight=ShotFlightContext{raw[0][0x62b],raw[0][0x638],raw[0][0x61a],false};
+ state->session.ball_trajectory=BallTrajectoryContext{word(0,0x634),word(0,0x636),word(0,0x639),word(0,0x63b),raw[0][0x62c],raw[0][0x61b]};
+ state->mode=MatchTimingMode::provisional_demo;state->demo_rng=1;state->ball_fraction=MatchBallFraction{raw[0][0x634],raw[0][0x636]};
+ MatchContentIdentity identity{};identity[0]=42;std::ostringstream before(std::ios::binary);write_match_save(before,*state,identity);std::istringstream saved(before.str(),std::ios::binary);*state=load_match_save(saved,identity);
+ auto missing=std::make_unique<MatchContent>(*content);missing->data->flight.reset();auto stopped=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,0,0),*missing));
+ std::ostringstream missing_state(std::ios::binary);write_match_save(missing_state,stopped->state,identity);
+ if(stopped->unsupported!=UnsupportedCapability::content || missing_state.str()!=before.str())throw std::runtime_error("Missing opponent shot defender content was not atomic");
+ auto result=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,0,0),*content));
+ if(std::string(argv[1])=="--compare-opponent-shot-defender-terminal"){
+  std::ostringstream unchanged(std::ios::binary);write_match_save(unchanged,result->state,identity);
+  if(result->unsupported!=UnsupportedCapability::defender_contact || unchanged.str()!=before.str())throw std::runtime_error("Terminal opponent shot defender was not rejected atomically");
+  return 0;
+ }
+ if(result->unsupported || result->state.session.phase!=FieldSessionPhase::shot_keeper_entry)throw std::runtime_error(std::string("Opponent shot defender stopped: ")+(result->unsupported ? capability_name(*result->unsupported) : "incorrect phase"));
+ auto actual=result->state.session;actual.phase=FieldSessionPhase::field;actual.shot_flight.reset();actual.ball_trajectory.reset();expected.saved_ball_flight_flag=raw[3][0x61b];
+ if(actual.control && expected.control){expected.control->facing=actual.control->facing;expected.control->motion_requested=actual.control->motion_requested;expected.control->display_parameter=actual.control->display_parameter;}
+ std::ostringstream a(std::ios::binary),b(std::ios::binary);write_phase_session(a,actual);write_phase_session(b,expected);
+ if(a.str()!=b.str()){for(std::size_t i=0;i<a.str().size() && i<b.str().size();++i)if(a.str()[i]!=b.str()[i])throw std::runtime_error("Opponent shot defender differs at byte "+std::to_string(i)+" actual "+std::to_string(static_cast<unsigned char>(a.str()[i]))+" expected "+std::to_string(static_cast<unsigned char>(b.str()[i])));throw std::runtime_error("Opponent shot defender session lengths differ");}
+ if(!result->state.ball_fraction || result->state.ball_fraction->x!=raw[3][0x634] || result->state.ball_fraction->y!=raw[3][0x636] || !result->state.retained_defense_action || *result->state.retained_defense_action!=raw[3][0x43d])throw std::runtime_error("Opponent shot defender lost original metadata");
+ std::ostringstream out(std::ios::binary);write_match_save(out,result->state,identity);std::istringstream in(out.str(),std::ios::binary);load_match_save(in,identity);
+ return 0;
 }
 static int defense_skip_comparison(int argc,char** argv) {
  using namespace captain;if(argc!=7)return 2;
@@ -1806,7 +1836,7 @@ MatchConfig demo{};demo.initial=pre;demo.mode=MatchTimingMode::provisional_demo;
 }
 
 int main(int argc,char** argv) {
- if(argc!=1){if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
+ if(argc!=1){if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
  const auto result=regular_tests();
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);

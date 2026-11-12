@@ -28,6 +28,32 @@ void advance_demo_random(MatchRuntimeState& state) {
  state.demo_rng=random;state.session.current.field.random_first=static_cast<std::uint8_t>(random);
  state.session.current.field.random_second=static_cast<std::uint8_t>(random>>8);
 }
+MatchStepResult resolve_opponent_shot_defender(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+ const auto& field=input.session.current.field;const auto& data=*content.data;
+ if(!data.flight || !data.contact || !data.experience || !input.session.experience || !input.session.scheduling || !input.session.action || !input.session.recovery || !input.session.ball_trajectory || !input.session.shot_flight){result.unsupported=UnsupportedCapability::content;return result;}
+ if(field.side!=11 || !field.selected_defenders || field.selected_defenders>2 || field.elapsed || input.session.saved_ball_flight_flag || input.session.shot_flight->loose_ball || data.flight->defense_actions[0]!=0){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+ try {
+  auto next=input;auto& session=next.session;const auto& rules=*data.flight;const auto variation=rules.variation[0];
+  for(unsigned slot=0;slot<field.selected_defenders;++slot){
+   const auto id=input.session.scheduling->selected_ids[slot];if(id<1 || id>10){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+   const auto& current=session.current.field;const auto& player=current.roster[id];const FieldPlayerRecord record{id,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level};
+   const auto prepared=prepare_profiled_field_defender(record,data.field_players,0,0,0,data.defense);
+   const auto contact=compare_defender_contact({session.action->power,prepared.base_strength,current.random_first,current.random_second,variation[0],variation[1],false,bool(rules.eligibility[0]&128u),0,id,0,rules.thresholds[0]});
+   if(prepared.move_effect || contact.special || contact.subtype || contact.result_code>=2){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+   session.recovery->opposing_player=id;session.action->move_effect=prepared.move_effect;
+   if(contact.result_code==1)session.action->power=reduce_action_strength(session.action->power,contact.loss);
+   session.experience=award_player_experience(*session.experience,current.roster[current.ball_owner].type,1,*data.experience).state;
+   const auto clock=apply_contact_prelude({session.current,id,0,true},*data.contact);
+   if(clock.clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+   session.current=clock.state;
+  }
+  session.current.field.selected_defenders=0;session.current.field.elapsed=0;session.scheduling->selected_ids.fill(0);
+  session.phase=FieldSessionPhase::shot_keeper_entry;next.retained_defense_action=0;use_trajectory_fraction(next,session.ball_trajectory);
+  next.last_sequence=event.sequence;validate_phase_session(session);project_field_random_memory(session.current.field,next.random_memory);result.state=std::move(next);return result;
+ } catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+}
 MatchStepResult resolve_pass_flight_contact(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
 
@@ -628,6 +654,9 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ball_advance_ready || input.session.phase==FieldSessionPhase::ball_cell_callback) &&
     input.session.action && input.session.action->action==0)
   return advance_human_shot_flight(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ball_arrival_callback || input.session.phase==FieldSessionPhase::shot_keeper_entry) &&
+    input.session.current.field.side==11 && input.session.phase==FieldSessionPhase::ball_arrival_callback && input.session.current.field.selected_defenders && input.session.action && input.session.action->action==0)
+  return resolve_opponent_shot_defender(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ball_arrival_callback || input.session.phase==FieldSessionPhase::shot_keeper_entry) &&
     input.session.action && input.session.action->action==0)
   return enter_human_shot_keeper(input,event);
