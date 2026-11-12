@@ -72,6 +72,27 @@ static void continue_home_after_action3(const captain::MatchRuntimeState& initia
  std::ofstream home4_seed(std::string(prefix)+"-home4-menu-seed.txt");home4_seed<<home4_menu->state.demo_rng;
  std::ostringstream home4_save(std::ios::binary);write_match_save(home4_save,home4_menu->state,identity);std::istringstream home4_in(home4_save.str(),std::ios::binary);auto home4_restored=std::make_unique<MatchRuntimeState>(load_match_save(home4_in,identity));
  if(home4_restored->session.phase!=FieldSessionPhase::human_action_menu || home4_restored->session.area_defender_cursor!=2 || home4_restored->session.current.field.selected_defenders!=5)throw std::runtime_error("Home player4 contact menu did not roundtrip");
+ std::ofstream home4_action_log(std::string(prefix)+"-home4-action-sequence.txt");
+ for(int i=0;i<50;++i){
+  if(i==18){
+   if(!home4_restored->session.area_contact || home4_restored->session.area_contact->result!=3 || home4_restored->session.area_contact->defense_subtype!=128)throw std::runtime_error("Player14 interception comparison differs");
+   std::ostringstream saved(std::ios::binary);write_match_save(saved,*home4_restored,identity);std::istringstream input(saved.str(),std::ios::binary);*home4_restored=load_match_save(input,identity);
+  }
+  const std::uint8_t pressed=i==0 ? 2 : i==1 ? 128 : i==3 ? 1 : i==4 ? 8 : i==5 ? 128 : 0;
+  auto next=std::make_unique<MatchStepResult>(step_match(*home4_restored,client_input(*home4_restored,pressed,pressed),content));
+  home4_action_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';home4_action_log.flush();
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-home4-action-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*home4_restored=std::move(next->state);
+  if(home4_restored->session.phase==FieldSessionPhase::control_ready || home4_restored->session.phase==FieldSessionPhase::player_control)break;
+ }
+ if(home4_restored->session.phase!=FieldSessionPhase::player_control || home4_restored->session.current.field.side!=11 || home4_restored->session.current.field.ball_owner!=14 || home4_restored->session.current.clock.remaining!=60)throw std::runtime_error("Home player4 pass was not intercepted by player14");
+ auto interceptor=std::make_unique<MatchStepResult>(step_match(*home4_restored,client_input(*home4_restored,0,0),content));
+ if(interceptor->unsupported || interceptor->state.session.phase!=FieldSessionPhase::control_ready || interceptor->state.session.current.field.ball_owner!=14 || interceptor->state.session.current.field.ball_x!=98 || interceptor->state.session.current.field.ball_y!=139)throw std::runtime_error("Player14 interception control stopped");
+ std::ofstream intercepted_file(std::string(prefix)+"-home4-intercepted-control.cmjsession",std::ios::binary);write_phase_session(intercepted_file,interceptor->state.session);
+ std::ostringstream interception_save(std::ios::binary);write_match_save(interception_save,interceptor->state,identity);std::istringstream interception_in(interception_save.str(),std::ios::binary);auto interception_restored=std::make_unique<MatchRuntimeState>(load_match_save(interception_in,identity));
+ if(interception_restored->session.current.field.side!=11 || interception_restored->session.current.field.ball_owner!=14 || interception_restored->session.area_defender_cursor!=1)throw std::runtime_error("Player14 interception control did not roundtrip");
+
+
 
 
 

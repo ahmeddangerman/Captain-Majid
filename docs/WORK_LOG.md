@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Player14 intercepts player4's pass
+
+At player4's five-defender contact, the controlled pass to player3 produces original defender choices [1,2,1,2,0] for players12,14,17,18,19. Defender12's contact returns 0; defender14's contact returns 3 with subtype128, and opposing player14 takes control at (98,139), clock60. Native/original represented states match target confirmation, all five choices, both defender preparations and comparisons, and interception/control. The subtype128 compared state and player14's subsequent control save/reload.
+
+Extended the observed fifth-defender block, deferred presentation state and second-defender interception instead of incorrectly continuing the pass. Original trace injects the same samples before AI choices and attacker preparation and acknowledges presentation; it does not run live NMI, rendering, audio or frame timing. Windows CMake build, all 65 registered tests, focused replay and controlled original comparisons passed. Next continue the intercepted possession. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player4 reaches five-defender contact
 
 Continued player4's sampled possession with rightward input from clock68 to clock63. All 65 native/original control and field-update boundaries match represented state. Player4 meets opponents12,14,17,18,19 at (101,140), and the original action menu matches and saves/reloads.

@@ -251,4 +251,13 @@ if (raw[0x441],raw[0x5f7],raw[0x616],raw[0x600],list(raw[0x601:0x606]))!=(4,63,2
 seed=int((a.trace/'native-home4-menu-seed.txt').read_text());injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
 observed,raw=trace_menu(rom[16:262160],injected)
 compare_represented((a.trace/'native-home4-menu.cmjsession').read_bytes(),export_session(raw,0),False,'home player4','menu')
+for index,pc in ((5,'d84b-1'),(7,'8637-1'),(8,'8637-2'),(9,'8637-3'),(10,'8637-4'),(11,'8637-5'),(12,'804f-1'),(13,'80b6-1'),(14,'80d9-1'),(15,'80dc-1'),(16,'80b6-2'),(17,'80d9-2'),(18,'e0df-1')):
+ raw=(a.player3_shot/f'home4-pass-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-home4-action-{index}.cmjsession').read_bytes(),export_session(raw,0),index!=18,'home player4 pass',pc)
+ if pc=='8637-5' and list(raw[0x60b:0x610])!=[1,2,1,2,0]:raise ValueError('Unexpected home player4 defender choices')
+ if pc=='80d9-1' and raw[0x612]!=0:raise ValueError('Unexpected first defender result')
+ if pc=='80d9-2' and (raw[0x442],raw[0x43d],raw[0x43e],raw[0x612])!=(14,2,128,3):raise ValueError('Unexpected player14 interception')
+raw=(a.player3_shot/'home4-pass-e145-1.bin').read_bytes()
+compare_represented((a.trace/'native-home4-intercepted-control.cmjsession').read_bytes(),export_session(raw,0),False,'home player4 pass','interception control')
+if (raw[0x441],raw[0x5fb],raw[0x635],raw[0x637],raw[0x5f7])!=(14,11,98,139,60):raise ValueError('Unexpected interception possession')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
