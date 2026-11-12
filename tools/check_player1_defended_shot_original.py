@@ -15,6 +15,7 @@ from verify_player7_pass_end_to_end import compare_represented
 p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--rom', type=Path, required=True)
 p.add_argument('--trace', type=Path, required=True)
+p.add_argument('--seeded-area-trace', type=Path)
 a = p.parse_args()
 rom = a.rom.read_bytes()
 if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
@@ -47,4 +48,12 @@ if (raw[0x600], raw[0x601]) != (1, 11):
 normalized = bytearray(raw);normalized[0x600] = 0
 expected = bytearray(export_session(normalized, 0));expected[28] = 1;expected[309] = 11
 compare_represented(state, expected, False, 'player8 goal-area', 'menu')
+if a.seeded_area_trace:
+    for name, pc in (('area-keeper', '8637-2'), ('area-shot', '82a0-1')):
+        raw = bytearray((a.seeded_area_trace / (pc + '.bin')).read_bytes())
+        if (raw[0x600], raw[0x601], raw[0x60b], raw[0xe2], raw[0xe3]) != (1, 11, 3, 248, 243):
+            raise ValueError('Unexpected seeded goalkeeper observation')
+        raw[0x600] = 0
+        expected = bytearray(export_session(raw, 0)); expected[28] = 1; expected[309] = 11
+        compare_represented((a.trace / ('native-' + name + '.cmjsession')).read_bytes(), expected, True, 'player8 goal-area', name)
 print('Matched defended shot, player8 recovery and attacking goal-area keeper menu')

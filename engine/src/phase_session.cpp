@@ -71,7 +71,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
     const bool postgoal_opponent_action=phase>=392 && phase<=414;
     const bool extended_opponent=player14_pass || player19_return_shot || player19_return_keeper || score23_opponent_shot || postgoal_opponent_action;
-    if(phase>255 && !(phase>=415 && phase<=466) && !(phase>=345 && phase<=391) && !extended_opponent && !score23_human_pass && !score24_dribble && !score25_human_pass && !score25_shot && !ordinary_human_target)throw std::invalid_argument("Unsupported extended phase session state");
+    if(phase>255 && !(phase>=415 && phase<=468) && !(phase>=345 && phase<=391) && !extended_opponent && !score23_human_pass && !score24_dribble && !score25_human_pass && !score25_shot && !ordinary_human_target)throw std::invalid_argument("Unsupported extended phase session state");
     if (ordinary_human_target) {
         const auto& field = state.current.field;
         if (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling ||
@@ -357,10 +357,11 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_action6=phase==104 || (phase>=106 && phase<=110) || phase==113;
     const bool area_action6_race=(phase>=106 && phase<=110) || phase==113;
     const bool area_setup=phase==65 || phase==105;
-    const bool area_menu=(phase>=66 && phase<=94) || ((phase==18 || phase==19) && state.keeper_area);
+    const bool area_menu=(phase>=66 && phase<=94) || ((phase==18 || phase==19 || phase==467 || phase==468) && state.keeper_area);
     const bool area_state=area_setup || area_menu;
     const bool empty_attacking_area=(phase==68 || phase==78 || phase==79 || phase==90 || phase==93) && state.action && state.action->menu_route==1 && state.current.field.side==11 && !state.current.field.selected_defenders;
-    const bool player8_keeper_area_menu=(phase==18 || phase==19) && state.keeper_area && state.action && state.action->menu_route==1 && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==196 && state.current.field.ball_y==124 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==11;
+    const bool player8_keeper_area_menu=(phase==18 || phase==19 || phase==467 || phase==468) && state.keeper_area && state.action && state.action->menu_route==1 && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==196 && state.current.field.ball_y==124 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==11;
+    if((phase==467 || phase==468) && (!player8_keeper_area_menu || !state.recovery || state.recovery->opposing_player!=11 || state.recovery->ball_variant!=2 || state.recovery->attack_subtype!=2 || state.action->action || state.action->power!=(phase==467 ? 5 : 11) || state.current.field.random_first!=248 || state.current.field.random_second!=243))throw std::invalid_argument("Invalid player8 goal-area shot boundary");
     if((((phase>=65 && phase<=94) || phase==105) && !state.keeper_area) || (state.keeper_area && !area_state))
         throw std::invalid_argument("Keeper-area setup needs exactly one captured selection counter");
     if(state.keeper_area && (!state.action || !state.recovery || !state.scheduling ||

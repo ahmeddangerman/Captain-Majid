@@ -65,11 +65,12 @@ void validate_runtime(const MatchRuntimeState& s) {
   const bool defense_skip=f.side==11 && *s.retained_defense_action==6 && phase==FieldSessionPhase::field_contact_pending && s.defense_menu && s.defense_menu->defender_count;
   const bool skip_return=f.side==11 && *s.retained_defense_action==6 && phase==FieldSessionPhase::player_control && s.session.action && s.session.action->action==2 && !s.defense_menu;
   const bool opponent_shot_keeper=f.side==11 && *s.retained_defense_action<=1 && (phase==FieldSessionPhase::shot_keeper_entry || phase==FieldSessionPhase::keeper_presentation_pending || phase==FieldSessionPhase::keeper_decided || phase==FieldSessionPhase::goal_celebration_pending) && s.session.action && s.session.action->action==0;
+  const bool player8_goal_area_keeper=f.side==0 && f.ball_owner==8 && *s.retained_defense_action==3 && (phase==FieldSessionPhase::player8_area_keeper_chosen || phase==FieldSessionPhase::player8_area_shot_prepared);
   const bool pass=f.side==0 && !f.selected_defenders && s.session.action && s.session.action->action==1 && !s.target_chooser &&
    s.flight_defenders.empty() && s.processed_flight_defenders.empty() &&
    (phase==FieldSessionPhase::ordinary_human_pass_target || ((phase==FieldSessionPhase::ordinary_human_pass_confirmed || phase==FieldSessionPhase::ordinary_pass_prepared) &&
     s.session.ordinary_pass_recipient && *s.session.ordinary_pass_recipient==255));
-  if(s.mode!=MatchTimingMode::provisional_demo || *s.retained_defense_action>6 || !(shot || goal || kickoff || control || pass || unopposed_ai || defense_skip || skip_return || opponent_shot_keeper))throw std::invalid_argument("Invalid retained defensive action provenance");
+  if(s.mode!=MatchTimingMode::provisional_demo || *s.retained_defense_action>6 || !(shot || goal || kickoff || control || pass || unopposed_ai || defense_skip || skip_return || opponent_shot_keeper || player8_goal_area_keeper))throw std::invalid_argument("Invalid retained defensive action provenance");
  }
  const bool target=static_cast<unsigned>(s.pass_stage)>=static_cast<unsigned>(MatchPassStage::target_ready);
  const bool flight=static_cast<unsigned>(s.pass_stage)>=static_cast<unsigned>(MatchPassStage::flight_ready);

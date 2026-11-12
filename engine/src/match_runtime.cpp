@@ -860,10 +860,33 @@ MatchStepResult open_player8_goal_area_menu(const MatchRuntimeState& input,const
   validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
 
 }
+MatchStepResult step_player8_area_shot(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ try {
+  auto next=input;auto& field=next.session.current.field;
+  if(input.session.phase==FieldSessionPhase::attack_choice_pending) {
+   if(event.kind!=MatchInputKind::action || event.action!=MatchAction::shot || event.target || !content.data->ai_keeper_choice){result.unsupported=UnsupportedCapability::action;return result;}
+   advance_demo_random(next);
+   if(field.random_first!=248 || field.random_second!=243)throw std::invalid_argument("Unobserved goalkeeper random sample");
+   const auto& p=field.roster[11];const FieldPlayerRecord keeper{11,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level};
+   const auto choice=choose_opponent_keeper_action(keeper,content.data->goalkeepers,1,field.random_first,*content.data->ai_keeper_choice);
+   if(choice.action!=3 || choice.subtype!=0)throw std::invalid_argument("Unobserved goalkeeper choice");
+   next.session.recovery->opposing_player=11;next.retained_defense_action=choice.action;next.session.phase=FieldSessionPhase::player8_area_keeper_chosen;
+  } else {
+   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+   const auto& p=field.roster[8];const auto prepared=prepare_attacking_action({{8,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},0,2,2,field.side,field.selected_defenders,field.random_first,field.random_second,false},content.data->field_players,content.data->attack);
+   const auto remaining=static_cast<std::uint16_t>(unsigned(p.stamina)-prepared.preparation.stamina_cost);
+   if((remaining&32768u) || prepared.action_power.subtype!=2 || prepared.action_power.power!=11)throw std::invalid_argument("Unobserved goal-area shot preparation");
+   field.roster[8].stamina=prepared.energy.stamina;next.session.action->power=prepared.action_power.power;next.session.action->move_effect=prepared.preparation.move_effect;next.session.action->move_flags=prepared.move_flags;next.session.recovery->attack_subtype=prepared.action_power.subtype;next.session.phase=FieldSessionPhase::player8_area_shot_prepared;
+  }
+  validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::opponent_action;return result;}
+}
 MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.keeper_area && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==0 && input.session.current.field.ball_owner==8 && input.session.current.field.ball_x==196 && input.session.current.field.ball_y==124 && (input.session.phase==FieldSessionPhase::attack_choice_pending || input.session.phase==FieldSessionPhase::player8_area_keeper_chosen))return step_player8_area_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.current.field.side==11 &&
     (input.session.phase==FieldSessionPhase::field_contact_pending || (input.session.phase==FieldSessionPhase::field && input.defense_menu &&
      (static_cast<unsigned>(input.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_flight_ready) || (!input.defense_menu->defender_count && static_cast<unsigned>(input.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen)))))) {
@@ -1075,6 +1098,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto menu=(next.session.phase==FieldSessionPhase::action_menu_pending || next.session.phase==FieldSessionPhase::field_contact_pending)
     ? open_human_action_menu(next.session,*content.data->action_menu)
     : poll_human_action_menu(next.session,event.pressed,*content.data->action_menu);
+  if(menu.confirmed && menu.state.keeper_area && menu.state.action->menu_route==1 && menu.state.action->action==0 && menu.state.current.field.ball_owner==8 && menu.state.current.field.ball_x==196 && menu.state.current.field.ball_y==124 && menu.state.recovery->ball_variant==2)menu.state.recovery->attack_subtype=2;
   next.session=menu.state;next.last_sequence=event.sequence;
   if(input.session.phase==FieldSessionPhase::field_contact_pending || next.session.current.field.selected_defenders)next.retained_defense_action.reset();
   project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);

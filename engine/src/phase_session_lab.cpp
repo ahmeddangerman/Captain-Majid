@@ -43,6 +43,8 @@ unsigned number(const std::string& token) {
 }
 const char* phase_name(captain::FieldSessionPhase phase) {
     switch (phase) {
+    case captain::FieldSessionPhase::player8_area_keeper_chosen: return "player8 goal-area goalkeeper chosen";
+    case captain::FieldSessionPhase::player8_area_shot_prepared: return "player8 goal-area shot prepared";
     case captain::FieldSessionPhase::player7_shot_defender_prepared: return "player7 shot defender prepared";
     case captain::FieldSessionPhase::player7_shot_defender_compared: return "player7 shot defender compared";
     case captain::FieldSessionPhase::player7_shot_contact_clocked: return "player7 terminal shot contact clocked";

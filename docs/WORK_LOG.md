@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-13 - Seeded player8 goalkeeper choice and shot preparation
+
+The provisional player8 goal-area menu now accepts the observed ordinary shot, computes opposing goalkeeper11's action3 from the original AI data, and prepares the player's subtype2 shot at power11 for random bytes 248/243. The guarded goalkeeper-choice and shot-prepared represented states match controlled original execution; the goalkeeper-choice runtime save reloads. The automated replay test sets the sampled RNG state explicitly, so this does not establish live timing parity. Windows CMake build and all 65 registered tests passed; the private original comparison passed. The original trace injects random bytes and acknowledges presentation without NMI, graphics or audio.
+
+A separate original-only continuation with these bytes produces area result2 and a loose ball recovered by player9 at 172,124; this outcome is not yet implemented. A different controlled sample produced a goal after explicit presentation acknowledgements; it remains original-only evidence. Next compare and implement the seeded goalkeeper contact, loose-ball movement and player9 recovery before extending subsequent control. A complete playable match remains unfinished and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player8-goal-area-seeded-original-20261112 and player1-shot-original-20261112.
+
+
 ## 2026-11-12 - Player8 attacks selected goalkeeper
 
 The player8 loose-shot recovery now opens the human attacking goal-area menu when the observed scan selects opponent goalkeeper11 and no field defenders. The narrowly guarded selection, retained original cursor and menu represented state match the controlled original; the runtime menu saves and reloads. The uninterrupted seed-3 provisional replay reaches this menu at clock125. A Windows build, all 65 registered tests and the private original shot/menu comparison passed; the save/reload test passed after the full suite.
