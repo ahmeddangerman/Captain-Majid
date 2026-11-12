@@ -360,6 +360,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_menu=(phase>=66 && phase<=94) || ((phase==18 || phase==19) && state.keeper_area);
     const bool area_state=area_setup || area_menu;
     const bool empty_attacking_area=(phase==68 || phase==78 || phase==79 || phase==90 || phase==93) && state.action && state.action->menu_route==1 && state.current.field.side==11 && !state.current.field.selected_defenders;
+    const bool player8_keeper_area_menu=(phase==18 || phase==19) && state.keeper_area && state.action && state.action->menu_route==1 && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==196 && state.current.field.ball_y==124 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==11;
     if((((phase>=65 && phase<=94) || phase==105) && !state.keeper_area) || (state.keeper_area && !area_state))
         throw std::invalid_argument("Keeper-area setup needs exactly one captured selection counter");
     if(state.keeper_area && (!state.action || !state.recovery || !state.scheduling ||
@@ -368,7 +369,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        (state.current.field.ball_x>=80 && state.current.field.ball_x<176) ||
        state.action->menu_route!=(((state.current.field.ball_x<80 ? 0 : 11)==state.current.field.side)?2:1)))
         throw std::invalid_argument("Keeper-area setup requires its original area and route (phase " + std::to_string(phase) + ", ball " + std::to_string(state.current.field.ball_x) + "," + std::to_string(state.current.field.ball_y) + ", side " + std::to_string(state.current.field.side) + ", route " + std::to_string(state.action ? state.action->menu_route : 255) + ")");
-    if(area_menu && !empty_attacking_area &&
+    if(area_menu && !empty_attacking_area && !player8_keeper_area_menu &&
        (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
     if(bool(state.area_defense)!=(((phase>=415 && phase<=420) || (phase>=238 && phase<=243) || ((phase>=202 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) || phase==67 || ((phase>=69 && phase<=92) && !empty_attacking_area) || phase==94 || area_action4 || ((phase==93 || area_action6) && state.action && (state.action->action==4 || state.action->action==6) && state.area_defense))))
@@ -712,7 +713,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.current.field.side==0 && state.current.field.ball_owner==2 && state.current.field.ball_x==104 && state.current.field.ball_y==164 &&
        (state.current.field.ball_cell==115 || state.current.field.ball_cell==94);
     const bool player2_free_pass_contact_cursor=(phase==15 || phase==18 || phase==19) && state.area_defender_cursor==1 && state.saved_ball_flight_flag==1 && state.current.field.side==0 && state.current.field.selected_defenders==1 && state.scheduling && ((state.current.field.ball_owner==2 && state.current.field.ball_x==100 && state.current.field.ball_y==164 && state.current.field.ball_cell==82 && state.scheduling->selected_ids[0]==16) || (state.current.field.ball_owner==1 && state.current.field.ball_x==116 && state.current.field.ball_y==100 && state.current.field.ball_cell==98 && state.scheduling->selected_ids[0]==12));
-    const bool player1_loose_shot_cursor=(phase==6 || phase==7 || phase==65) && state.area_defender_cursor==1 && !state.saved_ball_flight_flag && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==196 && state.current.field.ball_y==124 && state.recovery && state.recovery->opposing_player==12;
+    const bool player1_loose_shot_cursor=(phase==6 || phase==7 || phase==65 || player8_keeper_area_menu) && state.area_defender_cursor==1 && !state.saved_ball_flight_flag && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==196 && state.current.field.ball_y==124 && state.recovery && state.recovery->opposing_player==12;
     if((phase<82 && state.area_defender_cursor && !player1_loose_shot_cursor && !player2_free_pass_contact_cursor && !player2_one_two_residue && !player3_one_two_contact && !ordinary_pass_control_cursor && !skipped_generic_defended_shot && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor && !score25_shot_keeper_cursor) ||
        (phase>=82 && phase<=94 && (state.area_defender_cursor>state.current.field.selected_defenders ||
         ((phase==88 || (phase>=90 && phase<=93)) ? state.area_defender_cursor!=state.current.field.selected_defenders :
@@ -1088,7 +1089,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         throw std::invalid_argument("Invalid sampled home goalkeeper comparison");
     if(phase==226 && (state.current.field.keepers[0].timer || state.current.field.keepers[0].penalty || state.current.field.keepers[0].stun))
         throw std::invalid_argument("Invalid sampled opponent goal restart");
-    const bool keeper_selected=phase==388 || (phase==389 || phase==390 || phase==391) || score23_keeper || player19_return_keeper || (phase>=219 && phase<=226) || phase==53 || phase==56 || ((phase>=169 && phase<=187) || phase==190 || phase==191 || phase==192 || phase==193) || (phase==59 && !state.current.field.keepers[state.current.field.side==0?1:0].stun);
+    const bool keeper_selected=player8_keeper_area_menu || phase==388 || (phase==389 || phase==390 || phase==391) || score23_keeper || player19_return_keeper || (phase>=219 && phase<=226) || phase==53 || phase==56 || ((phase>=169 && phase<=187) || phase==190 || phase==191 || phase==192 || phase==193) || (phase==59 && !state.current.field.keepers[state.current.field.side==0?1:0].stun);
     if((phase==388 || (phase==389 || phase==390 || phase==391)) && (state.current.field.selected_defenders!=1 || state.scheduling->selected_ids[0]!=11 || state.current.field.keepers[1].stun || ((phase==389 || phase==390 || phase==391) && state.recovery->opposing_player!=11)))
         throw std::invalid_argument("Same-cell goalkeeper arrival requires the selected unstunned keeper");
     const bool keeper_possession=phase==57;

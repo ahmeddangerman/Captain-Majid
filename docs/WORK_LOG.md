@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-12 - Player8 attacks selected goalkeeper
+
+The player8 loose-shot recovery now opens the human attacking goal-area menu when the observed scan selects opponent goalkeeper11 and no field defenders. The narrowly guarded selection, retained original cursor and menu represented state match the controlled original; the runtime menu saves and reloads. The uninterrupted seed-3 provisional replay reaches this menu at clock125. A Windows build, all 65 registered tests and the private original shot/menu comparison passed; the save/reload test passed after the full suite.
+
+An original-only continuation selecting an ordinary goal-area shot recorded goalkeeper action3, shot power12, and area sequence result1. The cooperative observer then remained in presentation/scheduler work until its instruction limit; it does not establish the final goalkeeper outcome or a game defect. Continue diagnosing the original input/presentation sequence and compare the goalkeeper resolution before connecting that shot. Live timing, most goal-area branches and a complete match remain unverified. Overall progress is unmeasured; suggested model GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player1-shot-original-20261112 and player8-goal-area-original-20261112.
+
+
 ## 2026-11-12 - Defended player1 shot recovers to player8
 
 The first-fixture continuation now supports the captured player1 ordinary shot against defender12's action1 tackle. Original/native represented state matched the injected AI random selection, defender choice, attack and defender preparation, comparison result0, contact and dispatch clocks, field movement, shot target, all 12 flight crossings and arrival, loose-ball recovery, and player8's attacking goal-area setup. The shot lands as a loose ball and player8 recovers it near the opposing goal; it is not a goal. The original direct shot-tackle and existing pass-tackle comparison bytes were independently checked equal for the verified cartridge. This path is guarded to the observed player, positions and random sample; other shot-defense decisions remain unsupported.

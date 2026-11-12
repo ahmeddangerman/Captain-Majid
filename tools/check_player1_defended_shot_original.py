@@ -40,4 +40,11 @@ for name, pc in (('recovered','8c31'),('area','8b4a'),('area-prepared','8b73')):
     state, raw = compare(name, pc+'-1.bin', False)
     if (raw[0x441],raw[0x5fb],raw[0x616]) != (8,0,1):
         raise ValueError('Original recovered owner, side or cursor differs')
-print('Matched defender choice, shot preparation, flight and player8 goal-area recovery')
+state = (a.trace / 'native-area-menu.cmjsession').read_bytes()
+raw = (a.trace / 'd5e5-1.bin').read_bytes()
+if (raw[0x600], raw[0x601]) != (1, 11):
+    raise ValueError('Original goal-area goalkeeper selection differs')
+normalized = bytearray(raw);normalized[0x600] = 0
+expected = bytearray(export_session(normalized, 0));expected[28] = 1;expected[309] = 11
+compare_represented(state, expected, False, 'player8 goal-area', 'menu')
+print('Matched defended shot, player8 recovery and attacking goal-area keeper menu')
