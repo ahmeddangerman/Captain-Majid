@@ -680,6 +680,9 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool sampled_pass_cursor_residue=(phase==1 || phase==9 || phase==10 || phase==13 || phase==15 || phase==18 || phase==19 || (phase==20 && state.human_defense_choices)) && state.area_defender_cursor==1 &&
        state.score && state.score->left_goals==2 && state.score->right_goals==2 && state.score->kickoff==4 &&
        state.current.field.side==0 && state.current.field.ball_owner==5 && state.saved_ball_flight_flag==1;
+    const bool skipped_generic_defended_shot=(phase==15 || phase==43 || phase==45 || phase==46 || phase==47 || phase==48 || phase==49 || phase==52 || phase==53) && state.current.field.side==11 && state.current.field.ball_owner==21 &&
+       state.current.field.roster[21].type==0 && state.current.field.selected_defenders==((phase>=47 && phase<=52) ? 0 : 1) && state.area_defender_cursor==1 &&
+       state.action && state.action->action==0 && state.recovery && state.recovery->ball_variant==1;
     const bool ordinary_pass_control_cursor=(phase==1 || phase==9 || phase==10 || phase==11 || phase==13 || phase==18 || phase==19) &&
        ((phase==1 || phase==9) ? state.area_defender_cursor<=5 : (phase==10 || phase==13) ? state.area_defender_cursor<=2 : state.area_defender_cursor==1) && state.current.field.side==0 &&
        state.current.field.ball_owner>=1 && state.current.field.ball_owner<=10 && !state.current.field.selected_defenders &&
@@ -706,7 +709,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.current.clock.remaining>=130 && state.current.clock.remaining<=135 && state.current.clock.extra_time==0 &&
        state.current.field.side==0 && state.current.field.ball_owner==2 && state.current.field.ball_x==104 && state.current.field.ball_y==164 &&
        (state.current.field.ball_cell==115 || state.current.field.ball_cell==94);
-    if((phase<82 && state.area_defender_cursor && !player2_one_two_residue && !player3_one_two_contact && !ordinary_pass_control_cursor && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor && !score25_shot_keeper_cursor) ||
+    if((phase<82 && state.area_defender_cursor && !player2_one_two_residue && !player3_one_two_contact && !ordinary_pass_control_cursor && !skipped_generic_defended_shot && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor && !score25_shot_keeper_cursor) ||
        (phase>=82 && phase<=94 && (state.area_defender_cursor>state.current.field.selected_defenders ||
         ((phase==88 || (phase>=90 && phase<=93)) ? state.area_defender_cursor!=state.current.field.selected_defenders :
          state.area_defender_cursor>=state.current.field.selected_defenders))) ||
@@ -1280,7 +1283,7 @@ void validate_phase_session(const PhaseSessionState& state) {
             throw std::invalid_argument("Unsupported clearance race handoff");
     }
     const bool staged = phase >= 23 && phase <= 46;
-    if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
+    if (staged != bool(state.shot_progress) && !(skipped_generic_defended_shot && phase>=43 && phase<=46 && !state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     const bool generic_opponent_shot=state.current.field.side==11 && state.current.field.ball_owner>=12 && state.current.field.ball_owner<=21 && state.action && state.action->action==0 &&
         (phase==20 || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53 || phase==56 || phase==58 || phase==59);

@@ -430,6 +430,61 @@ static int ordinary_flight_defender_check(int argc,char** argv) {
   throw std::runtime_error("Flight defender16 did not reach control-ready");
  std::cout<<"Flight defender16 retained and reached control-ready\n";return 0;
 }
+static int generic_defended_shot_choice_check(int argc,char** argv) {
+ using namespace captain;if(argc!=5)return 2;
+ std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
+ MatchContent content{};content.data=load_shot_content(pack);std::ifstream velocity(argv[4],std::ios::binary);content.ball_velocity=read_ball_velocity_content(velocity);state.ball_fraction=MatchBallFraction{231,197};state.mode=MatchTimingMode::provisional_demo;state.demo_rng=3702952504u;
+ state.defense_menu=MatchDefenseMenu{};state.defense_menu->stage=MatchDefenseStage::complete;state.defense_menu->defender_count=1;state.defense_menu->poll.cursor=1;state.defense_menu->poll.defense.actions[0]=6;
+ auto chosen=step_match(state,client_input(state,0,0),content);
+ if(chosen.unsupported || !chosen.state.defense_menu || chosen.state.defense_menu->stage!=MatchDefenseStage::ai_chosen || chosen.state.session.action->action!=0 || chosen.state.session.recovery->attack_subtype!=0)throw std::runtime_error("Generic opponent21 did not choose the original shot");
+ auto prepared=step_match(chosen.state,client_input(chosen.state,0,0),content);
+ if(prepared.unsupported || !prepared.state.defense_menu || prepared.state.defense_menu->stage!=MatchDefenseStage::attack_prepared || prepared.state.session.action->power!=5)throw std::runtime_error("Generic defended shot preparation differs from original");
+ auto announced=step_match(prepared.state,client_input(prepared.state,0,0),content);
+ if(announced.unsupported || announced.state.defense_menu->stage!=MatchDefenseStage::clock_pending)throw std::runtime_error("Defended shot announcement stopped");
+ auto clocked=step_match(announced.state,client_input(announced.state,0,0),content);
+ if(clocked.unsupported || clocked.state.defense_menu->stage!=MatchDefenseStage::dispatch_pending || clocked.state.session.current.clock.remaining!=158 || clocked.state.session.area_defender_cursor!=1)throw std::runtime_error("Defended shot skip clock differs from original");
+ auto moved=step_match(clocked.state,client_input(clocked.state,0,0),content);
+ if(moved.unsupported || moved.state.session.phase!=FieldSessionPhase::shot_approach_ready || moved.state.session.current.clock.remaining!=158)throw std::runtime_error("Defended shot did not reach approach");
+ auto target=step_match(moved.state,client_input(moved.state,0,0),content);
+ if(target.unsupported || target.state.session.phase!=FieldSessionPhase::shot_flight_pending || !target.state.session.shot_flight || target.state.session.shot_flight->destination!=5 || target.state.session.shot_flight->distance!=36)throw std::runtime_error("Defended shot target differs from original: "+(target.unsupported ? std::string(capability_name(*target.unsupported)) : std::to_string(static_cast<unsigned>(target.state.session.phase))));
+ auto flight=step_match(target.state,client_input(target.state,0,0),content);
+ if(flight.unsupported || flight.state.session.phase!=FieldSessionPhase::ball_advance_ready || !flight.state.session.ball_trajectory || flight.state.session.current.field.selected_defenders)throw std::runtime_error("Defended shot did not enter flight");
+ auto moving=flight.state;for(unsigned i=0;i<30 && moving.session.phase!=FieldSessionPhase::ball_arrival_callback;++i){auto next=step_match(moving,client_input(moving,0,0),content);if(next.unsupported)throw std::runtime_error("Defended shot flight stopped");moving=std::move(next.state);}
+ if(moving.session.phase!=FieldSessionPhase::ball_arrival_callback || moving.session.current.field.ball_cell!=5 || moving.session.current.field.selected_defenders)throw std::runtime_error("Defended shot did not reach the original goalkeeper boundary");
+ auto keeper_entry=step_match(moving,client_input(moving,0,0),content);
+ if(keeper_entry.unsupported || keeper_entry.state.session.phase!=FieldSessionPhase::shot_keeper_entry)throw std::runtime_error("Defended shot did not reach goalkeeper entry");
+ auto keeper_menu=step_match(keeper_entry.state,client_input(keeper_entry.state,0,0),content);
+ if(keeper_menu.unsupported || keeper_menu.state.session.phase!=FieldSessionPhase::keeper_presentation_pending || keeper_menu.state.session.current.field.selected_defenders!=1 || keeper_menu.state.session.scheduling->selected_ids[0]!=0)throw std::runtime_error("Defended shot did not reach home goalkeeper menu");
+ auto open=step_match(keeper_menu.state,client_input(keeper_menu.state,0,0),content);
+ if(open.unsupported || open.state.session.action->menu_route!=4)throw std::runtime_error("Home goalkeeper menu did not open");
+ auto selected=step_match(open.state,{MatchInputKind::tick,open.state.last_sequence+1,1,1},content);
+ if(selected.unsupported || !selected.state.retained_defense_action || *selected.state.retained_defense_action!=0)throw std::runtime_error("Home goalkeeper catch was not selected");
+ auto compared=step_match(selected.state,{MatchInputKind::tick,selected.state.last_sequence+1,128,128},content);
+ if(compared.unsupported || compared.state.session.phase!=FieldSessionPhase::keeper_decided || !compared.state.session.keeper_decision || compared.state.session.keeper_decision->result_code!=2 || compared.state.session.area_defender_cursor)throw std::runtime_error("Home goalkeeper comparison differs from original");
+ auto save=step_match(compared.state,client_input(compared.state,0,0),content);
+ if(save.unsupported || save.state.session.phase!=FieldSessionPhase::ball_recovery)throw std::runtime_error("Goalkeeper save did not reach loose-ball recovery");
+ auto recovered=step_match(save.state,client_input(save.state,0,0),content);
+ if(recovered.unsupported || recovered.state.session.phase!=FieldSessionPhase::recovered_owner || recovered.state.session.current.field.ball_owner!=17)throw std::runtime_error("Loose ball did not reach opponent17");
+ auto area=step_match(recovered.state,client_input(recovered.state,0,0),content);
+ if(area.unsupported || area.state.session.phase!=FieldSessionPhase::keeper_interaction || area.state.session.current.field.ball_owner!=17)throw std::runtime_error("Recovered ball did not reach goalkeeper-area interaction");
+ std::cout<<"Generic opponent21 chose defended ordinary shot\n";return 0;
+}
+static int generic_action2_field_ai_check(int argc,char** argv) {
+ using namespace captain;if(argc!=4)return 2;
+ std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
+ MatchContent content{};content.data=load_shot_content(pack);state.mode=MatchTimingMode::provisional_demo;state.demo_rng=2246453902u;
+ auto chosen=step_match(state,client_input(state,0,0),content);
+ if(chosen.unsupported || chosen.state.session.phase!=FieldSessionPhase::control_clock_pending || chosen.state.session.action->action!=2 || chosen.state.session.recovery->attack_subtype!=0)throw std::runtime_error("Generic opponent21 did not choose the original action2");
+ std::cout<<"Generic opponent21 chose original action2\n";return 0;
+}
+static int first_generic_field_ai_check(int argc,char** argv) {
+ using namespace captain;if(argc!=4)return 2;
+ std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
+ MatchContent content{};content.data=load_shot_content(pack);state.mode=MatchTimingMode::provisional_demo;state.demo_rng=3472708245u;
+ auto chosen=step_match(state,client_input(state,0,0),content);
+ if(chosen.unsupported || chosen.state.session.phase!=FieldSessionPhase::field || !chosen.state.session.action || chosen.state.session.action->action!=1 || !chosen.state.defense_menu || !chosen.state.defense_menu->ai_pass_target || chosen.state.defense_menu->ai_pass_target->recipient!=21 || chosen.state.defense_menu->ai_pass_target->cell!=92)throw std::runtime_error("Generic opponent16 did not choose the original pass");
+ std::cout<<"Generic opponent16 chose player21 pass\n";return 0;
+}
 static int continuous_flight_terminal_check(int argc,char** argv) {
  using namespace captain;if(argc!=4)return 2;
  std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
@@ -2311,7 +2366,7 @@ static int keeper_outlet_choices(int argc,char** argv) {
  if(records.peek()!=std::char_traits<char>::eof())throw std::runtime_error("Extra keeper outlet choice cases");return 0;
 }
 int main(int argc,char** argv) {
- if(argc!=1){if(std::string(argv[1])=="--check-continuous-flight-terminal")return continuous_flight_terminal_check(argc,argv);if(std::string(argv[1])=="--check-first-encounter-fraction")return first_encounter_fraction_check(argc,argv);if(std::string(argv[1])=="--check-first-defended-free-pass-runtime")return first_defended_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-free-pass-runtime")return first_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-match-create")return first_match_create_check(argc,argv);if(std::string(argv[1])=="--check-first-match-roster")return first_match_roster_check(argc,argv);if(std::string(argv[1])=="--check-initial-kickoff-runtime")return initial_kickoff_runtime_check(argc,argv);if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
+ if(argc!=1){if(std::string(argv[1])=="--check-generic-defended-shot-choice")return generic_defended_shot_choice_check(argc,argv);if(std::string(argv[1])=="--check-generic-action2-field-ai")return generic_action2_field_ai_check(argc,argv);if(std::string(argv[1])=="--check-first-generic-field-ai")return first_generic_field_ai_check(argc,argv);if(std::string(argv[1])=="--check-continuous-flight-terminal")return continuous_flight_terminal_check(argc,argv);if(std::string(argv[1])=="--check-first-encounter-fraction")return first_encounter_fraction_check(argc,argv);if(std::string(argv[1])=="--check-first-defended-free-pass-runtime")return first_defended_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-free-pass-runtime")return first_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-match-create")return first_match_create_check(argc,argv);if(std::string(argv[1])=="--check-first-match-roster")return first_match_roster_check(argc,argv);if(std::string(argv[1])=="--check-initial-kickoff-runtime")return initial_kickoff_runtime_check(argc,argv);if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
  const auto result=regular_tests();
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
  test_human_defended_arrival(deferred_human_defended_test->state,deferred_human_defended_test->content,deferred_human_defended_test->seq,deferred_human_defended_test->identity);

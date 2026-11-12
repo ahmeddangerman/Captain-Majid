@@ -93,6 +93,8 @@ PhaseSessionState resolve_prepared_session_keeper(const PhaseSessionState& input
  if(returned && story.result_code!=0)
   throw std::invalid_argument("Unobserved returned goal-area goalkeeper result");
  auto state=input;state.current.field.roster[keeper].stamina=prepared.energy.stamina;
+ if(field.side==11 && field.ball_owner==21 && field.roster[21].type==0 && input.area_defender_cursor==1)
+  state.area_defender_cursor=0;
  if(input.score && ((input.score->left_goals==2 && input.score->right_goals==5 && input.current.clock.remaining==304 && input.area_defender_cursor==5) ||
     (input.score->left_goals==3 && input.score->right_goals==6 && input.current.clock.remaining==263 && input.area_defender_cursor==4)) &&
     input.current.field.side==0 && input.current.field.ball_owner==7)

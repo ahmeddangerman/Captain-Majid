@@ -50,6 +50,25 @@ int main(int argc,char** argv) try {
   }
   return std::cin.eof()?0:2;
  }
+ if(argc==3 && std::string(argv[1])=="--generic-field-plan") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  if(!content.ai_field_choice || !content.ai_area_choice)return 2;
+  unsigned flags,alt,carrier,x,y,first,second;
+  while(std::cin>>flags>>alt>>carrier>>x>>y>>first>>second) {
+   std::array<std::array<std::uint8_t,2>,10> positions{};
+   for(auto& p:positions)for(auto& v:p){unsigned n;if(!(std::cin>>n)||n>255)return 2;v=n;}
+   if(flags>255||alt>255||carrier>255||x>255||y>255||first>255||second>255)return 2;
+   try {const auto c=captain::choose_generic_ai_field_candidate(carrier,flags,alt,x,y,first,content.field_players,*content.ai_field_choice);
+    std::cout<<unsigned(c.category)<<' '<<unsigned(c.row)<<' '<<unsigned(c.candidate)<<' ';
+    if(c.candidate==1 && content.ai_field_choice->no_variant_zero_shot_options && (*content.ai_field_choice->no_variant_zero_shot_options)[0]) {std::cout<<"0 0 "<<first<<" -1 -1\n";continue;}
+    if(c.candidate==3 && content.ai_field_choice->empty_action2_options && (*content.ai_field_choice->empty_action2_options)[0]) {std::cout<<"2 0 "<<first<<" -1 -1\n";continue;}
+    try {const auto r=captain::plan_generic_ai_field_pass(carrier,flags,alt,x,y,first,second,positions,content.field_players,*content.ai_field_choice,*content.ai_area_choice);
+     std::cout<<unsigned(r.action)<<' '<<unsigned(r.subtype)<<' '<<unsigned(r.random_first)<<' '<<(r.recipient?int(*r.recipient):-1)<<' '<<(r.cell?int(*r.cell):-1)<<'\n';}
+    catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+   }catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--field-plan") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   if(!content.ai_field_choice || !content.ai_area_choice)return 2;
@@ -186,6 +205,9 @@ int main(int argc,char** argv) try {
  for(auto& pair:field.low_x_categories)pair={255,255};
  field.low_x_categories[0]={0,4};
  field.rows[0][16]=0x23;field.rows[0][4]=0x56;
+ captain::PlayerProfileMappings generic_field{};generic_field.generic_slot_offsets[5]=0;generic_field.team_types={119};field.profile_rows[119]=0;
+ const auto generic_choice=captain::choose_generic_ai_field_candidate(16,0,0,112,124,0,generic_field,field);
+ if(generic_choice.category!=16 || generic_choice.row!=0 || generic_choice.candidate!=2)return 1;
  const auto middle=captain::choose_ai_field_candidate(23,0,0,112,124,0,field);
  const auto left=captain::choose_ai_field_candidate(23,0,0,52,84,1,field);
  if(middle.category!=16 || middle.row!=0 || middle.candidate!=2 || left.category!=4 || left.candidate!=6)return 1;
@@ -201,6 +223,9 @@ int main(int argc,char** argv) try {
  field.empty_pass_options=std::array<std::uint8_t,118>{};(*field.empty_pass_options)[23]=1;
  const auto empty_options_pass=captain::plan_ai_field_pass_candidate(23,0,0,19,160,124,1,0,teammates,field,field_shared);
  if(empty_options_pass.action!=1 || empty_options_pass.recipient!=20 || empty_options_pass.subtype)return 1;
+ field.recipient_profile_rows[119]=0;(*field.empty_pass_options)[0]=1;
+ const auto generic_pass=captain::plan_generic_ai_field_pass(16,0,0,160,124,1,0,teammates,generic_field,field,field_shared);
+ if(generic_pass.action!=1 || generic_pass.recipient!=20 || generic_pass.subtype)return 1;
  const auto retry=captain::choose_ai_area_recipient(41,19,120,1,0,teammates);
  if(retry.action!=4 || retry.random_first!=128 || retry.recipient)return 1;
  const std::array<std::uint8_t,4> candidates{{0x01,0x23,0x45,0x67}};

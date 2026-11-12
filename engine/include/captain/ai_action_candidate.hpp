@@ -47,12 +47,19 @@ struct AiFieldChoiceContent {
 AiAreaChoice choose_ai_field_candidate(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
  const AiFieldChoiceContent& content);
+AiAreaChoice choose_generic_ai_field_candidate(std::uint8_t id,std::uint8_t flags,
+ std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
+ const PlayerProfileMappings& profiles,const AiFieldChoiceContent& content);
 struct AiAreaAction { AiAreaChoice choice; std::uint8_t action,subtype; };
 struct AiAreaPlan { std::uint8_t action,subtype,random_first; std::optional<std::uint8_t> recipient{},cell{}; };
 // Field route candidate2: fallback or a pass with a proven empty special-option list.
 AiAreaPlan plan_ai_field_pass_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t carrier,std::uint8_t ball_x,std::uint8_t ball_y,std::uint8_t first,std::uint8_t second,
  const std::array<std::array<std::uint8_t,2>,10>& teammates,
+ const AiFieldChoiceContent& field,const AiAreaChoiceContent& shared);
+AiAreaPlan plan_generic_ai_field_pass(std::uint8_t carrier,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t ball_x,std::uint8_t ball_y,std::uint8_t first,std::uint8_t second,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates,const PlayerProfileMappings& profiles,
  const AiFieldChoiceContent& field,const AiAreaChoiceContent& shared);
 AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t carrier,std::uint8_t ball_x,std::uint8_t ball_y,std::uint8_t first,

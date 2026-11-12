@@ -38,11 +38,18 @@ AiAreaChoice choose_ai_field_candidate(std::uint8_t type,std::uint8_t flags,std:
  std::array<std::uint8_t,4> candidates{};for(unsigned i=0;i<4;++i)candidates[i]=content.rows[row][category+i];
  return {static_cast<std::uint8_t>(category),row,choose_ai_action_candidate(candidates,random)};
 }
-AiAreaPlan plan_ai_field_pass_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+AiAreaChoice choose_generic_ai_field_candidate(std::uint8_t id,std::uint8_t flags,
+ std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
+ const PlayerProfileMappings& profiles,const AiFieldChoiceContent& content) {
+ if(id<12 || id>21)throw std::invalid_argument("Generic field AI requires an opposing field player");
+ const auto offset=profiles.generic_slot_offsets[id-11];
+ if(offset>=profiles.team_types.size())throw std::invalid_argument("Missing generic field team profile");
+ return choose_ai_field_candidate(profiles.team_types[offset],flags,alternate,x,y,random,content);
+}
+static AiAreaPlan plan_ai_field_pass_with_type(std::uint8_t raw_type,std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t carrier,std::uint8_t x,std::uint8_t y,std::uint8_t first,std::uint8_t second,
  const std::array<std::array<std::uint8_t,2>,10>& teammates,const AiFieldChoiceContent& field,const AiAreaChoiceContent& shared) {
  if(carrier<12 || carrier>21)throw std::invalid_argument("Field AI requires an opponent carrier");
- const auto raw_type=type;
  const auto choice=choose_ai_field_candidate(type,flags,alternate,x,y,first,field);
  if(choice.candidate!=2)throw std::invalid_argument("Unsupported field AI candidate");
  if(flags&128u)type=alternate;
@@ -56,6 +63,20 @@ AiAreaPlan plan_ai_field_pass_candidate(std::uint8_t type,std::uint8_t flags,std
   return {1,0,target.random_first,target.recipient,target.cell};
  }
  return {2,0,target.random_first,std::nullopt,std::nullopt};
+}
+AiAreaPlan plan_ai_field_pass_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t carrier,std::uint8_t x,std::uint8_t y,std::uint8_t first,std::uint8_t second,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates,const AiFieldChoiceContent& field,const AiAreaChoiceContent& shared) {
+ return plan_ai_field_pass_with_type(type,type,flags,alternate,carrier,x,y,first,second,teammates,field,shared);
+}
+AiAreaPlan plan_generic_ai_field_pass(std::uint8_t carrier,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t first,std::uint8_t second,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates,const PlayerProfileMappings& profiles,
+ const AiFieldChoiceContent& field,const AiAreaChoiceContent& shared) {
+ if(carrier<12 || carrier>21)throw std::invalid_argument("Generic field AI requires an opposing field player");
+ const auto offset=profiles.generic_slot_offsets[carrier-11];
+ if(offset>=profiles.team_types.size())throw std::invalid_argument("Missing generic field team profile");
+ return plan_ai_field_pass_with_type(0,profiles.team_types[offset],flags,alternate,carrier,x,y,first,second,teammates,field,shared);
 }
 AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t carrier,std::uint8_t ball_x,std::uint8_t ball_y,std::uint8_t first,
