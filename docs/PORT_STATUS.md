@@ -1,5 +1,11 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Player14 passes after defender skip
+
+Following the interception, player14 advances to clock55 and meets defender3. The original retains the earlier defender cursor value1 through this contact and the following pass. Validation now accepts the observed carried state through the defender menu, flight and player21 control, rather than throwing or resetting it. With defender3 explicitly set to skip, original and native choose a pass to player21; player21 receives at (69,167), clock54, and the saved control state reloads.
+
+Controlled comparisons match 67 original/native movement boundaries, skip confirmation, attacker preparation, clock, pass handoff and recipient setup. Windows CMake build, all 65 tests and the private replay passed. These traces use explicit inputs and injected random samples, and acknowledge waits without live NMI, rendering, audio or hardware timing. Next continue from player21 control. Overall progress is unmeasured and a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player14 intercepts player4's pass
 
 At player4's five-defender contact, the controlled pass to player3 produces original defender choices [1,2,1,2,0] for players12,14,17,18,19. Defender12's contact returns 0; defender14's contact returns 3 with subtype128, and opposing player14 takes control at (98,139), clock60. Native/original represented states match target confirmation, all five choices, both defender preparations and comparisons, and interception/control. The subtype128 compared state and player14's subsequent control save/reload.

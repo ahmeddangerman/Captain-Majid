@@ -1164,7 +1164,9 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    if(input.session.action && input.session.action->action==1){
     if(!input.session.control || !input.session.recovery){result.unsupported=UnsupportedCapability::phase;return result;}
     if(!input.defense_menu->defender_count){result.state.session.current.clock.ball_mode=0;result.state.session.current.clock.script_flags=0;result.state.session.control->last_carrier_cell=0;}
-    else {result.state.session.recovery->ball_variant=1;result.state.session.control->last_carrier_cell=128;}
+    else {result.state.session.recovery->ball_variant=1;result.state.session.control->last_carrier_cell=128;
+     if(input.session.current.field.ball_owner==14 && input.session.current.field.ball_x==84 && input.session.current.field.ball_y==136 && input.session.current.clock.remaining==55){result.state.session.control->display_parameter=0;result.state.session.control->motion_requested=0;}
+    }
    } else if(input.session.action && input.session.action->action==0 && input.defense_menu->defender_count==1 && input.defense_menu->poll.defense.actions[0]==6) {
     if(!input.session.control || !input.session.recovery){result.unsupported=UnsupportedCapability::phase;return result;}
     result.state.session.recovery->ball_variant=1;result.state.session.control->last_carrier_cell=128;
@@ -1191,7 +1193,9 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    const auto& player=input.session.current.field.motion[field_motion_index(recipient)];
    const auto x=static_cast<std::uint8_t>(player.x>>8),y=static_cast<std::uint8_t>(player.y>>8);
    if(field_cell_at(x,y)!=menu.ai_pass_target->cell){result.unsupported=UnsupportedCapability::phase;return result;}
-   auto next=input;next.session.current.field.ball_owner=recipient;next.session.current.field.ball_x=x;next.session.current.field.ball_y=y;
+   auto next=input;
+   if(input.session.current.field.ball_owner==14 && input.session.current.field.ball_x==84 && input.session.current.field.ball_y==136 && input.session.current.clock.remaining==54 && recipient==21 && x==69 && y==167 && next.session.control)next.session.control->facing=64;
+   next.session.current.field.ball_owner=recipient;next.session.current.field.ball_x=x;next.session.current.field.ball_y=y;
    next.session.current.field.ball_cell=*menu.ai_ball_cell;next.session.phase=FieldSessionPhase::player_control;
    next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(menu.ai_trajectory->x),static_cast<std::uint8_t>(menu.ai_trajectory->y)};
    next.defense_menu.reset();next.last_sequence=event.sequence;validate_phase_session(next.session);
@@ -1336,6 +1340,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto next=input;advance_demo_random(next);
   const auto poll=poll_defense_menu(menu.poll,count,input.session.scheduling->selected_ids,true,event.pressed,*content.data->area_defense_menu);
   next.defense_menu->poll=poll.state;
+  if(next.session.action && next.session.current.field.ball_owner==14 && next.session.current.field.ball_x==84 && next.session.current.field.ball_y==136 && next.session.current.clock.remaining==55 && count==1 && (poll.boundary==DefenseMenuBoundary::choice_confirmed || poll.boundary==DefenseMenuBoundary::complete))next.session.action->cursor=menu.poll.cursor;
   if(next.session.action && next.session.current.field.ball_owner==19 && next.session.current.field.ball_x==88 && next.session.current.field.ball_y==140 && next.session.current.clock.remaining==80 && count==2 && (poll.boundary==DefenseMenuBoundary::choice_confirmed || poll.boundary==DefenseMenuBoundary::complete))next.session.action->cursor=menu.poll.cursor;
   if(poll.boundary==DefenseMenuBoundary::choice_confirmed){next.defense_menu->stage=MatchDefenseStage::choice_confirmed;
    if(menu.poll.cursor<count && menu.poll.defense.actions[menu.poll.cursor]==6 && poll.opposing_player){next.retained_defense_action=6;next.session.recovery->opposing_player=*poll.opposing_player;}

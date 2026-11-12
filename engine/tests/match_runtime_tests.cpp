@@ -15,6 +15,41 @@
 #include <memory>
 #include <sstream>
 #include <string>
+static void continue_player14_interception(const captain::MatchRuntimeState& initial,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
+ using namespace captain;
+ auto state=std::make_unique<MatchRuntimeState>(initial);std::ofstream log(std::string(prefix)+"-player14-journey.txt");
+ for(int i=0;i<500;++i){
+  const auto phase=state->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending && phase!=FieldSessionPhase::ai_cell_decision)break;
+  auto next=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,0,0),content));
+  log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next->state.demo_rng&255)<<' '<<static_cast<unsigned>((next->state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<next->state.demo_rng<<'\n';log.flush();
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-player14-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*state=std::move(next->state);
+ }
+ if(state->session.phase!=FieldSessionPhase::field_contact_pending || state->session.current.field.selected_defenders!=1 || state->session.scheduling->selected_ids[0]!=3)throw std::runtime_error("Player14 observed contact stopped");
+ std::ofstream contact_log(std::string(prefix)+"-player14-contact-sequence.txt");
+ for(int i=0;i<40;++i){
+  std::uint8_t pressed=0;
+  if(state->defense_menu && state->defense_menu->stage==MatchDefenseStage::polling){
+   const auto& menu=*state->defense_menu;
+   if(menu.poll.cursor==menu.defender_count || menu.poll.defense.actions[menu.poll.cursor]==6)pressed=128;
+   else for(unsigned j=0;j<4;++j)if(content.data->area_defense_menu->directions[0][j]==6){pressed=static_cast<std::uint8_t>(1u<<j);break;}
+  }
+  auto next=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,0,pressed),content));
+  contact_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->state.defense_menu ? static_cast<int>(next->state.defense_menu->stage) : -1)<<' '<<next->state.demo_rng<<'\n';contact_log.flush();
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-player14-contact-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*state=std::move(next->state);
+  if(state->session.phase==FieldSessionPhase::control_ready || state->session.phase==FieldSessionPhase::player_control)break;
+ }
+
+ if(state->session.phase!=FieldSessionPhase::player_control || state->session.current.field.side!=11 || state->session.current.field.ball_owner!=21 || state->session.current.clock.remaining!=54)throw std::runtime_error("Player14 observed pass to player21 stopped");
+ auto ready=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,0,0),content));
+ if(ready->unsupported || ready->state.session.phase!=FieldSessionPhase::control_ready || ready->state.session.current.field.ball_owner!=21)throw std::runtime_error("Player21 control after player14 pass stopped");
+ std::ofstream ready_file(std::string(prefix)+"-player14-recipient-control.cmjsession",std::ios::binary);write_phase_session(ready_file,ready->state.session);
+ std::ostringstream saved(std::ios::binary);write_match_save(saved,ready->state,identity);std::istringstream saved_input(saved.str(),std::ios::binary);auto restored=std::make_unique<MatchRuntimeState>(load_match_save(saved_input,identity));
+ if(restored->session.current.field.ball_owner!=21 || restored->session.area_defender_cursor!=1)throw std::runtime_error("Player21 pass control did not roundtrip");
+
+}
 static void continue_home_after_action3(const captain::MatchRuntimeState& initial,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
  using namespace captain;
  auto state=std::make_unique<MatchRuntimeState>(initial);std::ofstream log(std::string(prefix)+"-home3-journey.txt");
@@ -91,6 +126,7 @@ static void continue_home_after_action3(const captain::MatchRuntimeState& initia
  std::ofstream intercepted_file(std::string(prefix)+"-home4-intercepted-control.cmjsession",std::ios::binary);write_phase_session(intercepted_file,interceptor->state.session);
  std::ostringstream interception_save(std::ios::binary);write_match_save(interception_save,interceptor->state,identity);std::istringstream interception_in(interception_save.str(),std::ios::binary);auto interception_restored=std::make_unique<MatchRuntimeState>(load_match_save(interception_in,identity));
  if(interception_restored->session.current.field.side!=11 || interception_restored->session.current.field.ball_owner!=14 || interception_restored->session.area_defender_cursor!=1)throw std::runtime_error("Player14 interception control did not roundtrip");
+ continue_player14_interception(*interception_restored,content,identity,prefix);
 
 
 
