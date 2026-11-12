@@ -38,4 +38,17 @@ for name,pc,extended in (('confirmed','8b8f-1',False),('prepared','82a0-1',True)
  raw=(a.player6_shot/f'{pc}.bin').read_bytes()
  compare_represented((a.trace/f'native-player6-shot-{name}.cmjsession').read_bytes(),export_session(raw,0),extended,'player6 shot',name)
  if raw[0x441]!=6 or raw[0x43b]!=0 or raw[0x43c]!=2:raise ValueError('Unexpected player6 shot state')
+for name,pc in (('shot-target','dd08-1'),('shot-flight','e773-6'),('shot-flight-1','e773-7'),('shot-flight-3','e773-8'),('shot-flight-5','e773-9'),('shot-flight-7','e773-10'),('shot-flight-9','e773-11'),('shot-flight-11','e773-12'),('shot-flight-12','e7cc-2'),('keeper-entry','dd1c-1'),('keeper-prompt','8509-1'),('keeper-result','8599-1'),('save','8bdf-1'),('recovered','8c31-2')):
+ raw=bytearray((a.player6_shot/f'{pc}.bin').read_bytes());count=raw[0x600];raw[0x600]=0
+ expected=bytearray(export_session(raw,0));expected[28]=count
+ if count: expected[309]=11
+ compare_represented((a.trace/f'native-player6-{name}.cmjsession').read_bytes(),expected,False,'player6 shot',name)
+ if name=='keeper-result' and (raw[0x43d],raw[0x612])!=(1,2):raise ValueError('Unexpected original goalkeeper result')
+ if name=='recovered' and (raw[0x441],raw[0x5fb],raw[0x634],raw[0x636])!=(4,0,79,152):raise ValueError('Unexpected original rebound owner or fraction')
+for name,pc in (('area','8b4a-2'),('area-prepared','8b73-2'),('menu','d5e5-3')):
+ raw=bytearray((a.player6_shot/f'{pc}.bin').read_bytes());count=raw[0x600];raw[0x600]=0
+ expected=bytearray(export_session(raw,0));expected[28]=count
+ if count: expected[309]=11
+ compare_represented((a.trace/f'native-player4-{name}.cmjsession').read_bytes(),expected,False,'player4 rebound',name)
+ if raw[0x441]!=4:raise ValueError('Unexpected player4 goal-area owner')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

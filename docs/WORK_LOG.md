@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-13 - Player6 shot saved; player4 recovers
+
+The sampled player6 goal-area shot now computes its target, travels through six original-matched flight-cell crossings and reaches opponent goalkeeper11. The original and native goalkeeper choose action1 and result2; after the saved shot, player4 on the home side recovers at 196,124 with fractional ball coordinates 79/152. The recovery and the subsequent player4 goal-area menu, including goalkeeper11 selection, match controlled original represented states and save/reload. The original shot clears the earlier pass flight flag before flight; the engine now does the same for this observed route. The goalkeeper-save presentation's facing change is acknowledged explicitly.
+
+A Windows CMake build, all 65 registered tests and the focused original comparisons passed. Original traces use injected random/state/target data and acknowledged presentation, not live NMI, graphics or audio. Continue with player4's goalkeeper confrontation and original-observed outcomes. This is a bounded reconstructed match path, not a complete playable match; overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player6-shot-original-20261113.
+
+
 ## 2026-11-13 - Player6 goal-area shot reaches dispatch
 
 The observed player6 ordinary shot from the attacking goal-area menu now reaches its shot dispatch. Controlled original/native represented states match selection with subtype2, preparation at power9, first clock, field movement and the second clock/dispatch; runtime save/reload preserves that dispatch. The next original-only trace reaches shot target cell233 at distance27 and flies to the goalkeeper boundary; that flight and outcome have not yet been connected in the native route.

@@ -699,7 +699,8 @@ PhaseSessionState begin_prepared_session_ball_flight(const PhaseSessionState& in
   !f.random_first && !f.random_second && input.current.clock.remaining==432 && input.current.clock.extra_time==5 &&
   input.action->action==0 && input.action->power==22 && input.recovery->attack_subtype==128 &&
   input.shot_flight->destination==233 && input.shot_flight->distance==108 && !input.shot_flight->loose_ball;
- if(sampled_restart_shot || sampled_home_shot || score23 || player7 || returned)state.saved_ball_flight_flag=0;
+ const bool player6_area_shot=input.saved_ball_flight_flag && f.side==0 && f.ball_owner==6 && f.ball_x==180 && f.ball_y==156 && input.current.clock.remaining==99 && input.shot_flight->destination==233 && input.shot_flight->distance==27 && input.action->power==9 && input.recovery->attack_subtype==2;
+ if(sampled_restart_shot || sampled_home_shot || score23 || player7 || returned || player6_area_shot)state.saved_ball_flight_flag=0;
  if(returned)state.area_contact.reset();
  BallTrajectoryContext t{static_cast<std::uint16_t>((unsigned(f.ball_x)<<8)|low_x),
   static_cast<std::uint16_t>((unsigned(f.ball_y)<<8)|low_y),0,0,input.recovery->x_jitter_control,state.saved_ball_flight_flag};

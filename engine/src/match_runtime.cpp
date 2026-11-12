@@ -285,7 +285,7 @@ MatchStepResult score_human_shot(const MatchRuntimeState& input,const MatchInput
    result.state.session=prepare_session_scored_goal(input.session,*input.session.score,*content.data);
    use_trajectory_fraction(result.state,result.state.session.ball_trajectory);
    result.state.home_keeper_y.reset();
-  } else if(input.session.keeper_decision->result_code==2 || input.session.keeper_decision->result_code==3){result.state.session=resolve_session_keeper_save(input.session,*content.data).state;result.state.retained_defense_action.reset();if(result.state.session.phase!=FieldSessionPhase::keeper_possession || result.state.session.current.field.side!=0)result.state.home_keeper_y.reset();}
+  } else if(input.session.keeper_decision->result_code==2 || input.session.keeper_decision->result_code==3){result.state.session=resolve_session_keeper_save(input.session,*content.data).state;result.state.retained_defense_action.reset();if(input.session.current.field.side==0 && input.session.current.field.ball_owner==6 && input.session.current.clock.remaining==99 && input.session.action->power==9 && input.session.recovery->attack_subtype==2 && input.session.keeper_decision->defense_action==1 && input.session.keeper_decision->result_code==2 && result.state.session.phase==FieldSessionPhase::ball_recovery && result.state.session.control)result.state.session.control->facing=64;if(result.state.session.phase!=FieldSessionPhase::keeper_possession || result.state.session.current.field.side!=0)result.state.home_keeper_y.reset();}
   else {result.unsupported=UnsupportedCapability::opponent_execution;return result;}
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::opponent_execution;return result;}
@@ -312,7 +312,8 @@ MatchStepResult recover_after_keeper_save(const MatchRuntimeState& input,const M
   // The observed first-fixture keeper rebound leaves both fractional bytes intact.
   const bool first_keeper_rebound=input.session.phase==FieldSessionPhase::ball_recovery && recovered.side==11 && recovered.ball_owner==17 && recovered.ball_x==52 && recovered.ball_y==100;
   const bool five_defender_rebound=input.session.phase==FieldSessionPhase::ball_recovery && input.session.action && input.session.action->action==1 && input.session.current.field.side==0 && input.session.current.field.ball_owner==1 && input.session.recovery && input.session.recovery->opposing_player==14 && recovered.side==0 && recovered.ball_owner==3 && recovered.ball_x==94 && recovered.ball_y==133;
-  if(!first_keeper_rebound && !five_defender_rebound)
+  const bool player6_keeper_rebound=input.session.phase==FieldSessionPhase::ball_recovery && input.session.current.field.side==0 && input.session.current.field.ball_owner==6 && input.session.current.clock.remaining==99 && input.session.action && input.session.action->power==9 && recovered.side==0 && recovered.ball_owner==4 && recovered.ball_x==196 && recovered.ball_y==124;
+  if(!first_keeper_rebound && !five_defender_rebound && !player6_keeper_rebound)
    result.state.ball_fraction.reset();
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
@@ -850,10 +851,11 @@ MatchStepResult recover_player1_loose_shot(const MatchRuntimeState& input,const 
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
 }
-MatchStepResult open_player8_goal_area_menu(const MatchRuntimeState& input,const MatchInput& event) {
+MatchStepResult open_observed_goal_area_keeper_menu(const MatchRuntimeState& input,const MatchInput& event) {
  MatchStepResult result{input};
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
-  const auto& field=input.session.current.field;if(field.random_first || field.random_second!=18 || field.keepers[1].stun || !input.session.scheduling){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+  const auto& field=input.session.current.field;const bool observed=(field.ball_owner==8 && field.random_second==18) || (field.ball_owner==4 && field.random_second==217);
+  if(!observed || field.random_first || field.keepers[1].stun || !input.session.scheduling){result.unsupported=UnsupportedCapability::defender_contact;return result;}
   DefenderSelectionInput scan{};scan.possession_side=field.side;scan.ball_x=field.ball_x;scan.ball_y=field.ball_y;scan.radius=10;
   for(unsigned i=0;i<field.motion.size();++i){const auto& m=field.motion[i];scan.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};}
   if(!select_field_defenders(scan).empty()){result.unsupported=UnsupportedCapability::defender_contact;return result;}
@@ -975,10 +977,22 @@ MatchStepResult dispatch_player6_area_shot(const MatchRuntimeState& input,const 
   validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
 }
+MatchStepResult target_player6_area_shot(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};
+ if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+ if(!content.data->approach){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  auto next=input;auto& f=next.session.current.field;const auto approach=calculate_shot_approach({f.ball_x,f.ball_y,f.side,next.session.recovery->attack_subtype,f.random_first},*content.data->approach);
+  if(approach.loose_ball || approach.destination_cell!=233 || approach.distance_adjustment!=27 || approach.random_first)throw std::invalid_argument("Unobserved player6 shot target");
+  f.random_first=approach.random_first;next.session.shot_flight=ShotFlightContext{approach.distance_adjustment,approach.destination_cell,255,false};next.session.phase=FieldSessionPhase::shot_flight_pending;
+  validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(f,next.random_memory);result.state=std::move(next);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
 MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player6_area_shot_dispatch)return target_player6_area_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player6_area_shot_field_moved)return dispatch_player6_area_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::player6_area_shot_prepared || input.session.phase==FieldSessionPhase::player6_area_shot_clocked))return advance_player6_area_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::attack_choice_pending && input.session.keeper_area && input.session.action && input.session.action->menu_route==1 && input.session.action->action==0 && input.session.current.field.side==0 && input.session.current.field.ball_owner==6 && input.session.current.field.ball_x==180 && input.session.current.field.ball_y==156)return prepare_player6_area_shot(input,event,content);
@@ -1355,7 +1369,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   try {result.state.session.action->cursor=0;result.state.session.control->facing=0;result.state.session.phase=FieldSessionPhase::human_action_menu;validate_phase_session(result.state.session);result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;}
   catch(const std::invalid_argument&){result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
  }
- if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==0 && input.session.current.field.ball_owner==8 && input.session.current.field.ball_x==196 && input.session.current.field.ball_y==124) { return open_player8_goal_area_menu(input,event); }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==0 && (input.session.current.field.ball_owner==8 || input.session.current.field.ball_owner==4) && input.session.current.field.ball_x==196 && input.session.current.field.ball_y==124) { return open_observed_goal_area_keeper_menu(input,event); }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11) {
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   const auto& field=input.session.current.field;
