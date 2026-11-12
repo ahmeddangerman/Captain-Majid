@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-12 - Defended player1 shot recovers to player8
+
+The first-fixture continuation now supports the captured player1 ordinary shot against defender12's action1 tackle. Original/native represented state matched the injected AI random selection, defender choice, attack and defender preparation, comparison result0, contact and dispatch clocks, field movement, shot target, all 12 flight crossings and arrival, loose-ball recovery, and player8's attacking goal-area setup. The shot lands as a loose ball and player8 recovers it near the opposing goal; it is not a goal. The original direct shot-tackle and existing pass-tackle comparison bytes were independently checked equal for the verified cartridge. This path is guarded to the observed player, positions and random sample; other shot-defense decisions remain unsupported.
+
+The original field movement shifts random byte101 to0 in its scratch routine; the native path acknowledges this observed effect. Two motion/facing changes during presentation are also explicitly acknowledged, not simulated. The original traces inject random bytes and use cooperative waits without NMI, audio or rendering. A fresh seed-3 provisional replay reaches player8's attacking goal-area phase65 at clock125 and stops there. Full Windows build, all 65 registered tests and the private original comparison passed. Next trace the human attacking goal-area menu and extend it against original behavior. Overall progress remains unmeasured; a complete match is unfinished. Suggested model GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player1-shot-original-20261112.
+
+
 ## 2026-11-12 - Player2 free pass times out to player1
 
 In the continued provisional fixture, player2's defended pass reaches an open target; a four-round race times out and player1 recovers the ball. Controlled original/native represented states match the recovery handoff and control-ready state, including position fractions 173/87. The timeout path is guarded to this observed state and winner. The subsequent defender12 contact and action menu match the original with injected provisional random bytes; the original retains defender cursor1 through both, so validation now accepts that observed continuation. The fresh seed-3 replay reaches the new action menu at clock128.
