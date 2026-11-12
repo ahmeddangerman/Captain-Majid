@@ -194,4 +194,24 @@ for index,name,kwargs in ((9,'prepared',{}),(11,'clock',{'through_clock':True}),
  original=original_preparation(rom[16:262160],base,**kwargs)
  compare_represented((a.trace/f'native-player19-contact-{index}.cmjsession').read_bytes(),export_session(original,0),False,'player19 fallback',name)
  if name=='ready' and (original[0x441],original[0x5fb],original[0x5f7])!=(19,11,79):raise ValueError('Unexpected player19 possession')
+raw=original
+for line in (a.trace/'native-player19-after-contact-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Player19 action3 continuation stopped early')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ if phase==12:
+  if original_candidate(rom[16:262160],injected)[2]!=4:raise ValueError('Unexpected original player19 action3 candidate')
+  raw=original_choice(rom[16:262160],injected)
+  if (raw[0x43b],raw[0x43c],raw[0x5fc],raw[0x638])!=(3,0,14,78):raise ValueError('Unexpected player19 action3 target')
+ else:observed,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-player19-after-contact-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'player19 action3 journey',str(i))
+for native,name in (('prepared','prepared'),('clock','preclock'),('moved','clock'),('flight','flight'),('flight2','flight2'),('contact','control'),('home-control','ready')):
+ original=(a.player3_shot/f'player19-action3-{name}.bin').read_bytes()
+ compare_represented((a.trace/f'native-player19-action3-{native}.cmjsession').read_bytes(),export_session(original,0),False,'player19 action3',name)
+arrival=(a.player3_shot/'player19-action3-arrival.bin').read_bytes()
+if (arrival[0x635],arrival[0x637],arrival[0x634],arrival[0x636],arrival[0x5fe],arrival[0x600])!=(84,132,235,37,54,0):raise ValueError('Unexpected original action3 first-leg arrival')
+arrival2=(a.player3_shot/'player19-action3-arrival2.bin').read_bytes();home=(a.player3_shot/'player19-action3-ready.bin').read_bytes()
+if (arrival2[0x635],arrival2[0x637],arrival2[0x634],arrival2[0x636],arrival2[0x5fe],list(arrival2[0x601:0x601+arrival2[0x600]]))!=(52,132,235,37,6,[3,4,5,7]):raise ValueError('Unexpected original action3 second leg')
+if (home[0x441],home[0x5fb],home[0x635],home[0x637],home[0x5f7])!=(3,0,77,135,74):raise ValueError('Unexpected original action3 interception owner')
+
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

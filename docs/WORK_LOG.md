@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Player19 action3 intercepted by player3
+
+Extended the controlled first-match sequence beyond the two skipped defenders. Player19 chooses the observed action3 at clock77, with teammate14 selected. The engine now reproduces its two observed flight legs: the first arrives at (84,132), the second at (52,132), preserving both fractional bytes. The second leg encounters defenders3,4,5,7. Original field-comparison data yields result3 for defender3, who takes possession; native and original then agree at home player3's control at (77,135), clock74.
+
+The action3 route is bounded to this captured state and sampled inputs; it is not a general implementation of every one-two or AI choice. Choice, first-flight arrival and second-flight defender selection save/reload. The private replay compares the represented choice, preparation, clock, both flight setups, interception and control against controlled original CPU observations. Windows CMake build, all 65 tests, focused integration and original comparison passed. The Windows integration-test executable uses an 8 MiB stack because this long replay nests large value snapshots. Original traces inject random values and acknowledge waits without live NMI, graphics, audio or frame timing. Next continue from player3 control. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Two skipped defenders and player19 fallback
 
 The sampled player19 possession reaches a field-defense prompt at clock80 with defenders3 and5. With both set to skip, controlled original/native comparisons match both confirmations, the generic opponent's candidate3/action2 choice, preparation, clock, handoff and control setup. Player19 keeps possession on side11 at clock79. The original menu confirmations and subsequent CPU routine were run from the captured field state with explicit choices and random bytes.
