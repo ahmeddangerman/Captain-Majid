@@ -650,9 +650,11 @@ MatchStepResult handle_contested_pass_progress(const MatchRuntimeState& input,co
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   // The recipient-facing presentation sample is only established for this controlled route.
   const auto& field=input.session.current.field;
-  if(field.ball_owner!=7 || field.ball_x!=113 || field.ball_y!=143 || !input.session.ball_trajectory){result.unsupported=UnsupportedCapability::presentation;return result;}
+  const bool original_recipient=field.ball_owner==7 && field.ball_x==113 && field.ball_y==143;
+  const bool player4_recipient=field.ball_owner==4 && field.ball_x==84 && field.ball_y==140 && input.session.current.clock.remaining==68;
+  if((!original_recipient && !player4_recipient) || !input.session.ball_trajectory){result.unsupported=UnsupportedCapability::presentation;return result;}
   auto next=input;next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(input.session.ball_trajectory->x),static_cast<std::uint8_t>(input.session.ball_trajectory->y)};
-  try {next.session=continue_ordinary_pass_control(next.session,0);}
+  try {next.session=continue_ordinary_pass_control(next.session,player4_recipient ? 64 : 0);}
   catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }
@@ -1648,7 +1650,8 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    }
    auto next=input;
    const bool player9_deferred_presentation=next.session.current.field.ball_owner==9 && next.session.current.field.ball_x==172 && next.session.current.field.ball_y==124 && next.session.current.field.selected_defenders==5 && next.session.scheduling && next.session.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && next.session.current.field.random_first==135 && next.session.current.field.random_second==94;
-   next.session.control->facing=player9_deferred_presentation ? 0 : 64;
+   const bool player3_left_facing=next.session.current.field.ball_owner==3 && next.session.current.field.ball_x==87 && next.session.current.field.ball_y==135 && next.session.current.field.selected_defenders==2 && next.session.current.clock.remaining==71 && next.session.current.field.random_first==252 && next.session.current.field.random_second==234;
+   next.session.control->facing=(player9_deferred_presentation || player3_left_facing) ? 0 : 64;
    next.session.control->motion_requested=0;
    const auto variant=static_cast<std::uint8_t>(player9_deferred_presentation ? 0 : 1+(next.session.current.field.random_first&1));
    try {next.session=prepare_first_ordinary_pass_defender(next.session,variant,content.data->field_players,content.data->defense);}

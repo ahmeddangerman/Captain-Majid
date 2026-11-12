@@ -6,6 +6,8 @@ from pathlib import Path
 from check_generic_pass_defense_original import original
 from export_phase_session import export_session
 from trace_ball_recovery_phase import trace_recovery
+from trace_action_menu import trace_menu
+from verify_ordinary_pass_initialization import original_target
 from check_ai_field_candidate_original import original_candidate
 from check_ai_field_plan_original import original_choice
 from check_field_defense_provenance_original import confirmed_skip
@@ -214,4 +216,28 @@ arrival2=(a.player3_shot/'player19-action3-arrival2.bin').read_bytes();home=(a.p
 if (arrival2[0x635],arrival2[0x637],arrival2[0x634],arrival2[0x636],arrival2[0x5fe],list(arrival2[0x601:0x601+arrival2[0x600]]))!=(52,132,235,37,6,[3,4,5,7]):raise ValueError('Unexpected original action3 second leg')
 if (home[0x441],home[0x5fb],home[0x635],home[0x637],home[0x5f7])!=(3,0,77,135,74):raise ValueError('Unexpected original action3 interception owner')
 
+raw=(a.player3_shot/'player19-action3-ready.bin').read_bytes()
+for line in (a.trace/'native-home3-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Home player3 continuation stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ observed,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(1,0)},10:{'control_tick':True},13:{'world_inputs':[(1,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-home3-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'home player3 journey',str(i))
+if (raw[0x600],raw[0x601],raw[0x602])!=(2,15,16):raise ValueError('Unexpected home player3 defenders')
+for line in (a.trace/'native-home3-menu-sequence.txt').read_text().splitlines()[:3]:
+ i,pressed,unsupported,phase,seed=map(int,line.split());injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
+ observed,raw=trace_menu(rom[16:262160],injected,mode='open' if i==0 else 'poll',pressed=pressed)
+ compare_represented((a.trace/f'native-home3-menu-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'home player3 menu',str(i))
+ if i==0:opened=raw
+carrier=0x300+12*3;x=opened[carrier+5]|opened[carrier+6]<<8;y=opened[carrier+7]|opened[carrier+8]<<8
+for flags in (0,1,3,128,255):
+ injected=bytearray(opened);injected[0x443]=flags
+ if original_target(rom[16:262160],injected,x,y,return_ram=True)[0x443]!=0:raise ValueError('Original pass target retained move flags')
+original=(a.player3_shot/'home3-target.bin').read_bytes()
+compare_represented((a.trace/'native-home3-menu-3.cmjsession').read_bytes(),export_session(original,0),True,'home player3 pass','target initialization')
+for index,pc in ((1,'d84b-1'),(3,'8637-1'),(4,'8637-2'),(5,'804f-1'),(6,'80b6-1'),(7,'80d9-1'),(8,'80dc-1'),(9,'80b6-2'),(10,'80d9-2'),(11,'80dc-2'),(12,'80ed-1'),(13,'80f0-1'),(14,'de64-1'),(15,'e773-1'),(16,'e7cc-1'),(19,'e0df-1'),(20,'e145-1')):
+ original=(a.player3_shot/f'home3-pass-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-home3-target-{index}.cmjsession').read_bytes(),export_session(original,0),index!=20,'home player3 pass',pc)
+ if pc.startswith('80d9') and original[0x612]!=0:raise ValueError('Unexpected original home pass defender result')
+ if pc=='e145-1' and (original[0x441],original[0x5fb],original[0x635],original[0x637],original[0x5f7])!=(4,0,84,140,68):raise ValueError('Unexpected original home pass recipient')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

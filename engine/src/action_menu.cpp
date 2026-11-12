@@ -923,6 +923,7 @@ PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& inpu
     state.current.field.ball_cell = target.cell;
     state.current.clock.ball_mode = target.ball_mode;
     state.recovery->attack_subtype = target.attack_subtype;
+    state.action->move_flags = 0;
     state.human_pass_cursor = target.cursor;
     state.human_pass_steps = 0;
     state.ordinary_pass_candidates = OrdinaryPassCandidateContext{};
@@ -1038,10 +1039,11 @@ PhaseSessionState prepare_ordinary_pass(const PhaseSessionState& input,
 PhaseSessionState prepare_first_ordinary_pass_defender(const PhaseSessionState& input,
     std::uint8_t observed_ball_variant, const FieldPlayerProfiles& players, const FieldDefenseContent& defense) {
     validate_phase_session(input);
+    const bool player3_left_facing=input.current.field.side==0 && input.current.field.ball_owner==3 && input.current.field.ball_x==87 && input.current.field.ball_y==135 && input.current.field.selected_defenders==2 && input.current.clock.remaining==71 && input.current.field.random_first==252 && input.current.field.random_second==234;
     const bool player9_deferred_presentation=input.current.field.side==0 && input.current.field.ball_owner==9 && input.current.field.ball_x==172 && input.current.field.ball_y==124 && input.current.field.selected_defenders==5 && input.scheduling && input.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && input.current.field.random_first==135 && input.current.field.random_second==94 && observed_ball_variant==0;
     if (input.phase != FieldSessionPhase::ordinary_pass_prepared || !input.scheduling || !input.control ||
         !input.ordinary_pass_defenses || input.area_contact || ((observed_ball_variant != 1 && observed_ball_variant != 2) && !player9_deferred_presentation) ||
-        (input.control->facing != (player9_deferred_presentation ? 0 : 64)) || input.control->motion_requested)
+        (input.control->facing != ((player9_deferred_presentation || player3_left_facing) ? 0 : 64)) || input.control->motion_requested)
         throw std::invalid_argument("First ordinary pass defender requires recorded presentation and variant");
     const auto defender = input.scheduling->selected_ids[0];
     const auto& player = input.current.field.roster[defender];

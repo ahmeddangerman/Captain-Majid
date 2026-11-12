@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Home player3 passes through two defenders
+
+Continued from player3's interception with an explicit rightward input. At clock71 player3 meets opponents15 and16 and chooses an ordinary pass to player4. In the controlled original, both defender comparisons return 0; the pass reaches player4 at (84,140), clock68. Original/native represented states match movement, menu, target initialization, AI choices, both contact preparations/results/clocks, dispatch, flight and control. Player4's control state saves/reloads.
+
+Fixed ordinary pass-target initialization to clear stale move flags, as the original did for five tested input values (0,1,3,128,255). Added the observed left-facing presentation and player4 control handoff for this specific continuation. A first original trace injected the attack random sample too late and falsely suggested an interception; replaying with the identical sample before original attack preparation produced the two verified result0 contacts. Windows CMake build, all 65 registered tests, focused replay and original comparisons passed. Random samples and presentation acknowledgements are controlled; real NMI, graphics, audio and timing remain unverified. Next continue from player4 control. Overall progress is unmeasured and a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player19 action3 intercepted by player3
 
 Extended the controlled first-match sequence beyond the two skipped defenders. Player19 chooses the observed action3 at clock77, with teammate14 selected. The engine now reproduces its two observed flight legs: the first arrives at (84,132), the second at (52,132), preserving both fractional bytes. The second leg encounters defenders3,4,5,7. Original field-comparison data yields result3 for defender3, who takes possession; native and original then agree at home player3's control at (77,135), clock74.

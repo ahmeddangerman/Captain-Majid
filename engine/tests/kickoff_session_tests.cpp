@@ -1187,7 +1187,9 @@ int main(){try{using namespace captain;
  general_pass_input.current.field.motion[field_motion_index(5)].y=0x8467;
  general_pass_input.current.field.motion[field_motion_index(2)].x=0x8400;
  general_pass_input.current.field.motion[field_motion_index(2)].y=0x8400;
+ general_pass_input.action->move_flags=3;
  const auto general_pass=begin_ordinary_human_pass_target(general_pass_input);
+ check(general_pass.action->move_flags==0 && general_pass_input.action->move_flags==3,"Ordinary pass target clears stale move flags atomically");
  check(general_pass.phase==FieldSessionPhase::ordinary_human_pass_target && general_pass.human_pass_cursor==114 &&
        general_pass.current.field.ball_x==127 && general_pass.current.field.ball_y==132 && general_pass.current.field.ball_cell==114 &&
        general_pass.current.clock.ball_mode==129 && !general_pass.recovery->attack_subtype &&

@@ -15,6 +15,50 @@
 #include <memory>
 #include <sstream>
 #include <string>
+static void continue_home_after_action3(const captain::MatchRuntimeState& initial,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
+ using namespace captain;
+ auto state=std::make_unique<MatchRuntimeState>(initial);std::ofstream log(std::string(prefix)+"-home3-journey.txt");
+ for(int i=0;i<500;++i){
+  const auto phase=state->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+  auto next=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,1,0),content));
+  log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next->state.demo_rng&255)<<' '<<static_cast<unsigned>((next->state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<'\n';
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-home3-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*state=std::move(next->state);
+ }
+ if(state->session.phase!=FieldSessionPhase::field_contact_pending || state->session.current.field.selected_defenders!=2 || state->session.scheduling->selected_ids[0]!=15 || state->session.scheduling->selected_ids[1]!=16)throw std::runtime_error("Home player3 expected contact stopped");
+ std::ofstream menu_log(std::string(prefix)+"-home3-menu-sequence.txt");
+ for(int i=0;i<4;++i){
+  const std::uint8_t pressed=i==1 ? 2 : i==2 ? 128 : 0;
+  auto next=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,pressed,pressed),content));
+  menu_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-home3-menu-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*state=std::move(next->state);
+ }
+ if(state->session.phase!=FieldSessionPhase::ordinary_human_pass_target || !state->session.human_pass_cursor || *state->session.human_pass_cursor!=54 || state->session.action->move_flags)throw std::runtime_error("Home player3 pass target stopped");
+ std::ofstream target_log(std::string(prefix)+"-home3-target-sequence.txt");
+ for(int i=0;i<4;++i){
+  const std::uint8_t pressed=i==0 ? 4 : i==1 ? 128 : 0;
+  auto next=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,pressed,pressed),content));
+  target_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-home3-target-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*state=std::move(next->state);
+ }
+
+ for(int i=4;i<50;++i){
+  auto next=std::make_unique<MatchStepResult>(step_match(*state,client_input(*state,0,0),content));
+  target_log<<i<<" 0 "<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';
+  if(next->unsupported)break;
+  std::ofstream f(std::string(prefix)+"-home3-target-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*state=std::move(next->state);
+  if(state->session.phase==FieldSessionPhase::control_ready || state->session.phase==FieldSessionPhase::player_control)break;
+ }
+
+ if(state->session.phase!=FieldSessionPhase::control_ready || state->session.current.field.ball_owner!=4 || state->session.current.field.side!=0 || state->session.current.field.ball_x!=84 || state->session.current.field.ball_y!=140 || state->session.current.clock.remaining!=68)throw std::runtime_error("Home player3 pass did not reach player4");
+ std::ostringstream home_save(std::ios::binary);write_match_save(home_save,*state,identity);std::istringstream home_in(home_save.str(),std::ios::binary);auto home_restored=std::make_unique<MatchRuntimeState>(load_match_save(home_in,identity));
+ if(home_restored->session.current.field.ball_owner!=4 || home_restored->session.phase!=FieldSessionPhase::control_ready)throw std::runtime_error("Home player4 possession did not roundtrip");
+
+
+}
 static void continue_player19_action3_flights(const captain::MatchStepResult& initial,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
  using namespace captain;
  auto p19_flight=std::make_unique<MatchStepResult>(initial);
@@ -48,6 +92,7 @@ static void continue_player19_action3_flights(const captain::MatchStepResult& in
    auto home_control=std::make_unique<MatchStepResult>(step_match(p19_contact->state,client_input(p19_contact->state,0,0),content));
    if(home_control->unsupported || home_control->state.session.phase!=FieldSessionPhase::control_ready || home_control->state.session.current.field.side!=0 || home_control->state.session.current.field.ball_owner!=3 || home_control->state.session.current.field.ball_x!=77 || home_control->state.session.current.field.ball_y!=135 || home_control->state.session.current.clock.remaining!=74)throw std::runtime_error("Player19 action3 interception control stopped");
    std::ofstream home_file(std::string(prefix)+"-player19-action3-home-control.cmjsession",std::ios::binary);write_phase_session(home_file,home_control->state.session);
+   continue_home_after_action3(home_control->state,content,identity,prefix);
 
  }
 static void continue_player19_action3(captain::MatchRuntimeState& journey,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
