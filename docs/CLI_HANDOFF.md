@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player3 shot and four defender choices
+
+The observed player3 goal-area shot now calculates the original four opposing defender choices from the existing private AI tables: 2,3,2,2 for defenders12,15,17,21. The original and native represented states match shot confirmation, each choice and shot preparation at power11. Partial defender selection and completed choices save/reload. The new AI routine is restricted to the observed generic records and position; unobserved candidates reject rather than guessing.
+
+Original-only continuation observes four result0 contacts and a clock92 prefix, but these contacts are not yet implemented for this new route. The trace injects sampled random bytes and acknowledges presentation without live NMI, graphics or audio. A Windows CMake build, all 65 registered tests and the controlled original comparison passed. Next export the original shot-versus-field-defender goal-area comparison data and reproduce those contacts, clocks and the resulting shot. A complete match remains unfinished and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
+
 ## 2026-11-13 - Player3 faces four goal-area defenders
 
 The player4 rebound now continues into player3's attacking goal-area menu. The original and native represented states match at area entry, area setup and the action menu; field defenders12,15,17,21 are selected while the goalkeeper is stunned. The selected four-defender menu saves and reloads. Selection uses the existing field-defender scan and is guarded to the observed state.

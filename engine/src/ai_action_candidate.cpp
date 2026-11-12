@@ -231,6 +231,26 @@ std::uint8_t choose_generic_ai_pass_defense(std::uint8_t id,std::uint8_t flags,s
  if(offset>=profiles.team_types.size())throw std::invalid_argument("Missing generic pass-defense team profile");
  return choose_pass_defense_with_candidate_type(0,profiles.team_types[offset],flags,alternate,x,y,random,ball_variant,home_types,content);
 }
+std::uint8_t choose_generic_ai_goal_area_shot_defense(std::uint8_t id,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,const PlayerProfileMappings& profiles,
+ const AiAreaChoiceContent& area,const AiPassDefenseContent& defense) {
+ if((id!=12 && id!=15 && id!=17 && id!=21) || flags || alternate || x!=180 || y!=124)throw std::invalid_argument("Unobserved generic goal-area shot defender");
+ const auto slot=profiles.generic_slot_offsets[id-11];if(slot>=profiles.team_types.size())throw std::invalid_argument("Missing generic defender team profile");
+ auto type=profiles.team_types[slot];if(flags&128u)type=alternate;
+ if(type<1 || unsigned(type-1)>=defense.profile_rows.size())throw std::invalid_argument("Missing goal-area defender profile");
+ const auto row=defense.profile_rows[type-1];if(row>=defense.rows.size())throw std::invalid_argument("Missing goal-area defender row");
+ const auto fx=static_cast<std::uint8_t>((x&128u) ? x^255u : x),fy=static_cast<std::uint8_t>((y&128u) ? y^255u : y);
+ if(fx<48 || fx>=208 || fy<80 || fy>=176)throw std::invalid_argument("Goal-area defender outside field");
+ const auto cell=static_cast<std::uint8_t>(((fx-48u)/8u)*12u+(fy-80u)/8u);
+ for(const auto& entry:area.cells)if(entry[0]==cell) {
+  const unsigned category=unsigned(entry[1])+12u;if(category>44)throw std::invalid_argument("Goal-area defender category outside row");
+  std::array<std::uint8_t,4> choices{};for(unsigned i=0;i<4;++i)choices[i]=defense.rows[row][category+i];
+  const auto candidate=choose_ai_action_candidate(choices,random);
+  if(candidate==2)return 2;if(candidate==1)return 3;
+  throw std::invalid_argument("Unobserved goal-area shot-defense candidate");
+ }
+ throw std::invalid_argument("Missing goal-area defender category");
+}
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiAreaChoiceContent& content) {
  if(type==0)throw std::invalid_argument("AI generic team resolution is not captured");

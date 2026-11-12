@@ -100,6 +100,10 @@ std::uint8_t choose_ordinary_ai_pass_defense(std::uint8_t type,std::uint8_t flag
 std::uint8_t choose_generic_ai_pass_defense(std::uint8_t id,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,std::uint8_t ball_variant,
  const std::array<std::uint8_t,10>& home_types,const PlayerProfileMappings& profiles,const AiPassDefenseContent& content);
+// Observed ordinary shot defenses in the attacking goal area for generic opponent records.
+std::uint8_t choose_generic_ai_goal_area_shot_defense(std::uint8_t id,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,const PlayerProfileMappings& profiles,
+ const AiAreaChoiceContent& area,const AiPassDefenseContent& defense);
 // Direct opponent types only; generic team resolution and final adjustments pending.
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,

@@ -9,7 +9,7 @@ from verify_action_strength import PAYLOAD_SHA256
 from verify_player7_pass_end_to_end import compare_represented
 
 p=argparse.ArgumentParser(description=__doc__)
-for name in ('rom','injected','trace','menu','contacts','prepared','player6-area','player6-shot','player4-shot'):p.add_argument('--'+name,type=Path,required=True)
+for name in ('rom','injected','trace','menu','contacts','prepared','player6-area','player6-shot','player4-shot','player3-shot'):p.add_argument('--'+name,type=Path,required=True)
 a=p.parse_args();rom=a.rom.read_bytes();base=bytearray(a.injected.read_bytes())
 if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256 or len(base)!=2048:raise ValueError('Expected verified original ROM and private RAM')
 menu=(a.trace/'native-player9-menu.cmjsession').read_bytes();compare_represented(menu,export_session(a.menu.read_bytes(),0),False,'player9','five-defender menu')
@@ -65,4 +65,10 @@ for name,pc in (('area','8b4a-3'),('area-prepared','8b73-3'),('menu','d5e5-5')):
  if keeper:expected[28]=1;expected[309]=11
  compare_represented((a.trace/f'native-player3-{name}.cmjsession').read_bytes(),expected,False,'player3 rebound',name)
  if raw[0x441]!=3:raise ValueError('Unexpected player3 goal-area owner')
+for name,pc,extended in (('shot-confirmed','8b8f-3',False),('defender-1','8637-3',True),('defender-2','8637-4',True),('defender-3','8637-5',True),('defender-4','8637-6',True),('shot-prepared','82a0-3',True)):
+ raw=(a.player3_shot/f'{pc}.bin').read_bytes();state=(a.trace/f'native-player3-{name}.cmjsession').read_bytes()
+ compare_represented(state,export_session(raw,0),extended,'player3 shot',name)
+ if name.startswith('defender-'):
+  count=int(name[-1]);expected=list(raw[0x60b:0x60b+count])+[255]*(4-count)
+  if state[373]!=1 or list(state[374:378])!=expected or any(raw[0x606:0x606+count]):raise ValueError('Player3 defender choices disagree')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
