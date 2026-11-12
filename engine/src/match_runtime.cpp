@@ -399,10 +399,19 @@ MatchStepResult handle_human_keeper_menu(const MatchRuntimeState& input,const Ma
  }
  next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
 }
-MatchStepResult handle_home_keeper_outlet(const MatchRuntimeState& input,const MatchInput& event) {
+MatchStepResult handle_home_keeper_outlet(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
   if(input.keeper_outlet_recipient){
+   if(input.session.action && input.session.action->action==1 && input.pass_stage==MatchPassStage::none){
+    if(!content.pass_distance){result.unsupported=UnsupportedCapability::content;return result;}
+    try{const auto& field=input.session.current.field;const auto& receiver=field.motion[field_motion_index(*input.keeper_outlet_recipient)];
+     const auto destination=field_cell_at(static_cast<std::uint8_t>(receiver.x>>8),static_cast<std::uint8_t>(receiver.y>>8));
+     const auto distance=calculate_pass_distance(field.ball_x,field.ball_y,destination,*content.pass_distance);
+     result.state.pass_target=MatchPassTarget{*input.keeper_outlet_recipient,destination,26,distance};
+     result.state.pass_stage=MatchPassStage::target_ready;result.state.session.saved_ball_flight_flag=1;result.state.last_sequence=event.sequence;return result;
+    }catch(const std::invalid_argument&){result.state=input;result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
+   }
    if(!input.session.action || !input.session.recovery || input.session.action->action!=0){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
    if(!input.home_keeper_y){result.unsupported=UnsupportedCapability::keeper_position;return result;}
    result.state.session.action->action=1;result.state.session.action->auxiliary=0;result.state.session.recovery->attack_subtype=0;
@@ -726,7 +735,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     input.session.action && input.session.action->action==0 && (input.session.current.field.side==0 || (input.session.current.field.side==11 && input.session.keeper_decision && (input.session.keeper_decision->result_code==0 || input.session.keeper_decision->result_code>=2))))
   return score_human_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_possession && input.session.current.field.side==0)
-  return handle_home_keeper_outlet(input,event);
+  return handle_home_keeper_outlet(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::goal_celebration_pending &&
     input.session.action && input.session.action->action==0)
   return restart_after_human_goal(input,event);

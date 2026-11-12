@@ -84,11 +84,14 @@ void validate_runtime(const MatchRuntimeState& s) {
   throw std::invalid_argument("Invalid processed flight defender prefix");
  for(const auto id:s.processed_flight_defenders)if((side==0 && (id<12 || id>21)) || (side==11 && (id<1 || id>10)))
   throw std::invalid_argument("Invalid processed flight defender ID");
+ const bool keeper_target=s.session.phase==FieldSessionPhase::keeper_possession && s.session.current.field.side==0 && s.keeper_outlet_recipient &&
+    s.session.action && s.session.action->action==1 && s.pass_stage==MatchPassStage::target_ready;
  if(bool(s.pass_target)!=target || bool(s.pass_trajectory)!=flight || bool(s.pass_cell)!=flight ||
-    (s.pass_stage!=MatchPassStage::none && (s.mode!=MatchTimingMode::provisional_demo || s.session.phase!=FieldSessionPhase::ordinary_pass_prepared)))
+    (s.pass_stage!=MatchPassStage::none && (s.mode!=MatchTimingMode::provisional_demo || (s.session.phase!=FieldSessionPhase::ordinary_pass_prepared && !keeper_target))))
   throw std::invalid_argument("Inconsistent match pass state");
- if(target && (!s.session.ordinary_pass_recipient || s.pass_target->recipient!=*s.session.ordinary_pass_recipient ||
-    (s.pass_target->recipient!=255 && (s.pass_target->recipient<1 || s.pass_target->recipient>10)) || s.pass_target->destination>=240 || s.pass_target->counter!=255))
+ if(target && ((!keeper_target && (!s.session.ordinary_pass_recipient || s.pass_target->recipient!=*s.session.ordinary_pass_recipient)) ||
+    (keeper_target && s.pass_target->recipient!=*s.keeper_outlet_recipient) ||
+    (s.pass_target->recipient!=255 && (s.pass_target->recipient<1 || s.pass_target->recipient>10)) || s.pass_target->destination>=240 || s.pass_target->counter!=(keeper_target ? 26 : 255)))
   throw std::invalid_argument("Invalid match pass target");
  if(flight && (*s.pass_cell>=240 || s.pass_trajectory->flags!=1 || !s.session.saved_ball_flight_flag))
   throw std::invalid_argument("Invalid match flight state");

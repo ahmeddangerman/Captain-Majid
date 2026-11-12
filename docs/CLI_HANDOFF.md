@@ -1,5 +1,10 @@
 # Codex CLI handoff
 
+## 2026-11-12 - Automatic keeper outlet target
+
+The provisional runtime now calculates the automatic home goalkeeper outlet receiver's destination cell and original distance, with counter 26 and saved flight flag 1. It stops atomically before flight. Original/native comparisons matched 72 constructed catch paths with keeper Y values 112, 124 and 140; the same sweep covered 48 punches and 384 goals. Native snapshots were saved and reloaded at the tested boundaries. The earlier exhaustive choice test covered all 256 random-byte values. Cooperative waits were acknowledged; live NMI, audio, presentation and random scheduling were not verified. The Windows build and all 65 registered tests passed. Next compare flight and reception against uninterrupted original execution, then establish normal-match keeper position provenance and fresh match startup. A complete playable match remains unverified; overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
+
 ## Latest - 2026-11-12 caught-keeper outlet preparation
 
 The provisional runtime now chooses and prepares the original automatic home-keeper outlet after a catch, then stops before ball flight. Original/native checks matched all 256 receiver-choice random bytes and 72 constructed catch choice/preparation paths with three keeper Y values; the full sweep also covered 48 punches and 384 goals. Original cooperative waits were acknowledged, and the choice uses an explicitly supplied provisional random value rather than verified live scheduling. Match save v16 preserves the recipient and older saves load; Windows build/all 65 checks passed. Flight/reception, normal-match position provenance, fresh startup and a complete match remain unfinished. Earlier isolated keeper-menu entries below did not model the actual catch route. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.

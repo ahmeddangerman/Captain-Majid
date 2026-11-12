@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-12 - Automatic keeper outlet target
+
+The provisional runtime now calculates the automatic home goalkeeper outlet receiver's destination cell and original distance, with counter 26 and saved flight flag 1. It stops atomically before flight. Original/native comparisons matched 72 constructed catch paths with keeper Y values 112, 124 and 140; the same sweep covered 48 punches and 384 goals. Native snapshots were saved and reloaded at the tested boundaries. The earlier exhaustive choice test covered all 256 random-byte values. Cooperative waits were acknowledged; live NMI, audio, presentation and random scheduling were not verified. The Windows build and all 65 registered tests passed. Next compare flight and reception against uninterrupted original execution, then establish normal-match keeper position provenance and fresh match startup. A complete playable match remains unverified; overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
+
 ## 2026-11-12 - Original caught-keeper outlet preparation
 
 The provisional runtime now chooses the original automatic outlet recipient after a home goalkeeper catch and prepares the outlet using the original keeper position and pass variant. It stops before outlet flight. Match save version 16 preserves the selected recipient; version-15 and earlier saves remain readable. Missing keeper-position provenance stops the preparation atomically. Native checkpoints are saved/reloaded at each tested boundary.
