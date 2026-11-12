@@ -1271,11 +1271,13 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool staged = phase >= 23 && phase <= 46;
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
+    const bool generic_opponent_shot=state.current.field.side==11 && state.current.field.ball_owner>=12 && state.current.field.ball_owner<=21 && state.action && state.action->action==0 &&
+        (phase==20 || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53);
     if (state.shot_progress) {
         const auto& p = *state.shot_progress;
         const auto count = state.current.field.selected_defenders;
         if (!state.scheduling || !state.action || !state.recovery || !state.control || !state.experience ||
-            (state.current.field.side != 0 && !post_possession) || state.action->action != 0 || count > 5 ||
+            (state.current.field.side != 0 && !post_possession && !generic_opponent_shot) || state.action->action != 0 || count > 5 ||
             p.cursor > count || p.result_code > 4 ||
             (p.defense_action != 0 && p.defense_action != 2) ||
             (p.defense_subtype != 0 && p.defense_subtype != 128))
@@ -1293,7 +1295,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         if (phase >= 43 && phase <= 46 &&
             (p.result_code >= 2 || p.cursor != count))
             throw std::invalid_argument("Attacking presentation requires a completed nonterminal prefix");
-        if (phase >= 44 && (state.control->last_carrier_cell ||
+        if (phase >= 44 && ((state.control->last_carrier_cell && !(generic_opponent_shot && phase>=45 && state.control->last_carrier_cell==128)) ||
             state.action->menu_route || (p.cursor && state.recovery->opposing_player != p.defender_id)))
             throw std::invalid_argument("Attack clock state needs ordinary selected field context");
         if (p.cursor == 0) {
@@ -1374,7 +1376,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         (static_cast<unsigned>(state.phase) >= 19 ||
          (state.phase == FieldSessionPhase::human_action_menu && (state.action->cursor & 128u))))
         throw std::invalid_argument("Unsupported captured action ID");
-    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && !(phase>=415 && phase<=420) && !post_possession && !area_state && !extended_opponent && !(phase>=194 && phase<=243)) || state.action->menu_route >= 6))
+    if (static_cast<unsigned>(state.phase) >= 18 && (!state.action || (state.current.field.side != 0 && !generic_opponent_shot && !(phase>=415 && phase<=420) && !post_possession && !area_state && !extended_opponent && !(phase>=194 && phase<=243)) || state.action->menu_route >= 6))
         throw std::invalid_argument("Human attacking menu requires captured action context and side0");
     if(bool(state.human_pass_cursor)!=(ordinary_human_target || score23_human_pass || score25_human_pass || (phase==111 || phase==112) || (phase>=244 && phase<=255)) || (!state.human_pass_cursor && state.human_pass_steps) || (state.human_pass_cursor && phase>=244 && phase<=248 &&
        ((state.human_pass_steps==0 && *state.human_pass_cursor!=87) ||

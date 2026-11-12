@@ -12,6 +12,26 @@ def word(memory, address):
     return memory[address] | memory[address + 1] << 8
 
 
+def no_variant_zero_shot_option(memory, pointer):
+    """Conservatively gate ordinary shots when variant-zero special entries exist."""
+    if not pointer:
+        return True
+    if not 0x8000 <= pointer < 0xc000:
+        return False
+    possible = False
+    for _ in range(128):
+        if not 0x8000 <= pointer < 0xc000:
+            raise ValueError('Shot option list leaves mapped stats banks')
+        encoded = memory[pointer]; pointer += 1
+        if encoded & 3 == 3:
+            return not possible
+        possible |= encoded & 3 == 0
+        if encoded >> 2 in (8, 9, 10, 17, 19):
+            if pointer >= 0xc000: raise ValueError('Shot option operand leaves mapped stats banks')
+            pointer += 1
+    raise ValueError('Shot option list lacks a bounded terminator')
+
+
 def selected_team_bytes(stats, team_id):
     """Read a caller-selected, original team record; selection remains external."""
     if team_id not in (3, 4, 5, 6):
@@ -23,13 +43,14 @@ def selected_team_bytes(stats, team_id):
     return bytes(stats[pointer:pointer + size])
 
 
-def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False, include_kickoff=False, include_cell_ai=False):
+def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False, include_kickoff=False, include_cell_ai=False, include_cell_shots=False):
     if len(rom) != 393232 or rom[:4] != b'NES\x1a' or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
         raise ValueError('ROM does not match verified Japanese reference')
     prg = rom[16:262160]
     stats = ReferenceCartridge(prg)
     stats.registers[6:8] = [28, 29]
     gameplay = ReferenceCartridge(prg)
+    include_cell_ai = include_cell_ai or include_cell_shots
     include_kickoff = include_kickoff or include_cell_ai
     include_keeper_ai = include_keeper_ai or include_kickoff
     if include_keeper_ai and team_id not in (3, 4, 5, 6):
@@ -38,7 +59,7 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
     include_pass_flight = include_pass_flight or include_pass_race
     include_field_ai_pass = include_field_ai_pass or include_pass_flight
     include_field_ai = include_field_ai or include_field_ai_pass
-    data = bytearray((b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
+    data = bytearray((b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -230,6 +251,11 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
             group=word(stats,0x8E1B+2*player_type)
             if not groups<=group<=0x934D-6:raise ValueError('Unsupported field action2-option group')
             data.append(int(word(stats,group+4)==0))
+    if include_cell_shots:
+        for player_type in range(count):
+            group=word(stats,0x8E1B+2*player_type)
+            if not groups<=group<=0x934D-2:raise ValueError('Unsupported field shot-option group')
+            data.append(int(no_variant_zero_shot_option(stats,word(stats,group))))
     return bytes(data)
 
 
@@ -245,11 +271,12 @@ def main():
     parser.add_argument('--include-keeper-ai', action='store_true', help='Include team-specific opposing goalkeeper AI (CMJSHOTP)')
     parser.add_argument('--include-kickoff', action='store_true', help='Include kickoff formations and receiver table (CMJSHOTQ)')
     parser.add_argument('--include-cell-ai', action='store_true', help='Include field action2 option gates (CMJSHOTR)')
+    parser.add_argument('--include-cell-shots', action='store_true', help='Include safe variant-zero opponent shot gates (CMJSHOTS)')
     args = parser.parse_args()
     if args.output.suffix != '.cmjpack':
         parser.error('Output must use the .cmjpack extension (ignored by Git)')
     try:
-        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai, args.include_kickoff, args.include_cell_ai)
+        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai, args.include_kickoff, args.include_cell_ai, args.include_cell_shots)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError) as error:

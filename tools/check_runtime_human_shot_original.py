@@ -36,11 +36,13 @@ def main():
     parser.add_argument('--post-kickoff', action='store_true', help='Also exercise native neutral control until an opponent decision or named stop')
     parser.add_argument('--velocity', type=Path, help='Private ball velocity table for --flight')
     parser.add_argument('--distance', type=Path, help='Private pass distance table for post-kickoff passing')
+    parser.add_argument('--after-pass', action='store_true', help='Continue the native provisional run past receiver control to the next stop')
     parser.add_argument('--limit', type=int, default=0, help='Stop after this many constructed cases (zero means all)')
     args = parser.parse_args()
     if args.fraction_survey and not args.kickoff_end_to_end: parser.error('--fraction-survey requires --kickoff-end-to-end')
     if args.post_kickoff and not args.fraction_survey: parser.error('--post-kickoff requires --fraction-survey')
     if args.distance and not args.post_kickoff: parser.error('--distance requires --post-kickoff')
+    if args.after_pass and not args.distance: parser.error('--after-pass requires --distance')
     if args.kickoff_end_to_end: args.end_to_end = True
     if args.end_to_end: args.keeper = True
     if args.defenders and args.keeper: parser.error('Keeper survey needs an unopposed arrival')
@@ -194,6 +196,7 @@ def main():
                             if args.fraction_survey:command.extend((str(ready[0x634]),str(ready[0x636])))
                             if args.post_kickoff:command.append('post')
                             if args.distance:command.append(str(args.distance.resolve()))
+                            if args.after_pass:command.append('continue')
                             result=subprocess.run(command,capture_output=True,text=True)
                             if result.returncode:raise RuntimeError(f'fixture={fixture}, stamina={stamina}, action={action} end-to-end: {result.stderr}')
                             if args.post_kickoff:

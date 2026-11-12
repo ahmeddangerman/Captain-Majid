@@ -11,6 +11,7 @@ from pathlib import Path
 from py65.devices.mpu6502 import MPU
 from check_ai_field_candidate_original import original_candidate
 from export_phase_session import export_session
+from export_shot_content import no_variant_zero_shot_option
 from reference_cartridge import ReferenceCartridge
 from trace_ball_recovery_phase import trace_recovery
 from trace_field_script import ObservedCartridge
@@ -42,7 +43,7 @@ def main():
         parser.error('Expected verified Japanese ROM')
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):
         parser.error('Private temporary data must stay outside checkout')
-    prg = rom[16:262160];counts = Counter();stats=ReferenceCartridge(prg);stats.registers[6:8]=[28,29]
+    prg = rom[16:262160];counts = Counter();stats=ReferenceCartridge(prg);stats.registers[6:8]=[28,29];shot_gates=args.pack.read_bytes()[:8]==b'CMJSHOTS'
     with tempfile.TemporaryDirectory(prefix='ai-cell-', dir=args.private_temp) as temporary:
         source, expected, metadata = (Path(temporary) / name for name in ('source.cmjsession', 'expected.cmjsession', 'metadata.bin'))
         for fixture in range(4):
@@ -81,14 +82,16 @@ def main():
                     empty_pass=stats[group+2] == 0 and stats[group+3] == 0
                     fallback = boundary == 0xe1e7 and after[0x43b] == 2 and (candidate == 2 or (candidate == 3 and (variant or (empty_action2 and not args.legacy_pack))))
                     passing = boundary == 0xe1b9 and after[0x43b] == 1 and candidate == 2 and variant == 0 and empty_pass
-                    if (fallback or passing) and (writes or any(after[address] != raw[address] for address in (0x43d, 0x634, 0x636))):
+                    safe_shot = no_variant_zero_shot_option(stats,stats[group] | (stats[group+1]<<8))
+                    shooting = shot_gates and safe_shot and boundary == 0xe1b9 and after[0x43b] == 0 and after[0x43c] == 0 and candidate == 1 and variant == 0
+                    if (fallback or passing or shooting) and (writes or any(after[address] != raw[address] for address in (0x43d, 0x634, 0x636))):
                         raise RuntimeError('Original fallback changed known metadata')
-                    source.write_bytes(export_session(raw, 12));expected.write_bytes(export_session(after, 0 if passing else 10));metadata.write_bytes(after)
-                    command = [str(args.exe.resolve()), '--compare-ai-cell' if fallback else '--compare-ai-cell-pass' if passing else '--compare-ai-cell-unsupported',
+                    source.write_bytes(export_session(raw, 12));expected.write_bytes(export_session(after, 0 if passing or shooting else 10));metadata.write_bytes(after)
+                    command = [str(args.exe.resolve()), '--compare-ai-cell' if fallback else '--compare-ai-cell-pass' if passing else '--compare-ai-cell-shot' if shooting else '--compare-ai-cell-unsupported',
                                str(source), str(expected), str(metadata), str(args.pack.resolve()), str(seed)]
                     result = subprocess.run(command, capture_output=True, text=True)
                     if result.returncode:raise RuntimeError(f'fixture={fixture}, x={x}, type={kind}, variant={variant}, flags={flags}, seed={seed}: {result.stderr}')
-                    counts['fallback' if fallback else 'pass' if passing else 'unsupported'] += 1
+                    counts['fallback' if fallback else 'pass' if passing else 'shot' if shooting else 'unsupported'] += 1
     if not counts['fallback']:raise RuntimeError('Survey did not exercise a supported fallback')
     print(f'Constructed original opponent cell decisions: {dict(sorted(counts.items()))}')
 
