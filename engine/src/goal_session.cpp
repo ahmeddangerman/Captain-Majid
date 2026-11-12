@@ -37,11 +37,12 @@ PhaseSessionState begin_sampled_opponent_goal_restart(const PhaseSessionState& i
 PhaseSessionState prepare_session_scored_goal(const PhaseSessionState& input,MatchScoreContext baseline,const ShotContent& content) {
  validate_phase_session(input);
  const bool returned=input.phase==FieldSessionPhase::ordinary_return_goal_area_keeper_compared;
- if((input.phase!=FieldSessionPhase::keeper_decided && input.phase!=FieldSessionPhase::stunned_keeper_decided && !returned) ||
+ const bool player3=input.phase==FieldSessionPhase::player3_area_keeper_decided;
+ if((input.phase!=FieldSessionPhase::keeper_decided && input.phase!=FieldSessionPhase::stunned_keeper_decided && !returned && !player3) ||
     input.keeper_decision->result_code>1 ||
     (input.keeper_decision->result_code==1 && (input.recovery->attack_subtype&63u)>=3) || !content.experience)
   throw std::invalid_argument("Goal preparation requires a scored keeper result and experience content");
- if(returned && input.control->motion_requested!=3)
+ if((returned || player3) && input.control->motion_requested!=3)
   throw std::invalid_argument("Returned goal requires the observed presentation handoff");
  if(input.score && (input.score->left_goals!=baseline.left_goals || input.score->right_goals!=baseline.right_goals || input.score->kickoff!=baseline.kickoff))
   throw std::invalid_argument("Captured score does not match the saved baseline");
@@ -50,19 +51,21 @@ PhaseSessionState prepare_session_scored_goal(const PhaseSessionState& input,Mat
  state.experience=reward.state;
  if(state.current.field.side==0)baseline.left_goals=static_cast<std::uint8_t>(unsigned(baseline.left_goals)+1u);
  else baseline.right_goals=static_cast<std::uint8_t>(unsigned(baseline.right_goals)+1u);
- state.score=baseline;state.phase=returned ? FieldSessionPhase::ordinary_return_goal_area_goal_scored : FieldSessionPhase::goal_celebration_pending;
+ state.score=baseline;state.phase=player3 ? FieldSessionPhase::player3_area_goal_scored : returned ? FieldSessionPhase::ordinary_return_goal_area_goal_scored : FieldSessionPhase::goal_celebration_pending;
  validate_phase_session(state);return state;
 }
 PhaseSessionState continue_prepared_goal_restart(const PhaseSessionState& input) {
  validate_phase_session(input);
  const bool returned=input.phase==FieldSessionPhase::ordinary_return_goal_area_goal_scored;
- if((input.phase!=FieldSessionPhase::goal_celebration_pending && !returned) || input.current.clock.ball_mode!=0 ||
+ const bool player3=input.phase==FieldSessionPhase::player3_area_goal_scored;
+ if((input.phase!=FieldSessionPhase::goal_celebration_pending && !returned && !player3) || input.current.clock.ball_mode!=0 ||
     (returned && (input.control->motion_requested!=0 || input.control->facing!=0)))
   throw std::invalid_argument("Post-goal restart requires acknowledged presentations/menu and ball mode zero");
  auto state=input;state.current.field.side=static_cast<std::uint8_t>(input.current.field.side^11u);
  auto& keeper=state.current.field.keepers[state.current.field.side==0?0:1];keeper.timer=0;keeper.penalty=0;keeper.stun=0;
  state.score->kickoff=4;state.shot_flight.reset();state.ball_trajectory.reset();state.keeper_decision.reset();
  if(returned)state.area_contact.reset();
+ if(player3){state.control->facing=0;state.control->motion_requested=0;}
  state.phase=FieldSessionPhase::goal_kickoff_pending;validate_phase_session(state);return state;
 }
 

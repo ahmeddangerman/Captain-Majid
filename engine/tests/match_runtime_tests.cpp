@@ -823,6 +823,28 @@ static int player1_defended_shot_check(int argc,char** argv) {
    auto prefix=step_match(p3_contact,client_input(p3_contact,0,0),content);
    if(prefix.unsupported || prefix.state.session.phase!=FieldSessionPhase::player3_area_prefix_clocked || prefix.state.session.current.clock.remaining!=92 || prefix.state.session.area_defender_cursor!=4)throw std::runtime_error("Player3 area prefix clock stopped");
    std::ofstream prefix_file(std::string(argv[4])+"-player3-prefix-clocked.cmjsession",std::ios::binary);write_phase_session(prefix_file,prefix.state.session);
+   auto p3_moved=step_match(prefix.state,client_input(prefix.state,0,0),content);
+   if(p3_moved.unsupported || p3_moved.state.session.phase!=FieldSessionPhase::player3_area_shot_field_moved)throw std::runtime_error("Player3 area shot field movement stopped");
+   auto p3_dispatch=step_match(p3_moved.state,client_input(p3_moved.state,0,0),content);
+   if(p3_dispatch.unsupported || p3_dispatch.state.session.phase!=FieldSessionPhase::player3_area_shot_dispatch || p3_dispatch.state.session.current.clock.remaining!=91)throw std::runtime_error("Player3 area shot dispatch stopped");
+   auto p3_target=step_match(p3_dispatch.state,client_input(p3_dispatch.state,0,0),content);
+   if(p3_target.unsupported || p3_target.state.session.phase!=FieldSessionPhase::player3_area_shot_target || p3_target.state.session.shot_flight->destination!=233 || p3_target.state.session.shot_flight->distance!=27)throw std::runtime_error("Player3 same-cell shot target stopped");
+   auto p3_entry=step_match(p3_target.state,client_input(p3_target.state,0,0),content);
+   if(p3_entry.unsupported || p3_entry.state.session.phase!=FieldSessionPhase::player3_area_keeper_entry)throw std::runtime_error("Player3 same-cell goalkeeper entry stopped");
+   auto p3_keeper=step_match(p3_entry.state,client_input(p3_entry.state,0,0),content);
+   if(p3_keeper.unsupported || p3_keeper.state.session.phase!=FieldSessionPhase::player3_area_keeper_ready)throw std::runtime_error("Player3 same-cell goalkeeper setup stopped");
+   auto p3_decided=step_match(p3_keeper.state,client_input(p3_keeper.state,0,0),content);
+   if(p3_decided.unsupported || p3_decided.state.session.phase!=FieldSessionPhase::player3_area_keeper_decided || !p3_decided.state.session.keeper_decision || p3_decided.state.session.keeper_decision->result_code!=0 || p3_decided.state.retained_defense_action!=1)throw std::runtime_error("Player3 same-cell goalkeeper result stopped");
+   for(const auto& pair:{std::pair<const char*,const MatchRuntimeState&>{"shot-moved",p3_moved.state},{"shot-dispatch",p3_dispatch.state},{"shot-target",p3_target.state},{"keeper-entry",p3_entry.state},{"keeper-ready",p3_keeper.state},{"keeper-decided",p3_decided.state}}){std::ofstream f(std::string(argv[4])+"-player3-"+pair.first+".cmjsession",std::ios::binary);write_phase_session(f,pair.second.session);}
+   auto p3_goal=step_match(p3_decided.state,client_input(p3_decided.state,0,0),content);
+   if(p3_goal.unsupported || p3_goal.state.session.phase!=FieldSessionPhase::player3_area_goal_scored || !p3_goal.state.session.score || p3_goal.state.session.score->left_goals!=1 || p3_goal.state.session.score->right_goals!=0)throw std::runtime_error("Player3 goal registration stopped");
+   std::ostringstream goal_save(std::ios::binary);write_match_save(goal_save,p3_goal.state,identity);std::istringstream goal_in(goal_save.str(),std::ios::binary);auto goal_restored=load_match_save(goal_in,identity);
+   if(!goal_restored.session.score || goal_restored.session.score->left_goals!=1 || goal_restored.session.phase!=FieldSessionPhase::player3_area_goal_scored)throw std::runtime_error("Player3 goal did not roundtrip");
+   std::ofstream goal_file(std::string(argv[4])+"-player3-goal.cmjsession",std::ios::binary);write_phase_session(goal_file,p3_goal.state.session);
+   auto p3_restart=step_match(goal_restored,client_input(goal_restored,0,0),content);
+   if(p3_restart.unsupported || p3_restart.state.session.phase!=FieldSessionPhase::goal_kickoff_pending || p3_restart.state.session.current.field.side!=11 || p3_restart.state.session.score->kickoff!=4)throw std::runtime_error("Player3 goal restart stopped");
+   std::ofstream restart_file(std::string(argv[4])+"-player3-restart.cmjsession",std::ios::binary);write_phase_session(restart_file,p3_restart.state.session);
+
    std::ofstream p3a(std::string(argv[4])+"-player3-area.cmjsession",std::ios::binary),p3p(std::string(argv[4])+"-player3-area-prepared.cmjsession",std::ios::binary),p3m(std::string(argv[4])+"-player3-menu.cmjsession",std::ios::binary);write_phase_session(p3a,player3_area.state.session);write_phase_session(p3p,player3_prepared.state.session);write_phase_session(p3m,player3_menu.state.session);
    std::ofstream p4a(std::string(argv[4])+"-player4-area.cmjsession",std::ios::binary),p4p(std::string(argv[4])+"-player4-area-prepared.cmjsession",std::ios::binary),p4m(std::string(argv[4])+"-player4-menu.cmjsession",std::ios::binary);write_phase_session(p4a,player4_area.state.session);write_phase_session(p4p,player4_prepared.state.session);write_phase_session(p4m,player4_menu.state.session);
    std::ofstream a6(std::string(argv[4])+"-player6-area.cmjsession",std::ios::binary),p6(std::string(argv[4])+"-player6-area-prepared.cmjsession",std::ios::binary),m6(std::string(argv[4])+"-player6-menu.cmjsession",std::ios::binary);write_phase_session(a6,area6.state.session);write_phase_session(p6,prepared6.state.session);write_phase_session(m6,menu6.state.session);

@@ -1,5 +1,11 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Player3 goal and opponent kickoff handoff
+
+The sampled player3 shot now continues past four defenders into a goalkeeper decision and a goal. The original's stored ball cell already equals the target, so this observed route reaches the keeper without inventing a flight. Represented original/native states match movement, dispatch, target, keeper entry, choice, result, goal and kickoff handoff. The keeper chooses action1 and result0; the score becomes 1-0 and player3 gains 15 experience. The scored state saves and reloads, and the restart switches to side11 with kickoff marker4.
+
+Windows CMake build, all 65 registered tests, the private integration sequence and controlled original comparisons passed. The original trace injects sampled random values and acknowledges presentation without live NMI, graphics or audio; this is a bounded reconstruction, not evidence of a complete playable match. Next trace the opponent kickoff and continue the match. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player3 shot clears four goal-area defenders
 
 The sampled player3 shot now passes all four goal-area defender contacts. Controlled original/native represented states match each defender's preparation, result0 comparison and contact clock, followed by the exhausted-prefix clock at 92. The new private CMJSHOTd extension supplies the original shot-versus-field-defender comparison tables; c and older packs remain readable and reject this continuation atomically when the data is missing. Partial contact progress saves/reloads. A synthetic format check rejected malformed d packs, and a private pack check matched the original data.

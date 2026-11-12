@@ -79,4 +79,12 @@ for i in range(1,5):
 raw=(a.player3_shot/'83f5-3.bin').read_bytes();state=(a.trace/'native-player3-prefix-clocked.cmjsession').read_bytes()
 compare_represented(state,export_session(raw,0),True,'player3 area','prefix clock')
 if (raw[0x616],raw[0x5f7],raw[0x612])!=(4,92,0):raise ValueError('Unexpected player3 area prefix')
+for name,pc in (('shot-moved','83f8-3'),('shot-dispatch','c618-2'),('shot-target','dd08-2'),('keeper-entry','dd1c-2'),('keeper-ready','8509-2'),('keeper-decided','8599-2'),('goal','85f0-1'),('restart','85dd-1')):
+ raw=bytearray((a.player3_shot/f'{pc}.bin').read_bytes());keeper=(raw[0x600]==1 and raw[0x601]==11)
+ if keeper:raw[0x600]=0
+ expected=bytearray(export_session(raw,0))
+ if keeper:expected[28]=1;expected[309]=11
+ compare_represented((a.trace/f'native-player3-{name}.cmjsession').read_bytes(),expected,name!='restart','player3 same-cell shot',name)
+ if name=='goal' and (raw[0x28],raw[0x29]) != (1,0):
+  raise ValueError('Unexpected original score')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

@@ -1045,10 +1045,53 @@ MatchStepResult advance_player3_area_contacts(const MatchRuntimeState& input,con
   validate_phase_session(s);next.last_sequence=event.sequence;project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::defender_contact;return result;}
 }
+MatchStepResult advance_player3_same_cell_shot(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};const auto phase=input.session.phase;const bool presentation=phase==FieldSessionPhase::player3_area_shot_field_moved || phase==FieldSessionPhase::player3_area_keeper_ready;
+ if(event.kind!=(presentation ? MatchInputKind::presentation_complete : MatchInputKind::tick)){result.unsupported=presentation ? UnsupportedCapability::presentation : UnsupportedCapability::action;return result;}
+ try {
+  auto next=input;auto& s=next.session;auto& field=s.current.field;
+  if(phase==FieldSessionPhase::player3_area_prefix_clocked){
+   if(!content.data->movement){result.unsupported=UnsupportedCapability::content;return result;}
+   field=advance_field_phase(field,content.data->field_players,*content.data->movement).state;s.control->motion_requested=0;s.phase=FieldSessionPhase::player3_area_shot_field_moved;
+  } else if(phase==FieldSessionPhase::player3_area_shot_field_moved){
+   if(!content.data->contact || !content.data->experience || !s.experience){result.unsupported=UnsupportedCapability::content;return result;}
+   const auto prelude=apply_contact_prelude({s.current,21,2,true},*content.data->contact);
+   if(prelude.elapsed_step!=1 || prelude.clock.continuation!=ClockContinuation::ready || prelude.state.clock.remaining!=91)throw std::invalid_argument("Unobserved player3 shot dispatch");
+   s.experience=award_player_experience(*s.experience,field.roster[field.ball_owner].type,1,*content.data->experience).state;s.current=prelude.state;s.action->menu_route=0;s.keeper_area.reset();s.phase=FieldSessionPhase::player3_area_shot_dispatch;
+  } else if(phase==FieldSessionPhase::player3_area_shot_dispatch){
+   if(!content.data->approach){result.unsupported=UnsupportedCapability::content;return result;}
+   const auto target=calculate_shot_approach({field.ball_x,field.ball_y,field.side,s.recovery->attack_subtype,field.random_first},*content.data->approach);
+   if(target.loose_ball || target.destination_cell!=field.ball_cell || target.destination_cell!=233 || target.distance_adjustment!=27 || target.random_first)throw std::invalid_argument("Unobserved player3 same-cell target");
+   field.random_first=target.random_first;s.shot_flight=ShotFlightContext{target.distance_adjustment,target.destination_cell,255,false};s.phase=FieldSessionPhase::player3_area_shot_target;
+  } else if(phase==FieldSessionPhase::player3_area_shot_target){
+   field.elapsed=0;field.selected_defenders=0;s.scheduling->selected_ids.fill(0);s.area_defense.reset();s.phase=FieldSessionPhase::player3_area_keeper_entry;
+  } else if(phase==FieldSessionPhase::player3_area_keeper_entry){
+   field.selected_defenders=1;s.scheduling->selected_ids[0]=11;s.recovery->opposing_player=11;s.phase=FieldSessionPhase::player3_area_keeper_ready;
+  } else {
+   if(!content.data->ai_keeper_choice){result.unsupported=UnsupportedCapability::content;return result;}
+   const auto& p=field.roster[11];const FieldPlayerRecord keeper{11,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level};
+   const auto choice=choose_opponent_keeper_action(keeper,content.data->goalkeepers,0,field.random_first,*content.data->ai_keeper_choice);
+   if(choice.action!=1 || choice.subtype)throw std::invalid_argument("Unobserved player3 goalkeeper choice");
+   const auto& status=field.keepers[1];const GoalkeeperInput comparison{s.action->power,{0,field.random_first,field.random_second,content.data->keeper_range,content.data->keeper_offset,false,false,0,11,0},0,status.timer,s.shot_flight->distance,status.penalty,content.data->keeper_thresholds};
+   const auto prepared=prepare_goalkeeper({keeper,field.side,choice.action,choice.subtype,0,s.recovery->attack_subtype,false,comparison},content.data->goalkeepers,content.data->keeper);
+   const auto story=apply_keeper_story_override({prepared.comparison.result_code,field.side,content.data->ai_keeper_choice->team_id,s.recovery->game_mode,s.recovery->attack_subtype,field.random_first});
+   if(story.result_code)throw std::invalid_argument("Unobserved player3 goalkeeper result");
+   field.roster[11].stamina=prepared.energy.stamina;s.area_defender_cursor=0;s.keeper_decision=KeeperDecisionContext{0,story.result_code,choice.action,prepared.comparison.subtype,prepared.preparation.move_effect};next.retained_defense_action=choice.action;s.phase=FieldSessionPhase::player3_area_keeper_decided;
+  }
+  validate_phase_session(s);next.last_sequence=event.sequence;project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::action;return result;}
+}
 MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player3_area_keeper_decided) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  if(!content.data->experience || !input.session.score){result.unsupported=UnsupportedCapability::content;return result;}
+  try {auto next=input;next.session.control->motion_requested=3;next.session=prepare_session_scored_goal(next.session,*next.session.score,*content.data);next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;}
+  catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::action;return result;}
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::player3_area_prefix_clocked || input.session.phase==FieldSessionPhase::player3_area_shot_field_moved || input.session.phase==FieldSessionPhase::player3_area_shot_dispatch || input.session.phase==FieldSessionPhase::player3_area_shot_target || input.session.phase==FieldSessionPhase::player3_area_keeper_entry || input.session.phase==FieldSessionPhase::player3_area_keeper_ready))return advance_player3_same_cell_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::player3_area_shot_prepared || input.session.phase==FieldSessionPhase::player3_area_contact_prepared || input.session.phase==FieldSessionPhase::player3_area_contact_compared || input.session.phase==FieldSessionPhase::player3_area_contact_clocked))return advance_player3_area_contacts(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.keeper_area && input.session.action && input.session.action->menu_route==1 && input.session.action->action==0 && input.session.current.field.side==0 && input.session.current.field.ball_owner==3 && input.session.current.field.ball_x==180 && input.session.current.field.ball_y==124 && (input.session.phase==FieldSessionPhase::attack_choice_pending || input.session.phase==FieldSessionPhase::player3_area_defender_selection || input.session.phase==FieldSessionPhase::player3_area_defenders_chosen))return step_player3_area_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player6_area_shot_dispatch)return target_player6_area_shot(input,event,content);
@@ -1405,7 +1448,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return score_human_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_possession && input.session.current.field.side==0)
   return handle_home_keeper_outlet(input,event,content);
- if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::goal_celebration_pending &&
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::goal_celebration_pending || input.session.phase==FieldSessionPhase::player3_area_goal_scored) &&
     input.session.action && input.session.action->action==0)
   return restart_after_human_goal(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ball_recovery || input.session.phase==FieldSessionPhase::keeper_punch_recovery) && input.session.action && input.session.action->action==0)
