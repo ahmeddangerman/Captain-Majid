@@ -9,8 +9,8 @@ from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def trace_menu(prg, ram, mode='open', pressed=0, max_instructions=2_000_000, max_frames=10000):
-    if len(ram) != 2048 or ram[0x22] & 64 or ram[0x5FB] != 0 or ram[0x441] not in range(1, 11):
+def trace_menu(prg, ram, mode='open', pressed=0, max_instructions=2_000_000, max_frames=10000, allow_keeper=False):
+    if len(ram) != 2048 or ram[0x22] & 64 or ram[0x5FB] != 0 or ram[0x441] not in (range(0, 11) if allow_keeper else range(1, 11)):
         raise ValueError('Expected supported human field-carrier RAM checkpoint')
     if mode not in ('open', 'poll', 'basic-shot') or not 0 <= pressed <= 255:
         raise ValueError('Unsupported observation mode/pressed mask')

@@ -1332,7 +1332,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         state.current.field.selected_defenders != 0)
         throw std::invalid_argument("Recovery continuation requires zero selected defenders");
     if (static_cast<unsigned>(state.phase) >= 6 && state.phase != FieldSessionPhase::selected_boundary_restart) {
-        if(!keeper_possession && !(state.phase==FieldSessionPhase::control_ready && state.current.field.side==0 && state.current.field.ball_owner==0)) field_motion_index(state.current.field.ball_owner);
+        if(!keeper_possession && !((state.phase==FieldSessionPhase::control_ready || state.phase==FieldSessionPhase::action_menu_pending) && state.current.field.side==0 && state.current.field.ball_owner==0)) field_motion_index(state.current.field.ball_owner);
         if (!transitional_clearance && !goal_restart && !player19_goal_possession && phase!=301 && phase!=302 && phase!=225 && phase!=226 && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;

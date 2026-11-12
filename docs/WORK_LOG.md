@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-12 - Caught goalkeeper menu handoff
+
+After a supported home goalkeeper catch, the provisional runtime now processes a neutral control poll and the original menu button through the action-menu handoff. It stops there before unsupported keeper menu choices; other keeper inputs and decision-time movement remain guarded. The 504-case original comparison matched 72 caught-keeper neutral/menu handoffs, 48 punches through recovered-player or keeper-area handoff, and 384 goals. Native saves are reloaded at each step; presentation-facing state and live NMI/audio/PPU remain outside the comparison. Windows build and all 65 registered checks passed.
+
+The keeper's menu choices and subsequent ball distribution, fresh startup and a complete match remain unfinished. Overall progress is unmeasured. Next compare the caught keeper's action menu and connect its supported selections. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Home goalkeeper control setup
 
 The provisional runtime advances a home goalkeeper's ordinary catch through the original control setup to a bounded control-ready state. Further keeper input stops safely because its controls have not yet been implemented. Original comparisons matched 72 constructed catches at the represented control boundary and 48 punches through their recovery continuation: 32 to player control and 16 to keeper-area interaction. The same 504-case sweep included 384 goals. The comparison uses related constructed snapshots, saves/reloads the native state on each step, excludes presentation-facing fields and acknowledges cooperative waits rather than modeling live NMI/audio/PPU. Windows build and all 65 registered checks passed.

@@ -587,6 +587,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  }
  if(input.mode==MatchTimingMode::provisional_demo && event.kind==MatchInputKind::tick && input.session.current.field.side==0 &&
     (input.session.phase==FieldSessionPhase::action_menu_pending || input.session.phase==FieldSessionPhase::field_contact_pending || input.session.phase==FieldSessionPhase::human_action_menu)) {
+  if(input.session.current.field.ball_owner==0){result.unsupported=UnsupportedCapability::action;return result;}
   if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
   if(!content.data->action_menu){result.unsupported=UnsupportedCapability::content;return result;}
   auto next=input;advance_demo_random(next);
@@ -600,7 +601,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return result;
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::control_ready && event.kind==MatchInputKind::tick) {
-  if(input.session.current.field.ball_owner==0){result.unsupported=UnsupportedCapability::action;return result;}
+  if(input.session.current.field.ball_owner==0 && (!input.session.control || !input.session.control->decision_timer || !((event.held==0 && event.pressed==0) || (event.held==64 && event.pressed==64)))){result.unsupported=UnsupportedCapability::action;return result;}
   if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
   if(!content.data->movement || !content.data->control_movement){result.unsupported=UnsupportedCapability::content;return result;}
   auto next=input;advance_demo_random(next);
