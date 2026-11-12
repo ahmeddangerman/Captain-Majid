@@ -22,6 +22,8 @@ def main():
     parser.add_argument('--rom', type=Path, required=True)
     parser.add_argument('--target-seed', type=Path, action='append', required=True)
     parser.add_argument('--cxx', default='clang++')
+    parser.add_argument('--keeper', action='store_true', help='Construct home goalkeeper carrier cases')
+    parser.add_argument('--oracle-only', action='store_true', help='Compare the existing field-scan rule with the original without compiling')
     args = parser.parse_args()
     if len(args.target_seed) < 2:
         raise ValueError('At least two independent target RAM seeds are required')
@@ -39,7 +41,7 @@ def main():
         cpu = MPU(memory=memory)
         for case in range(1024):
             cursor = (case * 37) % 240
-            carrier = case % 10 + 1
+            carrier = 0 if args.keeper else case % 10 + 1
             x = 48 + (cursor // 12) * 8 + 4
             y = 80 + (cursor % 12) * 8 + 4
             # Include empty, all-player, single-player and random occupancy patterns.
@@ -67,6 +69,23 @@ def main():
             expected.append((count, allies, *(memory[0x431 + i] if i < count else 0 for i in range(4))))
             cases.append((carrier, cursor, positions))
     root = Path(__file__).resolve().parents[1]
+    if args.oracle_only:
+        mismatches = 0
+        for (carrier, cursor, positions), wanted in zip(cases, expected):
+            ids=[];allies=0
+            for player in range(1,22):
+                if player==11 or player==carrier or len(ids)==4: continue
+                x,y=positions[player]
+                if not (48<=x<208 and 80<=y<176 and (x-48)//8*12+(y-80)//8==cursor): continue
+                if player>=12 and allies: continue
+                ids.append(player)
+                if player<11: allies+=1
+            got=(len(ids),allies,*(ids+[0]*(4-len(ids))))
+            if got!=wanted:
+                mismatches+=1
+                if mismatches<=3:print('mismatch',carrier,cursor,'expected',wanted,'field rule',got)
+        print('Original cases:',len(cases),'field-rule mismatches:',mismatches)
+        return
     with tempfile.TemporaryDirectory(prefix='captain-pass-candidates-') as temporary:
         binary = Path(temporary) / 'compare'
         subprocess.run([args.cxx, '-std=c++17', '-O2', '-I' + str(root / 'engine/include'),

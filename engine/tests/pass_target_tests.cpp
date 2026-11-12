@@ -32,7 +32,9 @@ int main() {try {
  auto opponents=captain::select_ordinary_pass_candidates(5,114,positions);
  check(opponents.count==4 && !opponents.allied_count && opponents.ids==std::array<std::uint8_t,4>{12,13,14,15},
        "Opponent-only candidates are limited to the first four field players");
- rejects([&]{captain::select_ordinary_pass_candidates(0,114,positions);});
+ const auto keeper=captain::select_ordinary_pass_candidates(0,114,positions);
+ check(keeper.count==1 && keeper.allied_count==1 && keeper.ids[0]==5,"A home keeper can target an outfield teammate");
+ rejects([&]{captain::select_ordinary_pass_candidates(11,114,positions);});
  rejects([&]{captain::select_ordinary_pass_candidates(5,240,positions);});
  check(resolve_pass_target_cell(7,42,52,84)==0,"First field cell");
  check(resolve_pass_target_cell(21,42,204,172)==239,"Last field cell");

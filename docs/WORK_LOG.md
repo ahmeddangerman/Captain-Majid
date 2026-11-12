@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-12 - Caught goalkeeper pass cursor
+
+With explicit keeper-position provenance, the provisional runtime now moves a caught home goalkeeper's pass-target cursor in four directions or leaves it stationary, and scans destination candidates when the cursor changes. Confirmation remains guarded. The original candidate-scan routine matched 2,048 constructed keeper-carrier cases with empty, crowded and random cells. A separate 504-case original/native sweep varied keeper Y across 112/124/140 and compared all five cursor inputs in 72 caught-keeper paths, including candidate counts and IDs, plus 48 punch and 384 goal cases. The cursor comparison isolates original direction arithmetic and candidate scanning; presentation and live NMI/audio/PPU are not modeled. Windows build/all 65 registered checks passed.
+
+Target confirmation, ball distribution, keeper-position provenance through a normal match, fresh startup and a complete match remain unfinished. Overall progress is unmeasured. Next compare and connect target confirmation and receiver selection. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Keeper-position provenance and pass target
 
 With an explicitly known home keeper Y byte from the same original keeper-entry snapshot, the provisional runtime now advances a caught goalkeeper through control setup, action-menu pass confirmation and ordinary pass-target initialization. It stops before keeper pass-target input. Match save version 15 preserves the optional byte; older saves load it as unknown, and missing metadata stops atomically. The Windows development window accepts `--home-keeper-y N` only at a supported opposing-shot keeper-entry snapshot; ordinary control-ready launches do not infer it.

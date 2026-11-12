@@ -724,7 +724,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     input.session.score && input.session.score->kickoff==4)
   return advance_goal_kickoff(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
-  if(input.session.current.field.ball_owner==0){result.unsupported=UnsupportedCapability::action;return result;}
+  if(input.session.current.field.ball_owner==0 && (event.pressed!=0 || (event.held!=0 && event.held!=1 && event.held!=2 && event.held!=4 && event.held!=8))){result.unsupported=UnsupportedCapability::action;return result;}
   if(input.target_chooser){
    if(!input.demo_rng || !input.session.ordinary_pass_candidates){result.unsupported=UnsupportedCapability::phase;return result;}
    const auto count=input.session.ordinary_pass_candidates->candidates.allied_count;

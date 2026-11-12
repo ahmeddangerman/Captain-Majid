@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - 2026-11-12 goalkeeper pass cursor:** A caught home keeper with known position can move the pass target and scan destination candidates. Original checks covered 2,048 keeper scans and five cursor inputs in 72 related caught paths; Windows build/all 65 checks passed. Confirmation, distribution, normal-match keeper-position provenance and a complete match remain unfinished. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
 **Latest - 2026-11-12 keeper pass target:** With explicitly known keeper Y from a supported original keeper-entry snapshot, the provisional runtime reaches the caught keeper's ordinary pass-target initialization. Original comparisons varied Y across three values and matched 72 catch paths plus 48 punches and 384 goals; match save v15 preserves the optional metadata and Windows build/all 65 checks passed. Target input, fresh startup and a complete match remain unfinished. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
 
 **Latest - 2026-11-12 caught keeper pass choice:** A caught home keeper can open the action menu and select/confirm ordinary pass through an original-compared boundary. Seventy-two related catches and the broader 504-case sweep matched; Windows build/all 65 checks passed. Targeting still needs keeper-position provenance, and a complete match remains unfinished. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.

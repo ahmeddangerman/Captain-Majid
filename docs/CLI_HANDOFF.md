@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Latest - 2026-11-12 goalkeeper pass cursor
+
+With explicit keeper-position provenance, a caught home keeper can move the pass target in four directions or hold still; destination candidates are scanned on movement. Original comparisons covered 2,048 constructed keeper candidate scans and five cursor inputs across 72 caught paths with three keeper Y values. The 504-case sweep also covered 48 punches and 384 goals; cursor checks isolate arithmetic/scanning, not live presentation. Windows build/all 65 registered checks passed. Confirmation, distribution, normal-match keeper-position provenance, fresh startup and a complete match remain unfinished. Overall progress is unmeasured. Next compare target confirmation and receiver selection. Suggested model: GPT-6.1 Terra High.
+
 ## Latest - 2026-11-12 caught keeper pass targeting
 
 With explicit original home keeper Y metadata at an opposing-shot keeper-entry snapshot, provisional mode now follows a catch through control, pass choice and target initialization. Match save v15 preserves this optional value; older saves load it unknown, and missing provenance stops atomically. A 504-case original comparison varied keeper Y among 112/124/140 and matched 72 catches through target setup, 48 punches and 384 goals. Catch setup now moves the ball to the original keeper position. Native save/reload was tested at each boundary; live presentation and NMI/audio/PPU remain unverified. Windows build/all 65 registered checks passed, including version-14 compatibility. Cursor/receiver selection, normal startup and a complete match remain unfinished. Overall progress is unmeasured. Next compare keeper pass targeting input. Suggested model: GPT-6.1 Terra High.

@@ -22,7 +22,7 @@ std::uint8_t advance_ordinary_pass_cursor(std::uint8_t cursor, std::uint8_t held
 }
 OrdinaryPassCandidates select_ordinary_pass_candidates(
     std::uint8_t carrier, std::uint8_t cursor, const std::array<std::array<std::uint8_t, 2>, 22>& positions) {
- if (carrier < 1 || carrier > 10 || cursor >= 240)
+ if (carrier > 10 || cursor >= 240)
   throw std::invalid_argument("Ordinary pass candidates require a side-zero carrier and field cursor");
  OrdinaryPassCandidates result{};
  for (unsigned id=1; id<22; ++id) {

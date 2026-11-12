@@ -26,6 +26,23 @@ def next_random(value):
     return value
 
 
+def keeper_target_move(prg, raw, rng, held):
+    memory = ObservedCartridge(prg, raw, None, set()); memory.registers[6:8] = [26,27]
+    memory[0x24],memory[0x25]=26,27;memory[0x23]=memory[0x22]|7;memory.select=memory[0x23]
+    memory[0xe2],memory[0xe3]=rng & 255,(rng >> 8) & 255;memory[0x1c]=held
+    old=memory[0x624];cpu=MPU(memory=memory);cpu.pc,cpu.sp,cpu.p=0xd80f,0xfd,cpu.UNUSED
+    for _ in range(40):
+        if cpu.pc in (0xd832,0xd837):break
+        cpu.step()
+    else: raise RuntimeError('Original keeper target cursor limit')
+    if memory[0x624] == old: return bytes(memory.ram[:2048])
+    cpu.pc=0xd8f7
+    for _ in range(10000):
+        if cpu.pc==0xd949:return bytes(memory.ram[:2048])
+        cpu.step()
+    raise RuntimeError('Original keeper target candidate scan limit')
+
+
 def menu_trace(prg, entry, pressed, seed):
     memory = ObservedCartridge(prg, entry, None, {0x43d, 0x61e, 0x621})
     memory.ram[:0x1a] = bytes(0x1a)
@@ -116,7 +133,7 @@ def main():
                             result = states['compared'][0x612]
                             states['goal'] = (observe_scored_goal(prg, states['compared'])[0] if result == 0 else
                                               observe_keeper_save(prg, states['compared'])[0] if result in (2, 3) else states['compared'])
-                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['compared']
+                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['caught_moved1'] = states['caught_moved2'] = states['caught_moved4'] = states['caught_moved8'] = states['caught_moved0'] = states['compared']
                             if result == 3 and states['compared'][0x43d] == 0:
                                 report, caught_ready = trace_recovery(prg, states['goal'], prepare_control=True)
                                 if report['boundary'] != 'player_control_ready': raise RuntimeError('Unexpected caught keeper control boundary')
@@ -144,6 +161,7 @@ def main():
                                 target_input = bytearray(states['caught_open']); target_input[0xe2],target_input[0xe3] = next_rng & 255,(next_rng >> 8) & 255
                                 x = target_input[0x305] | (target_input[0x306] << 8); y = target_input[0x307] | (target_input[0x308] << 8)
                                 states['caught_target'] = original_target(prg,target_input,x,y,True,allow_keeper=True,return_ram=True)
+                                for direction in (1,2,4,8,0): states[f'caught_moved{direction}'] = keeper_target_move(prg,states['caught_target'],next_random(next_rng),direction)
                                 if args.keeper_action_survey or args.keeper_action_one:
                                     action_report, opened = trace_menu(prg, states['caught_menu'], allow_keeper=True)
                                     recovery_counts['keeper-menu:' + action_report['boundary']] += 1
@@ -177,7 +195,7 @@ def main():
                             else: states.update({name: states['compared'] for name in ('formation', 'receiver', 'ball', 'handoff', 'control')})
                             counts[(pressed, states['selected'][0x43d], states['compared'][0x612])] += 1
                             if not args.original_only:
-                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target')
+                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target', 'caught_moved1', 'caught_moved2', 'caught_moved4', 'caught_moved8', 'caught_moved0')
                                 records.write_bytes(b''.join(states[name] for name in names))
                                 for name in names:
                                     normalized = bytearray(states[name]); normalized[0x600:0x606] = bytes(6)
