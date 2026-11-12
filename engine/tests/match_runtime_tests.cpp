@@ -613,6 +613,14 @@ static int player1_defended_shot_check(int argc,char** argv) {
   std::ostringstream keeper_save(std::ios::binary);write_match_save(keeper_save,keeper.state,identity);std::istringstream keeper_in(keeper_save.str(),std::ios::binary);auto keeper_restored=load_match_save(keeper_in,identity);
   auto shot=step_match(keeper_restored,client_input(keeper_restored,0,0),content);
   if(shot.unsupported || shot.state.session.phase!=FieldSessionPhase::player8_area_shot_prepared || shot.state.session.action->power!=11 || shot.state.session.recovery->attack_subtype!=2)throw std::runtime_error("Player8 area shot preparation differs from original");
+  auto compared_keeper=step_match(shot.state,client_input(shot.state,0,0),content);
+  if(compared_keeper.unsupported || compared_keeper.state.session.phase!=FieldSessionPhase::player8_area_keeper_compared || compared_keeper.state.session.area_sequence_result!=2 || compared_keeper.state.session.area_defender_cursor!=0)throw std::runtime_error("Player8 goalkeeper contact differs from original");
+  auto missing_content=content;missing_content.data->area_shot_keeper_comparison.reset();
+  auto denied=step_match(shot.state,client_input(shot.state,0,0),missing_content);
+  if(denied.unsupported!=UnsupportedCapability::content || denied.state.last_sequence!=shot.state.last_sequence || denied.state.session.phase!=shot.state.session.phase)throw std::runtime_error("Missing goalkeeper comparison did not reject atomically");
+  std::ostringstream compared_save(std::ios::binary);write_match_save(compared_save,compared_keeper.state,identity);std::istringstream compared_in(compared_save.str(),std::ios::binary);auto compared_restored=load_match_save(compared_in,identity);
+  if(compared_restored.session.area_sequence_result!=2 || compared_restored.session.phase!=FieldSessionPhase::player8_area_keeper_compared)throw std::runtime_error("Player8 goalkeeper comparison did not roundtrip");
+  std::ofstream kc(std::string(argv[4])+"-area-compared.cmjsession",std::ios::binary);write_phase_session(kc,compared_keeper.state.session);
   std::ofstream kf(std::string(argv[4])+"-area-keeper.cmjsession",std::ios::binary),sf(std::string(argv[4])+"-area-shot.cmjsession",std::ios::binary);write_phase_session(kf,keeper.state.session);write_phase_session(sf,shot.state.session);
   std::ofstream rec(std::string(argv[4])+"-recovered.cmjsession",std::ios::binary),inter(std::string(argv[4])+"-area.cmjsession",std::ios::binary),ap(std::string(argv[4])+"-area-prepared.cmjsession",std::ios::binary),mn(std::string(argv[4])+"-area-menu.cmjsession",std::ios::binary);write_phase_session(rec,recovered.state.session);write_phase_session(inter,area.state.session);write_phase_session(ap,area_prepared.state.session);write_phase_session(mn,menu.state.session);
  }

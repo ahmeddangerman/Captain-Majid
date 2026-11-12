@@ -142,7 +142,7 @@ enum class FieldSessionPhase : std::uint16_t {
     player2_opponent_pass_defender_clocked = 464,
     player2_opponent_pass_defender_finished = 465,
     player2_opponent_pass_received = 466,
-    player8_area_keeper_chosen = 467, player8_area_shot_prepared = 468
+    player8_area_keeper_chosen = 467, player8_area_shot_prepared = 468, player8_area_keeper_compared = 469
 };
 struct PendingTerminalContact {
     std::uint8_t result_code, defender_id, defense_action, defense_subtype;

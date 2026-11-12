@@ -1,5 +1,12 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Player8 shot goalkeeper contact compared
+
+The seeded attacking goal-area shot now calculates goalkeeper11's action3 contact using an optional private CMJSHOTc comparison extension. Original/native represented state matches the controlled comparison boundary: the keeper's rolled strength is 9, comparison score 78 and result 2. The continuation is guarded to the observed sample; the subsequent loose ball and recovery remain unimplemented. The goalkeeper comparison survives a runtime save/reload, and missing comparison data rejects atomically. C packs preserve earlier payloads; older formats still load and omit the new comparison. The exporter reads its selected values from the verified original cartridge and keeps the pack outside Git.
+
+Windows CMake build and all 65 registered tests passed. A synthetic pack regression rejected truncated, trailing, invalid and mislabelled c packs, and the private pack checker matched its original tables. The original comparison injects random bytes and acknowledges presentation, not live NMI, graphics or audio. Continue from result 2 through clock, movement and player9 loose-ball recovery, comparing each original boundary. A complete match remains unfinished and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player8-goal-area-seeded-original-20261112 and player1-shot-original-20261112.
+
+
 ## 2026-11-13 - Seeded player8 goalkeeper choice and shot preparation
 
 The provisional player8 goal-area menu now accepts the observed ordinary shot, computes opposing goalkeeper11's action3 from the original AI data, and prepares the player's subtype2 shot at power11 for random bytes 248/243. The guarded goalkeeper-choice and shot-prepared represented states match controlled original execution; the goalkeeper-choice runtime save reloads. The automated replay test sets the sampled RNG state explicitly, so this does not establish live timing parity. Windows CMake build and all 65 registered tests passed; the private original comparison passed. The original trace injects random bytes and acknowledges presentation without NMI, graphics or audio.
