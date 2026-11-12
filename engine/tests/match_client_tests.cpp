@@ -5,6 +5,7 @@
 
 int main() {
  using namespace captain;
+ ClientButtons tap;tap.press(1);tap.release(1);auto quick=tap.take();assert(quick.held==1 && quick.pressed==1);auto after_tap=tap.take();assert(after_tap.held==0 && after_tap.pressed==0);
  ClientButtons keys;keys.press(128);keys.press(128);auto first=keys.take();
  assert(first.held==128 && first.pressed==128);auto repeat=keys.take();assert(repeat.held==128 && repeat.pressed==0);
  keys.release(128);keys.press(128);auto second=keys.take();assert(second.held==128 && second.pressed==128);

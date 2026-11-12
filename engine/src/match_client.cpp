@@ -9,7 +9,7 @@ void ClientButtons::press(std::uint8_t mask) {
 }
 void ClientButtons::release(std::uint8_t mask) { held_=static_cast<std::uint8_t>(held_ & ~mask); }
 void ClientButtons::clear() { held_=pressed_=0; }
-ClientButtonSample ClientButtons::take() { const ClientButtonSample sample{held_,pressed_};pressed_=0;return sample; }
+ClientButtonSample ClientButtons::take() { const ClientButtonSample sample{static_cast<std::uint8_t>(held_ | pressed_),pressed_};pressed_=0;return sample; }
 
 MatchInput client_input(const MatchRuntimeState& state,std::uint8_t held,std::uint8_t pressed) {
  if(state.last_sequence==std::numeric_limits<std::uint64_t>::max())throw std::overflow_error("Input sequence exhausted");
