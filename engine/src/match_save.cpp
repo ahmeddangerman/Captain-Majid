@@ -85,7 +85,9 @@ void validate_runtime(const MatchRuntimeState& s) {
  for(const auto id:s.processed_flight_defenders)if((side==0 && (id<12 || id>21)) || (side==11 && (id<1 || id>10)))
   throw std::invalid_argument("Invalid processed flight defender ID");
  const bool keeper_target=s.session.phase==FieldSessionPhase::keeper_possession && s.session.current.field.side==0 && s.keeper_outlet_recipient &&
-    s.session.action && s.session.action->action==1 && s.pass_stage==MatchPassStage::target_ready;
+    s.session.action && s.session.action->action==1 && s.pass_stage!=MatchPassStage::none;
+ if(keeper_target && s.session.current.field.selected_defenders!=(s.pass_stage==MatchPassStage::target_ready ? 1 : 0))
+  throw std::invalid_argument("Inconsistent keeper outlet defender count");
  if(bool(s.pass_target)!=target || bool(s.pass_trajectory)!=flight || bool(s.pass_cell)!=flight ||
     (s.pass_stage!=MatchPassStage::none && (s.mode!=MatchTimingMode::provisional_demo || (s.session.phase!=FieldSessionPhase::ordinary_pass_prepared && !keeper_target))))
   throw std::invalid_argument("Inconsistent match pass state");

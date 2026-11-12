@@ -1128,8 +1128,8 @@ void validate_phase_session(const PhaseSessionState& state) {
             throw std::invalid_argument("Keeper phase does not match opposing keeper setup/status");
     }
     if(keeper_possession && ((state.current.field.side!=0 && state.current.field.side!=11) || state.current.field.ball_owner!=state.current.field.side ||
-       state.current.field.selected_defenders!=1 || !state.scheduling || state.scheduling->selected_ids[0]!=state.current.field.side ||
-       !state.recovery || state.recovery->opposing_player!=state.current.field.side || state.current.field.elapsed || state.current.field.keepers[state.current.field.side==0?0:1].stun))
+       !state.scheduling || (state.current.field.selected_defenders!=1 && !(state.current.field.selected_defenders==0 && state.action && state.action->action==1 && state.saved_ball_flight_flag)) ||
+       state.scheduling->selected_ids[0]!=state.current.field.side || !state.recovery || state.recovery->opposing_player!=state.current.field.side || state.current.field.elapsed || state.current.field.keepers[state.current.field.side==0?0:1].stun))
         throw std::invalid_argument("Keeper possession requires its own captured keeper and selected prefix");
     if(phase==58 && ((state.current.field.side!=0 && state.current.field.side!=11) || state.current.field.selected_defenders || state.current.field.elapsed!=1 ||
        !state.recovery || state.recovery->opposing_player!=(state.current.field.side^11u)))

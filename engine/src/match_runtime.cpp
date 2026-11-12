@@ -403,6 +403,20 @@ MatchStepResult handle_home_keeper_outlet(const MatchRuntimeState& input,const M
  MatchStepResult result{input};
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
   if(input.keeper_outlet_recipient){
+   if(input.session.action && input.session.action->action==1 && input.pass_stage==MatchPassStage::target_ready){
+    if(!input.pass_target || !input.session.recovery){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
+    if(!input.ball_fraction){result.unsupported=UnsupportedCapability::ball_fraction;return result;}
+    if(!content.data->movement || !content.ball_velocity){result.unsupported=UnsupportedCapability::content;return result;}
+    const auto& field=input.session.current.field;
+    if(field.ball_cell==input.pass_target->destination){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
+    BallTrajectoryContext trajectory{static_cast<std::uint16_t>((unsigned(field.ball_x)<<8)|input.ball_fraction->x),
+     static_cast<std::uint16_t>((unsigned(field.ball_y)<<8)|input.ball_fraction->y),0,0,0,1};
+    trajectory.direction=calculate_player_direction({trajectory.x,trajectory.y,input.pass_target->destination,0},field.ball_cell,content.data->movement->geometry);
+    const auto velocity=calculate_ball_velocity(trajectory.direction,*content.ball_velocity);trajectory.vx=velocity.x;trajectory.vy=velocity.y;
+    result.state.pass_trajectory=trajectory;result.state.pass_cell=field.ball_cell;result.state.session.recovery->x_jitter_control=trajectory.direction;
+    result.state.session.current.field.selected_defenders=0;
+    result.state.pass_stage=MatchPassStage::flight_ready;result.state.last_sequence=event.sequence;return result;
+   }
    if(input.session.action && input.session.action->action==1 && input.pass_stage==MatchPassStage::none){
     if(!content.pass_distance){result.unsupported=UnsupportedCapability::content;return result;}
     try{const auto& field=input.session.current.field;const auto& receiver=field.motion[field_motion_index(*input.keeper_outlet_recipient)];
