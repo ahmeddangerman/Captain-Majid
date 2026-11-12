@@ -1,5 +1,12 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Player4 goalkeeper confrontation recovered by player3
+
+The player4 rebound now continues through an ordinary goal-area shot against goalkeeper11. In the sampled original and native sequence the goalkeeper chooses action3, the shot is prepared at power6, the comparison returns result2, and player3 on the home side recovers at 180,124 after the goalkeeper is stunned. Original/native represented states match shot confirmation, AI choice, preparation, comparison, clock, movement, recovery entry and recovered owner. Ball fractions 79/152 survive a runtime save/reload.
+
+The original observer injects the sampled provisional random bytes and acknowledges presentation without real NMI, rendering or audio. The behavior is restricted to the observed state and is not general goal-area parity. Windows CMake build, all 65 registered tests and the private original comparison passed. Next follow player3's recovered goal-area interaction and continue toward a complete playable match. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player4-shot-original-20261113.
+
+
 ## 2026-11-13 - Player6 shot saved; player4 recovers
 
 The sampled player6 goal-area shot now computes its target, travels through six original-matched flight-cell crossings and reaches opponent goalkeeper11. The original and native goalkeeper choose action1 and result2; after the saved shot, player4 on the home side recovers at 196,124 with fractional ball coordinates 79/152. The recovery and the subsequent player4 goal-area menu, including goalkeeper11 selection, match controlled original represented states and save/reload. The original shot clears the earlier pass flight flag before flight; the engine now does the same for this observed route. The goalkeeper-save presentation's facing change is acknowledged explicitly.

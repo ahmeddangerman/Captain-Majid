@@ -9,7 +9,7 @@ from verify_action_strength import PAYLOAD_SHA256
 from verify_player7_pass_end_to_end import compare_represented
 
 p=argparse.ArgumentParser(description=__doc__)
-for name in ('rom','injected','trace','menu','contacts','prepared','player6-area','player6-shot'):p.add_argument('--'+name,type=Path,required=True)
+for name in ('rom','injected','trace','menu','contacts','prepared','player6-area','player6-shot','player4-shot'):p.add_argument('--'+name,type=Path,required=True)
 a=p.parse_args();rom=a.rom.read_bytes();base=bytearray(a.injected.read_bytes())
 if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256 or len(base)!=2048:raise ValueError('Expected verified original ROM and private RAM')
 menu=(a.trace/'native-player9-menu.cmjsession').read_bytes();compare_represented(menu,export_session(a.menu.read_bytes(),0),False,'player9','five-defender menu')
@@ -51,4 +51,11 @@ for name,pc in (('area','8b4a-2'),('area-prepared','8b73-2'),('menu','d5e5-3')):
  if count: expected[309]=11
  compare_represented((a.trace/f'native-player4-{name}.cmjsession').read_bytes(),expected,False,'player4 rebound',name)
  if raw[0x441]!=4:raise ValueError('Unexpected player4 goal-area owner')
+for name,pc,extended in (('shot-confirmed','8b8f-2',False),('keeper-chosen','8637-2',True),('shot-prepared','82a0-2',True),('keeper-compared','8385-1',True),('keeper-clocked','83f5-2',True),('keeper-moved','83f8-2',True),('recovery-entry','8bdf-2',True),('recovered','8c31-3',True)):
+ raw=bytearray((a.player4_shot/f'{pc}.bin').read_bytes());count=raw[0x600];raw[0x600]=0
+ expected=bytearray(export_session(raw,0));expected[28]=count
+ if count: expected[309]=11
+ compare_represented((a.trace/f'native-player4-{name}.cmjsession').read_bytes(),expected,extended,'player4 shot',name)
+ if name=='keeper-chosen' and (raw[0x60b],raw[0xe2],raw[0xe3])!=(3,164,142):raise ValueError('Unexpected player4 goalkeeper choice')
+ if name=='recovered' and (raw[0x441],raw[0x5fb],raw[0x634],raw[0x636])!=(3,0,79,152):raise ValueError('Unexpected player4 rebound owner or fractions')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
