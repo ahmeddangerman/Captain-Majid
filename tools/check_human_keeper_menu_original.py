@@ -16,6 +16,7 @@ from check_keeper_entry_original import observe as observe_keeper_entry
 from export_phase_session import export_session
 from trace_ball_recovery_phase import trace_recovery
 from trace_action_menu import trace_menu
+from verify_ordinary_pass_initialization import original_target
 from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
@@ -113,7 +114,7 @@ def main():
                             result = states['compared'][0x612]
                             states['goal'] = (observe_scored_goal(prg, states['compared'])[0] if result == 0 else
                                               observe_keeper_save(prg, states['compared'])[0] if result in (2, 3) else states['compared'])
-                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['compared']
+                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['compared']
                             if result == 3 and states['compared'][0x43d] == 0:
                                 report, caught_ready = trace_recovery(prg, states['goal'], prepare_control=True)
                                 if report['boundary'] != 'player_control_ready': raise RuntimeError('Unexpected caught keeper control boundary')
@@ -126,13 +127,30 @@ def main():
                                 menu_input[0xe2], menu_input[0xe3] = next_rng & 255, (next_rng >> 8) & 255
                                 menu_report, states['caught_menu'] = trace_recovery(prg, menu_input, control_input=(64,64))
                                 if menu_report['boundary'] != 'action_menu_pending': raise RuntimeError('Unexpected caught keeper menu boundary')
+                                open_input = bytearray(states['caught_menu']); next_rng = next_random(next_rng)
+                                open_input[0xe2], open_input[0xe3] = next_rng & 255, (next_rng >> 8) & 255
+                                action_report, states['caught_open'] = trace_menu(prg, open_input, allow_keeper=True)
+                                if action_report['boundary'] != 'human_action_menu': raise RuntimeError('Unexpected caught keeper menu open')
+                                selected_input = bytearray(states['caught_open']); next_rng = next_random(next_rng)
+                                selected_input[0xe2], selected_input[0xe3] = next_rng & 255, (next_rng >> 8) & 255
+                                selected_report, states['caught_selected'] = trace_menu(prg, selected_input, mode='poll', pressed=2, allow_keeper=True)
+                                if selected_report['boundary'] != 'human_action_menu' or selected_report['action'] != 1: raise RuntimeError('Unexpected caught keeper pass selection')
+                                confirmed_input = bytearray(states['caught_selected']); next_rng = next_random(next_rng)
+                                confirmed_input[0xe2], confirmed_input[0xe3] = next_rng & 255, (next_rng >> 8) & 255
+                                confirmed_report, states['caught_confirmed'] = trace_menu(prg, confirmed_input, mode='poll', pressed=128, allow_keeper=True)
+                                if confirmed_report['boundary'] != 'attack_choice_pending' or confirmed_report['action'] != 1: raise RuntimeError('Unexpected caught keeper pass confirmation')
                                 if args.keeper_action_survey or args.keeper_action_one:
                                     action_report, opened = trace_menu(prg, states['caught_menu'], allow_keeper=True)
                                     recovery_counts['keeper-menu:' + action_report['boundary']] += 1
+                                    posx = states['caught_open'][0x305] | (states['caught_open'][0x306] << 8)
+                                    posy = states['caught_open'][0x307] | (states['caught_open'][0x308] << 8)
+                                    target = original_target(prg, states['caught_open'], posx, posy, True, allow_keeper=True)
+                                    recovery_counts['keeper-ball:' + ('same' if target[0:2] == (states['caught_open'][0x635], states['caught_open'][0x637]) else 'different')] += 1
                                     for mask in (0,1,2,4,8,64,128):
                                         poll, _ = trace_menu(prg, opened, mode='poll', pressed=mask, allow_keeper=True)
                                         recovery_counts[f"keeper-poll:{mask}:{poll['boundary']}:action{poll['action']}"] += 1
                                     if args.keeper_action_one:
+                                        print('keeper position, ball and original pass target:', hex(posx), hex(posy), states['caught_open'][0x635], states['caught_open'][0x637], target)
                                         print('keeper action survey:', dict(sorted(recovery_counts.items())))
                                         return
                                 if args.catch_survey:
@@ -154,7 +172,7 @@ def main():
                             else: states.update({name: states['compared'] for name in ('formation', 'receiver', 'ball', 'handoff', 'control')})
                             counts[(pressed, states['selected'][0x43d], states['compared'][0x612])] += 1
                             if not args.original_only:
-                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu')
+                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed')
                                 records.write_bytes(b''.join(states[name] for name in names))
                                 for name in names:
                                     normalized = bytearray(states[name]); normalized[0x600:0x606] = bytes(6)

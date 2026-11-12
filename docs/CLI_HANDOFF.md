@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Latest - 2026-11-12 caught keeper pass choice
+
+The provisional runtime opens the caught home keeper's action menu and supports selecting and confirming the ordinary pass, then stops before target setup. The 504-case original comparison matched 72 catch menu/choice/confirmation sequences, 48 punch continuations and 384 goals; live presentation/timing was excluded. Windows build/all 65 registered checks passed. The original target reads keeper record Y high byte $0308, absent from current snapshots; the 72 related observations happened to match ball coordinates but do not establish a general invariant. Next preserve/verify keeper-position provenance and connect targeting. Fresh startup and a complete match remain unfinished; overall progress unmeasured. Suggested model: GPT-6.1 Terra High.
+
 ## Latest - 2026-11-12 caught goalkeeper menu handoff
 
 The provisional runtime follows a supported home catch through a neutral control poll and menu-button handoff. Original comparisons covered 72 such catches, 48 punch recoveries and 384 goals, with save/reload at native boundaries and presentation/live timing excluded. Windows build/all 65 checks passed. Keeper menu choices, ball distribution, fresh startup and a complete match remain unfinished. Overall progress is unmeasured. Next compare caught-keeper action menu choices. Suggested model: GPT-6.1 Terra High.

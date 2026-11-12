@@ -587,7 +587,9 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  }
  if(input.mode==MatchTimingMode::provisional_demo && event.kind==MatchInputKind::tick && input.session.current.field.side==0 &&
     (input.session.phase==FieldSessionPhase::action_menu_pending || input.session.phase==FieldSessionPhase::field_contact_pending || input.session.phase==FieldSessionPhase::human_action_menu)) {
-  if(input.session.current.field.ball_owner==0){result.unsupported=UnsupportedCapability::action;return result;}
+  if(input.session.current.field.ball_owner==0 && (input.session.phase==FieldSessionPhase::field_contact_pending ||
+     (input.session.phase==FieldSessionPhase::human_action_menu && event.pressed!=0 && event.pressed!=2 &&
+      !(event.pressed==128 && input.session.action && input.session.action->action==1 && (input.session.action->cursor&128u))))){result.unsupported=UnsupportedCapability::action;return result;}
   if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
   if(!content.data->action_menu){result.unsupported=UnsupportedCapability::content;return result;}
   auto next=input;advance_demo_random(next);
@@ -652,6 +654,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::attack_choice_pending &&
     input.session.current.field.side==0 && input.session.action && input.session.action->action==1 &&
     input.session.action->menu_route==0 && event.kind==MatchInputKind::action && event.action==MatchAction::pass && !event.target) {
+  if(input.session.current.field.ball_owner==0){result.unsupported=UnsupportedCapability::action;return result;}
   result.state.session=begin_ordinary_human_pass_target(input.session);
   if(input.session.current.field.selected_defenders)result.state.retained_defense_action.reset();
   result.state.last_sequence=event.sequence;

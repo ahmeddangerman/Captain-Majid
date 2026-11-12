@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-12 - Caught goalkeeper pass selection
+
+After a supported home catch, the provisional runtime now opens the original action menu and permits selecting and confirming its ordinary pass choice. It stops before target initialization. Controlled original comparisons matched all represented boundaries for 72 constructed catches, including menu opening, pass selection and confirmation, as well as 48 punch continuations and 384 goals. Native saves were reloaded at every step; presentation-facing fields and live NMI/audio/PPU remain excluded. Windows build/all 65 registered checks passed.
+
+An original-only survey found the pass-target routine reads the keeper's player-record bytes, including the Y high byte at $0308, which current snapshots omit. The 72 related cases happened to have ball coordinates matching that position; that does not prove equality in general, so the target stays blocked until provenance is represented or otherwise established. Fresh match startup, live interaction and a complete match remain unfinished. Overall progress is unmeasured. Next preserve and verify the needed keeper position and compare pass targeting. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Caught goalkeeper menu handoff
 
 After a supported home goalkeeper catch, the provisional runtime now processes a neutral control poll and the original menu button through the action-menu handoff. It stops there before unsupported keeper menu choices; other keeper inputs and decision-time movement remain guarded. The 504-case original comparison matched 72 caught-keeper neutral/menu handoffs, 48 punches through recovered-player or keeper-area handoff, and 384 goals. Native saves are reloaded at each step; presentation-facing state and live NMI/audio/PPU remain outside the comparison. Windows build and all 65 registered checks passed.

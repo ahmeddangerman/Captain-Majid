@@ -18,17 +18,17 @@ from trace_field_script import ObservedCartridge
 from export_shot_content import PAYLOAD_SHA256
 
 
-def original_target(prg, seed, x, y, include_fractions=False):
+def original_target(prg, seed, x, y, include_fractions=False, allow_keeper=False):
     raw = bytearray(seed)
     owner = raw[0x441]
-    if owner not in range(1, 11):
+    if owner not in (range(0, 11) if allow_keeper else range(1, 11)):
         raise ValueError('Menu seed must have a side-zero field carrier')
     record = 0x300 + 12 * owner
     raw[record + 5], raw[record + 6] = x & 255, x >> 8
     raw[record + 7], raw[record + 8] = y & 255, y >> 8
     # Stale values verify the original refreshes the ball from the carrier.
     raw[0x635], raw[0x637], raw[0x5fe] = 52, 84, 0
-    _, selected = trace_menu(prg, raw, 'poll', 2)
+    _, selected = trace_menu(prg, raw, 'poll', 2, allow_keeper=allow_keeper)
     memory = ObservedCartridge(prg, selected, None, set())
     memory.ram[:0x1a] = bytes(0x1a)
     for address, value in ((0, 5), (1, 255), (2, 0x90), (3, 26), (4, 27), (5, 1), (6, 0x50),
