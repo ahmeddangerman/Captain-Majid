@@ -16,6 +16,7 @@ p = argparse.ArgumentParser(description=__doc__)
 p.add_argument('--rom', type=Path, required=True)
 p.add_argument('--trace', type=Path, required=True)
 p.add_argument('--seeded-area-trace', type=Path)
+p.add_argument('--player9-trace', type=Path)
 a = p.parse_args()
 rom = a.rom.read_bytes()
 if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
@@ -67,4 +68,11 @@ if a.seeded_area_trace:
         raw[0x600] = 0
         expected = bytearray(export_session(raw, 0)); expected[28] = 1; expected[309] = 11
         compare_represented((a.trace / ('native-' + name + '.cmjsession')).read_bytes(), expected, True, 'player8 goal-area', name)
+if a.player9_trace:
+    for name, pc in (('player9-control-entry','e0df-1'), ('player9-control-ready','e145-1')):
+        raw = bytearray((a.player9_trace / (pc + '.bin')).read_bytes())
+        count=raw[0x600];raw[0x600]=0
+        expected=bytearray(export_session(raw,0));expected[28]=count
+        if count: expected[309]=11
+        compare_represented((a.trace / ('native-' + name + '.cmjsession')).read_bytes(), expected, False, 'player9 rebound', name)
 print('Matched defended shot, player8 recovery and attacking goal-area keeper menu')

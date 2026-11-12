@@ -936,6 +936,11 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player8_area_recovered_owner) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  try {result.state.session.control->facing=64;result.state.session.phase=FieldSessionPhase::player_control;result.state.retained_defense_action.reset();validate_phase_session(result.state.session);result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;}
+  catch(const std::invalid_argument&){result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
+ }
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::player8_area_keeper_field_moved || input.session.phase==FieldSessionPhase::player8_area_recovery_entry))return recover_player8_area_shot(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player8_area_keeper_clocked)return move_player8_area_keeper_field(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player8_area_keeper_compared)return clock_player8_area_keeper(input,event,content);

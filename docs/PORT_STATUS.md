@@ -1,5 +1,12 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Rebound continues through player9 control
+
+The player9 rebound now proceeds through acknowledged control entry and normal control setup. Both represented states match controlled original execution, including the goalkeeper selection retained until control setup; control-ready saves and reloads. Continued neutral provisional play reaches another five-defender contact with selected opponents13,14,18,19,20 at clock108. The separately continued original also reaches those five IDs at clock108, but field positions and random bytes differ because its cooperative observer does not simulate the provisional RNG timing; this is not claimed as contact-state parity. Next inject matching native state at the original contact and trace the menu and the player's next action.
+
+The Windows CMake build, all 65 registered tests and the controlled player9 control comparison passed. Original presentation waits and random scheduling remain approximations, and a complete match is unfinished. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player9-after-rebound-original-20261113 and player9-next-field-original-20261113.
+
+
 ## 2026-11-13 - Player8 blocked goal-area shot recovered by player9
 
 The seeded player8 shot now continues from goalkeeper action3/result2 through the original contact clock, field movement, goalkeeper stun and loose-ball recovery. Controlled original/native represented states match at the clock, movement, recovery entry and recovered owner: player9 on the same side controls the rebound at 172,124, with the original retained goalkeeper selection and jitter byte. Recovery saves and reloads. The clock and movement use shared engine calculations, while observed presentation changes are acknowledged. Windows CMake build, all 65 registered tests, and the private original comparison passed.
