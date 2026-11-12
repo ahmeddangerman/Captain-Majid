@@ -213,7 +213,7 @@ int WINAPI WinMain(HINSTANCE instance,HINSTANCE,LPSTR,int show) {
  int argc=0;auto argv=CommandLineToArgvW(GetCommandLineW(),&argc);
  if(!argv)return 1;
  try {
-  if(argc<3)throw std::invalid_argument("Usage: captain-match-window PACK SNAPSHOT --distance FILE --velocity FILE [--seed N] [--ball-fractions X Y] [--retained-defense-action N] [--score LEFT RIGHT KICKOFF]");
+  if(argc<3)throw std::invalid_argument("Usage: captain-match-window PACK SNAPSHOT --distance FILE --velocity FILE [--seed N] [--ball-fractions X Y] [--retained-defense-action N] [--home-keeper-y N] [--score LEFT RIGHT KICKOFF]");
   auto app=std::make_unique<App>();MatchConfig config{};config.mode=MatchTimingMode::provisional_demo;config.seed=1;
   auto pack=open_file(argv[1]);app->content.data=load_shot_content(pack);
   auto snapshot=open_file(argv[2]);config.initial=load_phase_session(snapshot);
@@ -224,6 +224,7 @@ int WINAPI WinMain(HINSTANCE instance,HINSTANCE,LPSTR,int show) {
    else if(option==L"--seed" && i<argc && !have_seed){config.seed=number(argv[i++],0xffffffffu,"Seed must be 1..4294967295");have_seed=true;}
    else if(option==L"--ball-fractions" && i+1<argc && !config.ball_fraction){const auto x=number(argv[i++],255,"Fraction must be 0..255");const auto y=number(argv[i++],255,"Fraction must be 0..255");config.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(x),static_cast<std::uint8_t>(y)};}
    else if(option==L"--retained-defense-action" && i<argc && !config.retained_defense_action)config.retained_defense_action=static_cast<std::uint8_t>(number(argv[i++],6,"Retained action must be 0..6"));
+   else if(option==L"--home-keeper-y" && i<argc && !config.home_keeper_y)config.home_keeper_y=static_cast<std::uint8_t>(number(argv[i++],255,"Home keeper Y must be 0..255"));
    else if(option==L"--score" && i+2<argc && !have_score){
     if(config.initial->score)throw std::invalid_argument("Snapshot already contains score metadata");
     const auto left=number(argv[i++],255,"Score bytes must be 0..255");const auto right=number(argv[i++],255,"Score bytes must be 0..255");const auto kickoff=number(argv[i++],255,"Kickoff byte must be 0..255");

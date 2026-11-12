@@ -10,7 +10,7 @@
 #include <vector>
 
 namespace captain {
-enum class UnsupportedCapability { content, initialization, input_sequence, random_state, ball_fraction, timing, action, defender_contact, defensive_prompt, opponent_action, opponent_execution, period_transition, presentation, phase, defense_action_state };
+enum class UnsupportedCapability { content, initialization, input_sequence, random_state, ball_fraction, timing, action, defender_contact, defensive_prompt, opponent_action, opponent_execution, period_transition, presentation, phase, defense_action_state, keeper_position };
 enum class MatchTimingMode { original_backed, provisional_demo };
 enum class MatchInputKind { tick, action, presentation_complete };
 enum class MatchAction { none, pass, shot };
@@ -25,9 +25,9 @@ struct MatchDefenseMenu { MatchDefenseStage stage=MatchDefenseStage::polling; De
 struct MatchInput { MatchInputKind kind; std::uint64_t sequence; std::uint8_t held=0, pressed=0; MatchAction action=MatchAction::none; std::optional<std::uint8_t> target{}; };
 struct MatchEvent { ControlPresentationRequest presentation; };
 // Initial state is a development snapshot, not independently verified match startup.
-struct MatchConfig { std::optional<PhaseSessionState> initial{}; std::uint32_t seed=0; std::uint16_t clock=0; std::optional<std::uint8_t> random_index{}; MatchTimingMode mode=MatchTimingMode::original_backed; std::optional<MatchBallFraction> ball_fraction{}; std::optional<std::uint8_t> retained_defense_action{}; };
+struct MatchConfig { std::optional<PhaseSessionState> initial{}; std::uint32_t seed=0; std::uint16_t clock=0; std::optional<std::uint8_t> random_index{}; MatchTimingMode mode=MatchTimingMode::original_backed; std::optional<MatchBallFraction> ball_fraction{}; std::optional<std::uint8_t> retained_defense_action{}; std::optional<std::uint8_t> home_keeper_y{}; };
 struct MatchContent { std::optional<ShotContent> data{}; std::optional<PassDistanceContent> pass_distance{}; std::optional<BallVelocityContent> ball_velocity{}; };
-struct MatchRuntimeState { PhaseSessionState session{}; std::uint64_t last_sequence=0; std::optional<std::uint8_t> random_index{}; RuntimeRandomMemory random_memory{}; MatchTimingMode mode=MatchTimingMode::original_backed; std::uint32_t demo_rng=0; MatchPassStage pass_stage=MatchPassStage::none; std::optional<MatchPassTarget> pass_target{}; std::optional<MatchBallFraction> ball_fraction{}; std::optional<BallTrajectoryContext> pass_trajectory{}; std::optional<std::uint8_t> pass_cell{}; std::optional<MatchDefenseMenu> defense_menu{}; std::optional<MatchTargetChooser> target_chooser{}; std::vector<std::uint8_t> flight_defenders{},processed_flight_defenders{}; std::optional<std::uint8_t> retained_defense_action{}; };
+struct MatchRuntimeState { PhaseSessionState session{}; std::uint64_t last_sequence=0; std::optional<std::uint8_t> random_index{}; RuntimeRandomMemory random_memory{}; MatchTimingMode mode=MatchTimingMode::original_backed; std::uint32_t demo_rng=0; MatchPassStage pass_stage=MatchPassStage::none; std::optional<MatchPassTarget> pass_target{}; std::optional<MatchBallFraction> ball_fraction{}; std::optional<BallTrajectoryContext> pass_trajectory{}; std::optional<std::uint8_t> pass_cell{}; std::optional<MatchDefenseMenu> defense_menu{}; std::optional<MatchTargetChooser> target_chooser{}; std::vector<std::uint8_t> flight_defenders{},processed_flight_defenders{}; std::optional<std::uint8_t> retained_defense_action{}; std::optional<std::uint8_t> home_keeper_y{}; };
 struct MatchBallView { std::uint8_t x=0,y=0,cell=0; bool in_flight=false; };
 struct MatchStepResult { MatchRuntimeState state{}; std::vector<MatchEvent> events{}; std::optional<UnsupportedCapability> unsupported{}; };
 // Runtime trajectory is authoritative for the visible ball while a pass is in flight.

@@ -11,5 +11,5 @@ struct KeeperSaveResult {
 };
 // Prepared after display9; only normal keeper results2/3. No goal/score writes.
 KeeperSaveResult resolve_session_keeper_save(const PhaseSessionState& input,const ShotContent& content);
-PhaseSessionState prepare_caught_home_keeper_control(const PhaseSessionState& input);
+PhaseSessionState prepare_caught_home_keeper_control(const PhaseSessionState& input,std::uint8_t home_keeper_y);
 }

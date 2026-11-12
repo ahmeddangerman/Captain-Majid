@@ -1,4 +1,5 @@
 #include "captain/keeper_save_session.hpp"
+#include "captain/defender_selection.hpp"
 #include <stdexcept>
 namespace captain {
 KeeperSaveResult resolve_session_keeper_save(const PhaseSessionState& input,const ShotContent& content) {
@@ -32,7 +33,7 @@ KeeperSaveResult resolve_session_keeper_save(const PhaseSessionState& input,cons
   resolved.event==ShotEvent::keeper_catch ? FieldSessionPhase::keeper_possession : FieldSessionPhase::keeper_punch_recovery;
  validate_phase_session(state);return {std::move(state),resolved.event,reward,f.side!=resolved.possession_side};
 }
-PhaseSessionState prepare_caught_home_keeper_control(const PhaseSessionState& input) {
+PhaseSessionState prepare_caught_home_keeper_control(const PhaseSessionState& input,std::uint8_t home_keeper_y) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::keeper_possession || input.current.field.side!=0 || input.current.field.ball_owner!=0 ||
     !input.control || !input.experience || !input.recovery || !input.scheduling)
@@ -41,6 +42,8 @@ PhaseSessionState prepare_caught_home_keeper_control(const PhaseSessionState& in
  state.current.clock.script_flags=128;state.current.clock.ball_mode=128;
  state.experience->totals[10]=static_cast<std::uint16_t>((state.experience->totals[10]&255u)|256u);
  c.travel_accumulator=0;c.display_parameter=2;c.motion_requested=0;c.decision_timer=10;c.facing=64;
+ f.ball_x=f.keepers[0].penalty_duration;f.ball_y=home_keeper_y;f.ball_cell=field_cell_at(f.ball_x,f.ball_y);
+ if(f.ball_cell==255)throw std::invalid_argument("Home goalkeeper position is outside the field");
  f.movement_region=255;state.recovery->ball_variant=0;f.selected_defenders=0;state.scheduling->selected_ids.fill(0);
  state.phase=FieldSessionPhase::control_ready;validate_phase_session(state);return state;
 }

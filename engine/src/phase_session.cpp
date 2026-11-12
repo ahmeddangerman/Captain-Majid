@@ -74,12 +74,13 @@ void validate_phase_session(const PhaseSessionState& state) {
     if (ordinary_human_target) {
         const auto& field = state.current.field;
         if (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling ||
-            !state.human_pass_cursor || state.human_pass_steps || field.side != 0 || field.ball_owner < 1 || field.ball_owner > 10 || field.selected_defenders > 5 ||
+            !state.human_pass_cursor || state.human_pass_steps || field.side != 0 || (field.ball_owner == 0 ? phase != 331 : field.ball_owner > 10) || field.selected_defenders > 5 ||
             state.action->action != 1 || state.action->menu_route != 0 || state.current.clock.ball_mode != (phase>=333 ? 0 : 129) ||
             (phase>=335 ? (state.recovery->attack_subtype != 0 && state.recovery->attack_subtype != 128) : state.recovery->attack_subtype != 0) || *state.human_pass_cursor >= 240 ||
             field_cell_at(field.ball_x, field.ball_y) != field.ball_cell ||
-            (field.motion[field_motion_index(field.ball_owner)].x >> 8) != field.ball_x ||
-            (field.motion[field_motion_index(field.ball_owner)].y >> 8) != field.ball_y)
+            (field.ball_owner == 0 ? field.keepers[0].penalty_duration != field.ball_x :
+             ((field.motion[field_motion_index(field.ball_owner)].x >> 8) != field.ball_x ||
+              (field.motion[field_motion_index(field.ball_owner)].y >> 8) != field.ball_y)))
             throw std::invalid_argument("Invalid ordinary human pass target boundary");
         for (unsigned i = 0; i < field.selected_defenders; ++i)
             if (state.scheduling->selected_ids[i] < 12 || state.scheduling->selected_ids[i] > 21)
@@ -1332,7 +1333,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         state.current.field.selected_defenders != 0)
         throw std::invalid_argument("Recovery continuation requires zero selected defenders");
     if (static_cast<unsigned>(state.phase) >= 6 && state.phase != FieldSessionPhase::selected_boundary_restart) {
-        if(!keeper_possession && !((state.phase==FieldSessionPhase::control_ready || state.phase==FieldSessionPhase::action_menu_pending || state.phase==FieldSessionPhase::human_action_menu || state.phase==FieldSessionPhase::attack_choice_pending) && state.current.field.side==0 && state.current.field.ball_owner==0)) field_motion_index(state.current.field.ball_owner);
+        if(!keeper_possession && !((state.phase==FieldSessionPhase::control_ready || state.phase==FieldSessionPhase::action_menu_pending || state.phase==FieldSessionPhase::human_action_menu || state.phase==FieldSessionPhase::attack_choice_pending || state.phase==FieldSessionPhase::ordinary_human_pass_target) && state.current.field.side==0 && state.current.field.ball_owner==0)) field_motion_index(state.current.field.ball_owner);
         if (!transitional_clearance && !goal_restart && !player19_goal_possession && phase!=301 && phase!=302 && phase!=225 && phase!=226 && (state.current.field.ball_owner < 11 ? 0 : 11) != state.current.field.side)
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;

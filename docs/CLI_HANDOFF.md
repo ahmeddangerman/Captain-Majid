@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Latest - 2026-11-12 caught keeper pass targeting
+
+With explicit original home keeper Y metadata at an opposing-shot keeper-entry snapshot, provisional mode now follows a catch through control, pass choice and target initialization. Match save v15 preserves this optional value; older saves load it unknown, and missing provenance stops atomically. A 504-case original comparison varied keeper Y among 112/124/140 and matched 72 catches through target setup, 48 punches and 384 goals. Catch setup now moves the ball to the original keeper position. Native save/reload was tested at each boundary; live presentation and NMI/audio/PPU remain unverified. Windows build/all 65 registered checks passed, including version-14 compatibility. Cursor/receiver selection, normal startup and a complete match remain unfinished. Overall progress is unmeasured. Next compare keeper pass targeting input. Suggested model: GPT-6.1 Terra High.
+
 ## Latest - 2026-11-12 caught keeper pass choice
 
 The provisional runtime opens the caught home keeper's action menu and supports selecting and confirming the ordinary pass, then stops before target setup. The 504-case original comparison matched 72 catch menu/choice/confirmation sequences, 48 punch continuations and 384 goals; live presentation/timing was excluded. Windows build/all 65 registered checks passed. The original target reads keeper record Y high byte $0308, absent from current snapshots; the 72 related observations happened to match ball coordinates but do not establish a general invariant. Next preserve/verify keeper-position provenance and connect targeting. Fresh startup and a complete match remain unfinished; overall progress unmeasured. Suggested model: GPT-6.1 Terra High.

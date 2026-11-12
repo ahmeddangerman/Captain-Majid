@@ -272,7 +272,8 @@ MatchStepResult score_human_shot(const MatchRuntimeState& input,const MatchInput
    if(!input.session.score){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
    result.state.session=prepare_session_scored_goal(input.session,*input.session.score,*content.data);
    use_trajectory_fraction(result.state,result.state.session.ball_trajectory);
-  } else if(input.session.keeper_decision->result_code==2 || input.session.keeper_decision->result_code==3){result.state.session=resolve_session_keeper_save(input.session,*content.data).state;result.state.retained_defense_action.reset();}
+   result.state.home_keeper_y.reset();
+  } else if(input.session.keeper_decision->result_code==2 || input.session.keeper_decision->result_code==3){result.state.session=resolve_session_keeper_save(input.session,*content.data).state;result.state.retained_defense_action.reset();if(result.state.session.phase!=FieldSessionPhase::keeper_possession || result.state.session.current.field.side!=0)result.state.home_keeper_y.reset();}
   else {result.unsupported=UnsupportedCapability::opponent_execution;return result;}
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::opponent_execution;return result;}
@@ -334,7 +335,7 @@ MatchStepResult advance_goal_kickoff(const MatchRuntimeState& input,const MatchI
 }
 }
 const char* capability_name(UnsupportedCapability c) {
- switch(c) {case UnsupportedCapability::content:return "content";case UnsupportedCapability::initialization:return "match initialization";case UnsupportedCapability::input_sequence:return "input sequence";case UnsupportedCapability::ball_fraction:return "ball fractional position is unknown";case UnsupportedCapability::random_state:return "random index is not present in development snapshot";case UnsupportedCapability::timing:return "live timing and random scheduling";case UnsupportedCapability::action:return "action routing";case UnsupportedCapability::defender_contact:return "pass-flight defender contact";case UnsupportedCapability::defensive_prompt:return "opponent contact defensive prompt";case UnsupportedCapability::opponent_action:return "opponent attack choice";case UnsupportedCapability::opponent_execution:return "opponent attack execution and defensive resolution";case UnsupportedCapability::period_transition:return "period or added-time transition";case UnsupportedCapability::presentation:return "presentation completion";case UnsupportedCapability::phase:return "session phase";case UnsupportedCapability::defense_action_state:return "retained defensive action is unknown";} return "unknown";
+ switch(c) {case UnsupportedCapability::content:return "content";case UnsupportedCapability::initialization:return "match initialization";case UnsupportedCapability::input_sequence:return "input sequence";case UnsupportedCapability::ball_fraction:return "ball fractional position is unknown";case UnsupportedCapability::random_state:return "random index is not present in development snapshot";case UnsupportedCapability::timing:return "live timing and random scheduling";case UnsupportedCapability::action:return "action routing";case UnsupportedCapability::defender_contact:return "pass-flight defender contact";case UnsupportedCapability::defensive_prompt:return "opponent contact defensive prompt";case UnsupportedCapability::opponent_action:return "opponent attack choice";case UnsupportedCapability::opponent_execution:return "opponent attack execution and defensive resolution";case UnsupportedCapability::period_transition:return "period or added-time transition";case UnsupportedCapability::presentation:return "presentation completion";case UnsupportedCapability::phase:return "session phase";case UnsupportedCapability::defense_action_state:return "retained defensive action is unknown";case UnsupportedCapability::keeper_position:return "home goalkeeper position is unknown";} return "unknown";
 }
 MatchBallView match_ball_view(const MatchRuntimeState& state) {
  if((state.session.phase==FieldSessionPhase::ball_advance_ready || state.session.phase==FieldSessionPhase::ball_cell_callback || state.session.phase==FieldSessionPhase::ball_arrival_callback || state.session.phase==FieldSessionPhase::ball_already_arrived) && state.session.ball_trajectory){
@@ -356,6 +357,7 @@ MatchStepResult create_match(const MatchConfig& config,const MatchContent& conte
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(!config.initial || config.clock || (config.mode!=MatchTimingMode::original_backed && config.mode!=MatchTimingMode::provisional_demo) || (config.mode==MatchTimingMode::original_backed && config.seed) || (config.mode==MatchTimingMode::provisional_demo && !config.seed)){result.unsupported=UnsupportedCapability::initialization;return result;}
  validate_phase_session(*config.initial);
+ if(config.home_keeper_y && (config.mode!=MatchTimingMode::provisional_demo || config.initial->phase!=FieldSessionPhase::shot_keeper_entry || config.initial->current.field.side!=11)){result.unsupported=UnsupportedCapability::initialization;return result;}
  if(config.retained_defense_action){const auto& session=*config.initial;
   const bool ready=session.phase==FieldSessionPhase::control_ready && !session.current.field.selected_defenders;
   const bool shot=session.current.field.side==0 && !session.current.field.selected_defenders && session.action && session.action->action==0 &&
@@ -366,7 +368,7 @@ MatchStepResult create_match(const MatchConfig& config,const MatchContent& conte
  }
  result.state.session=*config.initial;
  result.state.random_index=config.random_index;
- result.state.mode=config.mode;result.state.demo_rng=config.seed;result.state.ball_fraction=config.ball_fraction;result.state.retained_defense_action=config.retained_defense_action;
+ result.state.mode=config.mode;result.state.demo_rng=config.seed;result.state.ball_fraction=config.ball_fraction;result.state.retained_defense_action=config.retained_defense_action;result.state.home_keeper_y=config.home_keeper_y;
  project_field_random_memory(result.state.session.current.field,result.state.random_memory);
  return result;
 }
@@ -654,8 +656,9 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::attack_choice_pending &&
     input.session.current.field.side==0 && input.session.action && input.session.action->action==1 &&
     input.session.action->menu_route==0 && event.kind==MatchInputKind::action && event.action==MatchAction::pass && !event.target) {
-  if(input.session.current.field.ball_owner==0){result.unsupported=UnsupportedCapability::action;return result;}
-  result.state.session=begin_ordinary_human_pass_target(input.session);
+  if(input.session.current.field.ball_owner==0 && !input.home_keeper_y){result.unsupported=UnsupportedCapability::keeper_position;return result;}
+  try{result.state.session=begin_ordinary_human_pass_target(input.session,input.home_keeper_y);}
+  catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::action;return result;}
   if(input.session.current.field.selected_defenders)result.state.retained_defense_action.reset();
   result.state.last_sequence=event.sequence;
   project_field_random_memory(result.state.session.current.field,result.state.random_memory);
@@ -703,7 +706,8 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return score_human_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_possession && input.session.current.field.side==0){
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::phase;return result;}
-  try{result.state.session=prepare_caught_home_keeper_control(input.session);result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;}
+  if(!input.home_keeper_y){result.unsupported=UnsupportedCapability::keeper_position;return result;}
+  try{result.state.session=prepare_caught_home_keeper_control(input.session,*input.home_keeper_y);result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;}
   catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::phase;return result;}
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::goal_celebration_pending &&
@@ -720,6 +724,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     input.session.score && input.session.score->kickoff==4)
   return advance_goal_kickoff(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
+  if(input.session.current.field.ball_owner==0){result.unsupported=UnsupportedCapability::action;return result;}
   if(input.target_chooser){
    if(!input.demo_rng || !input.session.ordinary_pass_candidates){result.unsupported=UnsupportedCapability::phase;return result;}
    const auto count=input.session.ordinary_pass_candidates->candidates.allied_count;

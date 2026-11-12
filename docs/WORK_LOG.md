@@ -1,5 +1,13 @@
 # Development log
 
+## 2026-11-12 - Keeper-position provenance and pass target
+
+With an explicitly known home keeper Y byte from the same original keeper-entry snapshot, the provisional runtime now advances a caught goalkeeper through control setup, action-menu pass confirmation and ordinary pass-target initialization. It stops before keeper pass-target input. Match save version 15 preserves the optional byte; older saves load it as unknown, and missing metadata stops atomically. The Windows development window accepts `--home-keeper-y N` only at a supported opposing-shot keeper-entry snapshot; ordinary control-ready launches do not infer it.
+
+The 504-case original/native comparison matched 72 caught-keeper sequences through pass targeting, 48 punches and 384 goals with the original keeper Y deliberately varied among 112, 124 and 140. That intervention exposed and fixed an earlier assumption: catch control setup must move the ball to the keeper's actual coordinates, rather than assume it was already there. Native save/reload occurs at each step. The sweep compares represented state, excludes presentation-facing fields and uses cooperative waits rather than live NMI/audio/PPU. Windows build/all 65 registered checks passed, including version-14 save compatibility. Initializing keeper-position provenance from a normal control-ready snapshot and preserving it across unrelated match events is not verified.
+
+Keeper pass-target input and distribution, fresh match startup, live interaction and a complete match remain unfinished; overall progress is unmeasured. Next compare the keeper's target cursor and receiver selection. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Caught goalkeeper pass selection
 
 After a supported home catch, the provisional runtime now opens the original action menu and permits selecting and confirming its ordinary pass choice. It stops before target initialization. Controlled original comparisons matched all represented boundaries for 72 constructed catches, including menu opening, pass selection and confirmation, as well as 48 punch continuations and 384 goals. Native saves were reloaded at every step; presentation-facing fields and live NMI/audio/PPU remain excluded. Windows build/all 65 registered checks passed.

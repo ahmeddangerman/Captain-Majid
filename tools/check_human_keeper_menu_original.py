@@ -84,6 +84,7 @@ def main():
     parser.add_argument('--catch-survey', action='store_true')
     parser.add_argument('--keeper-action-survey', action='store_true')
     parser.add_argument('--keeper-action-one', action='store_true')
+    parser.add_argument('--vary-keeper-y', action='store_true')
     args = parser.parse_args(); rom = args.rom.read_bytes()
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256: parser.error('Expected verified Japanese ROM')
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]): parser.error('Temporary data must remain private')
@@ -110,11 +111,12 @@ def main():
                     for pressed, power in ((1, 2), (1, 11), (1, 30), (2, 11), (8, 2), (8, 11), (8, 30)):
                         for menu_seed in (1, 123, 98765):
                             raw = bytearray(entry); raw[0x301:0x303] = keeper_stamina.to_bytes(2, 'little'); raw[0x61c:0x61e] = power.to_bytes(2, 'little')
+                            if args.vary_keeper_y: raw[0x308] = {1:112, 123:124, 98765:140}[menu_seed]
                             states = menu_trace(prg, raw, pressed, menu_seed)
                             result = states['compared'][0x612]
                             states['goal'] = (observe_scored_goal(prg, states['compared'])[0] if result == 0 else
                                               observe_keeper_save(prg, states['compared'])[0] if result in (2, 3) else states['compared'])
-                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['compared']
+                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['compared']
                             if result == 3 and states['compared'][0x43d] == 0:
                                 report, caught_ready = trace_recovery(prg, states['goal'], prepare_control=True)
                                 if report['boundary'] != 'player_control_ready': raise RuntimeError('Unexpected caught keeper control boundary')
@@ -139,6 +141,9 @@ def main():
                                 confirmed_input[0xe2], confirmed_input[0xe3] = next_rng & 255, (next_rng >> 8) & 255
                                 confirmed_report, states['caught_confirmed'] = trace_menu(prg, confirmed_input, mode='poll', pressed=128, allow_keeper=True)
                                 if confirmed_report['boundary'] != 'attack_choice_pending' or confirmed_report['action'] != 1: raise RuntimeError('Unexpected caught keeper pass confirmation')
+                                target_input = bytearray(states['caught_open']); target_input[0xe2],target_input[0xe3] = next_rng & 255,(next_rng >> 8) & 255
+                                x = target_input[0x305] | (target_input[0x306] << 8); y = target_input[0x307] | (target_input[0x308] << 8)
+                                states['caught_target'] = original_target(prg,target_input,x,y,True,allow_keeper=True,return_ram=True)
                                 if args.keeper_action_survey or args.keeper_action_one:
                                     action_report, opened = trace_menu(prg, states['caught_menu'], allow_keeper=True)
                                     recovery_counts['keeper-menu:' + action_report['boundary']] += 1
@@ -172,7 +177,7 @@ def main():
                             else: states.update({name: states['compared'] for name in ('formation', 'receiver', 'ball', 'handoff', 'control')})
                             counts[(pressed, states['selected'][0x43d], states['compared'][0x612])] += 1
                             if not args.original_only:
-                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed')
+                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target')
                                 records.write_bytes(b''.join(states[name] for name in names))
                                 for name in names:
                                     normalized = bytearray(states[name]); normalized[0x600:0x606] = bytes(6)

@@ -906,13 +906,17 @@ PhaseSessionState acknowledge_sampled_unaffordable_shot(const PhaseSessionState&
     auto state=input;state.recovery->attack_subtype=0;state.action->cursor=0;state.phase=FieldSessionPhase::human_action_menu;
     validate_phase_session(state);return state;
 }
-PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& input) {
+PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& input,std::optional<std::uint8_t> home_keeper_y) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::attack_choice_pending || !input.action || !input.recovery ||
         input.current.field.side != 0 || input.action->action != 1 || input.action->menu_route != 0 || input.human_pass_cursor)
         throw std::invalid_argument("Ordinary pass target requires a confirmed human pass and acknowledged ordinary type");
-    const auto& carrier = input.current.field.motion[field_motion_index(input.current.field.ball_owner)];
-    const auto target = initialize_ordinary_pass_target(carrier.x, carrier.y);
+    OrdinaryPassTargetInitialization target{};
+    if(input.current.field.ball_owner==0){
+        if(!home_keeper_y)throw std::invalid_argument("Home goalkeeper position is unknown");
+        target=initialize_ordinary_pass_target(static_cast<std::uint16_t>(input.current.field.keepers[0].penalty_duration)<<8,
+                                              static_cast<std::uint16_t>(*home_keeper_y)<<8);
+    } else {const auto& carrier=input.current.field.motion[field_motion_index(input.current.field.ball_owner)];target=initialize_ordinary_pass_target(carrier.x,carrier.y);}
     auto state = input;
     state.current.field.ball_x = target.ball_x;
     state.current.field.ball_y = target.ball_y;
