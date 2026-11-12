@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-12 - Five-defender pass rebounds to player3
+
+The five-defender pass now supports the third selected defender14's action2 result2 in the observed first-fixture state. Controlled original/native represented state matched the third preparation and comparison, terminal contact clock and loose-ball entry, recovery, control handoff and player3 control-ready. The first two action1 result1 contacts have zero power loss in this case; the third terminal result ends the remaining defender sequence. Sixteen original recovery trials varying both fractional bytes preserved them, and the native continuation retains the known bytes for this captured state.
+
+The uninterrupted seed-3 provisional replay now continues from the opening through both player1's interception and this player3 recovery, then reaches a new one-defender action menu at clock142. Original CPU traces injected represented native state and acknowledged presentation waits; this is not live timing, rendering or audio parity. Full Windows build, all 65 registered tests and the private original comparison passed. Next trace the new encounter and continue towards a complete fixture. Other result2 cases and remaining match routes remain guarded; overall progress is unmeasured and a complete match is unfinished. Suggested model GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/five-defender-original-20261112.
+
+
 ## 2026-11-12 - First two contacts in the five-defender encounter
 
 After player1's interception, a fresh-start seed-3 provisional replay selects an ordinary pass against defenders 12, 13, 14, 15 and 18. The first two action1 defenders each produce result1 with zero power loss. Starting from the represented native preparation injected into the original CPU, both comparisons and contact clocks, plus the second preparation, matched original represented state. The runtime now supports these bounded result1 cases and reaches the third defender. The private original-only continuation gives the third defender's action2 result2 and enters loose-ball recovery; that outcome has not yet been implemented or compared in the runtime.
