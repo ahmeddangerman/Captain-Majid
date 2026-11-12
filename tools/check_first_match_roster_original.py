@@ -24,7 +24,7 @@ def main():
     if raw[0x2a]!=0 or any(raw[0x303+12*i] for i in range(11)):
         p.error('Expected the captured initial campaign and level-zero roster')
     pack=a.pack.read_bytes()
-    if pack[:8] not in (b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc'):p.error('Expected a first-match Y or Z pack')
+    if pack[:8] not in (b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd'):p.error('Expected a first-match Y or Z pack')
     for i in range(11):raw[0x300+12*i:0x303+12*i]=bytes(3)
     memory=ObservedCartridge(rom[16:262160],raw,None,set())
     def run(pc,banks,x=0):
@@ -42,10 +42,10 @@ def main():
         off=0x300+12*slot
         if bytes(memory.ram[off:off+4])!=expected[off:off+4]:
             raise RuntimeError(f'Original roster differs from captured startup at player {slot}')
-    if pack[:8] in (b'CMJSHOTb',b'CMJSHOTc'):
+    if pack[:8] in (b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd'):
         stats=ReferenceCartridge(rom[16:262160]);stats.registers[6:8]=[28,29]
         rows=1+max(stats[0x9662+12*((kind-35)&255)+5] for kind in range(1,121))
-        trailer=121+2+48*rows+(7 if pack[:8]==b'CMJSHOTc' else 0);lineup=pack[-21-trailer:-10-trailer]
+        trailer=121+2+48*rows+(21 if pack[:8]==b'CMJSHOTd' else 7 if pack[:8]==b'CMJSHOTc' else 0);lineup=pack[-21-trailer:-10-trailer]
     elif pack[:8]==b'CMJSHOTa':lineup=pack[-21:-10]
     elif pack[:8]==b'CMJSHOTZ':lineup=pack[-14:-3]
     else:lineup=pack[-11:]

@@ -26,11 +26,11 @@ def main():
             value=m[pointer];conditional=not bool(value&128);rules.extend((value&127,int(conditional),m[pointer+1] if conditional else 0))
     tail+=rules
     version=new[:8]
-    if version in (b'CMJSHOTW',b'CMJSHOTX',b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc'):
+    if version in (b'CMJSHOTW',b'CMJSHOTX',b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd'):
         m.registers[6:8]=[26,27]
         direct=m[0x8d93]|m[0x8d94]<<8
         tail+=bytes((m[direct+10],m[direct+11],int(bool(m[0x827c+5]&128)),*m[0x8290:0x8294]))
-    if version in (b'CMJSHOTX',b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc'):
+    if version in (b'CMJSHOTX',b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd'):
         m.registers[6:8]=[28,29]
         tail+=(118).to_bytes(2,'little')
         for kind in range(118):
@@ -41,19 +41,24 @@ def main():
                 tail+=bytes((value&127,int(conditional),m[pointer+1] if conditional else 0))
         m.registers[6:8]=[26,27]
         tail+=bytes((m[direct+8],m[direct+9],int(bool(m[0x827c+4]&128)),*m[0x8290:0x8294]))
-    if version in (b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc'):
+    if version in (b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd'):
         m.registers[6:8]=[0,2];tail+=bytes(m[0xaa47:0xaa52])
-    if version in (b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc'):
+    if version in (b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd'):
         m.registers[6:8]=[28,29];tail+=bytes(m[0x9662+12*((kind-35)&255)+7] for kind in range(118,121))
-    if version in (b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc'):
+    if version in (b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd'):
         m.registers[6:8]=[26,27];tail+=bytes((m[direct+12],m[direct+13],int(bool(m[0x827c+6]&128)),*m[0x8290:0x8294]))
-    if version in (b'CMJSHOTb',b'CMJSHOTc'):
+    if version in (b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd'):
         m.registers[6:8]=[28,29];profiles=bytes([0]+[m[0x9662+12*((kind-35)&255)+5] for kind in range(1,121)])
         count=max(profiles)+1;tail+=profiles+count.to_bytes(2,'little')+bytes(m[0xb12e:0xb12e+48*count])
-    if version==b'CMJSHOTc':
+    if version in (b'CMJSHOTc',b'CMJSHOTd'):
         m.registers[6:8]=[26,27];index=4*m[0x83d7]+2;ptr=m[0x8d95]|m[0x8d96]<<8
         tail+=bytes((m[ptr+2*index],m[ptr+2*index+1],int(bool(m[0x83e1+index]&128)),*m[0x83f1:0x83f5]))
-    if old[:8]!=b'CMJSHOTT' or version not in (b'CMJSHOTV',b'CMJSHOTW',b'CMJSHOTX',b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc') or old[8:]!=new[8:-len(tail)] or new[-len(tail):]!=tail:raise RuntimeError('Pass-defense pack does not preserve T and match original tables')
+    if version==b'CMJSHOTd':
+        m.registers[6:8]=[26,27];ptr=m[0x8d95]|m[0x8d96]<<8
+        for action in (2,3):
+            index=4*m[0x83d7]+m[0x83dd+action]
+            tail+=bytes((m[ptr+2*index],m[ptr+2*index+1],int(bool(m[0x83e1+index]&128)),*m[0x83f1:0x83f5]))
+    if old[:8]!=b'CMJSHOTT' or version not in (b'CMJSHOTV',b'CMJSHOTW',b'CMJSHOTX',b'CMJSHOTY',b'CMJSHOTZ',b'CMJSHOTa',b'CMJSHOTb',b'CMJSHOTc',b'CMJSHOTd') or old[8:]!=new[8:-len(tail)] or new[-len(tail):]!=tail:raise RuntimeError('Pass-defense pack does not preserve T and match original tables')
     def launch(pack):return subprocess.run([str(a.exe.resolve()),'--field',str(pack)],input='',capture_output=True,text=True).returncode
     if launch(a.old_pack.resolve()) or launch(a.new_pack.resolve()):raise RuntimeError('Valid T/V/W pack rejected')
     with tempfile.TemporaryDirectory(prefix='pass-defense-pack-',dir=a.private_temp) as temp:

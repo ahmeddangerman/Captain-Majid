@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a' && version!='b' && version!='c')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a' && version!='b' && version!='c' && version!='d')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -332,6 +332,11 @@ ShotContent load_shot_content(std::istream& input) {
         const auto eligible=reader.byte();if(!choice.range || eligible>1)throw std::invalid_argument("Invalid area shot goalkeeper comparison");
         choice.eligible=eligible!=0;reader.bytes(choice.thresholds);classify_score(0,choice.thresholds);
         content.area_shot_keeper_comparison=choice;
+    }
+    if(version>='d') {
+        std::array<FieldComparisonSelection,2> choices{};
+        for(unsigned i=0;i<choices.size();++i){auto& choice=choices[i];choice.table_index=static_cast<std::uint8_t>(8+i);choice.range=reader.byte();choice.offset=reader.byte();const auto eligible=reader.byte();if(!choice.range || eligible>1)throw std::invalid_argument("Invalid area shot field comparison");choice.eligible=eligible!=0;reader.bytes(choice.thresholds);classify_score(0,choice.thresholds);}
+        content.area_shot_field_comparisons=choices;
     }
     reader.end();
     return content;

@@ -1,5 +1,12 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Player3 shot clears four goal-area defenders
+
+The sampled player3 shot now passes all four goal-area defender contacts. Controlled original/native represented states match each defender's preparation, result0 comparison and contact clock, followed by the exhausted-prefix clock at 92. The new private CMJSHOTd extension supplies the original shot-versus-field-defender comparison tables; c and older packs remain readable and reject this continuation atomically when the data is missing. Partial contact progress saves/reloads. A synthetic format check rejected malformed d packs, and a private pack check matched the original data.
+
+Windows CMake build, all 65 registered tests and the original contact comparisons passed. The original trace injects sampled random bytes and acknowledges presentation without live NMI, rendering or audio; only this bounded sequence is implemented. Next trace the shot's movement, goalkeeper/flight and resulting possession. A complete match remains unfinished and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
+
 ## 2026-11-13 - Player3 shot and four defender choices
 
 The observed player3 goal-area shot now calculates the original four opposing defender choices from the existing private AI tables: 2,3,2,2 for defenders12,15,17,21. The original and native represented states match shot confirmation, each choice and shot preparation at power11. Partial defender selection and completed choices save/reload. The new AI routine is restricted to the observed generic records and position; unobserved candidates reject rather than guessing.

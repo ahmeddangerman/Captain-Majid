@@ -1010,10 +1010,46 @@ MatchStepResult step_player3_area_shot(const MatchRuntimeState& input,const Matc
   validate_phase_session(s);next.last_sequence=event.sequence;project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::defender_contact;return result;}
 }
+MatchStepResult advance_player3_area_contacts(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
+ MatchStepResult result{input};const auto phase=input.session.phase;
+ const bool presentation=phase==FieldSessionPhase::player3_area_shot_prepared || phase==FieldSessionPhase::player3_area_contact_compared;
+ if(event.kind!=(presentation ? MatchInputKind::presentation_complete : MatchInputKind::tick)){result.unsupported=presentation ? UnsupportedCapability::presentation : UnsupportedCapability::action;return result;}
+ if(!content.data->area_shot_field_comparisons || !content.data->contact || !content.data->area_prefix_elapsed){result.unsupported=UnsupportedCapability::content;return result;}
+ try {
+  auto next=input;auto& s=next.session;auto& field=s.current.field;
+  if(phase==FieldSessionPhase::player3_area_contact_prepared){
+   const auto& c=*s.area_contact;const auto& rules=(*content.data->area_shot_field_comparisons)[c.defense_action==2 ? 0 : 1];
+   const auto comparison=compare_defender_contact({s.action->power,c.defender_power,field.random_first,field.random_second,rules.range,rules.offset,c.weakened,rules.eligible,1,s.recovery->opposing_player,c.defense_subtype,rules.thresholds});
+   if(comparison.result_code || comparison.special || comparison.subtype)throw std::invalid_argument("Unobserved player3 area contact result");
+   s.area_contact->strength=comparison.strength;s.area_contact->loss=comparison.loss;s.area_contact->score=comparison.score;s.area_contact->result=comparison.result_code;s.area_sequence_result=comparison.result_code;s.phase=FieldSessionPhase::player3_area_contact_compared;
+  } else if(phase==FieldSessionPhase::player3_area_contact_compared){
+   const auto applied=apply_contact_prelude({s.current,s.recovery->opposing_player,s.area_contact->defense_action,true},*content.data->contact);
+   if(applied.clock.continuation!=ClockContinuation::ready)throw std::invalid_argument("Unobserved player3 area contact clock");
+   s.current=applied.state;s.phase=FieldSessionPhase::player3_area_contact_clocked;
+  } else if(phase==FieldSessionPhase::player3_area_contact_clocked && s.area_defender_cursor==3){
+   const auto elapsed=(*content.data->area_prefix_elapsed)[0];if(elapsed!=2)throw std::invalid_argument("Unobserved player3 area prefix clock");
+   s.current.field.elapsed=static_cast<std::uint8_t>(unsigned(s.current.field.elapsed)+elapsed);
+   const auto recovery=advance_keeper_recovery({s.current.field.keepers,s.current.shared_recovery_flags,s.current.shared_recovery_timer},elapsed);
+   s.current.field.keepers=recovery.keepers;s.current.shared_recovery_flags=recovery.shared_flags;s.current.shared_recovery_timer=recovery.shared_timer;
+   const auto clock=advance_match_clock(s.current.clock,elapsed,s.current.field.random_first);if(clock.continuation!=ClockContinuation::ready || clock.state.remaining!=92)throw std::invalid_argument("Unobserved player3 area prefix result");
+   s.current.clock=clock.state;s.area_defender_cursor=4;s.area_contact.reset();s.phase=FieldSessionPhase::player3_area_prefix_clocked;
+  } else {
+   if(phase==FieldSessionPhase::player3_area_shot_prepared){s.area_defender_cursor=0;s.control->last_carrier_cell=0;s.control->motion_requested=16;s.area_sequence_result=0;}
+   else {++s.area_defender_cursor;s.area_contact.reset();}
+   const auto cursor=s.area_defender_cursor,id=s.scheduling->selected_ids[cursor],action=s.area_defense->actions[cursor];const auto& p=field.roster[id];
+   const auto prepared=prepare_profiled_field_defender({id,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},content.data->field_players,action,2,0,content.data->defense);
+   const auto energy=calculate_energy({p.stamina,prepared.stamina_cost,p.type,field.side,0,2,true,false});
+   if(prepared.move_effect || energy.weakened)throw std::invalid_argument("Unobserved player3 area defender preparation");
+   field.roster[id].stamina=energy.stamina;s.recovery->opposing_player=id;s.area_contact=AreaContactContext{cursor,action,0,prepared.move_effect,prepared.base_strength,energy.cost,0,0,0,0,false};s.phase=FieldSessionPhase::player3_area_contact_prepared;
+  }
+  validate_phase_session(s);next.last_sequence=event.sequence;project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
+ } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::defender_contact;return result;}
+}
 MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::player3_area_shot_prepared || input.session.phase==FieldSessionPhase::player3_area_contact_prepared || input.session.phase==FieldSessionPhase::player3_area_contact_compared || input.session.phase==FieldSessionPhase::player3_area_contact_clocked))return advance_player3_area_contacts(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.keeper_area && input.session.action && input.session.action->menu_route==1 && input.session.action->action==0 && input.session.current.field.side==0 && input.session.current.field.ball_owner==3 && input.session.current.field.ball_x==180 && input.session.current.field.ball_y==124 && (input.session.phase==FieldSessionPhase::attack_choice_pending || input.session.phase==FieldSessionPhase::player3_area_defender_selection || input.session.phase==FieldSessionPhase::player3_area_defenders_chosen))return step_player3_area_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player6_area_shot_dispatch)return target_player6_area_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player6_area_shot_field_moved)return dispatch_player6_area_shot(input,event,content);

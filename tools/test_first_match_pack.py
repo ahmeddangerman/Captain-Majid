@@ -54,6 +54,14 @@ if z_path:
             path=Path(tmp)/(name+'.cmjpack');path.write_bytes(data)
             assert not accepts(path),name+' accepted'
     print('goal-area keeper pack preserves b and rejects malformed comparison data')
+    with tempfile.TemporaryDirectory(prefix='goal-area-field-pack-',dir=private) as tmp:
+        d=b'CMJSHOTd'+c[8:]+bytes((128,128,0,160,96,64,0,128,128,1,160,96,64,0))
+        path=Path(tmp)/'field.cmjpack';path.write_bytes(d)
+        assert accepts(path),'goal-area field comparison pack rejected'
+        for name,data in (('truncated',d[:-1]),('trailing',d+b'\0'),('zero-range',d[:-14]+bytes(14)),('mislabelled',b'CMJSHOTc'+d[8:])):
+            path=Path(tmp)/(name+'.cmjpack');path.write_bytes(data)
+            assert not accepts(path),name+' accepted'
+    print('goal-area field pack preserves c and rejects malformed comparisons')
 
 
 print('Y preserves X, and truncated, trailing, invalid and mislabelled variants are rejected')

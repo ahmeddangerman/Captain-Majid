@@ -71,4 +71,12 @@ for name,pc,extended in (('shot-confirmed','8b8f-3',False),('defender-1','8637-3
  if name.startswith('defender-'):
   count=int(name[-1]);expected=list(raw[0x60b:0x60b+count])+[255]*(4-count)
   if state[373]!=1 or list(state[374:378])!=expected or any(raw[0x606:0x606+count]):raise ValueError('Player3 defender choices disagree')
+for i in range(1,5):
+ for kind,pc,count in (('prepared','8349',i+1),('compared','8385',i+1),('clocked','83c3',i)):
+  raw=(a.player3_shot/f'{pc}-{count}.bin').read_bytes();state=(a.trace/f'native-player3-contact-{i}-{kind}.cmjsession').read_bytes()
+  compare_represented(state,export_session(raw,0),True,'player3 area',f'contact {i} {kind}')
+  if raw[0x442]!=(12,15,17,21)[i-1] or (kind!='prepared' and raw[0x612]!=0):raise ValueError('Unexpected player3 area contact')
+raw=(a.player3_shot/'83f5-3.bin').read_bytes();state=(a.trace/'native-player3-prefix-clocked.cmjsession').read_bytes()
+compare_represented(state,export_session(raw,0),True,'player3 area','prefix clock')
+if (raw[0x616],raw[0x5f7],raw[0x612])!=(4,92,0):raise ValueError('Unexpected player3 area prefix')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
