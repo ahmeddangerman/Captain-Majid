@@ -1,5 +1,12 @@
 # Development log
 
+## 2026-11-13 - Player3 faces four goal-area defenders
+
+The player4 rebound now continues into player3's attacking goal-area menu. The original and native represented states match at area entry, area setup and the action menu; field defenders12,15,17,21 are selected while the goalkeeper is stunned. The selected four-defender menu saves and reloads. Selection uses the existing field-defender scan and is guarded to the observed state.
+
+The original trace uses injected prior state and random samples with presentation acknowledgements, without live NMI, rendering or audio. Windows CMake build, all 65 registered tests and the focused original comparison passed. Next trace player3's choice and the four defenders' original responses. A complete playable match remains unfinished, and overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player4-shot-original-20261113.
+
+
 ## 2026-11-13 - Player4 goalkeeper confrontation recovered by player3
 
 The player4 rebound now continues through an ordinary goal-area shot against goalkeeper11. In the sampled original and native sequence the goalkeeper chooses action3, the shot is prepared at power6, the comparison returns result2, and player3 on the home side recovers at 180,124 after the goalkeeper is stunned. Original/native represented states match shot confirmation, AI choice, preparation, comparison, clock, movement, recovery entry and recovered owner. Ball fractions 79/152 survive a runtime save/reload.

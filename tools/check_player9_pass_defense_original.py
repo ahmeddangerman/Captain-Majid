@@ -58,4 +58,11 @@ for name,pc,extended in (('shot-confirmed','8b8f-2',False),('keeper-chosen','863
  compare_represented((a.trace/f'native-player4-{name}.cmjsession').read_bytes(),expected,extended,'player4 shot',name)
  if name=='keeper-chosen' and (raw[0x60b],raw[0xe2],raw[0xe3])!=(3,164,142):raise ValueError('Unexpected player4 goalkeeper choice')
  if name=='recovered' and (raw[0x441],raw[0x5fb],raw[0x634],raw[0x636])!=(3,0,79,152):raise ValueError('Unexpected player4 rebound owner or fractions')
+for name,pc in (('area','8b4a-3'),('area-prepared','8b73-3'),('menu','d5e5-5')):
+ raw=bytearray((a.player4_shot/f'{pc}.bin').read_bytes());keeper=(raw[0x600]==1 and raw[0x601]==11)
+ if keeper:raw[0x600]=0
+ expected=bytearray(export_session(raw,0))
+ if keeper:expected[28]=1;expected[309]=11
+ compare_represented((a.trace/f'native-player3-{name}.cmjsession').read_bytes(),expected,False,'player3 rebound',name)
+ if raw[0x441]!=3:raise ValueError('Unexpected player3 goal-area owner')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
