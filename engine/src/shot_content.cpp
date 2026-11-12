@@ -275,7 +275,7 @@ ShotContent load_shot_content(std::istream& input) {
     }
     if(version>='U') {
         content.ai_pass_defense=AiPassDefenseContent{};auto& ai=*content.ai_pass_defense;
-        for(auto& pair:ai.cells)reader.bytes(pair);ai.profile_rows=reader.vector(83,83);
+        for(auto& pair:ai.cells)reader.bytes(pair);ai.profile_rows=reader.vector(117,117);
         ai.rows.resize(reader.count(1,64));for(auto& row:ai.rows)reader.bytes(row);
         for(auto row:ai.profile_rows)if(row>=ai.rows.size())throw std::invalid_argument("Invalid pass-defense AI profile row");
     }

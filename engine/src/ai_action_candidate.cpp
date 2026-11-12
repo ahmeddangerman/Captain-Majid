@@ -126,8 +126,8 @@ AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t fla
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiPassDefenseContent& content) {
  if(type==0)throw std::invalid_argument("AI generic team resolution is not captured");
  if(flags&128u)type=alternate;
- if(type<35 || unsigned(type-35)>=content.profile_rows.size())throw std::invalid_argument("Unsupported pass-defense AI type");
- const auto row=content.profile_rows[type-35];if(row>=content.rows.size())throw std::invalid_argument("Missing pass-defense AI row");
+ if(type<1 || unsigned(type-1)>=content.profile_rows.size())throw std::invalid_argument("Unsupported pass-defense AI type");
+ const auto row=content.profile_rows[type-1];if(row>=content.rows.size())throw std::invalid_argument("Missing pass-defense AI row");
  const unsigned fx=static_cast<std::uint8_t>(x^255u),fy=(y&128u)?(y^255u):y;
  unsigned category=20;
  if(fx<160){category=16;if(fx<96){

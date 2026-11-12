@@ -264,7 +264,7 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
         offset=stats[0x86B5]
         if offset!=0:raise ValueError('Unsupported original pass-defense situation')
         data.extend(stats[0x8BBE:0x8CBE])
-        profiles=[stats[0x9662+12*i+7+offset] for i in range(83)]
+        profiles=[stats[0x9662+12*((kind-35)&255)+7+offset] for kind in range(1,118)]
         vector(profiles)
         rows=max(profiles)+1
         if rows>64 or 0xB8AE+48*rows>0xC000:raise ValueError('Unsupported pass-defense AI row bounds')

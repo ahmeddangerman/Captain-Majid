@@ -29,8 +29,8 @@ def main():
     args=parser.parse_args();rom=args.rom.read_bytes();base=args.ram.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256 or len(base)!=2048:parser.error('Expected verified ROM and 2048-byte private RAM')
     samples=[];expected=[]
-    for kind in (35,40,55,70,90,117):
-        for flags,alternate in ((0,35),(128,40)):
+    for kind in (1,7,23,35,55,70,117):
+        for flags,alternate in ((0,35),(128,23)):
             for x in (80,95,108,120,159,200):
                 for y in (84,108,124,140,172):
                     for random in range(8):

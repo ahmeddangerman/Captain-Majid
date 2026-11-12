@@ -16,7 +16,7 @@ def main():
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected verified Japanese ROM')
     if a.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]):p.error('Temporary files must stay private')
     m=ReferenceCartridge(rom[16:262160]);m.registers[6:8]=[28,29]
-    profiles=bytes(m[0x9662+12*i+7] for i in range(83));rows=max(profiles)+1
+    profiles=bytes(m[0x9662+12*((kind-35)&255)+7] for kind in range(1,118));rows=max(profiles)+1
     tail=bytes(m[0x8bbe:0x8cbe])+len(profiles).to_bytes(2,'little')+profiles+rows.to_bytes(2,'little')+bytes(m[0xb8ae:0xb8ae+48*rows])
     if old[:8]!=b'CMJSHOTT' or new[:8]!=b'CMJSHOTU' or old[8:]!=new[8:-len(tail)] or new[-len(tail):]!=tail:raise RuntimeError('U pack does not preserve T and match original tables')
     def launch(pack):return subprocess.run([str(a.exe.resolve()),'--field',str(pack)],input='',capture_output=True,text=True).returncode
