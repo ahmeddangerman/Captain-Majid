@@ -600,6 +600,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return result;
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::control_ready && event.kind==MatchInputKind::tick) {
+  if(input.session.current.field.ball_owner==0){result.unsupported=UnsupportedCapability::action;return result;}
   if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
   if(!content.data->movement || !content.data->control_movement){result.unsupported=UnsupportedCapability::content;return result;}
   auto next=input;advance_demo_random(next);
@@ -696,6 +697,11 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_decided &&
     input.session.action && input.session.action->action==0 && (input.session.current.field.side==0 || (input.session.current.field.side==11 && input.session.keeper_decision && (input.session.keeper_decision->result_code==0 || input.session.keeper_decision->result_code>=2))))
   return score_human_shot(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_possession && input.session.current.field.side==0){
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::phase;return result;}
+  try{result.state.session=prepare_caught_home_keeper_control(input.session);result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;}
+  catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::phase;return result;}
+ }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::goal_celebration_pending &&
     input.session.action && input.session.action->action==0)
   return restart_after_human_goal(input,event);

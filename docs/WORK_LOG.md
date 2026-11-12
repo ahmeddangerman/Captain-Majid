@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-12 - Home goalkeeper control setup
+
+The provisional runtime advances a home goalkeeper's ordinary catch through the original control setup to a bounded control-ready state. Further keeper input stops safely because its controls have not yet been implemented. Original comparisons matched 72 constructed catches at the represented control boundary and 48 punches through their recovery continuation: 32 to player control and 16 to keeper-area interaction. The same 504-case sweep included 384 goals. The comparison uses related constructed snapshots, saves/reloads the native state on each step, excludes presentation-facing fields and acknowledges cooperative waits rather than modeling live NMI/audio/PPU. Windows build and all 65 registered checks passed.
+
+Keeper input after catching, keeper-area interaction, fresh startup and a complete playable match remain unfinished. Overall progress is unmeasured. Next compare keeper control polls and connect supported choices. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Home goalkeeper save handoffs
 
 The provisional runtime now follows successful ordinary home goalkeeper catches and punches through the original save outcome and reward handoff. Session validation supports the home keeper's possession and opposing-side punch recovery state. `tools/check_human_keeper_menu_original.py` compared 120 constructed saves (72 catches and 48 punches) and 384 goals from four related snapshots against the original; save/reload occurs on each native step. Presentation-facing fields and live NMI/audio/PPU were excluded. The Windows build and all 65 registered checks passed by direct invocation.

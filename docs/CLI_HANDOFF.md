@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Latest - 2026-11-12 caught keeper control setup
+
+Home goalkeeper catches now advance to an original-compared control-ready boundary; further keeper input stops safely. The original/native sweep matched 72 catches, 48 punches through recovery continuation (32 player-control and 16 keeper-area), and 384 goal cases, with presentation-facing and live NMI/audio/PPU excluded. Windows build/all 65 registered checks passed. Keeper control choices, fresh startup and a complete match remain unfinished. Overall progress is unmeasured. Next trace keeper polls and choices. Suggested model: GPT-6.1 Terra High.
+
 ## Latest - 2026-11-12 home goalkeeper save handoffs
 
 The provisional runtime resolves successful ordinary home keeper catches and punches through the original save/reward handoff. Original comparisons covered 72 catches, 48 punches and 384 goal cases, using constructed related snapshots and cooperative waits; all 48 punches also matched the recovered-owner handoff. Live presentation remains unverified. Windows build/all 65 registered checks passed. Catch possession, the recovery possession tail, fresh startup and complete match remain unfinished; overall progress is unmeasured. Next follow the home keeper save into possession or recovery. Suggested model: GPT-6.1 Terra High.

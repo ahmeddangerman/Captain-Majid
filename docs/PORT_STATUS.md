@@ -1,5 +1,7 @@
 # Port status and completion checkpoints
 
+**Latest - 2026-11-12 caught goalkeeper control:** The provisional runtime advances a home keeper catch to original-compared control setup; later keeper input is unsupported. Seventy-two catches and 48 punch continuations were compared; Windows build/all 65 checks passed. Fresh startup and a complete match remain unfinished; overall progress is unmeasured. Next trace keeper controls. Suggested model: GPT-6.1 Terra High.
+
 **Latest - 2026-11-12 home keeper saves:** Successful home keeper catches and punches reach their original-compared save handoffs in provisional mode. Original comparisons covered 72 catches and 48 punches; Windows build/all 65 registered checks passed. Possession/recovery after those handoffs and a complete match remain unfinished. Overall progress is unmeasured. Next trace those continuations. Suggested model: GPT-6.1 Terra High.
 
 **Latest - 2026-11-12 home goalkeeper:** The provisional runtime accepts ordinary home goalkeeper catch/punch input and follows supported opponent goals through home kickoff to control. Controlled original checks matched 504 constructed selections, including 384 goal-to-control paths; T private content adds menu data without changing S. Windows build/all 65 registered checks passed. Goalkeeper saves, fresh startup, live presentation and a complete playable match remain unfinished; progress is unmeasured. Next compare and connect home goalkeeper saves. Suggested model: GPT-6.1 Terra High; see CLI_HANDOFF and WORK_LOG.

@@ -79,10 +79,11 @@ def main():
     for name in ('rom', 'ready-dir', 'pack', 'velocity', 'exe', 'private-temp'): parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--original-only', action='store_true')
     parser.add_argument('--save-survey', action='store_true')
+    parser.add_argument('--catch-survey', action='store_true')
     args = parser.parse_args(); rom = args.rom.read_bytes()
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256: parser.error('Expected verified Japanese ROM')
     if args.private_temp.resolve().is_relative_to(Path(__file__).resolve().parents[1]): parser.error('Temporary data must remain private')
-    prg = rom[16:262160]; counts = Counter(); recovery_counts = Counter()
+    prg = rom[16:262160]; counts = Counter(); recovery_counts = Counter(); catch_changes = Counter()
     with tempfile.TemporaryDirectory(prefix='human-keeper-menu-', dir=args.private_temp) as temporary:
         temp = Path(temporary); source = temp / 'source.cmjsession'; records = temp / 'records.bin'
         for fixture in range(4):
@@ -109,17 +110,28 @@ def main():
                             result = states['compared'][0x612]
                             states['goal'] = (observe_scored_goal(prg, states['compared'])[0] if result == 0 else
                                               observe_keeper_save(prg, states['compared'])[0] if result in (2, 3) else states['compared'])
-                            states['recovered'] = states['compared']
+                            states['caught_ready'] = states['compared']
+                            if result == 3 and states['compared'][0x43d] == 0:
+                                report, caught_ready = trace_recovery(prg, states['goal'], prepare_control=True)
+                                if report['boundary'] != 'player_control_ready': raise RuntimeError('Unexpected caught keeper control boundary')
+                                states['caught_ready'] = caught_ready
+                                recovery_counts['catch:' + report['boundary']] += 1
+                                for address in range(0x1a, 0x800):
+                                    if states['goal'][address] != caught_ready[address]: catch_changes[address] += 1
+                            states['recovered'] = states['tail'] = states['compared']
                             if result == 3 and states['compared'][0x43d] == 1:
                                 report, states['recovered'] = trace_recovery(prg, states['goal'], skip_jitter=True)
                                 if report['boundary'] != 'recovered_owner_handoff': raise RuntimeError('Unexpected punch recovery boundary')
                                 recovery_counts[report['boundary']] += 1
+                                tail_report, states['tail'] = trace_recovery(prg, states['recovered'], continue_handoff=True)
+                                if tail_report['boundary'] not in ('keeper_area_interaction', 'player_control_handoff'): raise RuntimeError('Unexpected punch recovery tail')
+                                recovery_counts['tail:' + tail_report['boundary']] += 1
                             states['restart'] = observe_keeper_entry(prg, states['goal'], 0x85bf, {0x85dd})[0] if states['compared'][0x612] == 0 else states['compared']
                             if states['compared'][0x612] == 0: states.update(kickoff_trace(prg, states['restart']))
                             else: states.update({name: states['compared'] for name in ('formation', 'receiver', 'ball', 'handoff', 'control')})
                             counts[(pressed, states['selected'][0x43d], states['compared'][0x612])] += 1
                             if not args.original_only:
-                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered')
+                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready')
                                 records.write_bytes(b''.join(states[name] for name in names))
                                 for name in names:
                                     normalized = bytearray(states[name]); normalized[0x600:0x606] = bytes(6)
@@ -128,6 +140,7 @@ def main():
                                 if run.returncode: raise RuntimeError(f'fixture={fixture} x={x} stamina={keeper_stamina} pressed={pressed} power={power} seed={menu_seed}: {run.stderr}')
     print(f'Constructed original human goalkeeper menu: {dict(sorted(counts.items()))}')
     if args.save_survey: print(f'Original home punch recovery: {dict(sorted(recovery_counts.items()))}')
+    if args.catch_survey: print(f'Caught keeper setup changed RAM addresses: {[(hex(a), n) for a,n in sorted(catch_changes.items())]}')
 
 
 if __name__ == '__main__': main()
