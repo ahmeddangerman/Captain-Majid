@@ -1,5 +1,19 @@
 # Development log
 
+## 2026-11-12 - Original caught-keeper outlet preparation
+
+The provisional runtime now chooses the original automatic outlet recipient after a home goalkeeper catch and prepares the outlet using the original keeper position and pass variant. It stops before outlet flight. Match save version 16 preserves the selected recipient; version-15 and earlier saves remain readable. Missing keeper-position provenance stops the preparation atomically. Native checkpoints are saved/reloaded at each tested boundary.
+
+`tools/check_keeper_catch_auto_original.py` traced 72 actual catch-to-control original sequences and compared native receiver selection for all 256 possible original random-byte values. The 504-case native/original sweep, using an explicitly supplied provisional random value at the choice and keeper Y values 112/124/140, matched 72 catch outlet choices and preparation states, 48 punches and 384 goals. Cooperative waits were acknowledged; this is not live NMI/audio/PPU scheduling. The Windows build and all 65 registered checks passed, including older save readers. The earlier isolated keeper-menu experiments below do not describe the actual catch route.
+
+Outlet flight and reception, provenance from ordinary match startup, fresh startup itself, live interaction and a complete match remain unfinished. Overall progress is unmeasured. Next compare and implement outlet flight preparation and reception. Suggested model: GPT-6.1 Terra High.
+
+## 2026-11-12 - Correction: goalkeeper catch starts an automatic outlet
+
+An uninterrupted original trace from the actual catch handoff at $865B showed that the game enters $DDFD, automatically chooses an outlet receiver, runs the pass and returns to that field player's control. Across 72 constructed caught cases the receiver/control owner was player 6 in 48 cases and player 7 in 24. Cooperative waits are acknowledged; live NMI/audio/PPU remain unmodeled. The runtime now stops atomically at the caught-keeper handoff while the real outlet is implemented.
+
+The earlier keeper control/menu/target comparisons in this log started from separately constructed, isolated states and did not trace the true catch continuation. They do not establish that those menu states follow a normal catch. The previous automatic transition to that menu has been disabled. The 48 punch continuations and opponent-goal comparisons are unaffected. Overall progress remains unmeasured; a complete playable match is unfinished. Next implement and compare the original automatic keeper outlet. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Caught goalkeeper pass cursor
 
 With explicit keeper-position provenance, the provisional runtime now moves a caught home goalkeeper's pass-target cursor in four directions or leaves it stationary, and scans destination candidates when the cursor changes. Confirmation remains guarded. The original candidate-scan routine matched 2,048 constructed keeper-carrier cases with empty, crowded and random cells. A separate 504-case original/native sweep varied keeper Y across 112/124/140 and compared all five cursor inputs in 72 caught-keeper paths, including candidate counts and IDs, plus 48 punch and 384 goal cases. The cursor comparison isolates original direction arithmetic and candidate scanning; presentation and live NMI/audio/PPU are not modeled. Windows build/all 65 registered checks passed.

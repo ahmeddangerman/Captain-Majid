@@ -1,8 +1,22 @@
 # Codex CLI handoff
 
+## Latest - 2026-11-12 caught-keeper outlet preparation
+
+The provisional runtime now chooses and prepares the original automatic home-keeper outlet after a catch, then stops before ball flight. Original/native checks matched all 256 receiver-choice random bytes and 72 constructed catch choice/preparation paths with three keeper Y values; the full sweep also covered 48 punches and 384 goals. Original cooperative waits were acknowledged, and the choice uses an explicitly supplied provisional random value rather than verified live scheduling. Match save v16 preserves the recipient and older saves load; Windows build/all 65 checks passed. Flight/reception, normal-match position provenance, fresh startup and a complete match remain unfinished. Earlier isolated keeper-menu entries below did not model the actual catch route. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
+## Latest - 2026-11-12 correction: actual caught-keeper outlet
+
+Uninterrupted original execution from the home keeper catch goes through an automatic outlet pass, not the isolated manual keeper menu explored below. Seventy-two constructed original catch traces reached teammate control (48 player 6, 24 player 7). The runtime now stops atomically at the catch until this outlet is implemented. Earlier keeper-menu entries below are isolated CPU comparisons, not evidence of the actual catch continuation. Punch/goal comparisons remain valid. Overall progress is unmeasured; next compare and implement the automatic outlet. Suggested model: GPT-6.1 Terra High.
+
 ## Latest - 2026-11-12 goalkeeper pass cursor
 
 With explicit keeper-position provenance, a caught home keeper can move the pass target in four directions or hold still; destination candidates are scanned on movement. Original comparisons covered 2,048 constructed keeper candidate scans and five cursor inputs across 72 caught paths with three keeper Y values. The 504-case sweep also covered 48 punches and 384 goals; cursor checks isolate arithmetic/scanning, not live presentation. Windows build/all 65 registered checks passed. Confirmation, distribution, normal-match keeper-position provenance, fresh startup and a complete match remain unfinished. Overall progress is unmeasured. Next compare target confirmation and receiver selection. Suggested model: GPT-6.1 Terra High.
+
+## Requested engine checkpoint — 2026-11-12
+
+Follow the automatic outlet observed in the uninterrupted original catch traces through pass flight and teammate control. Compare receiver, pass power and resulting possession on that route. At the next checkpoint, report the furthest step reproduced by the native engine and the first remaining difference, if any.
+
+Then identify the smallest missing dependency for starting São Paulo versus Fluminense from the pre-match meeting without a developer snapshot. The Japanese opening capture shows Rio Cup round one, the meeting, and a first-half scoreboard of 0–0 at 30:00. Roster levels and the first controllable frame still need evidence.
 
 ## Latest - 2026-11-12 caught keeper pass targeting
 

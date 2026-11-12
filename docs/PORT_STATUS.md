@@ -1,5 +1,9 @@
 # Port status and completion checkpoints
 
+**Latest - 2026-11-12 keeper outlet:** A supported home keeper catch now selects and prepares the original automatic outlet, then stops before flight. All 256 receiver-choice random bytes and 72 catch preparation cases were original-compared; Windows build/all 65 checks passed and save v16 preserves the selection. Flight, normal-match position provenance and a complete match remain unfinished; overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
+**Latest - 2026-11-12 caught-keeper correction:** The original automatically passes to a teammate after a catch; 72 uninterrupted constructed traces reached player 6 or 7 control. Earlier keeper-menu work below used isolated states and did not demonstrate the actual catch continuation. The runtime stops safely at the catch while the outlet is implemented. Complete match remains unfinished and progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
 **Latest - 2026-11-12 goalkeeper pass cursor:** A caught home keeper with known position can move the pass target and scan destination candidates. Original checks covered 2,048 keeper scans and five cursor inputs in 72 related caught paths; Windows build/all 65 checks passed. Confirmation, distribution, normal-match keeper-position provenance and a complete match remain unfinished. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
 
 **Latest - 2026-11-12 keeper pass target:** With explicitly known keeper Y from a supported original keeper-entry snapshot, the provisional runtime reaches the caught keeper's ordinary pass-target initialization. Original comparisons varied Y across three values and matched 72 catch paths plus 48 punches and 384 goals; match save v15 preserves the optional metadata and Windows build/all 65 checks passed. Target input, fresh startup and a complete match remain unfinished. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.

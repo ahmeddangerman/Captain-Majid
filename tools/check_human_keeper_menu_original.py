@@ -94,6 +94,7 @@ def kickoff_trace(prg, restart):
 
 
 def main():
+    from check_keeper_catch_auto_original import trace_catch_outlet
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('rom', 'ready-dir', 'pack', 'velocity', 'exe', 'private-temp'): parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--original-only', action='store_true')
@@ -133,8 +134,12 @@ def main():
                             result = states['compared'][0x612]
                             states['goal'] = (observe_scored_goal(prg, states['compared'])[0] if result == 0 else
                                               observe_keeper_save(prg, states['compared'])[0] if result in (2, 3) else states['compared'])
-                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['caught_moved1'] = states['caught_moved2'] = states['caught_moved4'] = states['caught_moved8'] = states['caught_moved0'] = states['compared']
+                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['caught_moved1'] = states['caught_moved2'] = states['caught_moved4'] = states['caught_moved8'] = states['caught_moved0'] = states['outlet_chosen'] = states['outlet_prepared'] = states['compared']
                             if result == 3 and states['compared'][0x43d] == 0:
+                                outlet=bytearray(states['goal']);outlet_rng=next_random(next_random(next_random(menu_seed)))
+                                outlet[0xe2],outlet[0xe3]=outlet_rng&255,(outlet_rng>>8)&255
+                                outlet_states=trace_catch_outlet(prg,outlet,stop_after='prepared')
+                                states['outlet_chosen']=outlet_states['chosen'];states['outlet_prepared']=outlet_states['prepared']
                                 report, caught_ready = trace_recovery(prg, states['goal'], prepare_control=True)
                                 if report['boundary'] != 'player_control_ready': raise RuntimeError('Unexpected caught keeper control boundary')
                                 states['caught_ready'] = caught_ready
@@ -195,7 +200,7 @@ def main():
                             else: states.update({name: states['compared'] for name in ('formation', 'receiver', 'ball', 'handoff', 'control')})
                             counts[(pressed, states['selected'][0x43d], states['compared'][0x612])] += 1
                             if not args.original_only:
-                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target', 'caught_moved1', 'caught_moved2', 'caught_moved4', 'caught_moved8', 'caught_moved0')
+                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target', 'caught_moved1', 'caught_moved2', 'caught_moved4', 'caught_moved8', 'caught_moved0', 'outlet_chosen', 'outlet_prepared')
                                 records.write_bytes(b''.join(states[name] for name in names))
                                 for name in names:
                                     normalized = bytearray(states[name]); normalized[0x600:0x606] = bytes(6)
