@@ -403,6 +403,16 @@ MatchStepResult handle_home_keeper_outlet(const MatchRuntimeState& input,const M
  MatchStepResult result{input};
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
   if(input.keeper_outlet_recipient){
+   if(input.session.action && input.session.action->action==1 && input.pass_stage==MatchPassStage::flight_cell){
+    if(!input.pass_cell || !input.pass_target || !input.pass_trajectory){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
+    const auto& field=input.session.current.field;FlightDefenderSelectionInput selection{};
+    selection.possession_side=field.side;selection.ball_cell=*input.pass_cell;selection.random_first=field.random_first;
+    selection.random_second=field.random_second;selection.threshold=input.pass_target->counter;
+    for(unsigned i=0;i<field.motion.size();++i){const auto& player=field.motion[i];
+     selection.players[i]={static_cast<std::uint8_t>(player.x>>8),static_cast<std::uint8_t>(player.y>>8),player.status!=0};}
+    if(!accumulate_flight_defenders(selection,input.flight_defenders).empty()){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
+    result.state.pass_stage=MatchPassStage::flight_ready;result.state.last_sequence=event.sequence;return result;
+   }
    if(input.session.action && input.session.action->action==1 && input.pass_stage==MatchPassStage::flight_ready){
     if(!input.pass_target || !input.pass_trajectory || !input.pass_cell){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
     const auto& trajectory=*input.pass_trajectory;

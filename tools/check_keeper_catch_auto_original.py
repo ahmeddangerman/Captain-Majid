@@ -18,7 +18,7 @@ from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def trace_catch_outlet(prg, caught, stop_after='control_ready'):
+def trace_catch_outlet(prg, caught, stop_after='control_ready', capture_flight=False):
     memory=ObservedCartridge(prg,caught,None,set());memory.ram[:0x1a]=bytes(0x1a)
     for address,value in ((0,5),(1,255),(2,0x90),(3,26),(4,27),(5,1),(6,0x50),(7,26),(8,27),
                           (0x191,0x85),(0x192,0xeb),(0x24,26),(0x25,27)):memory[address]=value
@@ -27,11 +27,15 @@ def trace_catch_outlet(prg, caught, stop_after='control_ready'):
     targets={(30,0xddfd):'start',(30,0xde11):'chosen',(30,0xde2b):'setup',
              (30,0xde38):'prepared',(30,0xde69):'flight_start',(31,0xe773):'flight_setup',(31,0xe7b4):'flight_cell',(30,0xde6c):'flight_done',
              (31,0xe0df):'control_entry',(31,0xe14a):'control_ready'}
-    states={}
+    states={};flight_cells=[]
     for _ in range(3_000_000):
         bank=memory.bank_at(cpu.pc);name=targets.get((bank,cpu.pc))
         if name and name not in states:states[name]=bytes(memory.ram[:2048])
-        if name==stop_after:return states
+        if capture_flight and (bank,cpu.pc)==(31,0xe7b4):flight_cells.append([bytes(memory.ram[:2048])])
+        if capture_flight and (bank,cpu.pc)==(31,0xe7b7):flight_cells[-1].append(bytes(memory.ram[:2048]))
+        if name==stop_after:
+            if capture_flight:states['flight_cells']=flight_cells
+            return states
         if cpu.pc<0x8000:raise RuntimeError(f'Catch outlet left PRG at {cpu.pc:04x}')
         if cpu.pc==0xcaae:
             memory.instruction=None;memory[0x1b]|=128;memory[0x515]=0;memory[0x1c]=memory[0x1e]=0

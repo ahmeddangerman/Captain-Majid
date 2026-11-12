@@ -106,9 +106,11 @@ def main():
     parser.add_argument('--outlet-target', action='store_true')
     parser.add_argument('--outlet-flight', action='store_true')
     parser.add_argument('--outlet-cell', action='store_true')
+    parser.add_argument('--outlet-cells', action='store_true')
     parser.add_argument('--catch-only', action='store_true')
     parser.add_argument('--distance', type=Path)
     args = parser.parse_args(); rom = args.rom.read_bytes()
+    if args.outlet_cells: args.outlet_cell = True
     if args.outlet_cell: args.outlet_flight = True
     if args.outlet_flight: args.outlet_target = True
     if args.outlet_target and not args.distance: parser.error('Outlet target comparison requires --distance')
@@ -143,16 +145,18 @@ def main():
                             if args.catch_only and (result != 3 or states['compared'][0x43d] != 0): continue
                             states['goal'] = (observe_scored_goal(prg, states['compared'])[0] if result == 0 else
                                               observe_keeper_save(prg, states['compared'])[0] if result in (2, 3) else states['compared'])
-                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['caught_moved1'] = states['caught_moved2'] = states['caught_moved4'] = states['caught_moved8'] = states['caught_moved0'] = states['outlet_chosen'] = states['outlet_prepared'] = states['outlet_target'] = states['outlet_flight'] = states['outlet_cell'] = states['compared']
+                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['caught_moved1'] = states['caught_moved2'] = states['caught_moved4'] = states['caught_moved8'] = states['caught_moved0'] = states['outlet_chosen'] = states['outlet_prepared'] = states['outlet_target'] = states['outlet_flight'] = states['outlet_cell'] = states['outlet_done'] = states['compared']; outlet_cells=[]
                             if result == 3 and states['compared'][0x43d] == 0:
                                 outlet=bytearray(states['goal']);outlet_rng=next_random(next_random(next_random(menu_seed)))
                                 outlet[0xe2],outlet[0xe3]=outlet_rng&255,(outlet_rng>>8)&255
-                                outlet_states=trace_catch_outlet(prg,outlet,stop_after='flight_done' if args.outlet_flight else 'flight_start' if args.outlet_target else 'prepared')
+                                outlet_states=trace_catch_outlet(prg,outlet,stop_after='flight_done' if args.outlet_flight else 'flight_start' if args.outlet_target else 'prepared',capture_flight=args.outlet_cells)
                                 states['outlet_chosen']=outlet_states['chosen'];states['outlet_prepared']=outlet_states['prepared']
                                 if args.outlet_target: states['outlet_target']=outlet_states['flight_start']
                                 if args.outlet_flight:
                                     states['outlet_flight']=outlet_states.get('flight_setup',outlet_states['flight_done'])
                                     recovery_counts[f"outlet-flight-defenders:{outlet_states['flight_done'][0x600]}"] += 1
+                                    states['outlet_done']=outlet_states['flight_done'];outlet_cells=outlet_states.get('flight_cells',[])
+                                    recovery_counts['outlet-cell-callbacks'] += len(outlet_cells)
                                     states['outlet_cell']=outlet_states.get('flight_cell',outlet_states['flight_done'])
                                     recovery_counts['outlet-first-cell:' + ('present' if 'flight_cell' in outlet_states else 'absent')] += 1
                                     if 'flight_cell' not in outlet_states:
@@ -217,8 +221,11 @@ def main():
                             else: states.update({name: states['compared'] for name in ('formation', 'receiver', 'ball', 'handoff', 'control')})
                             counts[(pressed, states['selected'][0x43d], states['compared'][0x612])] += 1
                             if not args.original_only:
-                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target', 'caught_moved1', 'caught_moved2', 'caught_moved4', 'caught_moved8', 'caught_moved0', 'outlet_chosen', 'outlet_prepared', 'outlet_target', 'outlet_flight', 'outlet_cell')
+                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target', 'caught_moved1', 'caught_moved2', 'caught_moved4', 'caught_moved8', 'caught_moved0', 'outlet_chosen', 'outlet_prepared', 'outlet_target', 'outlet_flight', 'outlet_cell', 'outlet_done')
                                 records.write_bytes(b''.join(states[name] for name in names))
+                                if args.outlet_cells:
+                                    if any(len(pair)!=2 for pair in outlet_cells): raise RuntimeError('Incomplete original flight callback')
+                                    (temp / 'outlet-cells.bin').write_bytes(bytes([len(outlet_cells)])+b''.join(before+after for before,after in outlet_cells))
                                 for name in names:
                                     normalized = bytearray(states[name]); normalized[0x600:0x606] = bytes(6)
                                     (temp / (name + '.cmjsession')).write_bytes(export_session(normalized))
@@ -226,6 +233,7 @@ def main():
                                 if args.outlet_target: command.append(str(args.distance.resolve()))
                                 if args.outlet_flight: command.append(str(args.velocity.resolve()))
                                 if args.outlet_cell: command.append('cell')
+                                if args.outlet_cells: command.append('cells')
                                 run = subprocess.run(command, capture_output=True, text=True)
                                 if run.returncode: raise RuntimeError(f'fixture={fixture} x={x} stamina={keeper_stamina} pressed={pressed} power={power} seed={menu_seed}: {run.stderr}')
     print(f'Constructed original human goalkeeper menu: {dict(sorted(counts.items()))}')

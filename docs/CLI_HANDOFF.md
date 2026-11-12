@@ -1,5 +1,10 @@
 # Codex CLI handoff
 
+## 2026-11-12 - Uncontested goalkeeper outlet flight
+
+The provisional runtime follows the automatic home goalkeeper outlet through all observed flight cells and stops at arrival. The original/native comparison matched 576 defender callbacks and flight coordinates across 72 related constructed catches (keeper Y 112, 124 and 140), with native save/reload at each boundary; all observed passes had no selected defenders. If a scan selects a defender, the runtime stops atomically instead of assuming an interception outcome. The original also reached teammate possession in these scenarios, but native reception is not yet implemented. Cooperative waits were acknowledged; live presentation, NMI/audio and random scheduling remain unverified. The Windows build and all 65 registered tests passed. Next compare reception and resumed player control, then continue toward fresh startup and a complete Windows playtest. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
+
 ## 2026-11-12 - First goalkeeper outlet flight cell
 
 The provisional runtime advances the automatic home keeper outlet from flight setup to its first ball-cell boundary, retaining the calculated trajectory across save/reload. All 72 constructed catch paths with keeper Y values 112, 124 and 140 matched the original's first cell and ball coordinates; missing ball fractions stop atomically. Original-only continuation found no flight defenders in these related cases. The runtime stops before the next defender callback, which still requires comparison. Cooperative waits were acknowledged and live presentation, NMI/audio and random scheduling remain unverified. Windows build and all 65 registered tests passed. Next compare defender callbacks, remaining flight and receipt, then work toward match startup and a complete Windows playtest. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
