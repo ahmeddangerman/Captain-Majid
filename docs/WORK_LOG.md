@@ -1,5 +1,10 @@
 # Development log
 
+## 2026-11-12 - Keeper catch returns to teammate control
+
+The provisional runtime follows the automatic home goalkeeper outlet through uncontested flight, teammate reception and player-control setup. Across 72 related constructed catches with keeper Y values 112, 124 and 140, native and original matched the receiver, represented session fields and ball fractions at reception/control-ready; the same test compared 576 flight-cell callbacks and saves/reloads at every native boundary. Facing and selected-defender presentation fields were normalized in the session comparison. A defender selected during flight remains unsupported and stops atomically. Keeper Y must still be explicitly supplied at a supported opponent-shot entry; ordinary match snapshots do not establish it. Cooperative waits were acknowledged, not live presentation, NMI/audio or verified random timing. The Windows build and all 65 registered checks passed. Next establish keeper-position provenance during normal play and unblock fresh match startup, end-of-period flow and an actual complete Windows match playtest. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
+
 ## 2026-11-12 - Uncontested goalkeeper outlet flight
 
 The provisional runtime follows the automatic home goalkeeper outlet through all observed flight cells and stops at arrival. The original/native comparison matched 576 defender callbacks and flight coordinates across 72 related constructed catches (keeper Y 112, 124 and 140), with native save/reload at each boundary; all observed passes had no selected defenders. If a scan selects a defender, the runtime stops atomically instead of assuming an interception outcome. The original also reached teammate possession in these scenarios, but native reception is not yet implemented. Cooperative waits were acknowledged; live presentation, NMI/audio and random scheduling remain unverified. The Windows build and all 65 registered tests passed. Next compare reception and resumed player control, then continue toward fresh startup and a complete Windows playtest. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.

@@ -401,6 +401,16 @@ MatchStepResult handle_human_keeper_menu(const MatchRuntimeState& input,const Ma
 }
 MatchStepResult handle_home_keeper_outlet(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
+  if(input.pass_stage==MatchPassStage::flight_arrived){
+   if(event.kind!=MatchInputKind::presentation_complete || !input.keeper_outlet_recipient || !input.pass_target || !input.pass_trajectory || !input.pass_cell ||
+      !input.flight_defenders.empty() || *input.pass_cell!=input.pass_target->destination || *input.keeper_outlet_recipient!=input.pass_target->recipient){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
+   auto& state=result.state;auto& field=state.session.current.field;const auto recipient=*input.keeper_outlet_recipient;
+   const auto& player=field.motion[field_motion_index(recipient)];field.ball_owner=recipient;field.ball_x=static_cast<std::uint8_t>(player.x>>8);
+   field.ball_y=static_cast<std::uint8_t>(player.y>>8);field.ball_cell=field_cell_at(field.ball_x,field.ball_y);
+   state.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(input.pass_trajectory->x),static_cast<std::uint8_t>(input.pass_trajectory->y)};
+   state.session.phase=FieldSessionPhase::player_control;state.keeper_outlet_recipient.reset();state.home_keeper_y.reset();state.pass_target.reset();state.pass_trajectory.reset();state.pass_cell.reset();state.pass_stage=MatchPassStage::none;
+   state.last_sequence=event.sequence;validate_phase_session(state.session);return result;
+  }
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
   if(input.keeper_outlet_recipient){
    if(input.session.action && input.session.action->action==1 && input.pass_stage==MatchPassStage::flight_cell){
