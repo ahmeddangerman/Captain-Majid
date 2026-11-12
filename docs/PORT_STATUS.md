@@ -1,5 +1,10 @@
 # Port status and completion checkpoints
 
+## 2026-11-12 - First goalkeeper outlet flight cell
+
+The provisional runtime advances the automatic home keeper outlet from flight setup to its first ball-cell boundary, retaining the calculated trajectory across save/reload. All 72 constructed catch paths with keeper Y values 112, 124 and 140 matched the original's first cell and ball coordinates; missing ball fractions stop atomically. Original-only continuation found no flight defenders in these related cases. The runtime stops before the next defender callback, which still requires comparison. Cooperative waits were acknowledged and live presentation, NMI/audio and random scheduling remain unverified. Windows build and all 65 registered tests passed. Next compare defender callbacks, remaining flight and receipt, then work toward match startup and a complete Windows playtest. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.
+
+
 ## 2026-11-12 - Automatic keeper outlet flight setup
 
 The provisional runtime now initializes the original automatic goalkeeper outlet flight from explicit ball fractions and private movement/velocity content, including clearing the selected-defender count. It stops before ball movement. The constructed original/native sweep matched setup in 72 catches with keeper Y values 112, 124 and 140 and saved/reloaded native states at the new boundary. Original-only continuation found no flight defenders in these 72 related cases; it does not establish general uncontested passes. The earlier full sweep included 48 punches and 384 goals. Cooperative waits were acknowledged; live presentation, NMI/audio and random scheduling remain unverified. The Windows build and all 65 registered tests passed. Next compare the movement and reception against uninterrupted original execution, then continue toward normal match startup and a complete Windows playtest. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High.

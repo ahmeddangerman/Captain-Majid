@@ -25,7 +25,7 @@ def trace_catch_outlet(prg, caught, stop_after='control_ready'):
     memory[0x23]=memory[0x22]|7;memory.select=memory[0x23];memory.registers[6:8]=[26,27]
     cpu=MPU(memory=memory);cpu.pc,cpu.sp,cpu.p=0x865b,0xfd,cpu.UNUSED
     targets={(30,0xddfd):'start',(30,0xde11):'chosen',(30,0xde2b):'setup',
-             (30,0xde38):'prepared',(30,0xde69):'flight_start',(31,0xe773):'flight_setup',(30,0xde6c):'flight_done',
+             (30,0xde38):'prepared',(30,0xde69):'flight_start',(31,0xe773):'flight_setup',(31,0xe7b4):'flight_cell',(30,0xde6c):'flight_done',
              (31,0xe0df):'control_entry',(31,0xe14a):'control_ready'}
     states={}
     for _ in range(3_000_000):

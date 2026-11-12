@@ -403,6 +403,14 @@ MatchStepResult handle_home_keeper_outlet(const MatchRuntimeState& input,const M
  MatchStepResult result{input};
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
   if(input.keeper_outlet_recipient){
+   if(input.session.action && input.session.action->action==1 && input.pass_stage==MatchPassStage::flight_ready){
+    if(!input.pass_target || !input.pass_trajectory || !input.pass_cell){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
+    const auto& trajectory=*input.pass_trajectory;
+    const auto step=advance_ball_to_next_cell({trajectory.x,trajectory.y,{trajectory.vx,trajectory.vy},*input.pass_cell,input.pass_target->destination});
+    result.state.pass_trajectory->x=step.x;result.state.pass_trajectory->y=step.y;result.state.pass_cell=step.cell;
+    result.state.pass_stage=step.event==BallStepEvent::cell_changed ? MatchPassStage::flight_cell : MatchPassStage::flight_arrived;
+    result.state.last_sequence=event.sequence;return result;
+   }
    if(input.session.action && input.session.action->action==1 && input.pass_stage==MatchPassStage::target_ready){
     if(!input.pass_target || !input.session.recovery){result.unsupported=UnsupportedCapability::keeper_outlet;return result;}
     if(!input.ball_fraction){result.unsupported=UnsupportedCapability::ball_fraction;return result;}

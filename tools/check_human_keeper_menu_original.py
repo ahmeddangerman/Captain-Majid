@@ -105,9 +105,11 @@ def main():
     parser.add_argument('--vary-keeper-y', action='store_true')
     parser.add_argument('--outlet-target', action='store_true')
     parser.add_argument('--outlet-flight', action='store_true')
+    parser.add_argument('--outlet-cell', action='store_true')
     parser.add_argument('--catch-only', action='store_true')
     parser.add_argument('--distance', type=Path)
     args = parser.parse_args(); rom = args.rom.read_bytes()
+    if args.outlet_cell: args.outlet_flight = True
     if args.outlet_flight: args.outlet_target = True
     if args.outlet_target and not args.distance: parser.error('Outlet target comparison requires --distance')
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256: parser.error('Expected verified Japanese ROM')
@@ -141,7 +143,7 @@ def main():
                             if args.catch_only and (result != 3 or states['compared'][0x43d] != 0): continue
                             states['goal'] = (observe_scored_goal(prg, states['compared'])[0] if result == 0 else
                                               observe_keeper_save(prg, states['compared'])[0] if result in (2, 3) else states['compared'])
-                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['caught_moved1'] = states['caught_moved2'] = states['caught_moved4'] = states['caught_moved8'] = states['caught_moved0'] = states['outlet_chosen'] = states['outlet_prepared'] = states['outlet_target'] = states['outlet_flight'] = states['compared']
+                            states['caught_ready'] = states['caught_poll'] = states['caught_menu'] = states['caught_open'] = states['caught_selected'] = states['caught_confirmed'] = states['caught_target'] = states['caught_moved1'] = states['caught_moved2'] = states['caught_moved4'] = states['caught_moved8'] = states['caught_moved0'] = states['outlet_chosen'] = states['outlet_prepared'] = states['outlet_target'] = states['outlet_flight'] = states['outlet_cell'] = states['compared']
                             if result == 3 and states['compared'][0x43d] == 0:
                                 outlet=bytearray(states['goal']);outlet_rng=next_random(next_random(next_random(menu_seed)))
                                 outlet[0xe2],outlet[0xe3]=outlet_rng&255,(outlet_rng>>8)&255
@@ -151,6 +153,10 @@ def main():
                                 if args.outlet_flight:
                                     states['outlet_flight']=outlet_states.get('flight_setup',outlet_states['flight_done'])
                                     recovery_counts[f"outlet-flight-defenders:{outlet_states['flight_done'][0x600]}"] += 1
+                                    states['outlet_cell']=outlet_states.get('flight_cell',outlet_states['flight_done'])
+                                    recovery_counts['outlet-first-cell:' + ('present' if 'flight_cell' in outlet_states else 'absent')] += 1
+                                    if 'flight_cell' not in outlet_states:
+                                        missing=bytearray(states['outlet_cell']);missing[0]=255;states['outlet_cell']=bytes(missing)
                                 report, caught_ready = trace_recovery(prg, states['goal'], prepare_control=True)
                                 if report['boundary'] != 'player_control_ready': raise RuntimeError('Unexpected caught keeper control boundary')
                                 states['caught_ready'] = caught_ready
@@ -211,7 +217,7 @@ def main():
                             else: states.update({name: states['compared'] for name in ('formation', 'receiver', 'ball', 'handoff', 'control')})
                             counts[(pressed, states['selected'][0x43d], states['compared'][0x612])] += 1
                             if not args.original_only:
-                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target', 'caught_moved1', 'caught_moved2', 'caught_moved4', 'caught_moved8', 'caught_moved0', 'outlet_chosen', 'outlet_prepared', 'outlet_target', 'outlet_flight')
+                                source.write_bytes(export_session(raw)); names = ('entry', 'open', 'selected', 'confirmed', 'compared', 'goal', 'restart', 'formation', 'receiver', 'ball', 'handoff', 'control', 'recovered', 'tail', 'caught_ready', 'caught_poll', 'caught_menu', 'caught_open', 'caught_selected', 'caught_confirmed', 'caught_target', 'caught_moved1', 'caught_moved2', 'caught_moved4', 'caught_moved8', 'caught_moved0', 'outlet_chosen', 'outlet_prepared', 'outlet_target', 'outlet_flight', 'outlet_cell')
                                 records.write_bytes(b''.join(states[name] for name in names))
                                 for name in names:
                                     normalized = bytearray(states[name]); normalized[0x600:0x606] = bytes(6)
@@ -219,6 +225,7 @@ def main():
                                 command=[str(args.exe.resolve()), '--compare-human-keeper-menu', str(source), str(records), str(args.pack.resolve()), str(pressed), str(menu_seed), temporary]
                                 if args.outlet_target: command.append(str(args.distance.resolve()))
                                 if args.outlet_flight: command.append(str(args.velocity.resolve()))
+                                if args.outlet_cell: command.append('cell')
                                 run = subprocess.run(command, capture_output=True, text=True)
                                 if run.returncode: raise RuntimeError(f'fixture={fixture} x={x} stamina={keeper_stamina} pressed={pressed} power={power} seed={menu_seed}: {run.stderr}')
     print(f'Constructed original human goalkeeper menu: {dict(sorted(counts.items()))}')
