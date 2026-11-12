@@ -897,6 +897,56 @@ static int player1_defended_shot_check(int argc,char** argv) {
     if(pass_state.session.phase==FieldSessionPhase::control_ready)break;
    }
    if(!saw_defender6 || pass_state.session.phase!=FieldSessionPhase::control_ready || pass_state.session.current.field.ball_owner!=21 || pass_state.session.current.field.side!=11)throw std::runtime_error("Player16 defended pass did not reach player21");
+   auto player21=pass_state;std::ofstream p21_sequence(std::string(argv[4])+"-player21-sequence.txt");
+   for(int i=0;i<300;++i){
+    const auto phase=player21.session.phase;
+    if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+    auto next=step_match(player21,client_input(player21,0,0),content);
+    if(next.unsupported)throw std::runtime_error("Player21 continuation stopped at "+std::to_string(i));
+    p21_sequence<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next.state.demo_rng&255)<<' '<<static_cast<unsigned>((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<'\n';
+    std::ofstream f(std::string(argv[4])+"-player21-continuation-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);player21=std::move(next.state);
+   }
+   if(player21.session.phase!=FieldSessionPhase::ai_cell_decision)throw std::runtime_error("Expected player21 AI decision");
+   auto player21_choice=step_match(player21,client_input(player21,0,0),content);
+   std::ofstream p21_info(std::string(argv[4])+"-player21-choice.txt");p21_info<<(player21_choice.unsupported ? static_cast<int>(*player21_choice.unsupported) : -1)<<' '<<player21_choice.state.demo_rng<<' '<<static_cast<unsigned>(player21_choice.state.session.phase)<<' '<<static_cast<unsigned>(player21_choice.state.session.action->action)<<'\n';
+   if(player21_choice.unsupported || player21_choice.state.session.phase!=FieldSessionPhase::control_clock_pending || player21_choice.state.session.action->action!=2)throw std::runtime_error("Player21 continuation choice stopped");
+   std::ofstream p21_choice_file(std::string(argv[4])+"-player21-choice.cmjsession",std::ios::binary);write_phase_session(p21_choice_file,player21_choice.state.session);
+   player21=player21_choice.state;std::ofstream p21b_sequence(std::string(argv[4])+"-player21-after-choice-sequence.txt");
+   for(int i=0;i<300;++i){
+    const auto phase=player21.session.phase;
+    if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+    auto next=step_match(player21,client_input(player21,0,0),content);
+    if(next.unsupported)throw std::runtime_error("Player21 post-choice stopped at "+std::to_string(i));
+    p21b_sequence<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next.state.demo_rng&255)<<' '<<static_cast<unsigned>((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<'\n';
+    std::ofstream f(std::string(argv[4])+"-player21-after-choice-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);player21=std::move(next.state);
+   }
+   if(player21.session.phase!=FieldSessionPhase::ai_cell_decision)throw std::runtime_error("Expected second player21 AI decision");
+   auto player21_next=step_match(player21,client_input(player21,0,0),content);
+   std::ofstream p21_next_info(std::string(argv[4])+"-player21-next-choice.txt");p21_next_info<<(player21_next.unsupported ? static_cast<int>(*player21_next.unsupported) : -1)<<' '<<player21_next.state.demo_rng<<' '<<static_cast<unsigned>(player21_next.state.session.phase)<<' '<<static_cast<unsigned>(player21_next.state.session.action->action)<<'\n';
+   if(!player21_next.unsupported){std::ofstream f(std::string(argv[4])+"-player21-next-choice.cmjsession",std::ios::binary);write_phase_session(f,player21_next.state.session);}
+   if(player21_next.unsupported || player21_next.state.session.phase!=FieldSessionPhase::control_clock_pending)throw std::runtime_error("Second player21 choice stopped");
+   auto journey=player21_next.state;std::ofstream journey_log(std::string(argv[4])+"-player21-journey.txt");
+   for(int i=0;i<500;++i){
+    const auto phase=journey.session.phase;
+    if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending && phase!=FieldSessionPhase::ai_cell_decision)break;
+    auto next=step_match(journey,client_input(journey,0,0),content);
+    journey_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next.state.demo_rng&255)<<' '<<static_cast<unsigned>((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<'\n';
+    if(next.unsupported)break;
+    std::ofstream f(std::string(argv[4])+"-player21-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);journey=std::move(next.state);
+   }
+   if(journey.session.phase!=FieldSessionPhase::field || !journey.defense_menu || !journey.defense_menu->ai_pass_target || journey.defense_menu->ai_pass_target->recipient!=19 || journey.defense_menu->ai_pass_target->cell!=79)throw std::runtime_error("Player21 expected pass stopped");
+   std::ofstream p21_pass_sequence(std::string(argv[4])+"-player21-pass-sequence.txt");
+   for(int i=0;i<100;++i){
+    auto next=step_match(journey,client_input(journey,0,0),content);
+    p21_pass_sequence<<i<<' '<<(journey.defense_menu ? static_cast<int>(journey.defense_menu->stage) : -1)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<(next.state.defense_menu ? static_cast<int>(next.state.defense_menu->stage) : -1)<<' '<<next.state.flight_defenders.size()<<'\n';
+    if(next.unsupported)break;
+    std::ofstream f(std::string(argv[4])+"-player21-pass-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);journey=std::move(next.state);
+    if(journey.session.phase==FieldSessionPhase::control_ready)break;
+   }
+   if(journey.session.phase!=FieldSessionPhase::control_ready || journey.session.current.field.side!=11 || journey.session.current.field.ball_owner!=19)throw std::runtime_error("Player21 pass did not reach player19");
+
+
+
 
 
 

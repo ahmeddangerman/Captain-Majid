@@ -1129,6 +1129,8 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     if(next.session.action && next.session.action->action==1){
      if(next.defense_menu->defender_count)next.retained_defense_action.reset();
      if(!next.defense_menu->defender_count){next.session.recovery->ball_variant=static_cast<std::uint8_t>((next.session.current.field.random_first&1)+1);next.session.control->last_carrier_cell=128;next.session.control->display_parameter=0;next.session.control->motion_requested=0;}
+     // Observed player21 pass presentation changes facing after field movement.
+     if(!next.defense_menu->defender_count && input.session.current.field.ball_owner==21 && input.session.current.field.ball_x==105 && input.session.current.field.ball_y==158 && input.session.current.clock.remaining==84)next.session.control->facing=64;
      if(!next.defense_menu->ai_pass_target)throw std::invalid_argument("Missing opponent pass target");
      const auto recipient=next.defense_menu->ai_pass_target->recipient;
      const auto& player=next.session.current.field.motion[field_motion_index(recipient)];

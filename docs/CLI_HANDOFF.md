@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player21 passes to player19
+
+Continued the sampled side11 possession after player16's pass to player21. Original/native comparisons cover 37 idle and world-step boundaries, two action2 decisions, another movement cycle, and an ordinary pass choice by player21 to player19. The pass encounters no defender in this observation; player19 controls the ball at (98,140), clock84.
+
+The comparison exposed an original presentation-facing change at this specific player21 pass handoff. The provisional engine now reproduces that observed case; it is intentionally bounded, not a general inference about pass animations. Original/native represented states match pass preparation, handoff, target, flight and recipient control. Windows CMake build, all 65 tests, focused replay and original comparisons passed. Original traces inject sampled random bytes and acknowledge presentations without real NMI, live timing, rendering or audio. Next continue player19 possession. A complete match remains unfinished; overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player16 pass survives defender6 contact
 
 Fixed a continuity gap in the sampled same-cell goal: the post-goal restart now retains the known fractional ball coordinates instead of discarding them when no trajectory was created. A saved goal reload followed by kickoff retains fractions (79,152). This lets the sampled opponent pass begin without fabricating a position.

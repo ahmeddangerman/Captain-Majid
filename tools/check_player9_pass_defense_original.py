@@ -135,4 +135,41 @@ arrival=(a.player3_shot/'opponent-pass-arrival.bin').read_bytes()
 contact=(a.player3_shot/'opponent-pass-contact-compared.bin').read_bytes()
 ready=(a.player3_shot/'opponent-pass-ready.bin').read_bytes()
 if (arrival[0x600],arrival[0x601],contact[0x612],ready[0x441],ready[0x5fb])!=(1,6,0,21,11):raise ValueError('Unexpected original defender contact or pass owner')
+def compare_player21_sequence(raw,sequence,prefix):
+ for line in (a.trace/f'native-{sequence}.txt').read_text().splitlines():
+  i,phase,first,second,next_phase=map(int,line.split())
+  injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+  params={9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase]
+  observed,raw=trace_recovery(rom[16:262160],injected,**params)
+  expected='player_control_ready' if phase==13 and next_phase==9 else {9:'control_poll_wait',10:'control_clock_pending',12:'ai_cell_decision',13:'field_round_pending'}[next_phase]
+  if observed['boundary']!=expected:raise ValueError('Unexpected player21 original boundary')
+  compare_represented((a.trace/f'native-{prefix}-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'player21 continuation',str(i))
+ return raw
+
+def compare_player21_choice(raw,name):
+ info=(a.trace/f'native-{name}.txt').read_text().split();seed=int(info[1]);injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
+ if original_candidate(rom[16:262160],injected)[2]!=3:raise ValueError('Unexpected player21 candidate')
+ result=original_choice(rom[16:262160],injected)
+ if (result[0x43b],result[0x43c])!=(2,0):raise ValueError('Unexpected player21 choice')
+ compare_represented((a.trace/f'native-{name}.cmjsession').read_bytes(),export_session(result,0),False,'player21 continuation',name)
+ return result
+raw=compare_player21_sequence(ready,'player21-sequence','player21-continuation')
+raw=compare_player21_choice(raw,'player21-choice')
+raw=compare_player21_sequence(raw,'player21-after-choice-sequence','player21-after-choice')
+raw=compare_player21_choice(raw,'player21-next-choice')
+for line in (a.trace/'native-player21-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Native player21 continuation stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ if phase==12:
+  if original_candidate(rom[16:262160],injected)[2]!=2:raise ValueError('Unexpected player21 pass candidate')
+  raw=original_choice(rom[16:262160],injected)
+  if (raw[0x43b],raw[0x43c],raw[0x5fc],raw[0x638])!=(1,0,19,79):raise ValueError('Unexpected player21 pass choice')
+ else:
+  observed,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-player21-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'player21 journey',str(i))
+for index,name in ((0,'prepared'),(1,'preclock'),(3,'handoff'),(4,'target'),(5,'flight'),(11,'control'),(12,'ready')):
+ original=(a.player3_shot/f'player21-pass-{name}.bin').read_bytes()
+ compare_represented((a.trace/f'native-player21-pass-{index}.cmjsession').read_bytes(),export_session(original,0),False,'player21 pass',name)
+ if name=='ready' and (original[0x441],original[0x5fb])!=(19,11):raise ValueError('Unexpected player21 pass owner')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
