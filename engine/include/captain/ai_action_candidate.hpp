@@ -62,6 +62,15 @@ AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t
 AiAreaAction choose_ai_area_action(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
  const AiAreaChoiceContent& content);
+struct AiPassDefenseContent {
+ std::vector<std::uint8_t> profile_rows;
+ std::array<std::array<std::uint8_t,2>,128> cells{};
+ std::vector<std::array<std::uint8_t,48>> rows;
+};
+// Pass-defense candidate only; generic types and final special-move adjustments are not represented.
+AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t flags,
+ std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
+ const AiPassDefenseContent& content);
 // Direct opponent types only; generic team resolution and final adjustments pending.
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,

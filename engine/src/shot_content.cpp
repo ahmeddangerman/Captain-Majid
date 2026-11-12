@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -272,6 +272,12 @@ ShotContent load_shot_content(std::istream& input) {
         auto& menu=*content.action_menu;menu.keeper_directions=std::array<std::uint8_t,4>{};menu.keeper_icons=std::array<std::uint8_t,2>{};
         reader.bytes(*menu.keeper_directions);reader.bytes(*menu.keeper_icons);
         for(auto value:*menu.keeper_directions)if(value>2 && value!=255)throw std::invalid_argument("Invalid home goalkeeper menu action");
+    }
+    if(version>='U') {
+        content.ai_pass_defense=AiPassDefenseContent{};auto& ai=*content.ai_pass_defense;
+        for(auto& pair:ai.cells)reader.bytes(pair);ai.profile_rows=reader.vector(83,83);
+        ai.rows.resize(reader.count(1,64));for(auto& row:ai.rows)reader.bytes(row);
+        for(auto row:ai.profile_rows)if(row>=ai.rows.size())throw std::invalid_argument("Invalid pass-defense AI profile row");
     }
     reader.end();
     return content;

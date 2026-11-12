@@ -122,6 +122,23 @@ AiAreaAction choose_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uin
  default:throw std::invalid_argument("AI recipient selection or unknown action branch is not supported");
  }
 }
+AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiPassDefenseContent& content) {
+ if(type==0)throw std::invalid_argument("AI generic team resolution is not captured");
+ if(flags&128u)type=alternate;
+ if(type<35 || unsigned(type-35)>=content.profile_rows.size())throw std::invalid_argument("Unsupported pass-defense AI type");
+ const auto row=content.profile_rows[type-35];if(row>=content.rows.size())throw std::invalid_argument("Missing pass-defense AI row");
+ const unsigned fx=static_cast<std::uint8_t>(x^255u),fy=(y&128u)?(y^255u):y;
+ unsigned category=20;
+ if(fx<160){category=16;if(fx<96){
+  if(fx<48 || fy<80 || fy>=176)throw std::invalid_argument("Pass-defense AI position outside cell map");
+  const auto cell=((fx-48)/8)*12+(fy-80)/8;category=content.cells[0][1];
+  for(const auto& entry:content.cells)if(entry[0]==cell){category=entry[1];break;}
+ }}
+ if(category>44)throw std::invalid_argument("Pass-defense AI category outside row");
+ std::array<std::uint8_t,4> choices{};for(unsigned i=0;i<4;++i)choices[i]=content.rows[row][category+i];
+ return {static_cast<std::uint8_t>(category),row,choose_ai_action_candidate(choices,random)};
+}
 AiAreaChoice choose_ai_area_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiAreaChoiceContent& content) {
  if(type==0)throw std::invalid_argument("AI generic team resolution is not captured");

@@ -5,6 +5,17 @@
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) {
+ if(argc==3 && std::string(argv[1])=="--pass-defender") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
+  if(!content.ai_pass_defense)return 2;
+  unsigned type,flags,alternate,x,y,random;
+  while(std::cin>>type>>flags>>alternate>>x>>y>>random){
+   if(type>255 || flags>255 || alternate>255 || x>255 || y>255 || random>255)return 2;
+   try{const auto result=captain::choose_ai_pass_defense_candidate(type,flags,alternate,x,y,random,*content.ai_pass_defense);std::cout<<unsigned(result.category)<<' '<<unsigned(result.row)<<' '<<unsigned(result.candidate)<<'\n';}
+   catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--keeper-ai") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   if(!content.ai_keeper_choice)return 2;
