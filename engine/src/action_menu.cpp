@@ -1080,7 +1080,8 @@ static PhaseSessionState compare_ordinary_pass_defender(const PhaseSessionState&
     contact.eligible = comparison.eligible;
     contact.thresholds = comparison.thresholds;
     const auto result = compare_defender_contact(contact);
-    if ((result.result_code != 0 && !(input.phase==FieldSessionPhase::ordinary_pass_defender_prepared && result.result_code==3)) || result.special || result.subtype != 0)
+    const bool observed_result1=input.current.field.side==0 && input.current.field.ball_owner==1 && input.current.field.selected_defenders==5 && ((input.phase==FieldSessionPhase::ordinary_pass_defender_prepared && input.recovery->opposing_player==12) || (input.phase==FieldSessionPhase::ordinary_pass_next_defender_prepared && input.area_defender_cursor==1 && input.recovery->opposing_player==13)) && action==1 && result.result_code==1 && result.loss==0;
+    if ((result.result_code != 0 && !(input.phase==FieldSessionPhase::ordinary_pass_defender_prepared && result.result_code==3) && !observed_result1) || result.special || result.subtype != 0)
         throw std::invalid_argument("Only observed ordinary nonterminal defender comparisons are supported: score=" +
             std::to_string(result.score) + " result=" + std::to_string(result.result_code) +
             " special=" + std::to_string(result.special) + " subtype=" + std::to_string(result.subtype) +

@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## 2026-11-12 - First two contacts in the five-defender encounter
+
+After player1's interception, a fresh-start seed-3 provisional replay selects an ordinary pass against defenders 12, 13, 14, 15 and 18. The first two action1 defenders each produce result1 with zero power loss. Starting from the represented native preparation injected into the original CPU, both comparisons and contact clocks, plus the second preparation, matched original represented state. The runtime now supports these bounded result1 cases and reaches the third defender. The private original-only continuation gives the third defender's action2 result2 and enters loose-ball recovery; that outcome has not yet been implemented or compared in the runtime.
+
+The trace injects state and acknowledges presentation waits; original live timing and general result1 cases are not established. The full Windows build and all 65 registered checks passed, along with the focused private runtime and original comparisons. Next compare and implement the third contact and its loose-ball recovery, then continue the fixture. Overall progress is unmeasured; a complete match is unfinished. Suggested model GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/five-defender-original-20261112.
+
+
 ## 2026-11-12 - Player1 intercepts the rebound pass
 
 The provisional first-fixture rebound pass now processes the first of four selected flight defenders. Controlled original/native represented states matched defender announcement, preparation, comparison, ball-variant restoration, result presentation, terminal clock, possession transfer, field movement and player1 control-ready. Both produce result3 and give the home side player1 possession; the other three selected defenders do not act after this terminal outcome. The original control-ready setup retains the previous action byte, which the runtime now preserves.
