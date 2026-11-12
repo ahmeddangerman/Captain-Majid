@@ -620,7 +620,7 @@ MatchStepResult handle_contested_pass_progress(const MatchRuntimeState& input,co
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   const auto& field=input.session.current.field;
   // The original presentation-facing handoff has been observed at this winner and position.
-  if(field.ball_owner!=2 || field.ball_x!=132 || field.ball_y!=164 || !input.session.ball_trajectory){result.unsupported=UnsupportedCapability::presentation;return result;}
+  if(field.ball_owner!=2 || (field.ball_x!=132 && field.ball_x!=100) || field.ball_y!=164 || !input.session.ball_trajectory){result.unsupported=UnsupportedCapability::presentation;return result;}
   auto next=input;next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(input.session.ball_trajectory->x),static_cast<std::uint8_t>(input.session.ball_trajectory->y)};
   try {next.session=continue_ordinary_pass_control(next.session,64);}
   catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}

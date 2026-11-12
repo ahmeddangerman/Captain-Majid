@@ -711,7 +711,8 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.current.clock.remaining>=130 && state.current.clock.remaining<=135 && state.current.clock.extra_time==0 &&
        state.current.field.side==0 && state.current.field.ball_owner==2 && state.current.field.ball_x==104 && state.current.field.ball_y==164 &&
        (state.current.field.ball_cell==115 || state.current.field.ball_cell==94);
-    if((phase<82 && state.area_defender_cursor && !player2_one_two_residue && !player3_one_two_contact && !ordinary_pass_control_cursor && !skipped_generic_defended_shot && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor && !score25_shot_keeper_cursor) ||
+    const bool player2_free_pass_contact_cursor=(phase==15 || phase==18 || phase==19) && state.area_defender_cursor==1 && state.saved_ball_flight_flag==1 && state.current.field.side==0 && state.current.field.ball_owner==2 && state.current.field.ball_x==100 && state.current.field.ball_y==164 && state.current.field.ball_cell==82 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==16;
+    if((phase<82 && state.area_defender_cursor && !player2_free_pass_contact_cursor && !player2_one_two_residue && !player3_one_two_contact && !ordinary_pass_control_cursor && !skipped_generic_defended_shot && !sampled_pass_cursor_residue && !score23_recovery_cursor && !score25_player7_cursor && !score25_shot_keeper_cursor) ||
        (phase>=82 && phase<=94 && (state.area_defender_cursor>state.current.field.selected_defenders ||
         ((phase==88 || (phase>=90 && phase<=93)) ? state.area_defender_cursor!=state.current.field.selected_defenders :
          state.area_defender_cursor>=state.current.field.selected_defenders))) ||

@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## 2026-11-12 - Player3 pass reaches player2 and next encounter
+
+In the provisional first-fixture continuation, player3's defended ordinary pass reaches an open target. The existing numeric race takes three rounds and gives the ball to player2; controlled original/native represented states match the race winner, control handoff and control-ready state. The scoped runtime guard now admits this observed three-round case. Continued neutral play reaches defender16 at clock135. The original retains the prior defender cursor into field contact and the action menu; validation now allows this captured state instead of throwing. Both contact and menu represented states match controlled original execution, with the provisional random bytes injected. Known ball fractions 109/215 survive the encounter.
+
+The fresh seed-3 provisional replay reaches that next menu from startup; original comparisons inject native state and acknowledge waits, not live presentation or NMI timing. Full Windows build, all 65 registered tests and the private race/contact comparison passed. Next choose and trace the defender16 encounter, including its effect on possession. Other race outcomes and remaining match situations stay guarded. Overall progress is unmeasured, and a complete match is unfinished. Suggested model GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-flight-original-20261112 and player2-next-contact-original-20261112.bin.
+
+
 ## 2026-11-12 - Five-defender pass rebounds to player3
 
 The five-defender pass now supports the third selected defender14's action2 result2 in the observed first-fixture state. Controlled original/native represented state matched the third preparation and comparison, terminal contact clock and loose-ball entry, recovery, control handoff and player3 control-ready. The first two action1 result1 contacts have zero power loss in this case; the third terminal result ends the remaining defender sequence. Sixteen original recovery trials varying both fractional bytes preserved them, and the native continuation retains the known bytes for this captured state.
