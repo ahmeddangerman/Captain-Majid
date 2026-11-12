@@ -11,6 +11,7 @@ from py65.devices.mpu6502 import MPU
 from check_ai_field_candidate_original import original_candidate
 from check_unopposed_ai_shot_original import observe
 from check_scored_goal_original import observe_scored_goal
+from check_keeper_saves_original import observe_keeper_save
 from check_keeper_entry_original import observe as observe_keeper_entry
 from export_phase_session import export_session
 from trace_ball_recovery_phase import trace_recovery
@@ -104,7 +105,9 @@ def main():
                         for menu_seed in (1, 123, 98765):
                             raw = bytearray(entry); raw[0x301:0x303] = keeper_stamina.to_bytes(2, 'little'); raw[0x61c:0x61e] = power.to_bytes(2, 'little')
                             states = menu_trace(prg, raw, pressed, menu_seed)
-                            states['goal'] = observe_scored_goal(prg, states['compared'])[0] if states['compared'][0x612] == 0 else states['compared']
+                            result = states['compared'][0x612]
+                            states['goal'] = (observe_scored_goal(prg, states['compared'])[0] if result == 0 else
+                                              observe_keeper_save(prg, states['compared'])[0] if result in (2, 3) else states['compared'])
                             states['restart'] = observe_keeper_entry(prg, states['goal'], 0x85bf, {0x85dd})[0] if states['compared'][0x612] == 0 else states['compared']
                             if states['compared'][0x612] == 0: states.update(kickoff_trace(prg, states['restart']))
                             else: states.update({name: states['compared'] for name in ('formation', 'receiver', 'ball', 'handoff', 'control')})

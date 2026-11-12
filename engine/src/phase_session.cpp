@@ -1126,12 +1126,12 @@ void validate_phase_session(const PhaseSessionState& state) {
            (!keeper_selected && (!f.keepers[f.side==0?1:0].stun || !state.action || state.action->action)))
             throw std::invalid_argument("Keeper phase does not match opposing keeper setup/status");
     }
-    if(keeper_possession && (state.current.field.side!=11 || state.current.field.ball_owner!=11 ||
-       state.current.field.selected_defenders!=1 || !state.scheduling || state.scheduling->selected_ids[0]!=11 ||
-       !state.recovery || state.recovery->opposing_player!=11 || state.current.field.elapsed || state.current.field.keepers[1].stun))
+    if(keeper_possession && ((state.current.field.side!=0 && state.current.field.side!=11) || state.current.field.ball_owner!=state.current.field.side ||
+       state.current.field.selected_defenders!=1 || !state.scheduling || state.scheduling->selected_ids[0]!=state.current.field.side ||
+       !state.recovery || state.recovery->opposing_player!=state.current.field.side || state.current.field.elapsed || state.current.field.keepers[state.current.field.side==0?0:1].stun))
         throw std::invalid_argument("Keeper possession requires its own captured keeper and selected prefix");
-    if(phase==58 && (state.current.field.side!=0 || state.current.field.selected_defenders || state.current.field.elapsed!=1 ||
-       !state.recovery || state.recovery->opposing_player!=11))
+    if(phase==58 && ((state.current.field.side!=0 && state.current.field.side!=11) || state.current.field.selected_defenders || state.current.field.elapsed!=1 ||
+       !state.recovery || state.recovery->opposing_player!=(state.current.field.side^11u)))
         throw std::invalid_argument("Punch recovery requires the prepared empty no-jitter handoff");
     if(phase==59 && (!state.score || !state.keeper_decision || state.keeper_decision->result_code>1 ||
        !state.recovery || state.recovery->opposing_player!=(state.current.field.side^11u) ||
@@ -1272,7 +1272,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     if (staged != bool(state.shot_progress) && !(state.phase == FieldSessionPhase::period_end && state.shot_progress))
         throw std::invalid_argument("Staged shot phase requires exactly one progress context");
     const bool generic_opponent_shot=state.current.field.side==11 && state.current.field.ball_owner>=12 && state.current.field.ball_owner<=21 && state.action && state.action->action==0 &&
-        (phase==20 || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53 || phase==56 || phase==59);
+        (phase==20 || phase==27 || phase==43 || (phase>=45 && phase<=49) || phase==52 || phase==53 || phase==56 || phase==58 || phase==59);
     if (state.shot_progress) {
         const auto& p = *state.shot_progress;
         const auto count = state.current.field.selected_defenders;

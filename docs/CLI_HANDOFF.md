@@ -1,5 +1,9 @@
 # Codex CLI handoff
 
+## Latest - 2026-11-12 home goalkeeper save handoffs
+
+The provisional runtime resolves successful ordinary home keeper catches and punches through the original save/reward handoff. Original comparisons covered 72 catches, 48 punches and 384 goal cases, using constructed related snapshots and cooperative waits; live presentation remains unverified. Windows build/all 65 registered checks passed. Catch possession and punch recovery continuations, fresh startup and complete match remain unfinished; overall progress is unmeasured. Next follow the home keeper save into possession or recovery. Suggested model: GPT-6.1 Terra High.
+
 ## Latest - 2026-11-12 home goalkeeper and opposing goal kickoff
 
 The provisional runtime accepts ordinary catch/punch at the home goalkeeper menu and follows supported opponent goals through home kickoff to control. A private T content pack adds the original keeper menu directions/icons; S stays readable. Controlled original comparisons matched 504 constructed menu/keeper cases, including 384 goal-to-home-control continuations; presentation-facing and live NMI/audio/PPU were excluded. T preserves S, matches six original bytes and rejects malformed packs. Windows build and all 65 registered checks passed (direct invocation; CTest unavailable). The test runtime's Windows stack overflow was removed by extracting the new menu handler. Home keeper saves, fresh startup, live interaction and a complete match remain unfinished. Overall progress is unmeasured. Next compare and connect home keeper save outcomes. Suggested model: GPT-6.1 Terra High.

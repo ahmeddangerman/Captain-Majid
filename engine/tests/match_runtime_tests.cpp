@@ -1,5 +1,6 @@
 #include "captain/match_runtime.hpp"
 #include "captain/match_client.hpp"
+#include "captain/keeper_save_session.hpp"
 #include "captain/match_save.hpp"
 #include "captain/phase_session_io.hpp"
 #include "captain/field_state_io.hpp"
@@ -301,7 +302,7 @@ static int human_keeper_menu_comparison(int argc,char** argv) {
  state->session.score=MatchScoreContext{raw[0][0x28],raw[0][0x29],raw[0][0x629]};
  state->mode=MatchTimingMode::provisional_demo;state->demo_rng=std::stoul(argv[6]);state->ball_fraction=MatchBallFraction{raw[0][0x634],raw[0][0x636]};
  MatchContentIdentity identity{};identity[0]=42;auto result=std::make_unique<MatchStepResult>();const std::string names[]={"entry","open","selected","confirmed","compared","goal","restart","formation","receiver","ball","handoff","control"};
- const auto advance=[&](std::uint8_t pressed){*result=step_match(*state,client_input(*state,0,pressed),*content);if(result->unsupported)throw std::runtime_error(std::string("Home goalkeeper stopped: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(state->session.phase)));*state=result->state;std::ostringstream out(std::ios::binary);write_match_save(out,*state,identity);std::istringstream in(out.str(),std::ios::binary);*state=load_match_save(in,identity);};
+ const auto advance=[&](std::uint8_t pressed){*result=step_match(*state,client_input(*state,0,pressed),*content);if(result->unsupported){if(state->session.phase==FieldSessionPhase::keeper_decided && state->session.keeper_decision->result_code>=2)resolve_session_keeper_save(state->session,*content->data);throw std::runtime_error(std::string("Home goalkeeper stopped: ")+capability_name(*result->unsupported)+" phase "+std::to_string(static_cast<unsigned>(state->session.phase)));}*state=result->state;std::ostringstream out(std::ios::binary);write_match_save(out,*state,identity);std::istringstream in(out.str(),std::ios::binary);*state=load_match_save(in,identity);};
  const auto compare=[&](unsigned index){std::ifstream in(std::string(argv[7])+"/"+names[index]+".cmjsession",std::ios::binary);auto expected=load_phase_session(in),actual=state->session;expected.saved_ball_flight_flag=raw[index][0x61b];
   if(!actual.score || actual.score->left_goals!=raw[index][0x28] || actual.score->right_goals!=raw[index][0x29] || actual.score->kickoff!=raw[index][0x629])throw std::runtime_error("Home keeper score differs");
   actual.phase=FieldSessionPhase::field;actual.shot_flight.reset();actual.ball_trajectory.reset();actual.keeper_decision.reset();actual.score.reset();actual.kickoff_formation.reset();actual.kickoff_receiver.reset();actual.current.field.selected_defenders=0;actual.scheduling->selected_ids.fill(0);
@@ -317,6 +318,7 @@ static int human_keeper_menu_comparison(int argc,char** argv) {
   const FieldSessionPhase phases[]={FieldSessionPhase::kickoff_formation_placed,FieldSessionPhase::kickoff_receiver_selected,FieldSessionPhase::kickoff_ball_placed,FieldSessionPhase::kickoff_control_pending,FieldSessionPhase::control_ready};
   for(unsigned i=0;i<5;++i){advance(0);if(state->session.phase!=phases[i])throw std::runtime_error("Opponent goal kickoff phase differs");compare(i+7);if(!state->ball_fraction || state->ball_fraction->x!=raw[i+7][0x634] || state->ball_fraction->y!=raw[i+7][0x636] || !state->retained_defense_action || *state->retained_defense_action!=raw[i+7][0x43d])throw std::runtime_error("Opponent goal kickoff lost original metadata");}
  }
+ else if(raw[4][0x612]==2 || raw[4][0x612]==3){advance(0);const auto phase=raw[4][0x612]==2 ? FieldSessionPhase::ball_recovery : raw[4][0x43d]==1 ? FieldSessionPhase::keeper_punch_recovery : FieldSessionPhase::keeper_possession;if(state->session.phase!=phase)throw std::runtime_error("Home keeper save phase differs");compare(5);}
  return 0;
 }
 static int opponent_shot_defender_comparison(int argc,char** argv) {

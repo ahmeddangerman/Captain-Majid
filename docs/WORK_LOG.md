@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-12 - Home goalkeeper save handoffs
+
+The provisional runtime now follows successful ordinary home goalkeeper catches and punches through the original save outcome and reward handoff. Session validation supports the home keeper's possession and opposing-side punch recovery state. `tools/check_human_keeper_menu_original.py` compared 120 constructed saves (72 catches and 48 punches) and 384 goals from four related snapshots against the original; save/reload occurs on each native step. Presentation-facing fields and live NMI/audio/PPU were excluded. The Windows build and all 65 registered checks passed by direct invocation.
+
+The new save handoff does not yet complete goalkeeper possession or all punch recovery routes. Fresh startup, live window interaction and a complete match remain unfinished. Overall progress is unmeasured. Next compare and connect what happens after the home keeper catches or punches. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-12 - Home goalkeeper menu and kickoff after an opponent goal
 
 The provisional runtime accepts ordinary catch and punch selections at the home goalkeeper prompt, compares the shot, and continues a supported opponent goal through scoring and a home kickoff to control. The T private content pack extends S with original goalkeeper menu direction and icon bytes; S remains readable and stops where the missing menu data is needed. The Windows development window labels the keeper choices. This is a bounded development-snapshot path, not a complete match or live original presentation.

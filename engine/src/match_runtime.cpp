@@ -694,7 +694,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     input.session.current.field.side==0 && input.session.action && input.session.action->action==0)
   return resolve_opponent_keeper_ai(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_decided &&
-    input.session.action && input.session.action->action==0 && (input.session.current.field.side==0 || (input.session.current.field.side==11 && input.session.keeper_decision && input.session.keeper_decision->result_code==0)))
+    input.session.action && input.session.action->action==0 && (input.session.current.field.side==0 || (input.session.current.field.side==11 && input.session.keeper_decision && (input.session.keeper_decision->result_code==0 || input.session.keeper_decision->result_code>=2))))
   return score_human_shot(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::goal_celebration_pending &&
     input.session.action && input.session.action->action==0)
