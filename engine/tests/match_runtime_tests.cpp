@@ -716,6 +716,15 @@ static int player1_defended_shot_check(int argc,char** argv) {
    std::ostringstream race_save(std::ios::binary);write_match_save(race_save,race9.state,identity);std::istringstream race_in(race_save.str(),std::ios::binary);auto race_restored=load_match_save(race_in,identity);
    if(race_restored.session.current.field.ball_owner!=6 || !race_restored.ball_fraction || race_restored.ball_fraction->x!=16 || race_restored.ball_fraction->y!=17)throw std::runtime_error("Player6 pass recovery did not roundtrip");
    std::ofstream rr(std::string(argv[4])+"-player9-race.cmjsession",std::ios::binary);write_phase_session(rr,race9.state.session);
+   auto area6=step_match(race_restored,client_input(race_restored,0,0),content);
+   if(area6.unsupported || area6.state.session.phase!=FieldSessionPhase::keeper_interaction || area6.state.session.current.field.ball_owner!=6)throw std::runtime_error("Player6 attacking area entry stopped");
+   auto prepared6=step_match(area6.state,client_input(area6.state,0,0),content);
+   if(prepared6.unsupported || prepared6.state.session.phase!=FieldSessionPhase::keeper_area_prepared || prepared6.state.session.action->menu_route!=1)throw std::runtime_error("Player6 attacking area setup stopped");
+   auto menu6=step_match(prepared6.state,client_input(prepared6.state,0,0),content);
+   if(menu6.unsupported || menu6.state.session.phase!=FieldSessionPhase::human_action_menu || menu6.state.session.current.field.selected_defenders)throw std::runtime_error("Player6 attacking area menu stopped: "+(menu6.unsupported ? std::string(capability_name(*menu6.unsupported)) : std::to_string(menu6.state.session.current.field.selected_defenders)));
+   std::ostringstream menu6_save(std::ios::binary);write_match_save(menu6_save,menu6.state,identity);std::istringstream menu6_in(menu6_save.str(),std::ios::binary);auto menu6_restored=load_match_save(menu6_in,identity);
+   if(menu6_restored.session.phase!=FieldSessionPhase::human_action_menu || menu6_restored.session.current.field.ball_owner!=6)throw std::runtime_error("Player6 area menu did not roundtrip");
+   std::ofstream a6(std::string(argv[4])+"-player6-area.cmjsession",std::ios::binary),p6(std::string(argv[4])+"-player6-area-prepared.cmjsession",std::ios::binary),m6(std::string(argv[4])+"-player6-menu.cmjsession",std::ios::binary);write_phase_session(a6,area6.state.session);write_phase_session(p6,prepared6.state.session);write_phase_session(m6,menu6.state.session);
   }
   std::ofstream kre(std::string(argv[4])+"-area-recovery-entry.cmjsession",std::ios::binary),kr(std::string(argv[4])+"-area-recovered.cmjsession",std::ios::binary);write_phase_session(kre,recovery_entry.state.session);write_phase_session(kr,area_recovered.state.session);
   std::ofstream kc(std::string(argv[4])+"-area-compared.cmjsession",std::ios::binary);write_phase_session(kc,compared_keeper.state.session);

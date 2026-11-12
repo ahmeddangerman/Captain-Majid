@@ -1,5 +1,12 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player6 reaches attacking goal-area menu
+
+The player9 pass timeout now continues into player6's attacking goal-area setup and action menu. The controlled original/native represented states match at recovery area entry, route1 setup and the menu, where no defender or goalkeeper is selected for the sampled position. The menu survives runtime save/reload. The runtime acknowledges the original facing change before displaying it. The previous pass action and original retained defender cursor and flight flag survive the entry; the selection guard is restricted to this observed state.
+
+Windows CMake build, all 65 registered tests and the private original comparison passed. The original trace injects represented state, target and random values and acknowledges presentation without real NMI, rendering or audio. Next select and trace player6's goal-area action and its outcome; other goal-area selections and complete match behavior remain unfinished. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player6-goal-area-original-20261113.
+
+
 ## 2026-11-13 - Player9 five-defender pass recovered by player6
 
 From the provisional rebound continuation, player9's ordinary free pass now crosses five defenders and reaches player6 at 180,156 after a three-round timeout. Controlled original/native comparisons match the injected encounter menu, each original AI choice (1,2,0,1,1), pass preparation, all five contact preparations/comparisons/clocks, dispatch, field movement, target, each flight cell, arrival defender16 contact and the player6 recovery. The recovered ball fractions 16/17 survive runtime save/reload. The original selects its pass-presentation defender by the random-derived index; this sample waits until defender3, so the earlier contacts retain ball variant0 and the later presentation retains cursor130. The completed defender prefix retains cursor5. The engine now handles these observed boundaries without prematurely applying presentation.
