@@ -1254,6 +1254,9 @@ int main(){try{using namespace captain;
  check(first_choice.phase==FieldSessionPhase::ordinary_pass_defense_selection && first_choice.ordinary_pass_defenses->count==1 &&
        first_choice.recovery->opposing_player==19 && !selection.ordinary_pass_defenses->count,
        "First observed defender choice is retained without changing input");
+ const auto mixed_block=record_ordinary_pass_defense(first_choice,20,0,0);
+ check(mixed_block.phase==FieldSessionPhase::ordinary_pass_defenses_recorded && mixed_block.ordinary_pass_defenses->actions[1]==0,
+       "Second ordinary defender can block after a tackle choice");
  const auto second_choice=record_ordinary_pass_defense(first_choice,20,1,0);
  check(second_choice.phase==FieldSessionPhase::ordinary_pass_defenses_recorded && second_choice.ordinary_pass_defenses->count==2 &&
        second_choice.recovery->opposing_player==20,"Complete observed defender prefix reaches preparation boundary");

@@ -889,8 +889,9 @@ SessionBallStepResult advance_ordinary_pass_ball_cell(const PhaseSessionState& i
   throw std::invalid_argument("Ordinary ball step requires a flight boundary");
  auto state=input;auto& t=*state.ball_trajectory;
  const auto step=advance_ball_to_next_cell({t.x,t.y,{t.vx,t.vy},state.current.field.ball_cell,state.shot_flight->destination});
- if(step.event!=BallStepEvent::cell_changed && state.area_ai_target->recipient==255)
+ if(step.event!=BallStepEvent::cell_changed && state.area_ai_target->recipient==255 && !state.current.field.selected_defenders)
   throw std::invalid_argument("Free-ball pass arrival needs original contest handling");
+ if(step.event!=BallStepEvent::cell_changed && state.area_ai_target->recipient==255)state.area_defender_cursor=0;
  t.x=step.x;t.y=step.y;state.current.field.ball_x=step.x>>8;state.current.field.ball_y=step.y>>8;
  state.current.field.ball_cell=step.cell;
  state.phase=step.event==BallStepEvent::cell_changed ? FieldSessionPhase::ordinary_pass_flight_callback : FieldSessionPhase::ordinary_pass_flight_arrival;

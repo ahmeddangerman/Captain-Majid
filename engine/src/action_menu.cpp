@@ -996,7 +996,9 @@ PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
     std::uint8_t defender, std::uint8_t action, std::uint8_t subtype) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::ordinary_pass_defense_selection || !input.ordinary_pass_defenses ||
-        !input.scheduling || (action != 1 && action != 2 && !(action == 0 && input.current.field.selected_defenders == 1)) || subtype != 0)
+        !input.scheduling || (action != 1 && action != 2 && !(action == 0 && (input.current.field.selected_defenders == 1 ||
+         (input.current.field.selected_defenders == 2 && input.ordinary_pass_defenses->count == 1 &&
+          (input.ordinary_pass_defenses->actions[0] == 1 || input.ordinary_pass_defenses->actions[0] == 2))))) || subtype != 0)
         throw std::invalid_argument("Unsupported observed ordinary pass defender choice");
     auto state = input;
     auto& defense = *state.ordinary_pass_defenses;
