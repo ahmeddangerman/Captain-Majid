@@ -144,6 +144,40 @@ AiAreaAction choose_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uin
  default:throw std::invalid_argument("AI recipient selection or unknown action branch is not supported");
  }
 }
+static std::uint8_t generic_goal_area_type(std::uint8_t carrier,std::uint8_t flags,std::uint8_t alternate,const PlayerProfileMappings& profiles) {
+ if(carrier<12 || carrier>21)throw std::invalid_argument("Generic goal-area AI requires an opposing field player");
+ const auto offset=profiles.generic_slot_offsets[carrier-11];
+ if(offset>=profiles.team_types.size())throw std::invalid_argument("Missing generic goal-area team profile");
+ auto type=profiles.team_types[offset];if(flags&128u)type=alternate;
+ if(type<1 || type>120)throw std::invalid_argument("Unsupported goal-area AI type");
+ return type;
+}
+AiAreaChoice choose_generic_goal_area_candidate(std::uint8_t carrier,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,const PlayerProfileMappings& profiles,
+ const AiGoalAreaChoiceContent& goal,const AiAreaChoiceContent& area) {
+ const auto type=generic_goal_area_type(carrier,flags,alternate,profiles);const auto row=goal.profile_rows[type];
+ if(row>=goal.rows.size())throw std::invalid_argument("Missing goal-area AI row");
+ const unsigned fx=(x&128u)?(x^255u):x,fy=(y&128u)?(y^255u):y;
+ if(fx<48 || fx>=208 || fy<80 || fy>=176)throw std::invalid_argument("Goal-area AI position outside cell map");
+ const auto cell=((fx-48)/8)*12+(fy-80)/8;
+ for(const auto& entry:area.cells)if(entry[0]==cell) {
+  const auto category=entry[1];if(category>44)throw std::invalid_argument("Invalid goal-area AI category");
+  std::array<std::uint8_t,4> choices{};for(unsigned i=0;i<4;++i)choices[i]=goal.rows[row][category+i];
+  return {category,row,choose_ai_action_candidate(choices,random)};
+ }
+ throw std::invalid_argument("Missing goal-area AI cell category");
+}
+AiAreaPlan plan_generic_goal_area_pass(std::uint8_t carrier,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t first,std::uint8_t second,std::uint8_t variant,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates,const PlayerProfileMappings& profiles,
+ const AiGoalAreaChoiceContent& goal,const AiAreaChoiceContent& area) {
+ if(variant!=1 && variant!=2)throw std::invalid_argument("Unsupported goal-area ball variant");
+ const auto candidate=choose_generic_goal_area_candidate(carrier,flags,alternate,x,y,first,profiles,goal,area);
+ if(candidate.candidate!=2)throw std::invalid_argument("Only the observed goal-area pass candidate is supported");
+ const auto type=generic_goal_area_type(carrier,flags,alternate,profiles);
+ const auto target=choose_profiled_ai_area_recipient(type,0,0,carrier,x,first,second,teammates,area);
+ return {target.action,0,target.random_first,target.recipient,target.cell};
+}
 AiAreaChoice choose_ai_pass_defense_candidate(std::uint8_t type,std::uint8_t flags,std::uint8_t alternate,
  std::uint8_t x,std::uint8_t y,std::uint8_t random,const AiPassDefenseContent& content) {
  if(type==0)throw std::invalid_argument("AI generic team resolution is not captured");

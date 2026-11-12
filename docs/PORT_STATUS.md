@@ -1,5 +1,12 @@
 # Port status and completion checkpoints
 
+## 2026-11-12 - Opponent goal-area pass preparation
+
+The provisional runtime now continues the first-fixture rebound into the opponent goal area when the original goalkeeper and field-defender scan selects nobody. The route uses a new opt-in CMJSHOTb extension for original goal-area AI profiles; it preserves earlier formats. A controlled original CPU survey of 5,760 constructed cases matched profile/category/candidate selection and 240 supported ordinary passes; the remaining 5,520 candidates are guarded. For the first rebound, intervening the original random bytes to match the provisional runtime selects opponent19 and cell79. Original/native represented state matched the empty-defender boundary, the AI choice and attack preparation. The new phases save and reload successfully. A private original-only continuation traversed the pass flight and reached a boundary with player1 holding the ball; four human defenders were selected during flight. This is not yet implemented or compared in native flight, and the observed boundary does not establish a general interception rule.
+
+The original traces inject represented state and random bytes and acknowledge cooperative waits; they do not model live presentation, NMI, audio or timing. The Windows build, all 65 registered tests, private runtime/save tests, original survey and pack compatibility/malformed checks passed. The runtime stops after goal-area attack preparation; other goal-area choices and defender scans remain guarded. Next compare the original pass dispatch, movement, flight and four-defender arrival before connecting them. Overall progress remains unmeasured; a complete playable match is unfinished. Suggested model GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/first-opponent-area-original-20261112 and first-opponent-area-pass-original-20261112.
+
+
 ## 2026-11-12 - Generic opponent pass and defended shot to rebound
 
 Generic opponent field AI now resolves team-mapped candidate and recipient profiles while using the raw type-zero special-option gates. Across 11,520 constructed original CPU cases, candidate rows and the supported outcomes matched: 3,780 passes, 1,800 pass fallbacks, 3,600 action2 choices and 300 ordinary shots; 2,040 other candidates remain guarded. A controlled continuation of the fresh fixture matched opponent16's pass to player21 through nine original preparation, movement, target, flight and control boundaries.

@@ -367,9 +367,10 @@ void validate_phase_session(const PhaseSessionState& state) {
        (state.current.field.ball_x>=80 && state.current.field.ball_x<176) ||
        state.action->menu_route!=(((state.current.field.ball_x<80 ? 0 : 11)==state.current.field.side)?2:1)))
         throw std::invalid_argument("Keeper-area setup requires its original area and route (phase " + std::to_string(phase) + ", ball " + std::to_string(state.current.field.ball_x) + "," + std::to_string(state.current.field.ball_y) + ", side " + std::to_string(state.current.field.side) + ", route " + std::to_string(state.action ? state.action->menu_route : 255) + ")");
-    if(area_menu && (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
+    if(area_menu && !((phase==68 || phase==78 || phase==79) && state.action->menu_route==1 && state.current.field.side==11 && !state.current.field.selected_defenders) &&
+       (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
-    if(bool(state.area_defense)!=(((phase>=415 && phase<=420) || (phase>=238 && phase<=243) || ((phase>=202 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) || phase==67 || (phase>=69 && phase<=92) || phase==94 || area_action4 || ((phase==93 || area_action6) && state.action && (state.action->action==4 || state.action->action==6) && state.area_defense))))
+    if(bool(state.area_defense)!=(((phase>=415 && phase<=420) || (phase>=238 && phase<=243) || ((phase>=202 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) || phase==67 || ((phase>=69 && phase<=92) && !((phase==78 || phase==79) && state.action && state.action->menu_route==1 && !state.current.field.selected_defenders)) || phase==94 || area_action4 || ((phase==93 || area_action6) && state.action && (state.action->action==4 || state.action->action==6) && state.area_defense))))
         throw std::invalid_argument("Initial area defense requires its captured choice arrays");
     if((phase>=415 && phase<=420) && (!state.action || !state.recovery || !state.control || !state.score || !state.scheduling || !state.area_defense ||
        state.current.field.side!=(phase==420 ? 0 : 11) || state.current.field.ball_owner!=(phase==420 ? 7 : 18) || state.current.field.ball_cell!=87 ||
@@ -412,7 +413,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         for(unsigned i=0;i<4;++i)if(state.area_defense->actions[i]!=255 || state.area_defense->subtypes[i])
             throw std::invalid_argument("Initial defense actions must be unselected with unused subtypes zero");
     }
-    if((phase>=70 && phase<=92) || phase==94) {
+    if(((phase>=70 && phase<=92) || phase==94) && !((phase==78 || phase==79) && state.action && state.action->menu_route==1 && !state.current.field.selected_defenders)) {
         const auto count=state.current.field.selected_defenders;
         if(!count || count>4 || state.action->cursor>count || ((phase==71 || (phase>=73 && phase<=76)) && state.action->cursor==count))
             throw std::invalid_argument("Defensive poll requires a valid selected cursor");
@@ -627,7 +628,7 @@ void validate_phase_session(const PhaseSessionState& state) {
            (terminal_presentation ? state.control->facing!=0 : (state.control->facing!=0 && state.control->facing!=64))))throw std::invalid_argument("Invalid announced area presentation state");
         if(phase==80 && state.control->motion_requested!=(state.recovery->ball_variant==1 ? 2 : 0))throw std::invalid_argument("Area defense entry needs acknowledged motion request");
         if(target.cost>1023 || (phase==78 && target.cost))throw std::invalid_argument("Invalid prepared area cost");
-        if(state.action->cursor!=state.current.field.selected_defenders ||
+        if((state.action->cursor!=state.current.field.selected_defenders && !((phase==78 || phase==79) && state.action->menu_route==1 && !state.current.field.selected_defenders)) ||
            (state.action->action!=1 && state.action->action!=4 && state.action->action!=6) ||
            (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2) ||
            (state.action->action==1 ? (target.recipient<12 || target.recipient>21 || subtype) :

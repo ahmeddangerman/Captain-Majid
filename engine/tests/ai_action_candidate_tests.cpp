@@ -50,6 +50,22 @@ int main(int argc,char** argv) try {
   }
   return std::cin.eof()?0:2;
  }
+ if(argc==3 && std::string(argv[1])=="--generic-goal-area") {
+  std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);if(!content.ai_area_choice || !content.ai_goal_area_choice)return 2;
+  unsigned flags,alt,carrier,x,y,first,second,variant;
+  while(std::cin>>flags>>alt>>carrier>>x>>y>>first>>second>>variant) {
+   std::array<std::array<std::uint8_t,2>,10> positions{};
+   for(auto& p:positions)for(auto& v:p){unsigned n;if(!(std::cin>>n)||n>255)return 2;v=n;}
+   if(flags>255||alt>255||carrier>255||x>255||y>255||first>255||second>255||variant>255)return 2;
+   try {const auto c=captain::choose_generic_goal_area_candidate(carrier,flags,alt,x,y,first,content.field_players,*content.ai_goal_area_choice,*content.ai_area_choice);
+    std::cout<<unsigned(c.category)<<' '<<unsigned(c.row)<<' '<<unsigned(c.candidate)<<' ';
+    try {const auto r=captain::plan_generic_goal_area_pass(carrier,flags,alt,x,y,first,second,variant,positions,content.field_players,*content.ai_goal_area_choice,*content.ai_area_choice);
+     std::cout<<unsigned(r.action)<<' '<<unsigned(r.subtype)<<' '<<unsigned(r.random_first)<<' '<<(r.recipient?int(*r.recipient):-1)<<' '<<(r.cell?int(*r.cell):-1)<<'\n';}
+    catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+   }catch(const std::invalid_argument&){std::cout<<"unsupported\n";}
+  }
+  return std::cin.eof()?0:2;
+ }
  if(argc==3 && std::string(argv[1])=="--generic-field-plan") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);
   if(!content.ai_field_choice || !content.ai_area_choice)return 2;
@@ -263,5 +279,11 @@ int main(int argc,char** argv) try {
  const auto third=captain::choose_ai_area_action(35,0,0,51,124,2,synthetic);
  if(first.action!=4 || first.subtype || second.action!=6 || second.subtype || third.action!=6 || third.subtype!=1)return 1;
  try {captain::choose_ai_area_action(35,0,0,51,124,3,synthetic);return 1;}catch(const std::invalid_argument&){}
+ captain::AiGoalAreaChoiceContent goal_ai{};goal_ai.rows.resize(1);goal_ai.profile_rows[119]=0;goal_ai.rows[0][32]=0x22;
+ synthetic.recipient_profile_rows.resize(85,0);synthetic.recipient_rows.resize(1);synthetic.recipient_rows[0].fill(41);
+ const auto goal_candidate=captain::choose_generic_goal_area_candidate(16,0,0,51,124,0,generic_field,goal_ai,synthetic);
+ if(goal_candidate.category!=32 || goal_candidate.candidate!=2)return 1;
+ const auto goal_pass=captain::plan_generic_goal_area_pass(16,0,0,51,124,0,0,1,teammates,generic_field,goal_ai,synthetic);
+ if(goal_pass.action!=1 || goal_pass.recipient!=20 || goal_pass.subtype)return 1;
  std::cout<<"AI candidate selection checks passed\n";
 } catch(const std::exception& e) { std::cerr << e.what() << "\n"; return 2; }

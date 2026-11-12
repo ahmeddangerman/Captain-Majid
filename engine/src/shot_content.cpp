@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a' && version!='b')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -321,6 +321,11 @@ ShotContent load_shot_content(std::istream& input) {
         const auto eligible=reader.byte();if(!choice.range || eligible>1)throw std::invalid_argument("Invalid ordinary pass action2 comparison");
         choice.eligible=eligible!=0;reader.bytes(choice.thresholds);classify_score(0,choice.thresholds);
         content.ordinary_pass_intercept_comparison=choice;
+    }
+    if(version>='b') {
+        content.ai_goal_area_choice=AiGoalAreaChoiceContent{};auto& ai=*content.ai_goal_area_choice;
+        reader.bytes(ai.profile_rows);ai.rows.resize(reader.count(1,64));for(auto& row:ai.rows)reader.bytes(row);
+        for(auto row:ai.profile_rows)if(row>=ai.rows.size())throw std::invalid_argument("Invalid goal-area AI profile row");
     }
     reader.end();
     return content;

@@ -27,6 +27,7 @@ struct ShotContent {
     std::optional<std::array<std::uint8_t,11>> first_match_lineup{};
     std::shared_ptr<const RuntimeKickoffContent> kickoff{};
     std::optional<AiAreaChoiceContent> ai_area_choice{};
+    std::optional<AiGoalAreaChoiceContent> ai_goal_area_choice{};
     std::optional<AiFieldChoiceContent> ai_field_choice{};
     std::optional<FieldDefenseContent> area_attack6{};
     std::optional<AreaComparisonContent> area_comparison{};
@@ -53,7 +54,7 @@ struct ShotContent {
     std::optional<AreaDefenseMenuContent> area_defense_menu{};
 };
 
-// Development CMJSHOT1..9/A..Z/a content formats. Reject truncated/oversized sections,
+// Development CMJSHOT1..9/A..Z/a..b content formats. Reject truncated/oversized sections,
 // unsupported versions and trailing data; simulation receives ordinary values.
 ShotContent load_shot_content(std::istream& input);
 }

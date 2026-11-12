@@ -69,6 +69,17 @@ AiAreaPlan plan_ai_area_action(std::uint8_t type,std::uint8_t flags,std::uint8_t
 AiAreaAction choose_ai_area_action(std::uint8_t type,std::uint8_t flags,
  std::uint8_t alternate,std::uint8_t x,std::uint8_t y,std::uint8_t random,
  const AiAreaChoiceContent& content);
+struct AiGoalAreaChoiceContent {
+ std::array<std::uint8_t,121> profile_rows{};
+ std::vector<std::array<std::uint8_t,48>> rows;
+};
+AiAreaChoice choose_generic_goal_area_candidate(std::uint8_t carrier,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t random,const PlayerProfileMappings& profiles,
+ const AiGoalAreaChoiceContent& goal,const AiAreaChoiceContent& area);
+AiAreaPlan plan_generic_goal_area_pass(std::uint8_t carrier,std::uint8_t flags,std::uint8_t alternate,
+ std::uint8_t x,std::uint8_t y,std::uint8_t first,std::uint8_t second,std::uint8_t variant,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates,const PlayerProfileMappings& profiles,
+ const AiGoalAreaChoiceContent& goal,const AiAreaChoiceContent& area);
 struct AiPassDefenseSpecial { std::uint8_t subtype=0; std::optional<std::uint8_t> teammate_type{}; };
 struct AiPassDefenseContent {
  std::vector<std::uint8_t> profile_rows;

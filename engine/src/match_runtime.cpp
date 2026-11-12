@@ -9,6 +9,7 @@
 #include "captain/selected_dispatch.hpp"
 #include "captain/attack_clock.hpp"
 #include "captain/approach_session.hpp"
+#include "captain/area_ai_session.hpp"
 #include "captain/ball_flight_session.hpp"
 #include "captain/keeper_session.hpp"
 #include "captain/goal_session.hpp"
@@ -1028,6 +1029,41 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return continue_keeper_save_recovery(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_interaction && input.session.action && input.session.action->action==0)
   return prepare_keeper_save_area(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  const auto& field=input.session.current.field;
+  // With random above 85 the original goalkeeper-selection table cannot select the keeper.
+  if(!input.session.scheduling || field.random_first<=85){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+  DefenderSelectionInput scan{};scan.possession_side=field.side;scan.ball_x=field.ball_x;scan.ball_y=field.ball_y;scan.radius=10;
+  for(unsigned i=0;i<field.motion.size();++i){const auto& m=field.motion[i];scan.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};}
+  if(!select_field_defenders(scan).empty()){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+  auto next=input;next.session.current.field.selected_defenders=0;next.session.scheduling->selected_ids.fill(0);
+  next.session.phase=FieldSessionPhase::keeper_area_choices_done;next.last_sequence=event.sequence;
+  validate_phase_session(next.session);project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_choices_done && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11) {
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
+  if(!content.data->ai_goal_area_choice || !content.data->ai_area_choice){result.unsupported=UnsupportedCapability::content;return result;}
+  const auto& field=input.session.current.field;const auto owner=field.ball_owner;
+  if(owner<12 || owner>21 || field.roster[owner].type!=0 || !input.session.recovery){result.unsupported=UnsupportedCapability::opponent_action;return result;}
+  std::array<std::array<std::uint8_t,2>,10> positions{};for(unsigned id=12;id<=21;++id){const auto& m=field.motion[field_motion_index(static_cast<std::uint8_t>(id))];positions[id-12]={{static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8)}};}
+  auto next=input;advance_demo_random(next);const auto& actor=field.roster[owner];
+  try {const auto plan=plan_generic_goal_area_pass(owner,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),field.ball_x,field.ball_y,
+    next.session.current.field.random_first,next.session.current.field.random_second,input.session.recovery->ball_variant,positions,content.data->field_players,*content.data->ai_goal_area_choice,*content.data->ai_area_choice);
+   if(plan.action!=1 || !plan.recipient || !plan.cell){result.unsupported=UnsupportedCapability::opponent_action;return result;}
+   next.session.action->action=plan.action;next.session.recovery->attack_subtype=plan.subtype;next.session.current.field.random_first=plan.random_first;
+   next.session.area_ai_target=PhaseSessionState::AreaAiTarget{*plan.recipient,*plan.cell};next.session.phase=FieldSessionPhase::keeper_area_ai_chosen;
+   validate_phase_session(next.session);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_action;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_ai_chosen && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11) {
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  auto next=input;try {next.session=prepare_session_area_attack(next.session,*content.data);}
+  catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::goal_kickoff_pending || input.session.phase==FieldSessionPhase::kickoff_formation_placed ||
     input.session.phase==FieldSessionPhase::kickoff_receiver_selected || input.session.phase==FieldSessionPhase::kickoff_ball_placed || input.session.phase==FieldSessionPhase::kickoff_control_pending) &&
     input.session.score && (input.session.score->kickoff==4 ||

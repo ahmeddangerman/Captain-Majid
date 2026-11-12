@@ -37,5 +37,15 @@ if z_path:
             path=Path(tmp)/(name+'.cmjpack');path.write_bytes(data)
             assert not accepts(path),name+' accepted'
     print('action2 pack preserves Z and rejects malformed comparison data')
+    with tempfile.TemporaryDirectory(prefix='goal-area-pack-',dir=private) as tmp:
+        b=b'CMJSHOTb'+a[8:]+bytes(121)+(1).to_bytes(2,'little')+bytes(48)
+        path=Path(tmp)/'goal-area.cmjpack';path.write_bytes(b)
+        assert accepts(path),'goal-area pack rejected'
+        bad=bytearray(b);bad[-171]=255
+        for name,data in (('truncated',b[:-1]),('trailing',b+b'\0'),('bad-profile',bad),('mislabelled',b'CMJSHOTa'+b[8:])):
+            path=Path(tmp)/(name+'.cmjpack');path.write_bytes(data)
+            assert not accepts(path),name+' accepted'
+    print('goal-area pack preserves action2 and rejects malformed profiles')
+
 
 print('Y preserves X, and truncated, trailing, invalid and mislabelled variants are rejected')
