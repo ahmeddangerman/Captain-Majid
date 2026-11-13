@@ -310,4 +310,16 @@ compare_represented((a.trace/'native-player21-shot-recovery.cmjsession').read_by
 for native,pc in (('setup','92f8'),('position','9306'),('taker','9318'),('formation','9328'),('clock','9342')):
  original=(a.player3_shot/f'player21-out-{pc}-1.bin').read_bytes()
  compare_represented((a.trace/f'native-player21-corner-{native}.cmjsession').read_bytes(),export_session(original,0),True,'player21 corner',native)
+for native,pc in (('flight','e773-1'),('contact','8bdf-2'),('out','8ca4-2')):
+ original=(a.player3_shot/f'player21-out-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-player21-corner-{native}.cmjsession').read_bytes(),export_session(original,0),False,'first corner pass',native)
+contact=(a.player3_shot/'player21-out-8870-1.bin').read_bytes()
+if (contact[0x442],contact[0x43d],contact[0x612])!=(2,2,2):raise ValueError('Unexpected first corner defender result')
+for native,pc in (('setup','92f8-2'),('position','9306-2'),('taker','9318-2'),('formation','9328-2'),('clock','9342-2')):
+ original=(a.player3_shot/f'player21-out-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-player21-corner2-{native}.cmjsession').read_bytes(),export_session(original,0),True,'second corner',native)
+for native,pc in (('flight','e773-10'),('received','e0df-1'),('control','e145-1')):
+ original=(a.player3_shot/f'player21-out-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-player21-corner2-{native}.cmjsession').read_bytes(),export_session(original,0),False,'second corner pass',native)
+if (original[0x441],original[0x5fb],original[0x635],original[0x637],original[0x5f7])!=(17,11,60,92,8):raise ValueError('Unexpected second corner recipient')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

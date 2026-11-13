@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Two corners through player17 control
+
+Continued the original corner sequence beyond formation. Player20's first pass targets player17 and encounters defenders [2,7,5,1]; defender2 produces result2, and the loose ball goes out again at (44,148), retaining fractions (22,209). The second corner uses the other original formation, consumes 18 clock ticks, adds one more unit of added time, and passes to player17. Original/native represented setup, both formations, clock, flight, block, boundary, second flight and player17 control match; player17 receives at (60,92), clock8. The second control state saves/reloads.
+
+The corner continuation is bounded to these observed states and requires the private CMJSHOTe formation extension. Existing numerical pass, defender comparison, clock and recovery routines are reused; the observed result2 boundary no longer skips directly to an unsupported recovery. Windows CMake build, all 65 tests, private integration and original comparisons passed. Traces use sampled randomness and acknowledged waits without live NMI, rendering, audio or hardware timing. Next continue player17 possession toward period end. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Opponent corner formation and clock
 
 Continued the saved goalkeeper rebound into the original opposing corner route. The engine clears the observed temporary status, selects corner position6 and player20, places both teams, and prepares the corner pass through the original 18-tick clock update. Controlled original/native represented states match setup, position, taker, all represented formation positions and the clock at 28 with one added-time unit. Formation and clock snapshots save/reload; missing formation content rejects atomically.

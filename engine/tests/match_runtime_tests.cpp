@@ -112,6 +112,54 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream corner_clock_file(std::string(prefix)+"-player21-corner-clock.cmjsession",std::ios::binary);write_phase_session(corner_clock_file,corner_clock->state.session);
  std::ostringstream clock_save(std::ios::binary);write_match_save(clock_save,corner_clock->state,identity);std::istringstream clock_in(clock_save.str(),std::ios::binary);auto clock_restore=std::make_unique<MatchRuntimeState>(load_match_save(clock_in,identity));
  if(clock_restore->session.phase!=FieldSessionPhase::player21_corner_clocked || clock_restore->session.current.clock.remaining!=28 || clock_restore->session.current.clock.extra_time!=1)throw std::runtime_error("Corner clock did not roundtrip");
+ auto corner_handoff=std::make_unique<MatchStepResult>(step_match(*clock_restore,client_input(*clock_restore,0,0),content));
+ if(corner_handoff->unsupported || !corner_handoff->state.defense_menu || !corner_handoff->state.defense_menu->ai_pass_target || corner_handoff->state.defense_menu->ai_pass_target->recipient!=17 || corner_handoff->state.defense_menu->ai_pass_target->cell!=27)throw std::runtime_error("Corner pass handoff stopped");
+ auto corner_target=std::make_unique<MatchStepResult>(step_match(corner_handoff->state,client_input(corner_handoff->state,0,0),content));
+ auto corner_flight=std::make_unique<MatchStepResult>(step_match(corner_target->state,client_input(corner_target->state,0,0),content));
+ if(corner_target->unsupported || corner_flight->unsupported)throw std::runtime_error("Corner pass flight stopped");
+ std::ofstream corner_flight_file(std::string(prefix)+"-player21-corner-flight.cmjsession",std::ios::binary);write_phase_session(corner_flight_file,corner_flight->state.session);
+ for(int i=0;i<50 && corner_flight->state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived;++i){
+  *corner_flight=step_match(corner_flight->state,client_input(corner_flight->state,0,0),content);
+  if(corner_flight->unsupported)throw std::runtime_error("Corner pass flight advance stopped");
+ }
+ const auto& corner_arrival=*corner_flight->state.defense_menu;
+ if(corner_arrival.stage!=MatchDefenseStage::ai_flight_arrived || !corner_arrival.ai_trajectory || !corner_arrival.ai_ball_cell || *corner_arrival.ai_ball_cell!=27 || corner_arrival.ai_trajectory->x!=((68u<<8)|22u) || corner_arrival.ai_trajectory->y!=((108u<<8)|209u) || corner_flight->state.flight_defenders!=std::vector<std::uint8_t>({2,7,5,1}))throw std::runtime_error("Corner pass arrival differs from original");
+ std::ostringstream corner_arrival_save(std::ios::binary);write_match_save(corner_arrival_save,corner_flight->state,identity);std::istringstream corner_arrival_in(corner_arrival_save.str(),std::ios::binary);auto corner_arrival_restored=std::make_unique<MatchRuntimeState>(load_match_save(corner_arrival_in,identity));
+ auto corner_contact=std::make_unique<MatchStepResult>(step_match(*corner_arrival_restored,client_input(*corner_arrival_restored,0,0),content));
+ if(corner_contact->unsupported || corner_contact->state.session.phase!=FieldSessionPhase::ball_recovery)throw std::runtime_error("Corner pass block stopped");
+ std::ofstream corner_contact_file(std::string(prefix)+"-player21-corner-contact.cmjsession",std::ios::binary);write_phase_session(corner_contact_file,corner_contact->state.session);
+ auto corner_out=std::make_unique<MatchStepResult>(step_match(corner_contact->state,client_input(corner_contact->state,0,0),content));
+ if(corner_out->unsupported || corner_out->state.session.phase!=FieldSessionPhase::boundary_restart || corner_out->state.session.current.field.ball_x!=44 || corner_out->state.session.current.field.ball_y!=148 || !corner_out->state.ball_fraction || corner_out->state.ball_fraction->x!=22 || corner_out->state.ball_fraction->y!=209)throw std::runtime_error("Corner rebound boundary stopped");
+ std::ofstream corner_out_file(std::string(prefix)+"-player21-corner-out.cmjsession",std::ios::binary);write_phase_session(corner_out_file,corner_out->state.session);
+ auto corner2=std::make_unique<MatchStepResult>(step_match(corner_out->state,client_input(corner_out->state,0,0),content));
+ auto position2=std::make_unique<MatchStepResult>(step_match(corner2->state,client_input(corner2->state,0,0),content));
+ auto taker2=std::make_unique<MatchStepResult>(step_match(position2->state,client_input(position2->state,0,0),content));
+ auto formation2=std::make_unique<MatchStepResult>(step_match(taker2->state,client_input(taker2->state,0,0),content));
+ auto clock2=std::make_unique<MatchStepResult>(step_match(formation2->state,client_input(formation2->state,0,0),content));
+ if(corner2->unsupported || position2->unsupported || taker2->unsupported || formation2->unsupported || clock2->unsupported || clock2->state.session.phase!=FieldSessionPhase::player21_corner_clocked)throw std::runtime_error("Second observed corner stopped");
+ for(const auto& sample:{std::pair<const char*,const MatchRuntimeState&>{"setup",corner2->state},{"position",position2->state},{"taker",taker2->state},{"formation",formation2->state},{"clock",clock2->state}}){std::ofstream f(std::string(prefix)+"-player21-corner2-"+sample.first+".cmjsession",std::ios::binary);write_phase_session(f,sample.second.session);}
+ auto handoff2=std::make_unique<MatchStepResult>(step_match(clock2->state,client_input(clock2->state,0,0),content));
+ auto target2=std::make_unique<MatchStepResult>(step_match(handoff2->state,client_input(handoff2->state,0,0),content));
+ auto flight2=std::make_unique<MatchStepResult>(step_match(target2->state,client_input(target2->state,0,0),content));
+ if(handoff2->unsupported || target2->unsupported || flight2->unsupported || !flight2->state.defense_menu || flight2->state.defense_menu->ai_pass_target->cell!=13)throw std::runtime_error("Second corner pass setup stopped");
+ std::ofstream flight2_file(std::string(prefix)+"-player21-corner2-flight.cmjsession",std::ios::binary);write_phase_session(flight2_file,flight2->state.session);
+ for(int i=0;i<20 && flight2->state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived;++i){*flight2=step_match(flight2->state,client_input(flight2->state,0,0),content);if(flight2->unsupported)throw std::runtime_error("Second corner flight stopped");}
+ if(!flight2->state.defense_menu || flight2->state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived || !flight2->state.defense_menu->ai_trajectory || flight2->state.defense_menu->ai_trajectory->x!=((60u<<8)|54u) || flight2->state.defense_menu->ai_trajectory->y!=((92u<<8)|211u) || !flight2->state.flight_defenders.empty())throw std::runtime_error("Second corner arrival differs");
+ auto receive2=std::make_unique<MatchStepResult>(step_match(flight2->state,client_input(flight2->state,0,0),content));
+ if(receive2->unsupported || receive2->state.session.phase!=FieldSessionPhase::player_control || receive2->state.session.current.field.ball_owner!=17)throw std::runtime_error("Second corner recipient stopped");
+ std::ofstream receive2_file(std::string(prefix)+"-player21-corner2-received.cmjsession",std::ios::binary);write_phase_session(receive2_file,receive2->state.session);
+ auto control2=std::make_unique<MatchStepResult>(step_match(receive2->state,client_input(receive2->state,0,0),content));
+ if(control2->unsupported || control2->state.session.phase!=FieldSessionPhase::control_ready || control2->state.session.current.field.ball_owner!=17)throw std::runtime_error("Second corner control stopped");
+ std::ofstream control2_file(std::string(prefix)+"-player21-corner2-control.cmjsession",std::ios::binary);write_phase_session(control2_file,control2->state.session);
+ std::ostringstream second_control_save(std::ios::binary);write_match_save(second_control_save,control2->state,identity);std::istringstream second_control_in(second_control_save.str(),std::ios::binary);auto second_control_restore=std::make_unique<MatchRuntimeState>(load_match_save(second_control_in,identity));
+ if(second_control_restore->session.phase!=FieldSessionPhase::control_ready || second_control_restore->session.current.field.ball_owner!=17)throw std::runtime_error("Second corner recipient did not roundtrip");
+
+
+
+
+
+
+
 
 
 
