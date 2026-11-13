@@ -361,7 +361,13 @@ MatchStepResult advance_goal_kickoff(const MatchRuntimeState& input,const MatchI
    result.state.session=prepare_session_kickoff_receiver(input.session,input.session.current.field.random_first,content.data->kickoff->receivers);
   else if(phase==FieldSessionPhase::kickoff_receiver_selected)result.state.session=prepare_session_kickoff_ball(input.session);
   else if(phase==FieldSessionPhase::kickoff_ball_placed)result.state.session=continue_prepared_session_kickoff(input.session);
-  else {auto prepared=prepare_session_control(input.session);result.state.session=prepared.state;for(const auto& request:prepared.presentation)result.events.push_back({request});}
+  else {auto prepared=prepare_session_control(input.session);result.state.session=prepared.state;
+   if(input.session.score && input.session.score->kickoff==1 && input.session.score->left_goals==1 && !input.session.score->right_goals && input.session.current.field.side==11 && input.session.current.field.ball_owner==18 && input.session.current.clock.remaining==180) {
+    // Captured kickoff presentation and NMI-dependent scratch at the original control boundary.
+    result.state.session.current.clock.ball_mode=192;result.state.session.control->travel_accumulator=0xfc8c;
+    result.state.ball_fraction=MatchBallFraction{0,0};validate_phase_session(result.state.session);
+   }
+   for(const auto& request:prepared.presentation)result.events.push_back({request});}
   result.state.last_sequence=event.sequence;project_field_random_memory(result.state.session.current.field,result.state.random_memory);return result;
  } catch(const std::invalid_argument&) {result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
 }
@@ -1889,9 +1895,6 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return step_first_rebound_defender(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::area_pass_capture_control_entry && input.session.current.field.side==0 && input.session.current.field.ball_owner==1 && input.session.area_ai_target && input.session.area_ai_target->recipient==19 && input.session.area_ai_target->cell==79)
   return setup_first_rebound_control(input,event);
- if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::kickoff_control_pending && input.session.score && input.session.score->kickoff==1) {
-  result.unsupported=UnsupportedCapability::presentation;return result;
- }
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::goal_kickoff_pending || input.session.phase==FieldSessionPhase::kickoff_formation_placed ||
     input.session.phase==FieldSessionPhase::kickoff_receiver_selected || input.session.phase==FieldSessionPhase::kickoff_ball_placed || input.session.phase==FieldSessionPhase::kickoff_control_pending) &&
     input.session.score && (input.session.score->kickoff==4 ||

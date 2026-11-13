@@ -542,6 +542,8 @@ compare_represented((a.trace/'native-interval-kickoff-side.cmjsession').read_byt
 for name,pc in (('formation','daf5'),('receiver','db0b'),('ball','db0e'),('handoff','db1e')):
  raw=(a.player3_shot/f'period-restart-30-{pc}.bin').read_bytes()
  compare_represented((a.trace/f'native-interval-kickoff-{name}.cmjsession').read_bytes(),export_session(raw,0),False,'interval kickoff',name)
+ready=(a.player3_shot/'period-next-boundary.bin').read_bytes()
+compare_represented((a.trace/'native-interval-kickoff-control.cmjsession').read_bytes(),export_session(ready,0),False,'interval kickoff','control')
 
 
 

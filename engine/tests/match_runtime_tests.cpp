@@ -406,10 +406,14 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
   *kickoff_side=std::move(*next);
  }
  if(kickoff_side->state.session.phase!=FieldSessionPhase::kickoff_control_pending || kickoff_side->state.session.current.field.ball_owner!=18)throw std::runtime_error("Interval kickoff receiver differs");
- const auto after_kickoff=step_match(kickoff_side->state,client_input(kickoff_side->state,0,0),content);
- if(after_kickoff.unsupported!=UnsupportedCapability::presentation || after_kickoff.state.last_sequence!=kickoff_side->state.last_sequence)throw std::runtime_error("Uncaptured interval kickoff presentation must stop atomically");
  std::ostringstream kickoff_save(std::ios::binary);write_match_save(kickoff_save,kickoff_side->state,identity);std::istringstream kickoff_in(kickoff_save.str(),std::ios::binary);
  if(load_match_save(kickoff_in,identity).session.current.field.ball_owner!=18)throw std::runtime_error("Interval kickoff did not roundtrip");
+ const auto after_kickoff=step_match(kickoff_side->state,client_input(kickoff_side->state,0,0),content);
+ if(after_kickoff.unsupported || after_kickoff.state.session.phase!=FieldSessionPhase::control_ready || after_kickoff.state.session.current.field.ball_owner!=18 || !after_kickoff.state.ball_fraction)throw std::runtime_error("Interval kickoff control stopped");
+ std::ofstream interval_control_file(std::string(prefix)+"-interval-kickoff-control.cmjsession",std::ios::binary);write_phase_session(interval_control_file,after_kickoff.state.session);
+ std::ostringstream interval_control_save(std::ios::binary);write_match_save(interval_control_save,after_kickoff.state,identity);std::istringstream interval_control_in(interval_control_save.str(),std::ios::binary);
+ const auto interval_control_restored=load_match_save(interval_control_in,identity);
+ if(interval_control_restored.session.phase!=FieldSessionPhase::control_ready || interval_control_restored.session.current.field.ball_owner!=18 || !interval_control_restored.ball_fraction || interval_control_restored.ball_fraction->x || interval_control_restored.ball_fraction->y)throw std::runtime_error("Interval kickoff control did not roundtrip");
 
 
 

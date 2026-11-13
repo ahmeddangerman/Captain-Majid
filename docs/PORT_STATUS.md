@@ -1,5 +1,11 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Player18 controls after the interval
+
+Connected the controlled second-half kickoff handoff to the existing player-control setup. Native and original represented states match at the original E145 boundary: opposing player18 controls at (148,108), score1-0 and clock180. Original kickoff presentation/NMI-dependent ball mode and travel are acknowledged as captured values; ball fractions0/0 and the control state survive a match save and reload. The original calculation moves the ball to the receiver's existing formation coordinates; no separate live player animation is claimed.
+
+Windows CMake build, all 65 tests, the continuous private replay and original comparisons passed. The scene and captured presentation do not emulate live NMI, rendering, audio or timing. Next compare player18's control polling and subsequent decisions with the original. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/period-restart-original-20261113.
+
 ## 2026-11-13 - Controlled second-half kickoff handoff
 
 Extended the continuous replay through the interval reset and opposing kickoff. Original/native represented state matches at initialization, selected side, formation, receiver selection, ball placement and handoff; the score remains1-0, clock180 and opposing player18 receives at (132,132). The interval restart, stamina and final kickoff handoff save and reload. The controlled route reuses the original-derived formation and receiver calculations and explicitly acknowledges the sampled presentation scratch/facing effects.
