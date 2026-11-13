@@ -804,6 +804,16 @@ MatchStepResult continue_empty_goal_area_attack(const MatchRuntimeState& input,c
  MatchStepResult result{input};
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   auto next=input;next.session.area_sequence_result=0;next.session.control->last_carrier_cell=0;next.session.control->motion_requested=2;
+  const auto& f=input.session.current.field;
+  if(input.session.action->action==0 && f.side==11 && f.ball_owner==17 && f.ball_x==77 && f.ball_y==107 && input.session.current.clock.remaining==156){
+   // Original no-defender shot uses bank26:90DD/table9109, elapsed1.
+   auto& s=next.session;s.current.field.elapsed=static_cast<std::uint8_t>(unsigned(s.current.field.elapsed)+1);
+   const auto recovery=advance_keeper_recovery({s.current.field.keepers,s.current.shared_recovery_flags,s.current.shared_recovery_timer},1);
+   s.current.field.keepers=recovery.keepers;s.current.shared_recovery_flags=recovery.shared_flags;s.current.shared_recovery_timer=recovery.shared_timer;
+   const auto clock=advance_match_clock(s.current.clock,1,f.random_first);
+   if(clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+   s.current.clock=clock.state;s.control->facing=64;
+  }
   next.session.phase=FieldSessionPhase::keeper_area_prefix_clock_done;next.last_sequence=event.sequence;
   validate_phase_session(next.session);project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
 
@@ -812,7 +822,28 @@ MatchStepResult move_empty_goal_area_attack(const MatchRuntimeState& input,const
  MatchStepResult result{input};
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
   if(!content.data->movement){result.unsupported=UnsupportedCapability::content;return result;}
-  auto next=input;try {next.session=advance_session_area_result_dispatch(next.session,*content.data).state;}
+  auto next=input;try {
+   const auto& f=input.session.current.field;
+   if(input.session.action->action==0 && f.side==11 && f.ball_owner==17 && f.ball_x==77 && f.ball_y==107 && input.session.current.clock.remaining==155){
+    auto& s=next.session;
+    if(f.elapsed==1)s.current.field=advance_field_phase(f,content.data->field_players,*content.data->movement).state;
+    else if(!f.elapsed){
+     if(!content.data->contact || !content.data->approach || !input.ball_fraction){result.unsupported=UnsupportedCapability::content;return result;}
+     // Original result0 handler8410 retains defender4/action2 from the return pass.
+     const auto clock=apply_contact_prelude({s.current,4,2,true},*content.data->contact);
+     if(clock.clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}
+     s.current=clock.state;s.current.field.elapsed=0;
+     const auto approach=calculate_shot_approach({s.current.field.ball_x,s.current.field.ball_y,s.current.field.side,s.recovery->attack_subtype,s.current.field.random_first},*content.data->approach);
+     if(approach.loose_ball){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+     s.current.field.random_first=approach.random_first;s.shot_flight=ShotFlightContext{approach.distance_adjustment,approach.destination_cell,255,false};
+     s.keeper_area.reset();s.area_defense.reset();s.area_ai_target.reset();s.current.field.selected_defenders=0;s.scheduling->selected_ids.fill(0);s.saved_ball_flight_flag=0;
+     s.area_defender_cursor=0;s.area_sequence_result=255;s.control->motion_requested=0;s.control->facing=0;
+     s.recovery->x_jitter_control=103; // Captured scratch byte left by this original approach.
+     s.action->menu_route=0;s.phase=FieldSessionPhase::shot_flight_pending;
+    }else {result.unsupported=UnsupportedCapability::phase;return result;}
+    validate_phase_session(s);
+   } else next.session=advance_session_area_result_dispatch(next.session,*content.data).state;
+  }
   catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
 

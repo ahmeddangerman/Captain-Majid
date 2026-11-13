@@ -139,6 +139,55 @@ static void verify_equalizer_interception_control(const captain::MatchRuntimeSta
  auto shot=step_match(attack.state,client_input(attack.state,0,0),content);
  if(shot.unsupported)throw std::runtime_error("Interceptor goal-area shot preparation unsupported");
  {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-area-prepared.cmjsession",std::ios::binary);write_phase_session(file,shot.state.session);}
+ auto clocked=step_match(shot.state,client_input(shot.state,0,0),content);
+ if(clocked.unsupported || clocked.state.session.current.clock.remaining!=155 || clocked.state.session.current.field.elapsed!=1)
+  throw std::runtime_error("Unopposed interceptor shot clock differs from original");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-shot-clock.cmjsession",std::ios::binary);write_phase_session(file,clocked.state.session);}
+ auto moved=step_match(clocked.state,client_input(clocked.state,0,0),content);
+ if(moved.unsupported || moved.state.session.current.field.elapsed)throw std::runtime_error("Unopposed interceptor shot movement differs");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-shot-field.cmjsession",std::ios::binary);write_phase_session(file,moved.state.session);}
+ auto flight=step_match(moved.state,client_input(moved.state,0,0),content);
+ if(flight.unsupported || flight.state.session.phase!=FieldSessionPhase::shot_flight_pending)throw std::runtime_error("Unopposed shot approach unsupported");
+ flight=step_match(flight.state,client_input(flight.state,0,0),content);
+ if(flight.unsupported || flight.state.session.phase!=FieldSessionPhase::ball_advance_ready)throw std::runtime_error("Unopposed shot flight setup unsupported");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-shot-flight.cmjsession",std::ios::binary);write_phase_session(file,flight.state.session);}
+ unsigned boundary=1;
+ for(unsigned i=0;i<40 && flight.state.session.phase!=FieldSessionPhase::ball_arrival_callback;++i){
+  flight=step_match(flight.state,client_input(flight.state,0,0),content);
+  if(flight.unsupported)throw std::runtime_error("Interceptor shot flight stopped");
+  if(flight.state.session.phase==FieldSessionPhase::ball_advance_ready){
+   ++boundary;std::ofstream file(std::string(prefix)+"-equalizer17-shot-flight-"+std::to_string(boundary)+".cmjsession",std::ios::binary);write_phase_session(file,flight.state.session);
+  }
+ }
+ if(flight.state.session.phase!=FieldSessionPhase::ball_arrival_callback || boundary!=5)throw std::runtime_error("Interceptor shot arrival differs");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-shot-arrival.cmjsession",std::ios::binary);write_phase_session(file,flight.state.session);}
+ auto keeper=step_match(flight.state,client_input(flight.state,0,0),content);
+ if(keeper.unsupported)throw std::runtime_error("Interceptor shot keeper entry unsupported");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-shot-keeper.cmjsession",std::ios::binary);write_phase_session(file,keeper.state.session);}
+ keeper=step_match(keeper.state,client_input(keeper.state,0,0),content);
+ if(keeper.unsupported || keeper.state.session.phase!=FieldSessionPhase::keeper_presentation_pending)throw std::runtime_error("Interceptor goalkeeper menu entry unsupported");
+ for(unsigned i=0;i<6 && keeper.state.session.phase==FieldSessionPhase::keeper_presentation_pending;++i){
+  const std::uint8_t pressed=i==1 ? 1 : i==2 ? 128 : 0;
+  keeper=step_match(keeper.state,client_input(keeper.state,0,pressed),content);
+  if(keeper.unsupported)throw std::runtime_error("Interceptor goalkeeper menu stopped");
+  std::ofstream file(std::string(prefix)+"-equalizer17-keeper-menu-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(file,keeper.state.session);
+ }
+ if(keeper.state.session.phase!=FieldSessionPhase::keeper_decided || !keeper.state.session.keeper_decision)throw std::runtime_error("Interceptor keeper result missing");
+ std::cout<<"Interceptor goalkeeper result "<<unsigned(keeper.state.session.keeper_decision->result_code)<<'\n';
+ if(keeper.state.session.keeper_decision->result_code!=2)throw std::runtime_error("Interceptor keeper did not punch as observed");
+ auto punched=step_match(keeper.state,client_input(keeper.state,0,0),content);
+ if(punched.unsupported)throw std::runtime_error("Interceptor goalkeeper punch unsupported");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-keeper-punched.cmjsession",std::ios::binary);write_phase_session(file,punched.state.session);}
+ auto recovered=step_match(punched.state,client_input(punched.state,0,0),content);
+ if(recovered.unsupported)throw std::runtime_error("Interceptor punched-ball recovery unsupported");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-keeper-recovered.cmjsession",std::ios::binary);write_phase_session(file,recovered.state.session);}
+ std::cout<<"Punched ball phase "<<static_cast<unsigned>(recovered.state.session.phase)<<" owner "<<unsigned(recovered.state.session.current.field.ball_owner)<<'\n';
+ for(const auto* name:{"handoff","area"}){
+  recovered=step_match(recovered.state,client_input(recovered.state,0,0),content);
+  if(recovered.unsupported)throw std::runtime_error(std::string("Rebound continuation stopped at ")+name);
+  std::ofstream file(std::string(prefix)+"-equalizer19-rebound-"+name+".cmjsession",std::ios::binary);write_phase_session(file,recovered.state.session);
+ }
+ roundtrip(recovered.state);
 }
 static void continue_player14_interception(const captain::MatchRuntimeState& initial,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
  using namespace captain;

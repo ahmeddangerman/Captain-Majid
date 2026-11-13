@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-14 - Unopposed shot, goalkeeper punch and rebound verified
+
+Continued player17's power7 shot through no-defender dispatch, all five flight boundaries, goalkeeper entry and result2 punch. Original/native represented states match through player19 recovering the rebound at (60,140), clock154, and entering goal-area phase65. Rebound goal-area state saves/reloads byte-identically. Added durable comparisons for these shot/save/rebound boundaries to check_confirmed_pass_contact.py via --shot-original. Full Windows build, all65 tests, continuous replay and original comparisons passed.
+
+The no-defender prefix uses one tick (90DD/table9109), not the earlier defended prefix. The subsequent result0 handler8410 retains defender4/action2 and calls9095, charging another tick before flight without another field-movement round. A continuous original execution from the earlier one-two decision independently confirmed clocks155/155/154 at shot clock/field/keeper boundaries, so this is not an isolated-observer stack artifact. Runtime preserves the observed scratch/facing bytes and remains bounded to this captured sequence. Private evidence: interceptor17-area-shot-original, including continuous-shot-clock/field/keeper.ram. Current native state is equalizer-continuous-verified-equalizer19-rebound-area.cmjsession. Next trace player19 goal-area defensive selection and attacking choice; original state has route1, random62/69, ball variant1. Overall progress unmeasured; complete playable match and live desktop acceptance remain unfinished. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-14 - Interceptor goal-area shot chosen and prepared
 
 Original selects no defenders at player17 (77,107), clock156. Native now reaches choices-done, samples seed697902401 (random65/37), chooses action0 subtype1, and prepares power7. All represented states match, including the empty selection. The reusable checker now verifies twelve one-two/goal-area boundaries plus the six defended-pass boundaries. Windows build, all65 CTests and continuous original comparison pass. This remains a bounded captured runtime sequence, not generalized AI or live presentation.

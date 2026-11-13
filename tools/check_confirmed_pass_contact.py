@@ -16,6 +16,7 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--next-observation',type=Path)
     parser.add_argument('--one-two-original',type=Path)
+    parser.add_argument('--shot-original',type=Path)
     args = parser.parse_args()
     rom = args.rom.read_bytes()
     if len(rom) != 393232 or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
@@ -109,6 +110,31 @@ def main():
             raw = (args.one_two_original / (boundary + '.ram')).read_bytes()
             compare_represented(native,export_session(raw,0),False,'interceptor one-two',boundary)
         print('Twelve one-two/goal-area boundaries match through player17 shot preparation.')
+    if args.shot_original:
+        pairs=[('shot-clock','83f5-1'),('shot-field','83f8-1'),('shot-flight','e773-1')]
+        pairs += [(f'shot-flight-{i}',f'e773-{i}') for i in range(2,6)]
+        pairs += [('shot-arrival','e7cc-1'),('shot-keeper','dd1c-1')]
+        pairs += [(f'keeper-menu-{i}',f'keeper-{name}') for i,name in enumerate(('open','selected','compared'))]
+        pairs += [('keeper-punched','keeper-saved'),('keeper-recovered','keeper-recovered')]
+        for suffix, boundary in pairs:
+            raw=bytearray((args.shot_original/(boundary+'.ram')).read_bytes())
+            keeper_selected=bool(raw[0x600] and raw[0x601]==0)
+            # Legacy field exporter rejects keeper IDs; restore the actual ID
+            # in the represented scheduling slot after exporting the prefix.
+            if keeper_selected:raw[0x601]=10
+            expected=bytearray(export_session(raw,0))
+            if keeper_selected:expected[309]=0
+            native=Path(str(args.control_prefix)+'-equalizer17-'+suffix+'.cmjsession').read_bytes()
+            compare_represented(native,expected,False,'interceptor shot',boundary)
+        for boundary in ('handoff','area'):
+            raw=bytearray((args.shot_original/('rebound-'+boundary+'.ram')).read_bytes())
+            keeper_selected=bool(raw[0x600] and raw[0x601]==0)
+            if keeper_selected:raw[0x601]=10
+            expected=bytearray(export_session(raw,0))
+            if keeper_selected:expected[309]=0
+            native=Path(str(args.control_prefix)+'-equalizer19-rebound-'+boundary+'.cmjsession').read_bytes()
+            compare_represented(native,expected,False,'rebound',boundary)
+        print('Shot flight, keeper result2, rebound recovery and player19 goal-area handoff match.')
     print('Six represented boundaries match; opponent player17 controls at (118,107), clock163, and continues control.')
     print(f'{count} further movement/clock/control boundaries match through player17 AI decision, clock161.')
 
