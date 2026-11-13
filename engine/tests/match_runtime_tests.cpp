@@ -233,6 +233,25 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream corner_recovered_file(std::string(prefix)+"-corner19-player13-control.cmjsession",std::ios::binary);write_phase_session(corner_recovered_file,corner_recovered->state.session);
  std::ostringstream recovered_save(std::ios::binary);write_match_save(recovered_save,corner_recovered->state,identity);std::istringstream recovered_in(recovered_save.str(),std::ios::binary);auto recovered_restore=std::make_unique<MatchRuntimeState>(load_match_save(recovered_in,identity));
  if(recovered_restore->session.phase!=FieldSessionPhase::control_ready || recovered_restore->session.current.field.ball_owner!=13 || recovered_restore->session.area_defender_cursor!=1)throw std::runtime_error("Corner player13 control did not roundtrip");
+ std::ofstream journey13(std::string(prefix)+"-corner13-journey.txt");
+ for(int i=0;i<150;++i){const auto phase=recovered_restore->session.phase;if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending && phase!=FieldSessionPhase::ai_cell_decision)break;
+  auto next=std::make_unique<MatchStepResult>(step_match(*recovered_restore,client_input(*recovered_restore,0,0),content));
+  journey13<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next->state.demo_rng&255)<<' '<<static_cast<unsigned>((next->state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<next->state.demo_rng<<'\n';journey13.flush();
+  if(next->unsupported)break;std::ofstream f(std::string(prefix)+"-corner13-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*recovered_restore=std::move(next->state);
+ }
+ if(recovered_restore->session.phase!=FieldSessionPhase::field || !recovered_restore->defense_menu || !recovered_restore->defense_menu->ai_pass_target || recovered_restore->defense_menu->ai_pass_target->recipient!=16 || recovered_restore->defense_menu->ai_pass_target->cell!=31)throw std::runtime_error("Corner player13 pass choice differs");
+ std::ofstream pass13_log(std::string(prefix)+"-corner13-pass.txt");
+ for(int i=0;i<50;++i){auto next=std::make_unique<MatchStepResult>(step_match(*recovered_restore,client_input(*recovered_restore,0,0),content));pass13_log<<i<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->state.defense_menu ? static_cast<int>(next->state.defense_menu->stage) : -1)<<'\n';pass13_log.flush();if(next->unsupported)break;std::ofstream f(std::string(prefix)+"-corner13-pass-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*recovered_restore=std::move(next->state);if(recovered_restore->session.phase!=FieldSessionPhase::field)break;}
+ if(recovered_restore->session.phase!=FieldSessionPhase::keeper_interaction || recovered_restore->session.current.field.ball_owner!=16)throw std::runtime_error("Corner player13 pass reception stopped");
+ auto area16=std::make_unique<MatchStepResult>(step_match(*recovered_restore,client_input(*recovered_restore,0,0),content));
+ if(area16->unsupported)throw std::runtime_error(std::string("Corner player16 area setup stopped: ")+capability_name(*area16->unsupported));
+ if(area16->state.session.phase!=FieldSessionPhase::keeper_area_prepared || area16->state.session.current.field.selected_defenders)throw std::runtime_error("Corner player16 area differs");
+ std::ofstream area16_file(std::string(prefix)+"-corner16-area-prepared.cmjsession",std::ios::binary);write_phase_session(area16_file,area16->state.session);
+ std::ostringstream area16_save(std::ios::binary);write_match_save(area16_save,area16->state,identity);std::istringstream area16_in(area16_save.str(),std::ios::binary);auto area16_restore=std::make_unique<MatchRuntimeState>(load_match_save(area16_in,identity));
+ if(area16_restore->session.phase!=FieldSessionPhase::keeper_area_prepared || area16_restore->session.current.field.ball_owner!=16)throw std::runtime_error("Corner player16 area did not roundtrip");
+
+
+
 
 
 

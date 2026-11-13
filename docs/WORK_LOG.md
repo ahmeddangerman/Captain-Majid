@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Player13 passes into player16's goal area
+
+Continued the controlled player13 possession from clock5 to clock4. The original preserves a defender cursor from the earlier contact; the engine now accepts it through movement, the AI decision and pass. Player13 selects an ordinary pass to player16. Native and original represented movement, choice, preparation, flight and goal-area entry match; player16 reaches (68,141), clock4, with no preliminary cell defenders. The goal-area setup saves and reloads.
+
+The sampled pass uses the original high-bit defender threshold and this particular goal-area handoff is bounded to the captured state. Windows CMake build, all 65 tests, private replay and original comparisons passed. Inputs/random samples are controlled and presentation waits acknowledged; live NMI, rendering, audio and frame timing remain unverified. Next trace the full defensive lineup and the attack. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player13 wins the relocated ball
 
 After defender3's result3 and the contact field update, the controlled original runs a scripted relocation to (76,84), then a four-step loose-ball race. The engine reproduces the observed two-round contest between players10 and 13; opposing player13 wins. The native race field, including player coordinates and fractional bytes, matches the original, as does the resulting player13 control state at clock5. That control state saves and reloads.

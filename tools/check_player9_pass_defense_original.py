@@ -399,6 +399,22 @@ if (original[0x441],original[0x5fb],original[0x635],original[0x637])!=(13,11,76,
 if (a.trace/'native-corner19-race-field.cmjstate').read_bytes()!=export_state(original):raise ValueError('Corner loose-ball race field differs')
 original=(a.player3_shot/'corner19-attack-e145-1.bin').read_bytes()
 compare_represented((a.trace/'native-corner19-player13-control.cmjsession').read_bytes(),export_session(original,0),False,'corner player13','control')
+raw=original
+for line in (a.trace/'native-corner13-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Corner player13 continuation stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ if phase==12:
+  raw=(a.player3_shot/'corner13-decision-e1b2-1.bin').read_bytes()
+  if (raw[0xe2],raw[0xe3],raw[0x43b],raw[0x5fc],raw[0x638])!=(first,second,1,16,31):raise ValueError('Unexpected corner player13 pass choice')
+ else:observed,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-corner13-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'corner player13',str(i))
+for index,pc in ((0,'e1cb-1'),(1,'80ed-1'),(3,'c612-1'),(4,'de64-1'),(5,'e773-1'),(19,'8b4a-1')):
+ original=(a.player3_shot/f'corner13-decision-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-corner13-pass-{index}.cmjsession').read_bytes(),export_session(original,0),False,'corner player13 pass',pc)
+original=(a.player3_shot/'corner13-decision-8b73-1.bin').read_bytes()
+compare_represented((a.trace/'native-corner16-area-prepared.cmjsession').read_bytes(),export_session(original,0),False,'corner player16','area setup')
+
 
 
 
