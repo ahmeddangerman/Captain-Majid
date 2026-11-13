@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Player19 goal-area shot choice
+
+After the controlled four-defender choices, the original generic goal-area AI selects candidate0, producing shot action0 subtype1. Native selection uses the extracted candidate table and matches the original represented state at the choice and preparation boundaries. The shot preparation costs 90, and its state saves and reloads. The continuation is restricted to the captured position, choices and random sample.
+
+The original trace continues to a defender3 contact and a result3 at clock5, but the engine has not yet reproduced that contact. Windows CMake build, all 65 tests, private replay and original comparisons passed for the implemented boundaries. Random samples and presentation acknowledgements are controlled; live NMI, rendering, audio and hardware timing remain unverified. Next reproduce and verify that contact and ownership. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Corner defensive menu choices
 
 Continued the player19 goal-area prompt through four controlled defensive choices. The original and native agree at each sampled menu input, confirmation and registration: direction1 chooses action4 for goalkeeper0 and action3 for field players3, 4 and 7, producing [4,3,3,3]. Represented state, choice arrays, subtypes and blink state match; the completed prompt saves and reloads.

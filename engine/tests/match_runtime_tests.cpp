@@ -196,6 +196,18 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(defense_restored->session.phase!=FieldSessionPhase::keeper_area_defense_complete || defense_restored->session.area_defense->actions!=std::array<std::uint8_t,4>{4,3,3,3})throw std::runtime_error("Corner defense choices differ");
  std::ostringstream choices_save(std::ios::binary);write_match_save(choices_save,*defense_restored,identity);std::istringstream choices_in(choices_save.str(),std::ios::binary);auto choices_restored=std::make_unique<MatchRuntimeState>(load_match_save(choices_in,identity));
  if(choices_restored->session.phase!=FieldSessionPhase::keeper_area_defense_complete || choices_restored->session.area_defense->actions!=std::array<std::uint8_t,4>{4,3,3,3})throw std::runtime_error("Corner defense choices did not roundtrip");
+ auto area_attack=std::make_unique<MatchStepResult>(step_match(*choices_restored,client_input(*choices_restored,0,0),content));
+ if(area_attack->unsupported)throw std::runtime_error(std::string("Corner attack choice stopped: ")+capability_name(*area_attack->unsupported));
+ if(area_attack->state.session.phase!=FieldSessionPhase::keeper_area_ai_chosen || area_attack->state.session.action->action!=0 || area_attack->state.session.recovery->attack_subtype!=1)throw std::runtime_error("Corner attack choice differs");
+ std::ofstream attack_file(std::string(prefix)+"-corner19-attack-choice.cmjsession",std::ios::binary);write_phase_session(attack_file,area_attack->state.session);
+ auto attack_prepared=std::make_unique<MatchStepResult>(step_match(area_attack->state,client_input(area_attack->state,0,0),content));
+ if(attack_prepared->unsupported)throw std::runtime_error(std::string("Corner shot preparation stopped: ")+capability_name(*attack_prepared->unsupported));
+ if(attack_prepared->state.session.phase!=FieldSessionPhase::keeper_area_attack_prepared || attack_prepared->state.session.area_ai_target->cost!=90)throw std::runtime_error("Corner shot preparation differs");
+ std::ofstream prepared_file(std::string(prefix)+"-corner19-attack-prepared.cmjsession",std::ios::binary);write_phase_session(prepared_file,attack_prepared->state.session);
+ std::ostringstream attack_save(std::ios::binary);write_match_save(attack_save,attack_prepared->state,identity);std::istringstream attack_in(attack_save.str(),std::ios::binary);auto attack_restored=std::make_unique<MatchRuntimeState>(load_match_save(attack_in,identity));
+ if(attack_restored->session.phase!=FieldSessionPhase::keeper_area_attack_prepared || attack_restored->session.area_ai_target->cost!=90)throw std::runtime_error("Corner shot preparation did not roundtrip");
+
+
 
 
 

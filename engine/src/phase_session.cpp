@@ -363,7 +363,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_action6=phase==104 || (phase>=106 && phase<=110) || phase==113;
     const bool area_action6_race=(phase>=106 && phase<=110) || phase==113;
     const bool area_setup=phase==65 || phase==105;
-    const bool corner19_area=(phase==65 || phase==67 || (phase>=69 && phase<=72)) && state.current.field.side==11 && state.current.field.ball_owner==19 && state.current.field.ball_x==52 && state.current.field.ball_y==124 && state.current.clock.remaining==6 && state.action && state.action->action==1 && state.recovery && state.recovery->ball_variant==1;
+    const bool corner19_area=(phase==65 || phase==67 || (phase>=69 && phase<=72) || phase==78 || phase==79) && state.current.field.side==11 && state.current.field.ball_owner==19 && state.current.field.ball_x==52 && state.current.field.ball_y==124 && state.current.clock.remaining==6 && state.action && (state.action->action==1 || ((phase==78 || phase==79) && state.action->action==0)) && state.recovery && state.recovery->ball_variant==1;
     const bool player6_area_route=(phase==7 || phase==65 || phase==18 || phase==19 || (phase>=474 && phase<=476)) && state.current.field.side==0 && state.current.field.ball_owner==6 && state.current.field.ball_x==180 && state.current.field.ball_y==156 && !state.current.field.selected_defenders && ((phase==18 || phase==19 || (phase>=474 && phase<=476)) || (state.current.field.random_first==0 && state.current.field.random_second==94)) && state.recovery && state.recovery->opposing_player==16 && state.recovery->ball_variant==2 && state.area_defender_cursor==1 && state.saved_ball_flight_flag==1;
     const bool area_menu=(phase>=66 && phase<=94) || ((phase==18 || phase==19 || (phase>=485 && phase<=492) || (phase>=478 && phase<=483) || (phase>=474 && phase<=476) || (phase>=467 && phase<=472)) && state.keeper_area);
     if((phase>=474 && phase<=476) && (!player6_area_route || !state.action || state.action->action || state.action->power!=9 || state.recovery->attack_subtype!=2 || state.current.field.random_first!=(phase==476 ? 0 : 34) || state.current.field.random_second!=217))throw std::invalid_argument("Invalid player6 area shot preparation");
@@ -685,7 +685,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         if(phase==80 && state.control->motion_requested!=(state.recovery->ball_variant==1 ? 2 : 0))throw std::invalid_argument("Area defense entry needs acknowledged motion request");
         if(target.cost>1023 || (phase==78 && target.cost))throw std::invalid_argument("Invalid prepared area cost");
         if((state.action->cursor!=state.current.field.selected_defenders && !empty_attacking_area) ||
-           (state.action->action!=1 && state.action->action!=4 && state.action->action!=6) ||
+           (state.action->action!=1 && state.action->action!=4 && state.action->action!=6 && !corner19_area) ||
            (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2) ||
            (state.action->action==1 ? (target.recipient<12 || target.recipient>21 || subtype) :
             (target.recipient || target.cell || (state.action->action==4 ? subtype!=0 : subtype>1))))

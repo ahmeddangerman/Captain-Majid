@@ -368,4 +368,16 @@ for line in (a.trace/'native-corner19-menu.txt').read_text().splitlines():
  expected_choices=bytes((1,*actions,*subtypes,menu[0x620],menu[0x1e] if phase in (69,70) and pressed==128 and i!=13 else 0))
  if actual[372:383]!=expected_choices:raise ValueError(f'Corner defensive menu choices differ at {i}: {list(actual[372:383])} vs {list(expected_choices)}')
 
+original=(a.player3_shot/'corner19-attack-829d-1.bin').read_bytes()
+if (original[0x43b],original[0x43c],original[0xe2],original[0xe3])!=(0,1,221,123):raise ValueError('Unexpected corner goal-area attack')
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner19-attack-choice.cmjsession').read_bytes(),expected,False,'corner player19','attack choice')
+original=(a.player3_shot/'corner19-attack-82a0-1.bin').read_bytes()
+if original[0x43f]!=90:raise ValueError('Unexpected corner shot cost')
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner19-attack-prepared.cmjsession').read_bytes(),expected,False,'corner player19','attack preparation')
+
+
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)
