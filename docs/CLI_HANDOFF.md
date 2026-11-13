@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Home player5 reaches defended pass target
+
+After the 1-1 equalizer, continued the controlled replay through 39 movement, clock and field steps. Original and native represented states match at each step, at contact with defender17, at the human action menu, and through selection and initialization of an ordinary pass target. Player5 is at (119,108), clock165; the target state saves and reloads. No engine behavior changed in this verification increment.
+
+Windows CMake build, all 65 tests, the continuous private replay and original comparisons passed. Random inputs and presentation acknowledgements are controlled; real rendering, NMI, audio and timing remain unverified. The pass has not yet been aimed, resolved against the defender or followed to possession. Next trace those boundaries in the original and continue the native replay. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-13 - Second-half equalizer and home kickoff
 
 Continued player17's controlled goal-area shot through its two-tick clock update, field movement, four flight boundaries, goalkeeper menu and original result0. Native and original represented states agree through goal registration: the score becomes1-1. The subsequent acknowledged goal cleanup, kickoff formation, receiver, ball placement, handoff and control also match; home player5 controls at (108,108), clock168. The goal and kickoff control save and reload. Corrected stale move flags during the sampled shot preparation and added a reusable private-output original shot observer.

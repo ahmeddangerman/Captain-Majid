@@ -672,6 +672,34 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(equalizer_kickoff->session.phase!=FieldSessionPhase::control_ready || equalizer_kickoff->session.current.field.side!=0 || equalizer_kickoff->session.current.field.ball_owner!=5 || equalizer_kickoff->session.current.field.ball_x!=108 || equalizer_kickoff->session.current.field.ball_y!=108)throw std::runtime_error("Second-half equalizer kickoff control differs");
  std::ostringstream equalizer_kickoff_save(std::ios::binary);write_match_save(equalizer_kickoff_save,*equalizer_kickoff,identity);std::istringstream equalizer_kickoff_in(equalizer_kickoff_save.str(),std::ios::binary);
  if(load_match_save(equalizer_kickoff_in,identity).session.current.field.ball_owner!=5)throw std::runtime_error("Second-half equalizer kickoff did not roundtrip");
+ std::ofstream equalizer_journey_log(std::string(prefix)+"-equalizer5-journey.txt");
+ for(int i=0;i<200;++i) {
+  const auto phase=equalizer_kickoff->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+  const std::uint8_t held=phase==FieldSessionPhase::control_ready ? 1 : 0;
+  const auto next=step_match(*equalizer_kickoff,client_input(*equalizer_kickoff,held,0),content);
+  equalizer_journey_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<unsigned(held)<<' '<<unsigned(next.state.demo_rng&255)<<' '<<unsigned((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<'\n';equalizer_journey_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-equalizer5-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*equalizer_kickoff=next.state;
+ }
+ if(equalizer_kickoff->session.phase!=FieldSessionPhase::field_contact_pending || equalizer_kickoff->session.current.field.ball_owner!=5 || equalizer_kickoff->session.current.field.selected_defenders!=1 || equalizer_kickoff->session.scheduling->selected_ids[0]!=17)throw std::runtime_error("Equalizer player5 contact differs");
+ const auto equalizer_contact=step_match(*equalizer_kickoff,client_input(*equalizer_kickoff,0,0),content);
+ if(equalizer_contact.unsupported || equalizer_contact.state.session.phase!=FieldSessionPhase::human_action_menu)throw std::runtime_error("Equalizer player5 action menu stopped");
+ std::ofstream equalizer_contact_log(std::string(prefix)+"-equalizer5-contact.txt");equalizer_contact_log<<(equalizer_contact.unsupported ? static_cast<int>(*equalizer_contact.unsupported) : -1)<<' '<<static_cast<unsigned>(equalizer_contact.state.session.phase)<<' '<<equalizer_contact.state.demo_rng<<'\n';
+ if(!equalizer_contact.unsupported){std::ofstream f(std::string(prefix)+"-equalizer5-contact.cmjsession",std::ios::binary);write_phase_session(f,equalizer_contact.state.session);}
+ auto equalizer_menu=std::make_unique<MatchRuntimeState>(equalizer_contact.state);
+ std::ofstream equalizer_choice_log(std::string(prefix)+"-equalizer5-choice.txt");
+ for(int i=0;i<3;++i){
+  const auto pressed=static_cast<std::uint8_t>(i==0?2:i==1?128:0);
+  auto next=step_match(*equalizer_menu,client_input(*equalizer_menu,0,pressed),content);
+  equalizer_choice_log<<i<<' '<<unsigned(pressed)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<next.state.demo_rng<<'\n';equalizer_choice_log.flush();
+  if(next.unsupported)throw std::runtime_error(std::string("Equalizer player5 pass choice stopped: ")+capability_name(*next.unsupported));
+  std::ofstream f(std::string(prefix)+"-equalizer5-choice-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*equalizer_menu=std::move(next.state);
+ }
+ if(equalizer_menu->session.phase!=FieldSessionPhase::ordinary_human_pass_target)throw std::runtime_error("Equalizer player5 pass target stopped");
+ std::ostringstream equalizer_target_save(std::ios::binary);write_match_save(equalizer_target_save,*equalizer_menu,identity);std::istringstream equalizer_target_in(equalizer_target_save.str(),std::ios::binary);
+ const auto equalizer_target_restored=load_match_save(equalizer_target_in,identity);
+ if(equalizer_target_restored.session.phase!=FieldSessionPhase::ordinary_human_pass_target || equalizer_target_restored.session.current.field.ball_owner!=5)throw std::runtime_error("Equalizer player5 pass target did not roundtrip");
 
 
 

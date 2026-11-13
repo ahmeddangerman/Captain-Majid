@@ -747,6 +747,30 @@ for name in ('formation','receiver','ball','handoff','control'):
  expected=bytearray(export_session(exportable,0))
  if raw[0x600] and raw[0x601]==0:expected[309]=0
  compare_represented((a.trace/f'native-interval17-goal-{name}.cmjsession').read_bytes(),expected,False,'interval equalizer kickoff',name)
+raw=equalizer_kickoff['control']
+for line in (a.trace/'native-equalizer5-journey.txt').read_text().splitlines():
+ i,phase,held,first,second,next_phase,unsupported=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Equalizer player5 journey stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ observation,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(held,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-equalizer5-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'equalizer player5 journey',str(i))
+if observation['boundary']!='field_contact_pending' or (raw[0x441],raw[0x600],raw[0x601])!=(5,1,17):raise ValueError('Unexpected original equalizer contact')
+_,_,seed=map(int,(a.trace/'native-equalizer5-contact.txt').read_text().split())
+injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
+observation,raw=trace_menu(rom[16:262160],injected)
+if observation['boundary']!='human_action_menu':raise ValueError('Unexpected original equalizer action menu')
+compare_represented((a.trace/'native-equalizer5-contact.cmjsession').read_bytes(),export_session(raw,0),False,'equalizer player5','contact menu')
+equalizer_opened=raw
+for line in (a.trace/'native-equalizer5-choice.txt').read_text().splitlines():
+ i,pressed,unsupported,phase,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Equalizer player5 pass choice stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
+ if i<2:_,raw=trace_menu(rom[16:262160],injected,'poll',pressed)
+ else:
+  target_seed=bytearray(equalizer_opened);target_seed[0xe2:0xe4]=injected[0xe2:0xe4]
+  carrier=0x300+12*5;x=target_seed[carrier+5]|target_seed[carrier+6]<<8;y=target_seed[carrier+7]|target_seed[carrier+8]<<8
+  raw=original_target(rom[16:262160],target_seed,x,y,return_ram=True)
+ compare_represented((a.trace/f'native-equalizer5-choice-{i}.cmjsession').read_bytes(),export_session(raw,0),i==2,'equalizer player5 choice',str(i))
 
 
 
