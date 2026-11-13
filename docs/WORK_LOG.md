@@ -1,5 +1,9 @@
 # Development log
 
+## 2026-11-13 - Defensive choice registration survey
+
+Extended the private original comparison tool to cover both captured opponent-area lineups and constructed home-area lineups, and restored its Windows executable path. Across 1,793 ordinary action-registration and return cases, represented snapshots and ordered presentation requests matched the original. The additional opponent-area cases cover goalkeeper and field defenders, actions3..6 and five confirm-button combinations. This checks registration up to the next menu boundary, not special moves, stamina charging, AI, rendering or live timing. No engine behavior changed in this increment. The Windows build and all 65 tests passed at the preceding engine checkpoint. Next investigate the period-end scene and remove evidenced obstacles to a continuous match. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/area-registration-20261113-review2.
+
 ## 2026-11-13 - Goalkeeper defense directions and presentation
 
 A broader opponent-area survey found that the original overrides the route direction table when selected defender ID is zero, uses a separate goalkeeper icon table, and selects title 13 for that goalkeeper. Other defenders use their route's direction and title tables. Corrected polling, backward navigation, prompt and registration presentation; the earlier description of a shared goalkeeper row was incomplete. The optional CMJSHOTf private pack extends e with the original four directions and seven icons. Older packs remain readable but do not supply this goalkeeper-menu capability.

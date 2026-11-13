@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Compare ordinary defensive registration and full-prefix return to private ROM."""
-import argparse, hashlib, json, re, subprocess
+import argparse, hashlib, json, os, re, subprocess
 from pathlib import Path
-from check_area_defense_poll_original import defense_entries, poll_snapshot
+from check_area_defense_poll_original import defense_entries, opponent_entries, poll_snapshot
 from trace_area_defense_poll import trace_defense_poll
 from verify_action_strength import PAYLOAD_SHA256
 
@@ -10,13 +10,14 @@ from verify_action_strength import PAYLOAD_SHA256
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
+    p.add_argument('--opponent-menu-dir',type=Path,help='Also check captured opponent-area lineups')
     a=p.parse_args();rom=a.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
     out=a.output_dir.resolve()
     if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private output must stay outside checkout')
     out.mkdir(parents=True,exist_ok=False);prg=rom[16:262160]
     seeds=dict(defense_entries(prg,a.keeper_ram.read_bytes()))
-    binary=str(Path('build/captain-phase-session').resolve());pack=str(a.pack.resolve());results=[]
+    binary=str(Path('build/captain-phase-session.exe' if os.name=='nt' else 'build/captain-phase-session').resolve());pack=str(a.pack.resolve());results=[]
 
     def compare(name,entry,pressed,preparation=False,source=None):
         phase=71 if preparation else 70
@@ -44,6 +45,15 @@ def main():
                     entry[0x601:0x605]=bytes(ids);entry[0x60b:0x60f]=bytes([4]*4)
                     entry[0x60b+slot]=action;entry[0x442]=player;entry[0x1e]=pressed
                     compare(f's{slot}-p{player}-a{action}-b{pressed}',entry,pressed,True)
+
+    if a.opponent_menu_dir:
+        opponents=dict(opponent_entries(a.opponent_menu_dir))
+        for name in ('keeper','field','back','last'):
+            for action in range(3,7):
+                for pressed in (128,144,192,208,193):
+                    entry=bytearray(opponents[name]);slot=entry[0x61e]
+                    entry[0x60b+slot]=action;entry[0x442]=entry[0x601+slot];entry[0x1e]=pressed
+                    compare(f'opponent-{name}-a{action}-b{pressed}',entry,pressed,True)
 
     # Last-slot waits have count1..4; A exits, B returns, idle retains UI state.
     for count in range(1,5):
@@ -74,7 +84,7 @@ def main():
     # Unsupported paths must leave no capture behind; no special-menu bypass.
     rejected=[]
     missing_rules=a.pack.read_bytes()
-    if missing_rules[:8]in (b'CMJSHOTC',b'CMJSHOTD',b'CMJSHOTE',b'CMJSHOTF',b'CMJSHOTG',b'CMJSHOTH',b'CMJSHOTI',b'CMJSHOTJ',b'CMJSHOTK'):missing_rules=b'CMJSHOTB'+missing_rules[8:20088]
+    if missing_rules[:8] in tuple(b'CMJSHOT'+bytes((version,)) for version in b'CDEFGHIJKLMNOPQRSTUVWXYZabcdef'):missing_rules=b'CMJSHOTB'+missing_rules[8:20088]
     old_pack=out/'missing-option-rules.cmjpack';old_pack.write_bytes(missing_rules)
     for name,action,slot,pressed in (('missing-special-rules',2,0,128),('full-direction',4,3,129)):
         entry=bytearray(seeds['last']);entry[0x61e]=slot;entry[0x60b+slot]=action
@@ -85,7 +95,7 @@ def main():
         if not run.returncode or target.exists():raise RuntimeError(f'{name}: unsupported registration accepted')
         rejected.append(name)
     (out/'verification.json').write_text(json.dumps({'cases':results,'rejected':rejected,
-        'scope':'Constructed ordinary field actions3..6 across4 slots/10 player IDs/4 pressed samples, full-prefix count1..4 polls and one chained four-defender sequence. Complete represented snapshots and ordered requests compared. Starts D3D4 before stat loader or D3AB after sampled yield; stops D3A6 or bank26:8B8F. Host presentation/frame acknowledgements; no special options, stamina charge, AI, actual renderer/NMI/audio or area-action execution.'},indent=2)+'\n')
+        'scope':'Constructed ordinary field actions3..6 across4 slots/10 player IDs, full-prefix count1..4 polls and one chained four-defender sequence; optional captured opponent-area lineups include goalkeeper and field defenders. Complete represented snapshots and ordered requests compared. Starts D3D4 before stat loader or D3AB after sampled yield; stops D3A6 or bank26:8B8F. Host presentation/frame acknowledgements; no special options, stamina charge, AI, actual renderer/NMI/audio or area-action execution.'},indent=2)+'\n')
     print(f'{len(results)} ordinary defensive registration/return comparisons match: {out}')
 
 
