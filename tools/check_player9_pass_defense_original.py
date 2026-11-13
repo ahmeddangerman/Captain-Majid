@@ -499,6 +499,20 @@ if original[0x5fc]!=255:raise ValueError('Unexpected corner player5 free pass ta
 if original[0x60b]!=4:raise ValueError('Unexpected corner player5 area defender choice')
 record=(a.trace/'native-corner5-target-3.cmjsession').read_bytes()
 if record[-11]!=1 or record[-10]!=4:raise ValueError('Corner area defense choice differs')
+original=(a.player3_shot/'corner5-target-814b-1.bin').read_bytes()
+if (original[0x442],original[0x43d],original[0x612])!=(18,4,3):raise ValueError('Unexpected corner player5 area contact')
+contact=(a.trace/'native-corner5-area-contact.cmjsession').read_bytes()
+compare_represented(contact,export_session(original,0),True,'corner home player5','area contact')
+if contact[408]!=original[0x71] or contact[409]!=original[0x619] or contact[411]!=3:raise ValueError('Corner player5 contact numeric details differ')
+original=(a.player3_shot/'corner5-contact-clock.bin').read_bytes()
+if (original[0x5f7],original[0x5f8],original[0x5f9])!=(0,0,14):raise ValueError('Unexpected corner added-time boundary')
+compare_represented((a.trace/'native-corner5-added-time.cmjsession').read_bytes(),export_session(original,0),False,'corner player5','added time')
+for index,name in ((0,'clock'),(1,'presentation'),(2,'next')):
+ original=(a.player3_shot/f'corner5-contact-after-{name}.bin').read_bytes()
+ compare_represented((a.trace/f'native-corner5-added-resume-{index}.cmjsession').read_bytes(),export_session(original,0),False,'corner player5 added time',name)
+
+
+
 
 
 

@@ -60,7 +60,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool score36_human_pass=score25_human_pass && state.score && state.score->left_goals==3 && state.score->right_goals==6;
     const bool score25_shot=phase>=327 && phase<=330;
     const bool ordinary_human_target=phase>=331 && phase<=344;
-    const bool corner5_target=(phase>=331 && phase<=335) && state.current.field.side==0 && state.current.field.ball_owner==5 && state.current.field.ball_x==71 && state.current.field.ball_y==109 && state.current.clock.remaining==1 && state.action && state.action->menu_route==2 && state.keeper_area;
+    const bool corner5_target=(phase>=331 && phase<=337) && state.current.field.side==0 && state.current.field.ball_owner==5 && state.current.field.ball_x==71 && state.current.field.ball_y==109 && state.current.clock.remaining==1 && state.action && state.action->menu_route==2 && state.keeper_area;
     if (state.ordinary_pass_candidates && !ordinary_human_target)
         throw std::invalid_argument("Ordinary pass candidate context requires the target phase");
     if (bool(state.ordinary_pass_recipient) != (phase>=332 && phase<=344))
@@ -140,8 +140,8 @@ void validate_phase_session(const PhaseSessionState& state) {
             state.area_contact->cursor!=active_defender_cursor || state.area_contact->defense_action!=state.ordinary_pass_defenses->actions[active_defender_cursor] || (state.area_contact->defense_subtype && !(phase==340 && player4_deferred_presentation && state.area_contact->defense_subtype==128)) ||
             ((phase==336 || phase==339) && (state.area_contact->strength || state.area_contact->loss || state.area_contact->score)) ||
             ((phase==337 || phase==338 || phase==340 || phase==341 || phase==342 || phase==343 || phase==344) && state.area_contact->loss!=state.area_contact->strength/4) ||
-            (state.area_contact->result && !((phase==337 || (phase==340 && player4_deferred_presentation)) && state.area_contact->result==3) && !(phase==340 && state.area_contact->result==2 && state.area_defender_cursor==2 && state.recovery->opposing_player==14 && state.area_contact->defense_action==2 && state.current.field.side==0 && state.current.field.ball_owner==1 && state.current.field.selected_defenders==5) && !(((phase==337 || phase==338) && state.recovery->opposing_player==12 || (phase==340 || phase==341) && state.area_defender_cursor==1 && state.recovery->opposing_player==13) && state.area_contact->result==1 && state.current.field.side==0 && state.current.field.ball_owner==1 && state.current.field.selected_defenders==5 && state.area_contact->defense_action==1 && !state.area_contact->loss)) || state.area_contact->weakened || (!(player9_deferred_presentation || player4_deferred_presentation) && state.control->motion_requested) ||
-            (!(player9_deferred_presentation || player4_deferred_presentation) && ((state.control->facing!=64 && !(player3_left_facing && state.control->facing==0)) || state.control->last_carrier_cell!=128 || (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2)))))
+            (state.area_contact->result && !((phase==337 || (phase==340 && player4_deferred_presentation)) && state.area_contact->result==3) && !(phase==340 && state.area_contact->result==2 && state.area_defender_cursor==2 && state.recovery->opposing_player==14 && state.area_contact->defense_action==2 && state.current.field.side==0 && state.current.field.ball_owner==1 && state.current.field.selected_defenders==5) && !(((phase==337 || phase==338) && state.recovery->opposing_player==12 || (phase==340 || phase==341) && state.area_defender_cursor==1 && state.recovery->opposing_player==13) && state.area_contact->result==1 && state.current.field.side==0 && state.current.field.ball_owner==1 && state.current.field.selected_defenders==5 && state.area_contact->defense_action==1 && !state.area_contact->loss)) || state.area_contact->weakened || (!(player9_deferred_presentation || player4_deferred_presentation || corner5_target) && state.control->motion_requested) ||
+            (!(player9_deferred_presentation || player4_deferred_presentation || corner5_target) && ((state.control->facing!=64 && !(player3_left_facing && state.control->facing==0)) || state.control->last_carrier_cell!=128 || (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2)))))
             throw std::invalid_argument("Invalid ordinary pass defender preparation");
     }
     if(score25_shot && (!state.action || !state.recovery || !state.control || !state.experience || !state.score || !state.scheduling || !state.kickoff_formation ||
@@ -364,7 +364,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_action6=phase==104 || (phase>=106 && phase<=110) || phase==113;
     const bool area_action6_race=(phase>=106 && phase<=110) || phase==113;
     const bool area_setup=phase==65 || phase==105;
-    const bool corner5_area=phase==65 && state.current.field.side==0 && state.current.field.ball_owner==5 && state.current.field.ball_x==71 && state.current.field.ball_y==109 && state.current.clock.remaining==1 && state.action && state.action->action==1 && state.recovery && state.recovery->ball_variant==1;
+    const bool corner5_area=(phase==65 || phase==83 || phase==84 || phase==86 || phase==89) && state.current.field.side==0 && state.current.field.ball_owner==5 && state.current.field.ball_x==71 && state.current.field.ball_y==109 && state.current.clock.remaining==(phase==65 ? 1 : 0) && state.action && state.action->action==1 && state.recovery && state.recovery->ball_variant==1;
     const bool corner16_area=(phase==65 || phase==67 || (phase>=69 && phase<=72) || phase==78 || phase==79 || phase==90) && state.current.field.side==11 && state.current.field.ball_owner==16 && state.current.field.ball_x==68 && state.current.field.ball_y==141 && state.current.clock.remaining==(phase==90 ? 2 : 4) && state.action && (state.action->action==1 || ((phase==78 || phase==79 || phase==90) && state.action->action==0)) && state.recovery && state.recovery->ball_variant==1;
     const bool corner19_area=(phase==65 || phase==67 || (phase>=69 && phase<=72) || phase==78 || phase==79 || phase==82 || phase==83) && state.current.field.side==11 && state.current.field.ball_owner==19 && state.current.field.ball_x==52 && state.current.field.ball_y==124 && state.current.clock.remaining==(phase==83 ? 5 : 6) && state.action && (state.action->action==1 || ((phase==78 || phase==79 || phase==82 || phase==83) && state.action->action==0)) && state.recovery && state.recovery->ball_variant==1;
     const bool player6_area_route=(phase==7 || phase==65 || phase==18 || phase==19 || (phase>=474 && phase<=476)) && state.current.field.side==0 && state.current.field.ball_owner==6 && state.current.field.ball_x==180 && state.current.field.ball_y==156 && !state.current.field.selected_defenders && ((phase==18 || phase==19 || (phase>=474 && phase<=476)) || (state.current.field.random_first==0 && state.current.field.random_second==94)) && state.recovery && state.recovery->opposing_player==16 && state.recovery->ball_variant==2 && state.area_defender_cursor==1 && state.saved_ball_flight_flag==1;
@@ -426,7 +426,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        (state.current.field.ball_x>=80 && state.current.field.ball_x<176) ||
        state.action->menu_route!=(((state.current.field.ball_x<80 ? 0 : 11)==state.current.field.side)?2:1)))
         throw std::invalid_argument("Keeper-area setup requires its original area and route (phase " + std::to_string(phase) + ", ball " + std::to_string(state.current.field.ball_x) + "," + std::to_string(state.current.field.ball_y) + ", side " + std::to_string(state.current.field.side) + ", route " + std::to_string(state.action ? state.action->menu_route : 255) + ")");
-    if(area_menu && !empty_attacking_area && !player8_keeper_area_menu && !player4_keeper_area_menu && !player3_area_menu && !player6_area_route && !corner19_area && !corner16_area &&
+    if(area_menu && !empty_attacking_area && !player8_keeper_area_menu && !player4_keeper_area_menu && !player3_area_menu && !player6_area_route && !corner19_area && !corner16_area && !corner5_area &&
        (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
     if(bool(state.area_defense)!=(((phase>=485 && phase<=494) || (phase>=415 && phase<=420) || (phase>=238 && phase<=243) || ((phase>=202 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) || phase==67 || ((phase>=69 && phase<=92) && !empty_attacking_area) || phase==94 || area_action4 || ((phase==93 || area_action6) && state.action && (state.action->action==4 || state.action->action==6) && state.area_defense))))
@@ -474,7 +474,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     }
     if(((phase>=70 && phase<=92) || phase==94) && !empty_attacking_area) {
         const auto count=state.current.field.selected_defenders;
-        if(!count || count>4 || state.action->cursor>count || ((phase==71 || (phase>=73 && phase<=76)) && state.action->cursor==count))
+        if(!count || count>4 || (state.action->cursor>count && !corner5_area) || ((phase==71 || (phase>=73 && phase<=76)) && state.action->cursor==count))
             throw std::invalid_argument("Defensive poll requires a valid selected cursor");
         for(unsigned i=0;i<4;++i) {
             const auto action=state.area_defense->actions[i];
@@ -683,17 +683,17 @@ void validate_phase_session(const PhaseSessionState& state) {
         const auto& target=*state.area_ai_target;
         const auto subtype=phase>=79 ? state.recovery->attack_subtype&127u : state.recovery->attack_subtype;
         const bool terminal_presentation=(phase==86 || phase==89 || phase==94) && state.area_contact && state.area_contact->result>=2;
-        if((phase>=81 && phase<=94) && !empty_attacking_area && (state.control->motion_requested!=(corner19_area && phase==83 ? 2 : terminal_presentation?0:16) ||
-           (terminal_presentation ? state.control->facing!=0 : (state.control->facing!=0 && state.control->facing!=64))))throw std::invalid_argument("Invalid announced area presentation state");
+        if((phase>=81 && phase<=94) && !empty_attacking_area && (state.control->motion_requested!=(corner5_area && phase==83 ? 0 : corner19_area && phase==83 ? 2 : terminal_presentation?0:16) ||
+           (terminal_presentation ? state.control->facing!=(corner5_area ? 64 : 0) : (state.control->facing!=0 && state.control->facing!=64))))throw std::invalid_argument("Invalid announced area presentation state");
         if(phase==80 && state.control->motion_requested!=(state.recovery->ball_variant==1 ? 2 : 0))throw std::invalid_argument("Area defense entry needs acknowledged motion request");
         if(target.cost>1023 || (phase==78 && target.cost))throw std::invalid_argument("Invalid prepared area cost");
-        if((state.action->cursor!=state.current.field.selected_defenders && !empty_attacking_area) ||
+        if((state.action->cursor!=state.current.field.selected_defenders && !empty_attacking_area && !corner5_area) ||
            (state.action->action!=1 && state.action->action!=4 && state.action->action!=6 && !corner19_area && !corner16_area) ||
            (state.recovery->ball_variant!=1 && state.recovery->ball_variant!=2) ||
-           (state.action->action==1 ? (target.recipient<12 || target.recipient>21 || subtype) :
+           (state.action->action==1 ? ((!corner5_area && (target.recipient<12 || target.recipient>21)) || subtype) :
             (target.recipient || target.cell || (state.action->action==4 ? subtype!=0 : subtype>1))))
             throw std::invalid_argument("Unsupported saved area AI choice");
-        if(state.action->action==1) {
+        if(state.action->action==1 && !corner5_area) {
             const auto& m=state.current.field.motion[field_motion_index(target.recipient)];
             if(target.cell!=field_cell_at(static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8)))
                 throw std::invalid_argument("Area AI target cell disagrees with saved player position");
@@ -1561,6 +1561,7 @@ PhaseSessionResult resolve_session_rewarded_terminal(const PhaseSessionState& in
     return result;
 }
 }
+
 
 
 

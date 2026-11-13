@@ -490,6 +490,42 @@ MatchStepResult handle_contested_human_pass(const MatchRuntimeState& input,const
 }
 MatchStepResult handle_contested_pass_progress(const MatchRuntimeState& input,const MatchInput& event,const MatchContent& content) {
  MatchStepResult result{input};
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::keeper_area_contact_added_time || input.session.phase==FieldSessionPhase::keeper_area_contact_clock_done || input.session.phase==FieldSessionPhase::keeper_area_contact_presented) && input.session.action && input.session.action->menu_route==2 && input.session.current.field.side==0 && input.session.current.field.ball_owner==5 && input.session.current.field.ball_x==71 && input.session.current.field.ball_y==109 && !input.session.current.clock.remaining && input.session.current.clock.extra_time==14 && input.session.area_sequence_result==3) {
+  const bool presentation=input.session.phase!=FieldSessionPhase::keeper_area_contact_presented;
+  if(event.kind!=(presentation ? MatchInputKind::presentation_complete : MatchInputKind::tick)){result.unsupported=UnsupportedCapability::presentation;return result;}
+  auto next=input;auto& s=next.session;
+  try{if(s.phase==FieldSessionPhase::keeper_area_contact_added_time){s.control->motion_requested=0;s.phase=FieldSessionPhase::keeper_area_contact_clock_done;}
+   else if(s.phase==FieldSessionPhase::keeper_area_contact_clock_done){s.control->facing=64;s.control->motion_requested=0;s.phase=FieldSessionPhase::keeper_area_contact_presented;}
+   else s.phase=FieldSessionPhase::keeper_area_terminal_result;
+   validate_phase_session(s);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::period_transition;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(s.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_defender_compared && input.session.action && input.session.action->menu_route==2 && input.session.current.field.side==0 && input.session.current.field.ball_owner==5 && input.session.current.field.ball_x==71 && input.session.current.field.ball_y==109 && input.session.current.clock.remaining==1 && input.session.area_sequence_result==3 && input.session.area_contact && input.session.area_contact->defense_action==4) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  if(!content.data->contact){result.unsupported=UnsupportedCapability::content;return result;}
+  auto next=input;auto& s=next.session;try{const auto contact=apply_contact_prelude({s.current,18,4,false},*content.data->contact);
+   if(contact.elapsed_step!=1 || contact.clock.continuation!=ClockContinuation::added_time_presentation || contact.state.clock.remaining || contact.state.clock.extra_time!=14){result.unsupported=UnsupportedCapability::period_transition;return result;}
+   s.current=contact.state;s.area_ai_target=PhaseSessionState::AreaAiTarget{255,*s.human_pass_cursor,20};s.area_defense=KeeperAreaDefenseContext{};s.area_defense->actions[0]=4;
+   s.human_pass_cursor.reset();s.human_pass_steps=0;s.ordinary_pass_candidates.reset();s.ordinary_pass_recipient.reset();s.ordinary_pass_defenses.reset();s.phase=FieldSessionPhase::keeper_area_contact_added_time;validate_phase_session(s);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::period_transition;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(s.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_pass_prepared && input.session.action && input.session.action->menu_route==2 && input.session.current.field.side==0 && input.session.current.field.ball_owner==5 && input.session.current.field.ball_x==71 && input.session.current.field.ball_y==109 && input.session.current.clock.remaining==1 && input.session.ordinary_pass_defenses && input.session.ordinary_pass_defenses->actions[0]==4) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  if(!content.data->area_comparison){result.unsupported=UnsupportedCapability::content;return result;}
+  auto next=input;auto& s=next.session;auto& f=s.current.field;const auto& p=f.roster[18];
+  try{const auto prep=prepare_profiled_field_defender({18,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},content.data->field_players,4,1,0,content.data->defense);
+   const auto energy=calculate_energy({p.stamina,prep.stamina_cost,p.type,0,1,0,true,false});
+   const auto rule=select_area_comparison(1,4,*content.data->area_comparison,content.data->field_comparison.eligibility);
+   const auto compared=compare_defender_contact({s.action->power,prep.base_strength,f.random_first,f.random_second,rule.range,rule.offset,energy.weakened,rule.eligible,2,18,0,rule.thresholds});
+   if(prep.stamina_cost!=60 || prep.move_effect || energy.weakened || compared.result_code!=3 || compared.special || compared.subtype){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+   f.roster[18].stamina=energy.stamina;s.recovery->opposing_player=18;s.control->facing=0;s.control->last_carrier_cell=0;s.control->motion_requested=16;
+   s.area_defender_cursor=0;s.area_sequence_result=3;s.area_contact=AreaContactContext{0,4,0,prep.move_effect,prep.base_strength,energy.cost,compared.strength,compared.loss,compared.score,compared.result_code,energy.weakened};
+   s.phase=FieldSessionPhase::ordinary_pass_defender_compared;next.pass_stage=MatchPassStage::none;validate_phase_session(s);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(f,next.random_memory);result.state=std::move(next);return result;
+ }
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::ordinary_pass_defender_prepared || input.session.phase==FieldSessionPhase::ordinary_pass_next_defender_prepared)) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
   if(!input.session.area_contact || input.session.area_contact->effect){result.unsupported=UnsupportedCapability::defender_contact;return result;}
@@ -1825,6 +1861,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
       (!input.session.kickoff_receiver || *input.session.kickoff_receiver==5 || *input.session.kickoff_receiver==6 ||
        *input.session.kickoff_receiver==7 || *input.session.kickoff_receiver==9 || *input.session.kickoff_receiver==10))))
   return advance_goal_kickoff(input,event,content);
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::keeper_area_contact_added_time || input.session.phase==FieldSessionPhase::keeper_area_contact_clock_done || input.session.phase==FieldSessionPhase::keeper_area_contact_presented) && input.session.action && input.session.action->menu_route==2 && input.session.current.field.side==0 && input.session.current.field.ball_owner==5 && input.session.current.field.ball_x==71 && input.session.current.field.ball_y==109 && !input.session.current.clock.remaining) return handle_contested_pass_progress(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_target && event.kind==MatchInputKind::tick) {
   if(input.session.current.field.ball_owner==0 && (event.pressed!=0 || (event.held!=0 && event.held!=1 && event.held!=2 && event.held!=4 && event.held!=8))){result.unsupported=UnsupportedCapability::action;return result;}
   if(input.target_chooser){
@@ -1870,7 +1907,8 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
      input.session.phase==FieldSessionPhase::ordinary_pass_defense_selection || input.session.phase==FieldSessionPhase::ordinary_pass_defenses_recorded))
   return handle_contested_human_pass(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo &&
-    ((input.session.phase>=FieldSessionPhase::ordinary_pass_defender_prepared && input.session.phase<=FieldSessionPhase::ordinary_pass_next_contact_clock) ||
+    ((input.session.phase==FieldSessionPhase::ordinary_pass_prepared && input.session.action && input.session.action->menu_route==2 && input.session.current.field.ball_owner==5 && input.session.current.field.ball_x==71 && input.session.current.field.ball_y==109 && input.session.current.clock.remaining==1) ||
+     (input.session.phase>=FieldSessionPhase::ordinary_pass_defender_prepared && input.session.phase<=FieldSessionPhase::ordinary_pass_next_contact_clock) ||
      (input.session.phase>=FieldSessionPhase::ordinary_pass_dispatch_clock && input.session.phase<=FieldSessionPhase::ordinary_free_pass_contest_winner)))
   return handle_contested_pass_progress(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::ordinary_human_pass_confirmed &&

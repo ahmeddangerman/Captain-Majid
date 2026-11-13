@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Home area contact enters added time
+
+Defender18's action4 against player5's prepared pass produces result3 in the controlled original. Native and original match the defender's 60-point preparation, comparison strength/loss and represented contact state. The subsequent contact clock takes the remaining time from 1 to 0 and triggers an added-time presentation with 14 units. After acknowledgement, native and original match the resumed clock, contact presentation and terminal result; that state saves and reloads.
+
+The area-specific continuation is restricted to the captured choices and samples. The period has not ended; the original retains added time and the terminal contact must still be dispatched. Windows CMake build, all 65 tests, private replay and original comparisons passed. The replay supplies the captured keeper Y coordinate, controls random samples and acknowledges presentation waits; live NMI, rendering, audio and hardware timing remain unverified. Next trace the contact's loose-ball dispatch during added time. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Home player5 prepares an area pass
 
 Continued the goalkeeper outlet into home player5's goal-area action menu. With controlled inputs, player5 selects a pass and moves the free target to cell39. The original defender18 chooses action4, and player5's pass preparation spends 20 stamina and yields power6. Native and original represented menu, target, defender choice and preparation states match; the prepared state saves and reloads.

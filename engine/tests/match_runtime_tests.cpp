@@ -336,6 +336,25 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(menu5_restore->session.phase!=FieldSessionPhase::ordinary_pass_prepared || menu5_restore->session.action->power!=6 || !menu5_restore->session.ordinary_pass_defenses || menu5_restore->session.ordinary_pass_defenses->actions[0]!=4)throw std::runtime_error("Corner player5 pass preparation differs");
  std::ostringstream pass5_save(std::ios::binary);write_match_save(pass5_save,*menu5_restore,identity);std::istringstream pass5_in(pass5_save.str(),std::ios::binary);auto pass5_restore=std::make_unique<MatchRuntimeState>(load_match_save(pass5_in,identity));
  if(pass5_restore->session.phase!=FieldSessionPhase::ordinary_pass_prepared || pass5_restore->session.action->power!=6)throw std::runtime_error("Corner player5 pass preparation did not roundtrip");
+ auto contact5=std::make_unique<MatchStepResult>(step_match(*pass5_restore,client_input(*pass5_restore,0,0),content));
+ if(contact5->unsupported)throw std::runtime_error(std::string("Corner player5 area contact stopped: ")+capability_name(*contact5->unsupported));
+ if(contact5->state.session.phase!=FieldSessionPhase::ordinary_pass_defender_compared || contact5->state.session.area_sequence_result!=3)throw std::runtime_error("Corner player5 area contact differs");
+ std::ofstream contact5_file(std::string(prefix)+"-corner5-area-contact.cmjsession",std::ios::binary);write_phase_session(contact5_file,contact5->state.session);
+ auto added5=std::make_unique<MatchStepResult>(step_match(contact5->state,client_input(contact5->state,0,0),content));
+ if(added5->unsupported)throw std::runtime_error(std::string("Corner player5 added time stopped: ")+capability_name(*added5->unsupported));
+ if(added5->state.session.phase!=FieldSessionPhase::keeper_area_contact_added_time || added5->state.session.current.clock.remaining!=0 || added5->state.session.current.clock.extra_time!=14)throw std::runtime_error("Corner player5 added time differs");
+ std::ofstream added5_file(std::string(prefix)+"-corner5-added-time.cmjsession",std::ios::binary);write_phase_session(added5_file,added5->state.session);
+ for(int i=0;i<3;++i){auto next=std::make_unique<MatchStepResult>(step_match(added5->state,client_input(added5->state,0,0),content));
+  if(next->unsupported)throw std::runtime_error(std::string("Corner player5 added time resume stopped: ")+capability_name(*next->unsupported));
+  std::ofstream f(std::string(prefix)+"-corner5-added-resume-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*added5=std::move(*next);
+ }
+ if(added5->state.session.phase!=FieldSessionPhase::keeper_area_terminal_result || added5->state.session.current.clock.extra_time!=14)throw std::runtime_error("Corner player5 added-time resume differs");
+ std::ostringstream terminal5_save(std::ios::binary);write_match_save(terminal5_save,added5->state,identity);std::istringstream terminal5_in(terminal5_save.str(),std::ios::binary);auto terminal5_restore=std::make_unique<MatchRuntimeState>(load_match_save(terminal5_in,identity));
+ if(terminal5_restore->session.phase!=FieldSessionPhase::keeper_area_terminal_result || terminal5_restore->session.current.clock.extra_time!=14)throw std::runtime_error("Corner player5 added-time result did not roundtrip");
+
+
+
+
 
 
 
