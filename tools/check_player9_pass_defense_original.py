@@ -435,6 +435,22 @@ for line in (a.trace/'native-corner16-menu.txt').read_text().splitlines():
  actions=list(menu[0x60b:0x60f]);subtypes=[menu[0x606+j] if actions[j]!=255 else 0 for j in range(4)]
  expected_choices=bytes((1,*actions,*subtypes,menu[0x620],menu[0x1e] if phase in (69,70) and pressed==128 and i!=4 else 0))
  if actual[372:383]!=expected_choices:raise ValueError(f'Corner player16 menu choices differ at {i}')
+for name,pc in (('choice','829d-1'),('prepared','82a0-1')):
+ original=(a.player3_shot/f'corner16-attack-{pc}.bin').read_bytes()
+ exportable=bytearray(original);exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0));expected[309]=0
+ compare_represented((a.trace/f'native-corner16-attack-{name}.cmjsession').read_bytes(),expected,False,'corner player16 shot',name)
+original=(a.player3_shot/'corner16-attack-83f5-1.bin').read_bytes()
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner16-attack-clock.cmjsession').read_bytes(),expected,False,'corner player16 shot','clock')
+original=(a.player3_shot/'corner16-attack-83f8-1.bin').read_bytes()
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner16-attack-world.cmjsession').read_bytes(),expected,False,'corner player16 shot','field update')
+
+
+
 
 
 

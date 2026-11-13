@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player16 shot prepared at clock2
+
+The controlled original selects a subtype1 shot for player16. Native and original match the AI choice, the 90-point shot preparation, the two-tick clock update and the subsequent field movement, leaving clock2 and shot power8. The field-update state saves and reloads. The native continuation is restricted to the sampled state and choices.
+
+The original trace continues through flight to defender2, but its result1 and subsequent period behavior are not yet implemented for this sequence. Windows CMake build, all 65 tests, private replay and original comparisons passed. Random samples and presentation acknowledgements are controlled; live NMI, rendering, audio and frame timing remain unverified. Next implement flight and defender contact. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player16 faces the goalkeeper
 
 The original player16 goal-area scan selects no field defenders and then adds goalkeeper0. The engine reproduces the selected goalkeeper and the controlled action4 choice, with original/native represented menu states and choice/blink arrays matching at each step. The completed menu saves and reloads.

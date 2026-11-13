@@ -1598,6 +1598,16 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   catch(const std::invalid_argument&){result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==0 && (input.session.current.field.ball_owner==8 || input.session.current.field.ball_owner==4) && input.session.current.field.ball_x==196 && input.session.current.field.ball_y==124) { return open_observed_goal_area_keeper_menu(input,event); }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_defense_complete && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4) {
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  if(!content.data->ai_goal_area_choice || !content.data->ai_area_choice || !input.demo_rng){result.unsupported=UnsupportedCapability::content;return result;}
+  auto next=input;advance_demo_random(next);const auto& f=next.session.current.field;const auto& actor=f.roster[16];
+  try{const auto candidate=choose_generic_goal_area_candidate(16,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),f.ball_x,f.ball_y,f.random_first,content.data->field_players,*content.data->ai_goal_area_choice,*content.data->ai_area_choice);
+   if(candidate.candidate!=0 || f.random_first!=28 || f.random_second!=140 || next.session.area_defense->actions[0]!=4){result.unsupported=UnsupportedCapability::opponent_action;return result;}
+   next.session.action->action=0;next.session.recovery->attack_subtype=1;next.session.area_ai_target=PhaseSessionState::AreaAiTarget{};next.session.phase=FieldSessionPhase::keeper_area_ai_chosen;validate_phase_session(next.session);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_action;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_defense_complete && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==6) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
   if(!content.data->ai_goal_area_choice || !content.data->ai_area_choice || !input.demo_rng){result.unsupported=UnsupportedCapability::content;return result;}
@@ -1712,6 +1722,27 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prefix_clock_done && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==2 && input.session.current.field.elapsed==2) {
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  if(!content.data->movement){result.unsupported=UnsupportedCapability::content;return result;}
+  auto next=input;try {next.session.current.field=advance_field_phase(next.session.current.field,content.data->field_players,*content.data->movement).state;
+   if(next.session.current.field.elapsed || next.session.current.field.random_first || next.session.current.field.random_second!=140){result.unsupported=UnsupportedCapability::opponent_execution;return result;}validate_phase_session(next.session);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_attack_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4 && input.session.action->action==0) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  if(!content.data->area_prefix_elapsed){result.unsupported=UnsupportedCapability::content;return result;}
+  auto next=input;auto& s=next.session;const auto elapsed=(*content.data->area_prefix_elapsed)[0];
+  try {s.current.field.elapsed=static_cast<std::uint8_t>(unsigned(s.current.field.elapsed)+elapsed);
+   const auto recovery=advance_keeper_recovery({s.current.field.keepers,s.current.shared_recovery_flags,s.current.shared_recovery_timer},elapsed);
+   s.current.field.keepers=recovery.keepers;s.current.shared_recovery_flags=recovery.shared_flags;s.current.shared_recovery_timer=recovery.shared_timer;
+   const auto clock=advance_match_clock(s.current.clock,elapsed,s.current.field.random_first);
+   if(elapsed!=2 || clock.continuation!=ClockContinuation::ready || clock.state.remaining!=2){result.unsupported=UnsupportedCapability::period_transition;return result;}
+   s.current.clock=clock.state;s.area_defender_cursor=1;s.area_sequence_result=0;s.control->last_carrier_cell=0;s.control->motion_requested=16;s.phase=FieldSessionPhase::keeper_area_prefix_clock_done;validate_phase_session(s);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(s.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_attack_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==6 && input.session.action->action==0) {
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   if(!content.data->area_shot_field_comparisons){result.unsupported=UnsupportedCapability::content;return result;}
@@ -1725,6 +1756,15 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    s.control->motion_requested=16;s.control->last_carrier_cell=0;s.control->facing=64;s.phase=FieldSessionPhase::keeper_area_defender_compared;validate_phase_session(s);
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(f,next.random_memory);result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_ai_chosen && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4 && input.session.action->action==0) {
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  auto next=input;const auto& f=next.session.current.field;const auto& p=f.roster[16];
+  try{const auto prepared=prepare_attacking_action({{16,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},0,1,1,11,f.selected_defenders,f.random_first,f.random_second,false},content.data->field_players,content.data->attack);
+   if(prepared.preparation.stamina_cost!=90 || prepared.action_power.power!=8 || prepared.action_power.subtype!=1 || prepared.preparation.move_effect || prepared.move_flags){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+   next.session.action->power=prepared.action_power.power;next.session.area_ai_target->cost=prepared.preparation.stamina_cost;next.session.phase=FieldSessionPhase::keeper_area_attack_prepared;validate_phase_session(next.session);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_ai_chosen && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==6 && input.session.action->action==0) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
@@ -1981,6 +2021,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  return result;
 }
 }
+
 
 
 

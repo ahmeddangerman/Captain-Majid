@@ -262,6 +262,25 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(defense16->state.session.phase!=FieldSessionPhase::keeper_area_defense_complete || defense16->state.session.area_defense->actions[0]!=4)throw std::runtime_error("Corner player16 defense choice differs");
  std::ostringstream menu16_save(std::ios::binary);write_match_save(menu16_save,defense16->state,identity);std::istringstream menu16_in(menu16_save.str(),std::ios::binary);auto menu16_restore=std::make_unique<MatchRuntimeState>(load_match_save(menu16_in,identity));
  if(menu16_restore->session.phase!=FieldSessionPhase::keeper_area_defense_complete || menu16_restore->session.area_defense->actions[0]!=4)throw std::runtime_error("Corner player16 defense did not roundtrip");
+ auto choice16=std::make_unique<MatchStepResult>(step_match(*menu16_restore,client_input(*menu16_restore,0,0),content));
+ if(choice16->unsupported)throw std::runtime_error(std::string("Corner player16 attack choice stopped: ")+capability_name(*choice16->unsupported));
+ auto prep16=std::make_unique<MatchStepResult>(step_match(choice16->state,client_input(choice16->state,0,0),content));
+ if(prep16->unsupported)throw std::runtime_error(std::string("Corner player16 shot preparation stopped: ")+capability_name(*prep16->unsupported));
+ if(prep16->state.session.phase!=FieldSessionPhase::keeper_area_attack_prepared || prep16->state.session.action->power!=8 || prep16->state.session.area_ai_target->cost!=90)throw std::runtime_error("Corner player16 shot differs");
+ for(const auto& sample:{std::pair<const char*,const MatchRuntimeState&>{"choice",choice16->state},{"prepared",prep16->state}}){std::ofstream f(std::string(prefix)+"-corner16-attack-"+sample.first+".cmjsession",std::ios::binary);write_phase_session(f,sample.second.session);}
+ auto clock16=std::make_unique<MatchStepResult>(step_match(prep16->state,client_input(prep16->state,0,0),content));
+ if(clock16->unsupported)throw std::runtime_error(std::string("Corner player16 shot clock stopped: ")+capability_name(*clock16->unsupported));
+ if(clock16->state.session.phase!=FieldSessionPhase::keeper_area_prefix_clock_done || clock16->state.session.current.clock.remaining!=2)throw std::runtime_error("Corner player16 shot clock differs");
+ std::ofstream clock16_file(std::string(prefix)+"-corner16-attack-clock.cmjsession",std::ios::binary);write_phase_session(clock16_file,clock16->state.session);
+ auto world16=std::make_unique<MatchStepResult>(step_match(clock16->state,client_input(clock16->state,0,0),content));
+ if(world16->unsupported)throw std::runtime_error(std::string("Corner player16 shot world update stopped: ")+capability_name(*world16->unsupported));
+ if(world16->state.session.current.field.elapsed || world16->state.session.current.field.random_first)throw std::runtime_error("Corner player16 shot world differs");
+ std::ofstream world16_file(std::string(prefix)+"-corner16-attack-world.cmjsession",std::ios::binary);write_phase_session(world16_file,world16->state.session);
+ std::ostringstream world16_save(std::ios::binary);write_match_save(world16_save,world16->state,identity);std::istringstream world16_in(world16_save.str(),std::ios::binary);auto world16_restore=std::make_unique<MatchRuntimeState>(load_match_save(world16_in,identity));
+ if(world16_restore->session.phase!=FieldSessionPhase::keeper_area_prefix_clock_done || world16_restore->session.current.clock.remaining!=2)throw std::runtime_error("Corner player16 shot world did not roundtrip");
+
+
+
 
 
 
