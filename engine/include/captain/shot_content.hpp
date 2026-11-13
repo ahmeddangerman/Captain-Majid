@@ -47,6 +47,7 @@ struct ShotContent {
     std::optional<ShotApproachContent> approach{};
     std::optional<FlightContactContent> flight{};
     std::optional<PassFlightComparisonContent> pass_flight_comparison{};
+    std::optional<PassFlightComparisonContent> one_two_flight_comparison{};
     std::shared_ptr<const ClearanceRaceContent> pass_race{};
     std::optional<FieldPhaseContent> movement{};
     std::optional<ContactPreludeContent> contact{};

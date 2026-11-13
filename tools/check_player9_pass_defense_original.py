@@ -771,6 +771,7 @@ for line in (a.trace/'native-equalizer5-choice.txt').read_text().splitlines():
   carrier=0x300+12*5;x=target_seed[carrier+5]|target_seed[carrier+6]<<8;y=target_seed[carrier+7]|target_seed[carrier+8]<<8
   raw=original_target(rom[16:262160],target_seed,x,y,return_ram=True)
  compare_represented((a.trace/f'native-equalizer5-choice-{i}.cmjsession').read_bytes(),export_session(raw,0),i==2,'equalizer player5 choice',str(i))
+(a.trace/'equalizer5-target-original.ram').write_bytes(raw)
 
 
 

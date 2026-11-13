@@ -3,6 +3,16 @@
 #include <algorithm>
 #include "captain/defender_selection.hpp"
 namespace captain {
+std::optional<std::uint8_t> choose_ordinary_one_two_recipient(std::uint8_t carrier,
+ std::uint8_t x,std::uint8_t y,const std::array<std::array<std::uint8_t,2>,10>& teammates) {
+ if(carrier<12 || carrier>21)throw std::invalid_argument("One-two requires an opposing field carrier");
+ for(unsigned slot=0;slot<teammates.size();++slot) {
+  if(slot+12==carrier)continue;
+  const int dx=int(teammates[slot][0])-int(x),dy=int(teammates[slot][1])-int(y);
+  if(dx>-20 && dx<20 && dy>-20 && dy<20)return static_cast<std::uint8_t>(slot+12);
+ }
+ return std::nullopt;
+}
 AiKeeperChoice choose_opponent_keeper_action(const FieldPlayerRecord& player,const PlayerProfileMappings& profiles,
  std::uint8_t route,std::uint8_t random,const AiKeeperContent& content) {
  if(player.player_id!=11 || content.team_id<3 || content.team_id>6 || route>4 || route==2)

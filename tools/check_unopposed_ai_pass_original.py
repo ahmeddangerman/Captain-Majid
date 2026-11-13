@@ -26,7 +26,9 @@ def observe(prg, raw, expected_action=1, stop_at_arrival=False, stop_at_second_a
     checkpoints={};targets={(31,0xe1b2):'choice',(31,0xe1cb):'prepared',(26,0x80ed):'preclock',
         (30,0xc612):'handoff',(30,0xde64):'target',(31,0xe773):'flight',
         (31,0xe7cc):'arrival',(31,0xe0df):'control',(31,0xe145):'ready'}
-    if expected_action==3:targets.update({(31,0xe01d):'swap-before',(31,0xe023):'swap-after',(31,0xe073):'return-target'})
+    if expected_action==3:targets.update({(31,0xe01d):'swap-before',(31,0xe023):'swap-after',(31,0xe073):'return-target',
+        (26,0x88a2):'return-defender-prepared',(26,0x88a8):'return-defender-compared',
+        (26,0x8877):'return-defender-clocked',(26,0x888a):'return-defender-cleanup'})
     for _ in range(2_000_000):
         bank=memory.bank_at(cpu.pc);name=targets.get((bank,cpu.pc))
         if stop_at_area and 'return-arrival' in checkpoints and bank==26 and cpu.pc==0x8b4a:

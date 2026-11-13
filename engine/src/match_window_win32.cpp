@@ -105,6 +105,8 @@ void render(HDC dc,const App& app) {
  if(bx>=pitch_x && bx<=pitch_x+pitch_w && by>=pitch_y && by<=pitch_y+pitch_h){disc(dc,bx,by,6,ink);disc(dc,bx,by,4,paper);}
  label(dc,phase_text(app),880,152,285,36,23,ink,true);
  label(dc,L"Arrow keys  Move / choose\nZ  Confirm\nX  Menu / back\nSpace  Pause",880,205,285,125,18,ink,false,DT_LEFT|DT_TOP|DT_WORDBREAK);
+ if(state.session.phase==FieldSessionPhase::control_ready)
+  label(dc,L"Player "+std::to_wstring(field.ball_owner)+L" controls the ball",880,355,280,60,19,ink,true,DT_LEFT|DT_TOP|DT_WORDBREAK);
  if(state.session.phase==FieldSessionPhase::human_action_menu && state.session.action && app.content.data->action_menu){
   const auto& action=*state.session.action;const auto route=action.menu_route;
   if(route<app.content.data->action_menu->directions.size()){

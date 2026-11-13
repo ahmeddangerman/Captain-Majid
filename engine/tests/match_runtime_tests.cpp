@@ -16,6 +16,119 @@
 #include <memory>
 #include <sstream>
 #include <string>
+static void verify_equalizer_interception_control(const captain::MatchRuntimeState& input,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
+ using namespace captain;
+ const auto roundtrip=[&](const MatchRuntimeState& state){
+  std::ostringstream bytes(std::ios::binary);write_match_save(bytes,state,identity);
+  std::istringstream input_bytes(bytes.str(),std::ios::binary);const auto loaded=load_match_save(input_bytes,identity);
+  std::ostringstream again(std::ios::binary);write_match_save(again,loaded,identity);
+  if(bytes.str()!=again.str())throw std::runtime_error("One-two save changed on reload");
+ };
+ if(input.session.phase!=FieldSessionPhase::player_control || input.session.current.field.ball_owner!=17 || input.session.current.field.side!=11)
+  throw std::runtime_error("Equalizer pass did not hand control to defender17");
+ auto ready=step_match(input,client_input(input,0,0),content);
+ if(ready.unsupported || ready.state.session.phase!=FieldSessionPhase::control_ready || ready.state.session.current.field.ball_owner!=17 || ready.state.session.current.field.ball_x!=118 || ready.state.session.current.field.ball_y!=107 || ready.state.session.current.clock.remaining!=163)
+  throw std::runtime_error("Equalizer interception control differs from original E145");
+ std::ostringstream saved(std::ios::binary);write_match_save(saved,ready.state,identity);
+ std::istringstream source(saved.str(),std::ios::binary);auto restored=load_match_save(source,identity);
+ std::ostringstream saved_again(std::ios::binary);write_match_save(saved_again,restored,identity);
+ if(saved.str()!=saved_again.str())throw std::runtime_error("Interception control save changed on reload");
+ std::ofstream control(std::string(prefix)+"-equalizer17-control.cmjsession",std::ios::binary);write_phase_session(control,restored.session);control.close();
+ auto next=step_match(restored,client_input(restored,0,0),content);
+ if(next.unsupported)throw std::runtime_error("Interceptor subsequent control step stopped");
+ std::ofstream poll(std::string(prefix)+"-equalizer17-poll.cmjsession",std::ios::binary);write_phase_session(poll,next.state.session);poll.close();
+ auto journey=std::make_unique<MatchRuntimeState>(restored);
+ std::ofstream journey_log(std::string(prefix)+"-equalizer17-journey.txt");
+ for(unsigned i=0;i<500;++i) {
+  const auto phase=journey->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+  auto step=std::make_unique<MatchStepResult>(step_match(*journey,client_input(*journey,0,0),content));
+  if(step->unsupported)throw std::runtime_error("Interceptor journey stopped at "+std::to_string(i));
+  journey_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<unsigned(step->state.demo_rng&255)<<' '<<unsigned((step->state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(step->state.session.phase)<<'\n';
+  std::ofstream file(std::string(prefix)+"-equalizer17-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(file,step->state.session);
+  *journey=std::move(step->state);
+ }
+ std::cout<<"Interceptor journey reaches phase "<<static_cast<unsigned>(journey->session.phase)<<" owner "<<unsigned(journey->session.current.field.ball_owner)<<" clock "<<journey->session.current.clock.remaining<<'\n';
+ auto choice=std::make_unique<MatchStepResult>(step_match(*journey,client_input(*journey,0,0),content));
+ std::ofstream choice_log(std::string(prefix)+"-equalizer17-choice.txt");choice_log<<(choice->unsupported ? static_cast<int>(*choice->unsupported) : -1)<<' '<<choice->state.demo_rng<<' '<<static_cast<unsigned>(choice->state.session.phase)<<'\n';
+ if(choice->unsupported)throw std::runtime_error("Interceptor AI choice unsupported");
+ std::ofstream choice_file(std::string(prefix)+"-equalizer17-choice.cmjsession",std::ios::binary);write_phase_session(choice_file,choice->state.session);
+ choice_log.close();choice_file.close();journey_log.close();
+ *journey=choice->state;
+ std::ofstream continuation_log(std::string(prefix)+"-equalizer17-continuation.txt");
+ for(unsigned i=0;i<500;++i) {
+  const auto phase=journey->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending && phase!=FieldSessionPhase::ai_cell_decision)break;
+  auto step=std::make_unique<MatchStepResult>(step_match(*journey,client_input(*journey,0,0),content));
+  if(step->unsupported){std::ofstream stopped(std::string(prefix)+"-equalizer17-stopped.cmjsession",std::ios::binary);write_phase_session(stopped,journey->session);stopped.close();std::ofstream meta(std::string(prefix)+"-equalizer17-stopped.txt");meta<<journey->demo_rng;meta.close();throw std::runtime_error("Interceptor continuation stopped at "+std::to_string(i)+" phase "+std::to_string(static_cast<unsigned>(phase))+" capability "+capability_name(*step->unsupported));}
+  continuation_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<unsigned(step->state.demo_rng&255)<<' '<<unsigned((step->state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(step->state.session.phase)<<'\n';continuation_log.flush();
+  std::ofstream file(std::string(prefix)+"-equalizer17-continuation-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(file,step->state.session);
+  *journey=std::move(step->state);
+ }
+ std::cout<<"Interceptor continuation reaches phase "<<static_cast<unsigned>(journey->session.phase)<<" owner "<<unsigned(journey->session.current.field.ball_owner)<<" clock "<<journey->session.current.clock.remaining<<'\n';
+ auto one_two=step_match(*journey,client_input(*journey,0,0),content);
+ if(one_two.unsupported || !one_two.state.defense_menu || one_two.state.defense_menu->stage!=MatchDefenseStage::attack_prepared || one_two.state.session.action->power!=11)
+  throw std::runtime_error("Interceptor one-two preparation differs from original");
+ std::ofstream prepared_file(std::string(prefix)+"-equalizer17-one-two-prepared.cmjsession",std::ios::binary);write_phase_session(prepared_file,one_two.state.session);
+ prepared_file.close();
+ roundtrip(one_two.state);
+ for(unsigned i=0;i<5;++i) {
+  auto next_step=step_match(one_two.state,client_input(one_two.state,0,0),content);
+  if(next_step.unsupported)throw std::runtime_error("Interceptor one-two flight setup stopped at "+std::to_string(i));
+  std::ofstream file(std::string(prefix)+"-equalizer17-one-two-setup-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(file,next_step.state.session);
+  one_two=std::move(next_step);
+  roundtrip(one_two.state);
+ }
+ if(!one_two.state.defense_menu || one_two.state.defense_menu->stage!=MatchDefenseStage::ai_flight_ready || one_two.state.defense_menu->ai_pass_target->cell!=87)
+  throw std::runtime_error("Interceptor first one-two flight target differs from original");
+ for(unsigned i=0;i<32 && one_two.state.defense_menu && one_two.state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived;++i){
+  auto step=step_match(one_two.state,client_input(one_two.state,0,0),content);
+  if(step.unsupported)throw std::runtime_error("Interceptor outward flight stopped");one_two=std::move(step);
+ }
+ if(!one_two.state.defense_menu || one_two.state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived || !one_two.state.flight_defenders.empty())throw std::runtime_error("Interceptor outward arrival differs");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-arrival.cmjsession",std::ios::binary);write_phase_session(file,one_two.state.session);}
+ auto swapped=step_match(one_two.state,client_input(one_two.state,0,0),content);
+ if(swapped.unsupported || !swapped.state.defense_menu || swapped.state.defense_menu->stage!=MatchDefenseStage::ai_pass_handoff || swapped.state.session.current.field.ball_owner!=18)
+  throw std::runtime_error("Interceptor one-two swap differs from original");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-swap.cmjsession",std::ios::binary);write_phase_session(file,swapped.state.session);}
+ roundtrip(swapped.state);
+ for(unsigned i=0;i<2;++i){
+  swapped=step_match(swapped.state,client_input(swapped.state,0,0),content);
+  if(swapped.unsupported)throw std::runtime_error("Interceptor return flight setup stopped");
+  roundtrip(swapped.state);
+ }
+ if(!swapped.state.defense_menu || swapped.state.defense_menu->stage!=MatchDefenseStage::ai_flight_ready || swapped.state.defense_menu->ai_pass_target->recipient!=17 || swapped.state.defense_menu->ai_pass_target->cell!=39)
+  throw std::runtime_error("Interceptor return flight target differs");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-return-flight.cmjsession",std::ios::binary);write_phase_session(file,swapped.state.session);}
+ for(unsigned i=0;i<32 && swapped.state.defense_menu->stage!=MatchDefenseStage::ai_flight_arrived;++i){
+  swapped=step_match(swapped.state,client_input(swapped.state,0,0),content);
+  if(swapped.unsupported)throw std::runtime_error("Interceptor return flight stopped");
+ }
+ const auto& returned=*swapped.state.defense_menu;
+ if(returned.stage!=MatchDefenseStage::ai_flight_arrived || !returned.ai_ball_cell || *returned.ai_ball_cell!=39 || !returned.ai_trajectory || returned.ai_trajectory->x>>8!=76 || returned.ai_trajectory->y>>8!=108 || swapped.state.flight_defenders!=std::vector<std::uint8_t>({4}))
+  throw std::runtime_error("Interceptor return arrival differs from original");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-return-arrival.cmjsession",std::ios::binary);write_phase_session(file,swapped.state.session);}
+ auto legacy_content=std::make_unique<MatchContent>(content);legacy_content->data->one_two_flight_comparison.reset();
+ const auto missing=step_match(swapped.state,client_input(swapped.state,0,0),*legacy_content);
+ std::ostringstream before_missing(std::ios::binary),after_missing(std::ios::binary);
+ write_match_save(before_missing,swapped.state,identity);write_match_save(after_missing,missing.state,identity);
+ if(missing.unsupported!=UnsupportedCapability::content || before_missing.str()!=after_missing.str())throw std::runtime_error("Missing one-two content did not fail atomically");
+ auto contact=step_match(swapped.state,client_input(swapped.state,0,0),content);
+ if(contact.unsupported)throw std::runtime_error("Interceptor return contact unsupported");
+ if(contact.state.session.action->power!=10)throw std::runtime_error("Interceptor return pass weakening differs from original");
+ roundtrip(contact.state);
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-return-contact.cmjsession",std::ios::binary);write_phase_session(file,contact.state.session);}
+ std::cout<<"One-two contact phase "<<static_cast<unsigned>(contact.state.session.phase)<<" owner "<<unsigned(contact.state.session.current.field.ball_owner)<<" power "<<unsigned(contact.state.session.action->power)<<" clock "<<contact.state.session.current.clock.remaining<<'\n';
+ auto received=step_match(contact.state,client_input(contact.state,0,0),content);
+ if(received.unsupported || received.state.session.phase!=FieldSessionPhase::keeper_interaction || received.state.session.current.field.ball_owner!=17 || received.state.session.current.field.ball_x!=77 || received.state.session.current.field.ball_y!=107)
+  throw std::runtime_error("Interceptor one-two goal-area reception differs");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-received.cmjsession",std::ios::binary);write_phase_session(file,received.state.session);}
+ auto area=step_match(received.state,client_input(received.state,0,0),content);
+ if(area.unsupported)throw std::runtime_error("Interceptor goal-area setup unsupported");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-area.cmjsession",std::ios::binary);write_phase_session(file,area.state.session);}
+ std::cout<<"Interceptor goal-area phase "<<static_cast<unsigned>(area.state.session.phase)<<'\n';
+ roundtrip(area.state);
+}
 static void continue_player14_interception(const captain::MatchRuntimeState& initial,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
  using namespace captain;
  auto state=std::make_unique<MatchRuntimeState>(initial);std::ofstream log(std::string(prefix)+"-player14-journey.txt");
@@ -700,6 +813,13 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ostringstream equalizer_target_save(std::ios::binary);write_match_save(equalizer_target_save,*equalizer_menu,identity);std::istringstream equalizer_target_in(equalizer_target_save.str(),std::ios::binary);
  const auto equalizer_target_restored=load_match_save(equalizer_target_in,identity);
  if(equalizer_target_restored.session.phase!=FieldSessionPhase::ordinary_human_pass_target || equalizer_target_restored.session.current.field.ball_owner!=5)throw std::runtime_error("Equalizer player5 pass target did not roundtrip");
+ auto equalizer_pass=std::make_unique<MatchRuntimeState>(equalizer_target_restored);std::ofstream equalizer_pass_log(std::string(prefix)+"-equalizer5-pass.txt");
+ for(const auto held:std::array<std::uint8_t,5>{1,1,1,4,4}){auto next=step_match(*equalizer_pass,client_input(*equalizer_pass,held,held),content);equalizer_pass_log<<"aim "<<unsigned(held)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<unsigned(next.state.session.human_pass_cursor.value_or(255))<<'\n';if(next.unsupported)throw std::runtime_error("Equalizer player5 pass aim stopped");*equalizer_pass=std::move(next.state);}
+ const auto equalizer_pass_confirm=step_match(*equalizer_pass,client_input(*equalizer_pass,0,128),content);
+ if(equalizer_pass_confirm.unsupported || equalizer_pass_confirm.state.session.phase!=FieldSessionPhase::ordinary_human_pass_confirmed || equalizer_pass_confirm.state.session.ordinary_pass_recipient!=8)throw std::runtime_error("Equalizer player5 pass recipient was not player8");
+ {std::ofstream f(std::string(prefix)+"-equalizer5-pass-confirmed.cmjsession",std::ios::binary);write_phase_session(f,equalizer_pass_confirm.state.session);}*equalizer_pass=equalizer_pass_confirm.state;
+ for(int i=0;i<6;++i){auto next=step_match(*equalizer_pass,client_input(*equalizer_pass,0,0),content);equalizer_pass_log<<"run "<<i<<' '<<static_cast<unsigned>(equalizer_pass->session.phase)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<unsigned(next.state.session.current.field.ball_owner)<<' '<<unsigned(next.state.session.current.field.side)<<' '<<unsigned(next.state.session.current.field.ball_x)<<' '<<unsigned(next.state.session.current.field.ball_y)<<' '<<unsigned(next.state.flight_defenders.size())<<' '<<unsigned(next.state.processed_flight_defenders.size())<<' '<<unsigned(next.state.session.area_sequence_result)<<' '<<unsigned(next.state.session.current.field.random_first)<<' '<<unsigned(next.state.session.current.field.random_second)<<' '<<unsigned(next.state.session.action ? next.state.session.action->power : 0)<<' '<<unsigned(next.state.session.ordinary_pass_defenses ? next.state.session.ordinary_pass_defenses->actions[0] : 255)<<' '<<unsigned(next.state.session.area_contact ? next.state.session.area_contact->defender_power : 0)<<'\n';equalizer_pass_log.flush();if(next.unsupported)throw std::runtime_error("Equalizer pass stopped at step "+std::to_string(i));if(i==4 && (!next.state.session.area_contact || next.state.session.area_contact->strength!=7 || next.state.session.area_contact->score!=45 || next.state.session.area_sequence_result!=3))throw std::runtime_error("Equalizer pass comparison differs from original");std::ofstream f(std::string(prefix)+"-equalizer5-pass-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*equalizer_pass=std::move(next.state);if(equalizer_pass->session.phase==FieldSessionPhase::player_control || equalizer_pass->session.phase==FieldSessionPhase::ball_recovery)break;}
+ verify_equalizer_interception_control(*equalizer_pass,content,identity,prefix);
 
 
 
@@ -1608,6 +1728,12 @@ static int player1_defended_shot_check(int argc,char** argv) {
  using namespace captain;if(argc!=5 && argc!=6 && argc!=7)return 2;
  std::ifstream source(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);MatchRuntimeState state{};state.session=load_phase_session(source);
  MatchContent content{};content.data=load_shot_content(pack);state.mode=MatchTimingMode::provisional_demo;state.demo_rng=3387922246u;state.ball_fraction=MatchBallFraction{173,87};
+ if(state.session.phase==FieldSessionPhase::human_action_menu) {
+  if(!content.data->action_menu)throw std::runtime_error("Shot replay requires menu content");
+  state.session=poll_human_action_menu(state.session,1,*content.data->action_menu).state;
+  state.session=poll_human_action_menu(state.session,128,*content.data->action_menu).state;
+ }
+
  auto selected=step_match(state,{MatchInputKind::action,1,0,0,MatchAction::shot},content);
  if(selected.unsupported || selected.state.session.phase!=FieldSessionPhase::ordinary_return_shot_defense || !selected.state.session.area_contact || selected.state.session.area_contact->defense_action!=1)throw std::runtime_error("Player1 shot defender choice stopped");
  auto prepared=step_match(selected.state,{MatchInputKind::tick,2},content);
@@ -3846,6 +3972,12 @@ static int keeper_outlet_choices(int argc,char** argv) {
  if(records.peek()!=std::char_traits<char>::eof())throw std::runtime_error("Extra keeper outlet choice cases");return 0;
 }
 int main(int argc,char** argv) {
+ if(argc==5 && std::string(argv[1])=="--check-equalizer-interception-control") {
+  using namespace captain;std::ifstream session(argv[2],std::ios::binary),pack(argv[3],std::ios::binary);
+  auto state=std::make_unique<MatchRuntimeState>();state->session=load_phase_session(session);state->mode=MatchTimingMode::provisional_demo;state->demo_rng=50075;
+  auto content=std::make_unique<MatchContent>();content->data=load_shot_content(pack);MatchContentIdentity identity{};identity[0]=42;
+  verify_equalizer_interception_control(*state,*content,identity,argv[4]);return 0;
+ }
  if(argc!=1){if(std::string(argv[1])=="--check-player1-defended-shot")return player1_defended_shot_check(argc,argv);if(std::string(argv[1])=="--check-player2-free-pass-timeout")return player2_free_pass_timeout_check(argc,argv);if(std::string(argv[1])=="--check-player2-post-pass-contact")return player2_post_pass_contact_check(argc,argv);if(std::string(argv[1])=="--check-player3-free-pass-race")return player3_free_pass_race_check(argc,argv);if(std::string(argv[1])=="--check-five-defender-third-contact")return five_defender_third_contact_check(argc,argv);if(std::string(argv[1])=="--check-five-defender-first-contact")return five_defender_first_contact_check(argc,argv);if(std::string(argv[1])=="--check-first-keeper-recovery-fraction")return first_keeper_recovery_fraction_check(argc,argv);if(std::string(argv[1])=="--check-first-opponent-area-entry")return first_opponent_area_entry_check(argc,argv);if(std::string(argv[1])=="--check-generic-defended-shot-choice")return generic_defended_shot_choice_check(argc,argv);if(std::string(argv[1])=="--check-generic-action2-field-ai")return generic_action2_field_ai_check(argc,argv);if(std::string(argv[1])=="--check-first-generic-field-ai")return first_generic_field_ai_check(argc,argv);if(std::string(argv[1])=="--check-continuous-flight-terminal")return continuous_flight_terminal_check(argc,argv);if(std::string(argv[1])=="--check-first-encounter-fraction")return first_encounter_fraction_check(argc,argv);if(std::string(argv[1])=="--check-first-defended-free-pass-runtime")return first_defended_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-free-pass-runtime")return first_free_pass_runtime_check(argc,argv);if(std::string(argv[1])=="--check-first-match-create")return first_match_create_check(argc,argv);if(std::string(argv[1])=="--check-first-match-roster")return first_match_roster_check(argc,argv);if(std::string(argv[1])=="--check-initial-kickoff-runtime")return initial_kickoff_runtime_check(argc,argv);if(std::string(argv[1])=="--check-flight-special")return ordinary_flight_special_check(argc,argv);if(std::string(argv[1])=="--check-flight-nonterminal")return ordinary_flight_nonterminal_check(argc,argv);if(std::string(argv[1])=="--check-ordinary-flight-defender")return ordinary_flight_defender_check(argc,argv);if(std::string(argv[1])=="--check-pass-defense-runtime")return pass_defense_runtime_check(argc,argv);if(std::string(argv[1])=="--compare-keeper-outlet-choices")return keeper_outlet_choices(argc,argv);if(std::string(argv[1])=="--compare-human-keeper-menu")return human_keeper_menu_comparison(argc,argv);if(std::string(argv[1])=="--compare-opponent-shot-defender" || std::string(argv[1])=="--compare-opponent-shot-defender-terminal")return opponent_shot_defender_comparison(argc,argv);if(std::string(argv[1])=="--compare-field-defense-skip")return defense_skip_comparison(argc,argv);if(std::string(argv[1])=="--compare-unopposed-ai-shot")return unopposed_shot_comparison(argc,argv);if(std::string(argv[1]).rfind("--compare-human-shot",0)==0 || std::string(argv[1])=="--compare-goal-kickoff")return shot_comparisons(argc,argv);return comparisons(argc,argv);}
  const auto result=regular_tests();
  test_defended_arrival(deferred_defended_test->state,deferred_defended_test->content,deferred_defended_test->seq,deferred_defended_test->identity);
@@ -3861,5 +3993,3 @@ int main(int argc,char** argv) {
  test_opponent_shot_gate(deferred_unopposed_ai_pass_test->state,deferred_unopposed_ai_pass_test->content,deferred_unopposed_ai_pass_test->identity);
  return result;
 }
-
-

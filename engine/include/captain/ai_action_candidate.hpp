@@ -5,6 +5,10 @@
 #include <optional>
 #include "captain/field_player_profile.hpp"
 namespace captain {
+// Ordinary subtype only. The caller handles special options and no-recipient fallback.
+std::optional<std::uint8_t> choose_ordinary_one_two_recipient(std::uint8_t carrier,
+ std::uint8_t ball_x,std::uint8_t ball_y,
+ const std::array<std::array<std::uint8_t,2>,10>& teammates);
 struct AiKeeperContent {
  std::uint8_t team_id=0;
  std::array<std::array<std::uint8_t,3>,221> profile_rows{};

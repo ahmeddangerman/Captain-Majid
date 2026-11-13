@@ -5,6 +5,27 @@
 #include <iostream>
 #include <string>
 int main(int argc,char** argv) try {
+ if(argc==2 && std::string(argv[1])=="--one-two-recipient") {
+  unsigned carrier,x,y;std::array<std::array<std::uint8_t,2>,10> positions{};
+  while(std::cin>>carrier>>x>>y) {
+   if(carrier>255 || x>255 || y>255)return 2;
+   for(auto& position:positions)for(auto& axis:position){unsigned value;if(!(std::cin>>value) || value>255)return 2;axis=static_cast<std::uint8_t>(value);}
+   auto result=captain::choose_ordinary_one_two_recipient(carrier,x,y,positions);
+   std::cout<<(result ? int(*result) : -1)<<'\n';
+  }
+  return std::cin.eof()?0:2;
+ }
+ if(argc==1) {
+  std::array<std::array<std::uint8_t,2>,10> positions{};positions.fill({200,200});
+  positions[5]={100,100};
+  if(captain::choose_ordinary_one_two_recipient(17,100,100,positions))throw std::runtime_error("One-two must exclude carrier");
+  positions[0]={119,119};positions[6]={101,101};
+  if(captain::choose_ordinary_one_two_recipient(17,100,100,positions)!=12)throw std::runtime_error("One-two chooses first slot, not nearest");
+  positions[0]={120,119};
+  if(captain::choose_ordinary_one_two_recipient(17,100,100,positions)!=18)throw std::runtime_error("One-two excludes distance20");
+  positions.fill({255,255});
+  if(captain::choose_ordinary_one_two_recipient(17,0,0,positions))throw std::runtime_error("One-two distance must not wrap across byte endpoints");
+ }
  if(argc==3 && std::string(argv[1])=="--pass-defender-generic") {
   std::ifstream file(argv[2],std::ios::binary);const auto content=captain::load_shot_content(file);if(!content.ai_pass_defense)return 2;
   unsigned id,flags,alternate,x,y,random,variant;std::array<std::uint8_t,10> teammates{};

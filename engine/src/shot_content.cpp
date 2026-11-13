@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a' && version!='b' && version!='c' && version!='d' && version!='e' && version!='f')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a' && version!='b' && version!='c' && version!='d' && version!='e' && version!='f' && version!='g')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -349,6 +349,12 @@ ShotContent load_shot_content(std::istream& input) {
         menu.home_keeper_directions=std::array<std::uint8_t,4>{};reader.bytes(*menu.home_keeper_directions);
         for(auto action:*menu.home_keeper_directions)if(action!=255 && action>6)throw std::invalid_argument("Invalid goalkeeper defensive direction");
         menu.home_keeper_icons=std::array<std::uint8_t,7>{};reader.bytes(*menu.home_keeper_icons);
+    }
+    if(version>='g') {
+        PassFlightComparisonContent comparison{};
+        comparison.range=reader.byte();comparison.offset=reader.byte();comparison.eligibility=reader.byte();reader.bytes(comparison.thresholds);
+        if(!comparison.range)throw std::invalid_argument("Invalid one-two flight comparison range");
+        classify_score(0,comparison.thresholds);content.one_two_flight_comparison=comparison;
     }
     reader.end();
     return content;
