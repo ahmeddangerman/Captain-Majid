@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player19 shot contact
+
+The sampled subtype1 goal-area shot meets defender3, whose selected action3 costs 80 stamina. The engine now uses the original shot-defense comparison data and reproduces the observed result3, including defender stamina, contact strength and loss; the state saves and reloads. Represented native and original state match at the comparison boundary.
+
+The original continuation reduces the clock to 5 and gives the ball to opposing player13 at (76,84); the engine has not yet implemented that recovery. The contact continuation is limited to the captured situation. Windows CMake build, all 65 tests, private replay and original comparisons passed. Random samples and presentation acknowledgements are controlled; live NMI, rendering, audio and hardware timing remain unverified. Next reproduce the clock and player13 recovery. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player19 goal-area shot choice
 
 After the controlled four-defender choices, the original generic goal-area AI selects candidate0, producing shot action0 subtype1. Native selection uses the extracted candidate table and matches the original represented state at the choice and preparation boundaries. The shot preparation costs 90, and its state saves and reloads. The continuation is restricted to the captured position, choices and random sample.

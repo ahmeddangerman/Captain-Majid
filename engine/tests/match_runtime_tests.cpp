@@ -206,6 +206,13 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream prepared_file(std::string(prefix)+"-corner19-attack-prepared.cmjsession",std::ios::binary);write_phase_session(prepared_file,attack_prepared->state.session);
  std::ostringstream attack_save(std::ios::binary);write_match_save(attack_save,attack_prepared->state,identity);std::istringstream attack_in(attack_save.str(),std::ios::binary);auto attack_restored=std::make_unique<MatchRuntimeState>(load_match_save(attack_in,identity));
  if(attack_restored->session.phase!=FieldSessionPhase::keeper_area_attack_prepared || attack_restored->session.area_ai_target->cost!=90)throw std::runtime_error("Corner shot preparation did not roundtrip");
+ auto shot_contact=std::make_unique<MatchStepResult>(step_match(*attack_restored,client_input(*attack_restored,0,0),content));
+ if(shot_contact->unsupported)throw std::runtime_error(std::string("Corner shot contact stopped: ")+capability_name(*shot_contact->unsupported));
+ if(shot_contact->state.session.phase!=FieldSessionPhase::keeper_area_defender_compared || shot_contact->state.session.recovery->opposing_player!=3 || shot_contact->state.session.area_sequence_result!=3)throw std::runtime_error("Corner shot contact differs");
+ std::ofstream shot_contact_file(std::string(prefix)+"-corner19-shot-contact.cmjsession",std::ios::binary);write_phase_session(shot_contact_file,shot_contact->state.session);
+ std::ostringstream contact_save(std::ios::binary);write_match_save(contact_save,shot_contact->state,identity);std::istringstream contact_in(contact_save.str(),std::ios::binary);auto contact_restored=std::make_unique<MatchRuntimeState>(load_match_save(contact_in,identity));
+ if(contact_restored->session.area_sequence_result!=3 || contact_restored->session.recovery->opposing_player!=3)throw std::runtime_error("Corner shot contact did not roundtrip");
+
 
 
 

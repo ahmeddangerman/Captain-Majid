@@ -1666,6 +1666,20 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_action;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_attack_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==6 && input.session.action->action==0) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  if(!content.data->area_shot_field_comparisons){result.unsupported=UnsupportedCapability::content;return result;}
+  auto next=input;auto& s=next.session;auto& f=s.current.field;const auto& p=f.roster[3];
+  try{const auto prepared=prepare_profiled_field_defender({3,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},content.data->field_players,3,1,0,content.data->defense);
+   const auto energy=calculate_energy({p.stamina,prepared.stamina_cost,p.type,11,0,1,true,false});
+   const auto& rule=(*content.data->area_shot_field_comparisons)[1];const auto compared=compare_defender_contact({s.action->power,prepared.base_strength,f.random_first,f.random_second,rule.range,rule.offset,energy.weakened,rule.eligible,1,3,0,rule.thresholds});
+   if(prepared.stamina_cost!=80 || energy.weakened || prepared.move_effect || compared.result_code!=3 || compared.special || compared.subtype){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+   f.roster[3].stamina=energy.stamina;s.recovery->opposing_player=3;s.area_defender_cursor=1;s.area_sequence_result=compared.result_code;
+   s.area_contact=AreaContactContext{1,3,0,prepared.move_effect,prepared.base_strength,energy.cost,compared.strength,compared.loss,compared.score,compared.result_code,energy.weakened};
+   s.control->motion_requested=16;s.control->last_carrier_cell=0;s.control->facing=64;s.phase=FieldSessionPhase::keeper_area_defender_compared;validate_phase_session(s);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(f,next.random_memory);result.state=std::move(next);return result;
+ }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_ai_chosen && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==6 && input.session.action->action==0) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
   auto next=input;const auto& f=next.session.current.field;const auto& p=f.roster[19];
@@ -1921,5 +1935,6 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  return result;
 }
 }
+
 
 
