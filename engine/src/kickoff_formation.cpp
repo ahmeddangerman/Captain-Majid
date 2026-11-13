@@ -19,4 +19,22 @@ std::array<KickoffPosition,22> place_kickoff_formation(const std::array<KickoffP
  }
  return result;
 }
+std::array<KickoffPosition,22> place_restart_formation(const std::array<KickoffPosition,22>& positions,
+ std::uint8_t side,std::uint8_t taker,std::uint8_t selection,const RestartFormationContent& content) {
+ if((side!=0 && side!=11) || selection>=8 || taker>=22 || taker==0 || taker==11 || (taker<11 ? 0 : 11)!=side)
+  throw std::invalid_argument("Restart formation needs a valid taker, side and selection");
+ auto result=positions;
+ for(unsigned slot=0;slot<22;++slot){
+  const auto local=slot%11;const auto table_index=local+((slot<11 ? side : (side^11u)));
+  const auto cell=slot==taker ? content.taker_cells[selection] : content.cells[selection][table_index];
+  if(cell==255)continue;
+  if(cell>=240)throw std::invalid_argument("Restart formation cell outside field");
+  auto x=static_cast<std::uint8_t>(52+8*(cell/12));auto y=static_cast<std::uint8_t>(84+8*(cell%12));
+  if(side==11){x=static_cast<std::uint8_t>(0u-x);y=static_cast<std::uint8_t>(0u-y);}
+  result[slot].x=static_cast<std::uint16_t>((positions[slot].x&255u)|(unsigned(x)<<8));
+  result[slot].y=static_cast<std::uint16_t>((positions[slot].y&255u)|(unsigned(y)<<8));
+ }
+ return result;
+}
+
 }

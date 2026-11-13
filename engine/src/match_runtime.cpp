@@ -1096,6 +1096,44 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::boundary_restart && input.session.current.field.side==11 && input.session.current.field.ball_owner==21 && input.session.current.field.ball_x==44 && input.session.current.field.ball_y==116 && input.session.current.clock.remaining==46){
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  try {auto next=input;for(auto& player:next.session.current.field.motion)player.status=0;for(auto& keeper:next.session.current.field.keepers){keeper.penalty=0;keeper.stun=0;}next.session.recovery->ball_variant=0;next.session.phase=FieldSessionPhase::player21_corner_setup;validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;}
+  catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::action;return result;}
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player21_corner_setup){
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  auto next=input;next.session.action->cursor=6;next.session.phase=FieldSessionPhase::player21_corner_position_selected;validate_phase_session(next.session);next.last_sequence=event.sequence;result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player21_corner_position_selected){
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  auto next=input;next.session.current.field.ball_owner=20;next.session.action->action=1;next.session.phase=FieldSessionPhase::player21_corner_taker_chosen;validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player21_corner_taker_chosen){
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  if(!content.data->restart_formations){result.unsupported=UnsupportedCapability::content;return result;}
+  try {
+   auto next=input;auto& field=next.session.current.field;std::array<KickoffPosition,22> positions{};
+   for(unsigned id=1;id<22;++id)if(id!=11){const auto& p=field.motion[field_motion_index(static_cast<std::uint8_t>(id))];positions[id]={p.x,p.y};}
+   const auto placed=place_restart_formation(positions,field.side,field.ball_owner,next.session.action->cursor,*content.data->restart_formations);
+   for(unsigned id=1;id<22;++id)if(id!=11){auto& p=field.motion[field_motion_index(static_cast<std::uint8_t>(id))];p.x=placed[id].x;p.y=placed[id].y;}
+   field.ball_x=static_cast<std::uint8_t>(placed[20].x>>8);field.ball_y=static_cast<std::uint8_t>(placed[20].y>>8);field.ball_cell=field_cell_at(field.ball_x,field.ball_y);
+   next.session.phase=FieldSessionPhase::player21_corner_formation_placed;validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::action;return result;}
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player21_corner_formation_placed){
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  if(content.data->field_players.skills.empty() || content.data->attack.moves[1].empty()){result.unsupported=UnsupportedCapability::content;return result;}
+  try {
+   auto next=input;auto& current=next.session.current;const auto& player=current.field.roster[20];
+   const auto prepared=prepare_attacking_action({{20,player.type,static_cast<std::uint8_t>(player.stamina),static_cast<std::uint8_t>(player.stamina>>8),player.level},1,0,0,11,0,current.field.random_first,current.field.random_second,false},content.data->field_players,content.data->attack);
+   current.field.roster[20].stamina=prepared.energy.stamina;next.session.action->power=prepared.action_power.power;next.session.action->move_effect=prepared.preparation.move_effect;next.session.action->move_flags=prepared.move_flags;next.session.recovery->attack_subtype=prepared.action_power.subtype;
+   current.field.elapsed=static_cast<std::uint8_t>(current.field.elapsed+18);const auto recovery=advance_keeper_recovery({current.field.keepers,current.shared_recovery_flags,current.shared_recovery_timer},18);current.field.keepers=recovery.keepers;current.shared_recovery_flags=recovery.shared_flags;current.shared_recovery_timer=recovery.shared_timer;
+   current.clock.extra_time=static_cast<std::uint8_t>(unsigned(current.clock.extra_time)+1u);
+   const auto clock=advance_match_clock(current.clock,18,current.field.random_first);if(clock.continuation!=ClockContinuation::ready){result.unsupported=UnsupportedCapability::period_transition;return result;}current.clock=clock.state;
+   next.session.phase=FieldSessionPhase::player21_corner_clocked;validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(current.field,next.random_memory);result.state=std::move(next);return result;
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::action;return result;}
+ }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::player3_area_keeper_decided) {
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   if(!content.data->experience || !input.session.score){result.unsupported=UnsupportedCapability::content;return result;}

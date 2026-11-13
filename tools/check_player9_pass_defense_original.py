@@ -307,4 +307,7 @@ compare_represented((a.trace/'native-player21-shot-save.cmjsession').read_bytes(
 observed,out=trace_recovery(rom[16:262160],saved)
 if observed['boundary']!='boundary_restart' or (out[0x635],out[0x637],out[0x634],out[0x636])!=(44,116,7,91):raise ValueError('Unexpected original keeper rebound boundary')
 compare_represented((a.trace/'native-player21-shot-recovery.cmjsession').read_bytes(),export_session(out,0),False,'player21 shot','boundary restart')
+for native,pc in (('setup','92f8'),('position','9306'),('taker','9318'),('formation','9328'),('clock','9342')):
+ original=(a.player3_shot/f'player21-out-{pc}-1.bin').read_bytes()
+ compare_represented((a.trace/f'native-player21-corner-{native}.cmjsession').read_bytes(),export_session(original,0),True,'player21 corner',native)
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

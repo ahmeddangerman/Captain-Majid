@@ -1,5 +1,13 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Opponent corner formation and clock
+
+Continued the saved goalkeeper rebound into the original opposing corner route. The engine clears the observed temporary status, selects corner position6 and player20, places both teams, and prepares the corner pass through the original 18-tick clock update. Controlled original/native represented states match setup, position, taker, all represented formation positions and the clock at 28 with one added-time unit. Formation and clock snapshots save/reload; missing formation content rejects atomically.
+
+The new optional CMJSHOTe data-only extension exports the original eight restart position tables and taker cells into a private pack. Older pack bytes remain unchanged after the header; missing content stops this continuation. The placement routine preserves player fractional coordinates and mirrors the original side11 positions. The private export command is `.venv\Scripts\python.exe tools/export_shot_content.py ..\Captain-Majid-analysis\Japanese-base-md5-77012436.nes ..\Captain-Majid-analysis\field-ai-e-20261113.cmjpack --team-id 3 --include-corner-formations`. No ROM or derived pack is committed.
+
+Windows CMake build, all 65 tests, private integration, malformed/truncated pack rejection and original comparisons passed. Random samples and presentation acknowledgements are controlled; live NMI, rendering, audio and hardware timing remain unverified. The original trace continues into a corner pass, which is the next engine task. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player21 shot saved out of bounds
 
 The observed player21 continuation reaches defender2 at clock49; with that defender explicitly set to skip, the original selects an ordinary shot. The shot meets defender5, whose comparison result is 0, and reaches the home goalkeeper at clock46. With goalkeeper action0, original and native comparison result is 2. The original then sends the loose ball out at (44,116), preserving fractional bytes (7,91). Native represented states match the controlled original through the keeper decision, save and boundary restart; the boundary state saves/reloads.

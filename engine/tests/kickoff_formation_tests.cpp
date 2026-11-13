@@ -27,5 +27,10 @@ int main(int argc,char**argv){try{
  bool rejected=false;try{place_kickoff_formation(p,1,0,0,c);}catch(const std::invalid_argument&){rejected=true;}if(!rejected)return 1;
  rejected=false;try{place_kickoff_formation(p,0,4,0,c);}catch(const std::invalid_argument&){rejected=true;}if(!rejected)return 1;
  c.on_ball[0]=240;rejected=false;try{place_kickoff_formation(p,0,0,0,c);}catch(const std::invalid_argument&){rejected=true;}if(!rejected)return 1;
+ RestartFormationContent restart{};for(auto& row:restart.cells)row.fill(255);restart.cells[6][12]=0;restart.cells[6][1]=13;restart.taker_cells.fill(228);
+ const auto corner=place_restart_formation(p,11,20,6,restart);
+ if(corner[0].x!=p[0].x || corner[1].x!=0xcc67 || corner[1].y!=0xac39 || corner[12].x!=0xc467 || corner[12].y!=0xa439 || corner[20].x!=0x3467 || corner[20].y!=0xac39)return 1;
+ rejected=false;try{place_restart_formation(p,11,4,6,restart);}catch(const std::invalid_argument&){rejected=true;}if(!rejected)return 1;
+ restart.cells[6][12]=240;rejected=false;try{place_restart_formation(p,11,20,6,restart);}catch(const std::invalid_argument&){rejected=true;}if(!rejected)return 1;
  std::cout<<"Kickoff formation checks passed\n";
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}

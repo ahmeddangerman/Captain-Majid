@@ -91,6 +91,33 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(recovery->state.session.phase!=FieldSessionPhase::boundary_restart || recovery->state.session.current.field.ball_x!=44 || recovery->state.session.current.field.ball_y!=116 || !recovery->state.ball_fraction || recovery->state.ball_fraction->x!=7 || recovery->state.ball_fraction->y!=91)throw std::runtime_error("Player21 goalkeeper boundary differs from original");
  std::ostringstream boundary_save(std::ios::binary);write_match_save(boundary_save,recovery->state,identity);std::istringstream boundary_in(boundary_save.str(),std::ios::binary);auto boundary_restore=std::make_unique<MatchRuntimeState>(load_match_save(boundary_in,identity));
  if(boundary_restore->session.phase!=FieldSessionPhase::boundary_restart || !boundary_restore->ball_fraction)throw std::runtime_error("Player21 boundary restart did not roundtrip");
+ auto corner=std::make_unique<MatchStepResult>(step_match(*boundary_restore,client_input(*boundary_restore,0,0),content));
+ if(corner->unsupported || corner->state.session.phase!=FieldSessionPhase::player21_corner_setup)throw std::runtime_error("Player21 corner setup stopped");
+ std::ofstream corner_file(std::string(prefix)+"-player21-corner-setup.cmjsession",std::ios::binary);write_phase_session(corner_file,corner->state.session);
+ auto corner_position=std::make_unique<MatchStepResult>(step_match(corner->state,client_input(corner->state,0,0),content));
+ if(corner_position->unsupported || corner_position->state.session.phase!=FieldSessionPhase::player21_corner_position_selected)throw std::runtime_error("Player21 corner position stopped");
+ std::ofstream position_file(std::string(prefix)+"-player21-corner-position.cmjsession",std::ios::binary);write_phase_session(position_file,corner_position->state.session);
+ auto corner_taker=std::make_unique<MatchStepResult>(step_match(corner_position->state,client_input(corner_position->state,0,0),content));
+ if(corner_taker->unsupported || corner_taker->state.session.phase!=FieldSessionPhase::player21_corner_taker_chosen || corner_taker->state.session.current.field.ball_owner!=20)throw std::runtime_error("Player21 corner taker stopped");
+ std::ofstream taker_file(std::string(prefix)+"-player21-corner-taker.cmjsession",std::ios::binary);write_phase_session(taker_file,corner_taker->state.session);
+ auto missing_content=content;missing_content.data->restart_formations.reset();auto missing=std::make_unique<MatchStepResult>(step_match(corner_taker->state,client_input(corner_taker->state,0,0),missing_content));
+ if(missing->unsupported!=UnsupportedCapability::content || missing->state.last_sequence!=corner_taker->state.last_sequence)throw std::runtime_error("Missing restart formation did not reject atomically");
+ auto formation=std::make_unique<MatchStepResult>(step_match(corner_taker->state,client_input(corner_taker->state,0,0),content));
+ if(formation->unsupported || formation->state.session.phase!=FieldSessionPhase::player21_corner_formation_placed)throw std::runtime_error("Player21 corner formation stopped");
+ std::ofstream formation_file(std::string(prefix)+"-player21-corner-formation.cmjsession",std::ios::binary);write_phase_session(formation_file,formation->state.session);
+ std::ostringstream corner_save(std::ios::binary);write_match_save(corner_save,formation->state,identity);std::istringstream corner_input(corner_save.str(),std::ios::binary);auto corner_restore=std::make_unique<MatchRuntimeState>(load_match_save(corner_input,identity));
+ if(corner_restore->session.phase!=FieldSessionPhase::player21_corner_formation_placed || corner_restore->session.current.field.ball_owner!=20)throw std::runtime_error("Corner formation did not roundtrip");
+ auto corner_clock=std::make_unique<MatchStepResult>(step_match(*corner_restore,client_input(*corner_restore,0,0),content));
+ if(corner_clock->unsupported || corner_clock->state.session.phase!=FieldSessionPhase::player21_corner_clocked)throw std::runtime_error("Player21 corner clock stopped");
+ std::ofstream corner_clock_file(std::string(prefix)+"-player21-corner-clock.cmjsession",std::ios::binary);write_phase_session(corner_clock_file,corner_clock->state.session);
+ std::ostringstream clock_save(std::ios::binary);write_match_save(clock_save,corner_clock->state,identity);std::istringstream clock_in(clock_save.str(),std::ios::binary);auto clock_restore=std::make_unique<MatchRuntimeState>(load_match_save(clock_in,identity));
+ if(clock_restore->session.phase!=FieldSessionPhase::player21_corner_clocked || clock_restore->session.current.clock.remaining!=28 || clock_restore->session.current.clock.extra_time!=1)throw std::runtime_error("Corner clock did not roundtrip");
+
+
+
+
+
+
 
 
 
