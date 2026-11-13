@@ -322,4 +322,21 @@ for native,pc in (('flight','e773-10'),('received','e0df-1'),('control','e145-1'
  original=(a.player3_shot/f'player21-out-{pc}.bin').read_bytes()
  compare_represented((a.trace/f'native-player21-corner2-{native}.cmjsession').read_bytes(),export_session(original,0),False,'second corner pass',native)
 if (original[0x441],original[0x5fb],original[0x635],original[0x637],original[0x5f7])!=(17,11,60,92,8):raise ValueError('Unexpected second corner recipient')
+raw=(a.player3_shot/'player21-out-e145-1.bin').read_bytes()
+for line in (a.trace/'native-corner-player17-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Corner player17 continuation stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ if phase==12:
+  raw=(a.player3_shot/'corner17-pass-e1b2-1.bin').read_bytes()
+  if (raw[0xe2],raw[0xe3],raw[0x43b],raw[0x5fc],raw[0x638])!=(first,second,1,19,5):raise ValueError('Unexpected original player17 pass choice')
+ else:observed,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-corner-player17-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'corner player17',str(i))
+for index,pc in ((0,'e1cb-1'),(1,'80ed-1'),(3,'c612-1'),(4,'de64-1'),(5,'e773-1'),(13,'8b4a-1')):
+ original=(a.player3_shot/f'corner17-pass-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-corner17-pass-{index}.cmjsession').read_bytes(),export_session(original,0),False,'corner player17 pass',pc)
+ if pc=='e773-1' and (original[0x61a],original[0x628])!=(38,128):raise ValueError('Unexpected original pass flight threshold')
+original=(a.player3_shot/'corner17-pass-8b73-1.bin').read_bytes()
+compare_represented((a.trace/'native-corner19-area-prepared.cmjsession').read_bytes(),export_session(original,0),False,'corner player19','area setup')
+if (original[0x441],original[0x600],original[0x601])!=(19,1,4):raise ValueError('Unexpected goal-area selection')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

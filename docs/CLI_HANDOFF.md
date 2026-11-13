@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player17 pass into the goal area
+
+Continued the second-corner possession through player17's movement and decision. With controlled random samples, player17 passes to player19 at (52,124), clock6; the original selects home defender4 in the goal-area setup. Native and original represented movement, pass preparation, flight and goal-area setup match, and the prepared state saves and reloads.
+
+Fixed the pass-flight defender threshold: the original uses 38 when the action auxiliary high bit is set, otherwise 255; the observed corner passes use 77. The previous threshold incorrectly detected defenders on this pass. The goal-area handoff is bounded to the observed continuation. Windows CMake build, all 65 tests, private integration and original comparisons passed. Random samples and presentation acknowledgements are controlled; live NMI, rendering, audio and frame timing remain unverified. Next trace defender4's decision and the subsequent attack. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Two corners through player17 control
 
 Continued the original corner sequence beyond formation. Player20's first pass targets player17 and encounters defenders [2,7,5,1]; defender2 produces result2, and the loose ball goes out again at (44,148), retaining fractions (22,209). The second corner uses the other original formation, consumes 18 clock ticks, adds one more unit of added time, and passes to player17. Original/native represented setup, both formations, clock, flight, block, boundary, second flight and player17 control match; player17 receives at (60,92), clock8. The second control state saves/reloads.
