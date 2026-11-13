@@ -483,6 +483,24 @@ for native,original_name in (('11','8b4a'),('home-area','8b73')):
 original=(a.player3_shot/'corner5-area-menu.bin').read_bytes()
 if (original[0x600],original[0x601])!=(1,18):raise ValueError('Unexpected corner outlet goal-area defender')
 compare_represented((a.trace/'native-corner5-area-menu.cmjsession').read_bytes(),export_session(original,0),False,'corner home player5','area menu')
+raw=original
+for line in (a.trace/'native-corner5-choice.txt').read_text().splitlines():
+ i,pressed,unsupported,phase,rng=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Corner player5 pass choice stopped')
+ if i<2:
+  injected=bytearray(raw);injected[0xe2:0xe4]=bytes((rng&255,(rng>>8)&255));_,raw=trace_menu(rom[16:262160],injected,'poll',pressed)
+ else:raw=(a.player3_shot/'corner5-pass-d80a-1.bin').read_bytes()
+ compare_represented((a.trace/f'native-corner5-choice-{i}.cmjsession').read_bytes(),export_session(raw,0),i==2,'corner home player5',str(i))
+for index,pc in ((0,'d949-1'),(1,'d84b-1'),(2,'8b8f-1'),(3,'8637-1'),(4,'8ff2-1')):
+ original=(a.player3_shot/f'corner5-target-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-corner5-target-{index}.cmjsession').read_bytes(),export_session(original,0),True,'corner player5 target',pc)
+ if original[0x624]!=39:raise ValueError('Unexpected corner player5 target cell')
+if original[0x5fc]!=255:raise ValueError('Unexpected corner player5 free pass target')
+if original[0x60b]!=4:raise ValueError('Unexpected corner player5 area defender choice')
+record=(a.trace/'native-corner5-target-3.cmjsession').read_bytes()
+if record[-11]!=1 or record[-10]!=4:raise ValueError('Corner area defense choice differs')
+
+
 
 
 

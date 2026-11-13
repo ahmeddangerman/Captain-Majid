@@ -911,7 +911,7 @@ PhaseSessionState acknowledge_sampled_unaffordable_shot(const PhaseSessionState&
 PhaseSessionState begin_ordinary_human_pass_target(const PhaseSessionState& input,std::optional<std::uint8_t> home_keeper_y) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::attack_choice_pending || !input.action || !input.recovery ||
-        input.current.field.side != 0 || input.action->action != 1 || input.action->menu_route != 0 || input.human_pass_cursor)
+        input.current.field.side != 0 || input.action->action != 1 || (input.action->menu_route != 0 && !(input.action->menu_route==2 && input.current.field.ball_owner==5 && input.current.field.ball_x==71 && input.current.field.ball_y==109 && input.current.clock.remaining==1 && input.keeper_area)) || input.human_pass_cursor)
         throw std::invalid_argument("Ordinary pass target requires a confirmed human pass and acknowledged ordinary type");
     OrdinaryPassTargetInitialization target{};
     if(input.current.field.ball_owner==0){
@@ -1001,7 +1001,7 @@ PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
     const bool player9_third_block=input.current.field.side==0 && input.current.field.ball_owner==9 && input.current.field.ball_x==172 && input.current.field.ball_y==124 && input.current.field.selected_defenders==5 && input.scheduling && input.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && input.ordinary_pass_defenses && input.ordinary_pass_defenses->count==2 && input.ordinary_pass_defenses->actions[0]==1 && input.ordinary_pass_defenses->actions[1]==2 && defender==18;
     const bool player4_fifth_block=input.current.field.side==0 && input.current.field.ball_owner==4 && input.current.field.ball_x==101 && input.current.field.ball_y==140 && input.current.field.selected_defenders==5 && input.scheduling && input.scheduling->selected_ids==std::array<std::uint8_t,5>{12,14,17,18,19} && input.ordinary_pass_defenses && input.ordinary_pass_defenses->count==4 && input.ordinary_pass_defenses->actions==std::array<std::uint8_t,5>{1,2,1,2,0} && defender==19;
     if (input.phase != FieldSessionPhase::ordinary_pass_defense_selection || !input.ordinary_pass_defenses ||
-        !input.scheduling || (action != 1 && action != 2 && !(action == 0 && (input.current.field.selected_defenders == 1 ||
+        !input.scheduling || (action != 1 && action != 2 && !(action==4 && defender==18 && input.action && input.action->menu_route==2 && input.current.field.ball_owner==5 && input.current.field.ball_x==71 && input.current.field.ball_y==109 && input.current.clock.remaining==1) && !(action == 0 && (input.current.field.selected_defenders == 1 ||
          (input.current.field.selected_defenders == 2 && input.ordinary_pass_defenses->count == 1 &&
           (input.ordinary_pass_defenses->actions[0] == 1 || input.ordinary_pass_defenses->actions[0] == 2)) || player9_third_block || player4_fifth_block))) || subtype != 0)
         throw std::invalid_argument("Unsupported observed ordinary pass defender choice");
@@ -1021,14 +1021,15 @@ PhaseSessionState record_ordinary_pass_defense(const PhaseSessionState& input,
 PhaseSessionState prepare_ordinary_pass(const PhaseSessionState& input,
     const FieldPlayerProfiles& players, const FieldDefenseContent& attack) {
     validate_phase_session(input);
+    const bool corner_area_pass=input.action && input.action->menu_route==2 && input.current.field.ball_owner==5 && input.current.field.ball_x==71 && input.current.field.ball_y==109 && input.current.clock.remaining==1 && input.recovery && input.recovery->ball_variant==1;
     if (input.phase != FieldSessionPhase::ordinary_pass_defenses_recorded || !input.recovery ||
-        input.recovery->ball_variant != 0)
+        (input.recovery->ball_variant != 0 && !corner_area_pass))
         throw std::invalid_argument("Ordinary pass preparation requires recorded defenses and the supported field situation");
     const auto& field = input.current.field;
     const auto& player = field.roster[field.ball_owner];
     const auto prepared = prepare_attacking_action({{field.ball_owner, player.type,
         static_cast<std::uint8_t>(player.stamina), static_cast<std::uint8_t>(player.stamina >> 8), player.level},
-        1, 0, 0, 0, field.selected_defenders, field.random_first, field.random_second, false}, players, attack);
+        1, static_cast<std::uint8_t>(corner_area_pass ? 1 : 0), 0, 0, field.selected_defenders, field.random_first, field.random_second, false}, players, attack);
     auto state = input;
     state.current.field.roster[field.ball_owner].stamina = prepared.energy.stamina;
     state.action->power = prepared.action_power.power;

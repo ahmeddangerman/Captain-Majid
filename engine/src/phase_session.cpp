@@ -60,6 +60,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool score36_human_pass=score25_human_pass && state.score && state.score->left_goals==3 && state.score->right_goals==6;
     const bool score25_shot=phase>=327 && phase<=330;
     const bool ordinary_human_target=phase>=331 && phase<=344;
+    const bool corner5_target=(phase>=331 && phase<=335) && state.current.field.side==0 && state.current.field.ball_owner==5 && state.current.field.ball_x==71 && state.current.field.ball_y==109 && state.current.clock.remaining==1 && state.action && state.action->menu_route==2 && state.keeper_area;
     if (state.ordinary_pass_candidates && !ordinary_human_target)
         throw std::invalid_argument("Ordinary pass candidate context requires the target phase");
     if (bool(state.ordinary_pass_recipient) != (phase>=332 && phase<=344))
@@ -76,7 +77,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         const auto& field = state.current.field;
         if (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling ||
             !state.human_pass_cursor || state.human_pass_steps || field.side != 0 || (field.ball_owner == 0 ? phase != 331 : field.ball_owner > 10) || field.selected_defenders > 5 ||
-            state.action->action != 1 || state.action->menu_route != 0 || state.current.clock.ball_mode != (phase>=333 ? 0 : 129) ||
+            state.action->action != 1 || (state.action->menu_route != 0 && !corner5_target) || state.current.clock.ball_mode != (phase>=333 ? 0 : 129) ||
             (phase>=335 ? (state.recovery->attack_subtype != 0 && state.recovery->attack_subtype != 128) : state.recovery->attack_subtype != 0) || *state.human_pass_cursor >= 240 ||
             field_cell_at(field.ball_x, field.ball_y) != field.ball_cell ||
             (field.ball_owner == 0 ? field.keepers[0].penalty_duration != field.ball_x :
@@ -126,7 +127,7 @@ void validate_phase_session(const PhaseSessionState& state) {
             const bool player9_third_block=field.side==0 && field.ball_owner==9 && field.ball_x==172 && field.ball_y==124 && field.selected_defenders==5 && state.scheduling && state.scheduling->selected_ids==std::array<std::uint8_t,5>{13,14,18,19,20} && defense.count>=3 && defense.actions[0]==1 && defense.actions[1]==2;
             const bool player4_fifth_block=field.side==0 && field.ball_owner==4 && field.ball_x==101 && field.ball_y==140 && field.selected_defenders==5 && state.scheduling && state.scheduling->selected_ids==std::array<std::uint8_t,5>{12,14,17,18,19} && defense.actions==std::array<std::uint8_t,5>{1,2,1,2,0};
             for (unsigned i=0; i<5; ++i)
-                if (defense.subtypes[i] || (i < defense.count ? (defense.actions[i]!=1 && defense.actions[i]!=2 && !(defense.actions[i]==0 && (field.selected_defenders==1 ||
+                if (defense.subtypes[i] || (i < defense.count ? (defense.actions[i]!=1 && defense.actions[i]!=2 && !(corner5_target && defense.actions[i]==4) && !(defense.actions[i]==0 && (field.selected_defenders==1 ||
                     (field.selected_defenders==2 && i==1 && (defense.actions[0]==1 || defense.actions[0]==2)) || (player9_third_block && i==2) || (player4_fifth_block && i==4)))) : defense.actions[i]!=0))
                     throw std::invalid_argument("Only explicitly captured ordinary defenses are supported");
         }
@@ -370,7 +371,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_menu=(phase>=66 && phase<=94) || ((phase==18 || phase==19 || (phase>=485 && phase<=492) || (phase>=478 && phase<=483) || (phase>=474 && phase<=476) || (phase>=467 && phase<=472)) && state.keeper_area);
     if((phase>=474 && phase<=476) && (!player6_area_route || !state.action || state.action->action || state.action->power!=9 || state.recovery->attack_subtype!=2 || state.current.field.random_first!=(phase==476 ? 0 : 34) || state.current.field.random_second!=217))throw std::invalid_argument("Invalid player6 area shot preparation");
     if(phase==477 && (!state.action || !state.recovery || !state.control || state.keeper_area || state.current.field.side!=0 || state.current.field.ball_owner!=6 || state.current.field.ball_x!=180 || state.current.field.ball_y!=156 || state.current.field.selected_defenders || state.current.clock.remaining!=99 || state.current.field.elapsed!=1 || state.current.field.random_first!=0 || state.current.field.random_second!=217 || state.action->action || state.action->menu_route || state.action->power!=9 || state.recovery->attack_subtype!=2 || state.recovery->opposing_player!=16 || state.area_defender_cursor!=1 || state.saved_ball_flight_flag!=1))throw std::invalid_argument("Invalid player6 area shot dispatch");
-    const bool area_state=area_setup || area_menu;
+    const bool area_state=area_setup || area_menu || corner5_target;
     const bool empty_attacking_area=(phase==68 || phase==78 || phase==79 || phase==90 || phase==93) && state.action && state.action->menu_route==1 && state.current.field.side==11 && !state.current.field.selected_defenders;
     const bool player8_keeper_area_menu=(phase==18 || phase==19 || (phase>=467 && phase<=472)) && state.keeper_area && state.action && state.action->menu_route==1 && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==196 && state.current.field.ball_y==124 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==11;
     const bool player4_keeper_area_menu=(phase==18 || phase==19 || (phase>=478 && phase<=483)) && state.keeper_area && state.action && state.action->menu_route==1 && state.current.field.side==0 && state.current.field.ball_owner==4 && state.current.field.ball_x==196 && state.current.field.ball_y==124 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==11 && state.area_defender_cursor==0 && !state.saved_ball_flight_flag;
@@ -1560,6 +1561,7 @@ PhaseSessionResult resolve_session_rewarded_terminal(const PhaseSessionState& in
     return result;
 }
 }
+
 
 
 

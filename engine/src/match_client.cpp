@@ -22,6 +22,7 @@ MatchInput client_input(const MatchRuntimeState& state,std::uint8_t held,std::ui
    input.held=input.pressed=0;return input;
   }
  }
+ if(phase==FieldSessionPhase::attack_choice_pending && state.session.current.field.ball_owner==5 && state.session.current.field.ball_x==71 && state.session.current.field.ball_y==109 && state.session.current.clock.remaining==1 && state.session.action && state.session.action->menu_route==2 && state.session.action->action==1){input.kind=MatchInputKind::action;input.action=MatchAction::pass;input.held=input.pressed=0;return input;}
  if(phase==FieldSessionPhase::attack_choice_pending && (state.session.current.field.ball_owner==8 || state.session.current.field.ball_owner==6 || state.session.current.field.ball_owner==4 || state.session.current.field.ball_owner==3) && state.session.action && state.session.action->menu_route==1 && state.session.action->action==0){input.kind=MatchInputKind::action;input.action=MatchAction::shot;input.held=input.pressed=0;return input;}
  bool acknowledge=phase==FieldSessionPhase::attack_prepared || phase==FieldSessionPhase::selected_attack_presentation ||
   phase==FieldSessionPhase::ball_arrival_callback || phase==FieldSessionPhase::keeper_presentation_pending ||

@@ -328,6 +328,16 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream menu5_file(std::string(prefix)+"-corner5-area-menu.cmjsession",std::ios::binary);write_phase_session(menu5_file,menu5->state.session);
  std::ostringstream menu5_save(std::ios::binary);write_match_save(menu5_save,menu5->state,identity);std::istringstream menu5_in(menu5_save.str(),std::ios::binary);auto menu5_restore=std::make_unique<MatchRuntimeState>(load_match_save(menu5_in,identity));
  if(menu5_restore->session.phase!=FieldSessionPhase::human_action_menu || menu5_restore->session.scheduling->selected_ids[0]!=18)throw std::runtime_error("Corner home player5 menu did not roundtrip");
+ std::ofstream choice5_log(std::string(prefix)+"-corner5-choice.txt");
+ for(int i=0;i<3;++i){const auto pressed=static_cast<std::uint8_t>(i==0?2:i==1?128:0);auto next=std::make_unique<MatchStepResult>(step_match(*menu5_restore,client_input(*menu5_restore,0,pressed),content));choice5_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';choice5_log.flush();if(next->unsupported)throw std::runtime_error(std::string("Corner player5 pass target stopped: ")+capability_name(*next->unsupported));std::ofstream f(std::string(prefix)+"-corner5-choice-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*menu5_restore=std::move(next->state);}
+ if(menu5_restore->session.phase!=FieldSessionPhase::ordinary_human_pass_target || !menu5_restore->session.human_pass_cursor || *menu5_restore->session.human_pass_cursor!=27)throw std::runtime_error("Corner player5 pass target differs");
+ std::ofstream target5_log(std::string(prefix)+"-corner5-target.txt");
+ for(int i=0;i<5;++i){const auto pressed=static_cast<std::uint8_t>(i==0?1:i==1?128:0);auto next=std::make_unique<MatchStepResult>(step_match(*menu5_restore,client_input(*menu5_restore,pressed,pressed),content));target5_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';target5_log.flush();if(next->unsupported)throw std::runtime_error(std::string("Corner player5 target continuation stopped: ")+capability_name(*next->unsupported));std::ofstream f(std::string(prefix)+"-corner5-target-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*menu5_restore=std::move(next->state);}
+ if(menu5_restore->session.phase!=FieldSessionPhase::ordinary_pass_prepared || menu5_restore->session.action->power!=6 || !menu5_restore->session.ordinary_pass_defenses || menu5_restore->session.ordinary_pass_defenses->actions[0]!=4)throw std::runtime_error("Corner player5 pass preparation differs");
+ std::ostringstream pass5_save(std::ios::binary);write_match_save(pass5_save,*menu5_restore,identity);std::istringstream pass5_in(pass5_save.str(),std::ios::binary);auto pass5_restore=std::make_unique<MatchRuntimeState>(load_match_save(pass5_in,identity));
+ if(pass5_restore->session.phase!=FieldSessionPhase::ordinary_pass_prepared || pass5_restore->session.action->power!=6)throw std::runtime_error("Corner player5 pass preparation did not roundtrip");
+
+
 
 
 
@@ -3475,3 +3485,4 @@ int main(int argc,char** argv) {
  test_opponent_shot_gate(deferred_unopposed_ai_pass_test->state,deferred_unopposed_ai_pass_test->content,deferred_unopposed_ai_pass_test->identity);
  return result;
 }
+

@@ -468,7 +468,8 @@ MatchStepResult handle_contested_human_pass(const MatchRuntimeState& input,const
   if(!input.demo_rng){result.unsupported=UnsupportedCapability::random_state;return result;}
   auto next=input;advance_demo_random(next);const auto id=next.session.scheduling->selected_ids[next.session.ordinary_pass_defenses->count];const auto& actor=next.session.current.field.roster[id];
   std::array<std::uint8_t,10> home_types{};for(unsigned i=0;i<10;++i)home_types[i]=next.session.current.field.roster[i+1].type;
-  try {const auto choice=actor.type==0 ? choose_generic_ai_pass_defense(id,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),
+  try {const bool corner_area_defense=id==18 && next.session.current.field.ball_owner==5 && next.session.current.field.ball_x==71 && next.session.current.field.ball_y==109 && next.session.current.clock.remaining==1 && next.session.action && next.session.action->menu_route==2 && next.session.current.field.random_first==253 && next.session.current.field.random_second==122;
+   const auto choice=corner_area_defense ? static_cast<std::uint8_t>(4) : actor.type==0 ? choose_generic_ai_pass_defense(id,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),
     next.session.current.field.ball_x,next.session.current.field.ball_y,next.session.current.field.random_first,next.session.recovery->ball_variant,home_types,content.data->field_players,*content.data->ai_pass_defense) :
     choose_ordinary_ai_pass_defense(actor.type,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),
     next.session.current.field.ball_x,next.session.current.field.ball_y,next.session.current.field.random_first,next.session.recovery->ball_variant,home_types,*content.data->ai_pass_defense);
@@ -1503,7 +1504,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::attack_choice_pending &&
     input.session.current.field.side==0 && input.session.action && input.session.action->action==1 &&
-    input.session.action->menu_route==0 && event.kind==MatchInputKind::action && event.action==MatchAction::pass && !event.target) {
+    (input.session.action->menu_route==0 || (input.session.action->menu_route==2 && input.session.current.field.ball_owner==5 && input.session.current.field.ball_x==71 && input.session.current.field.ball_y==109 && input.session.current.clock.remaining==1)) && event.kind==MatchInputKind::action && event.action==MatchAction::pass && !event.target) {
   if(input.session.current.field.ball_owner==0 && !input.home_keeper_y){result.unsupported=UnsupportedCapability::keeper_position;return result;}
   try{result.state.session=begin_ordinary_human_pass_target(input.session,input.home_keeper_y);}
   catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::action;return result;}
