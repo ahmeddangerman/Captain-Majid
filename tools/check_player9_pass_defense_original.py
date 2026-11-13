@@ -529,6 +529,12 @@ for line in (a.trace/'native-added8-journey.txt').read_text().splitlines():
 for name,pc in (('display','daa0'),('dispatch','c400')):
  original=(a.player3_shot/f'period-transition-30-{pc}-1.bin').read_bytes()
  compare_represented((a.trace/f'native-period-transition-{name}.cmjsession').read_bytes(),export_session(original,0),True,'period transition',name)
+original=(a.player3_shot/'period-restart-30-d092.bin').read_bytes()
+native=(a.trace/'native-interval-stamina.cmjsession').read_bytes()
+for player in range(11):
+ original_stamina=original[0x301+12*player]|original[0x302+12*player]<<8
+ offset=34+4*player+2;native_stamina=native[offset]|native[offset+1]<<8
+ if native_stamina!=original_stamina:raise ValueError(f'Interval stamina differs for player {player}')
 
 
 

@@ -72,7 +72,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
     const bool postgoal_opponent_action=phase>=392 && phase<=414;
     const bool extended_opponent=player14_pass || player19_return_shot || player19_return_keeper || score23_opponent_shot || postgoal_opponent_action;
-    if(phase>255 && !(phase>=415 && phase<=505) && !(phase>=345 && phase<=391) && !extended_opponent && !score23_human_pass && !score24_dribble && !score25_human_pass && !score25_shot && !ordinary_human_target)throw std::invalid_argument("Unsupported extended phase session state");
+    if(phase>255 && !(phase>=415 && phase<=506) && !(phase>=345 && phase<=391) && !extended_opponent && !score23_human_pass && !score24_dribble && !score25_human_pass && !score25_shot && !ordinary_human_target)throw std::invalid_argument("Unsupported extended phase session state");
     if (ordinary_human_target) {
         const auto& field = state.current.field;
         if (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling ||
@@ -364,8 +364,8 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_action6=phase==104 || (phase>=106 && phase<=110) || phase==113;
     const bool area_action6_race=(phase>=106 && phase<=110) || phase==113;
     const bool area_setup=phase==65 || phase==105;
-    const bool observed_period_transition=(phase==504 || phase==505) && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==146 && state.current.field.ball_y==109 && !state.current.clock.remaining && !state.current.clock.extra_time && state.action && state.action->action==1;
-    if((phase==504 || phase==505) && (!observed_period_transition || state.current.clock.ball_mode || state.current.clock.script_flags || !state.experience || (phase==505 && (state.experience->totals[10]&0xff00u))))throw std::invalid_argument("Invalid observed period transition");
+    const bool observed_period_transition=(phase>=504 && phase<=506) && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==146 && state.current.field.ball_y==109 && !state.current.clock.remaining && !state.current.clock.extra_time && state.action && state.action->action==1;
+    if((phase>=504 && phase<=506) && (!observed_period_transition || state.current.clock.ball_mode || state.current.clock.script_flags || !state.experience || (phase>=505 && (state.experience->totals[10]&0xff00u))))throw std::invalid_argument("Invalid observed period transition");
     const bool corner8_recovery=phase==95 && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==95 && state.current.field.ball_y==109 && !state.current.clock.remaining && state.current.clock.extra_time==14 && state.action && state.action->action==1 && state.action->menu_route==2;
     const bool corner5_area=(phase==65 || phase==83 || phase==84 || phase==86 || phase==89 || phase==94) && state.current.field.side==0 && state.current.field.ball_owner==5 && state.current.field.ball_x==71 && state.current.field.ball_y==109 && state.current.clock.remaining==(phase==65 ? 1 : 0) && state.action && state.action->action==1 && state.recovery && state.recovery->ball_variant==1;
     const bool corner16_area=(phase==65 || phase==67 || (phase>=69 && phase<=72) || phase==78 || phase==79 || phase==90) && state.current.field.side==11 && state.current.field.ball_owner==16 && state.current.field.ball_x==68 && state.current.field.ball_y==141 && state.current.clock.remaining==(phase==90 ? 2 : 4) && state.action && (state.action->action==1 || ((phase==78 || phase==79 || phase==90) && state.action->action==0)) && state.recovery && state.recovery->ball_variant==1;

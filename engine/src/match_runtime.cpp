@@ -1143,6 +1143,15 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::observed_period_dispatch) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  if(!content.data->world_step){result.unsupported=UnsupportedCapability::content;return result;}
+  try {auto next=input;
+   next.session.current.field=restore_period_stamina(input.session.current.field,1,content.data->field_players,content.data->goalkeepers,*content.data->world_step);
+   next.session.phase=FieldSessionPhase::observed_interval_stamina;validate_phase_session(next.session);
+   next.last_sequence=event.sequence;result.state=std::move(next);return result;
+  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::period_transition;return result;}
+ }
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::period_end || input.session.phase==FieldSessionPhase::observed_period_display) && input.session.current.field.side==0 && input.session.current.field.ball_owner==8 && input.session.current.field.ball_x==146 && input.session.current.field.ball_y==109 && !input.session.current.clock.remaining && !input.session.current.clock.extra_time && input.session.action && input.session.action->action==1) {
   const bool display=input.session.phase==FieldSessionPhase::period_end;
   if(event.kind!=(display ? MatchInputKind::tick : MatchInputKind::presentation_complete)){result.unsupported=UnsupportedCapability::presentation;return result;}

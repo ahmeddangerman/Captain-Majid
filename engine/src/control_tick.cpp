@@ -181,6 +181,20 @@ FieldPhaseState initialize_first_match_roster(const FieldPhaseState& input,const
     return field;
 }
 
+FieldPhaseState restore_period_stamina(const FieldPhaseState& input,std::uint8_t period,
+    const FieldPlayerProfiles& profiles,const GoalkeeperProfiles& keepers,const WorldStepContent& content) {
+    auto field=input;
+    if(period!=1 && period!=2)return field;
+    for(unsigned id=0;id<=10;++id) {
+        auto& player=field.roster[id];
+        const auto maximum=maximum_stamina(field,static_cast<std::uint8_t>(id),profiles,keepers,content);
+        const auto shift=static_cast<unsigned>((player.type==32 ? 4 : 3)-(period==2 ? 1 : 0));
+        const auto candidate=static_cast<std::uint16_t>(unsigned(player.stamina)+(maximum>>shift));
+        player.stamina=std::min(candidate,maximum);
+    }
+    return field;
+}
+
 static ControlTickResult begin_control_clock(const PhaseSessionState& input) {
     validate_phase_session(input);
     if (input.phase != FieldSessionPhase::control_clock_pending || !input.scheduling)

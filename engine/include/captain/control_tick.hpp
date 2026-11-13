@@ -12,6 +12,9 @@ struct WorldStepContent {
 // Reconstruct the traced first-match home lineup and initial stamina; other field data is retained.
 FieldPhaseState initialize_first_match_roster(const FieldPhaseState& input,const std::array<std::uint8_t,11>& lineup,
     const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content);
+// Original interval recovery operates on home IDs0..10; periods other than1/2 are unchanged.
+FieldPhaseState restore_period_stamina(const FieldPhaseState& input,std::uint8_t period,
+    const FieldPlayerProfiles& field,const GoalkeeperProfiles& keepers,const WorldStepContent& content);
 struct ControlTickResult {
     PhaseSessionState state;
     std::optional<MatchClockResult> clock{};

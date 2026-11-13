@@ -384,6 +384,13 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(period_dispatch->state.session.phase!=FieldSessionPhase::observed_period_dispatch)throw std::runtime_error("Period return dispatch differs");
  for(const auto& sample:{std::pair<const char*,const MatchRuntimeState&>{"display",period_display->state},{"dispatch",period_dispatch->state}}){std::ofstream f(std::string(prefix)+"-period-transition-"+sample.first+".cmjsession",std::ios::binary);write_phase_session(f,sample.second.session);}
  for(const auto* sample:{&period_display->state,&period_dispatch->state}){std::ostringstream saved(std::ios::binary);write_match_save(saved,*sample,identity);std::istringstream in(saved.str(),std::ios::binary);const auto restored=load_match_save(in,identity);if(restored.session.phase!=sample->session.phase)throw std::runtime_error("Period transition did not roundtrip");}
+ const auto wrong_interval=step_match(period_dispatch->state,{MatchInputKind::tick,period_dispatch->state.last_sequence+1},content);
+ if(wrong_interval.unsupported!=UnsupportedCapability::presentation || wrong_interval.state.last_sequence!=period_dispatch->state.last_sequence)throw std::runtime_error("Interval requires an atomic scene acknowledgement");
+ auto interval=std::make_unique<MatchStepResult>(step_match(period_dispatch->state,client_input(period_dispatch->state,0,0),content));
+ if(interval->unsupported || interval->state.session.phase!=FieldSessionPhase::observed_interval_stamina)throw std::runtime_error("Interval stamina recovery stopped");
+ std::ofstream interval_file(std::string(prefix)+"-interval-stamina.cmjsession",std::ios::binary);write_phase_session(interval_file,interval->state.session);
+ std::ostringstream interval_save(std::ios::binary);write_match_save(interval_save,interval->state,identity);std::istringstream interval_in(interval_save.str(),std::ios::binary);
+ if(load_match_save(interval_in,identity).session.phase!=FieldSessionPhase::observed_interval_stamina)throw std::runtime_error("Interval recovery did not roundtrip");
 
 
 

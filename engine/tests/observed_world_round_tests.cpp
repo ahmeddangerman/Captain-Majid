@@ -2,6 +2,8 @@
 #include "captain/control_session.hpp"
 #include "captain/action_menu.hpp"
 #include "captain/phase_session_io.hpp"
+#include "captain/shot_content.hpp"
+#include <fstream>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -11,9 +13,40 @@ std::string bytes(const captain::PhaseSessionState& state) {
     std::ostringstream output; captain::write_phase_session(output, state); return output.str();
 }
 }
-int main() {
+int main(int argc,char** argv) {
     using namespace captain;
     try {
+        if(argc==5 && std::string(argv[1])=="--period-stamina") {
+            std::ifstream pack(argv[2],std::ios::binary),session(argv[3],std::ios::binary),cases(argv[4],std::ios::binary);
+            if(!pack || !session || !cases)throw std::invalid_argument("Missing period recovery fixture");
+            const auto content=load_shot_content(pack);const auto original=load_phase_session(session);
+            if(!content.world_step)throw std::invalid_argument("Missing stamina content");
+            unsigned count=0;char raw[56];
+            while(cases.read(raw,sizeof(raw))) {
+                auto field=original.current.field;
+                for(unsigned id=0;id<11;++id){field.roster[id].type=static_cast<unsigned char>(raw[1+id]);field.roster[id].stamina=static_cast<unsigned char>(raw[12+2*id])|(unsigned(static_cast<unsigned char>(raw[13+2*id]))<<8);}
+                const auto result=restore_period_stamina(field,static_cast<unsigned char>(raw[0]),content.field_players,content.goalkeepers,*content.world_step);
+                for(unsigned id=0;id<11;++id) {
+                    const auto expected=static_cast<unsigned char>(raw[34+2*id])|(unsigned(static_cast<unsigned char>(raw[35+2*id]))<<8);
+                    if(result.roster[id].stamina!=expected)throw std::runtime_error("Original period recovery differs at case "+std::to_string(count)+" player "+std::to_string(id));
+                }
+                ++count;
+            }
+            if(cases.gcount()!=0 || !count)throw std::invalid_argument("Invalid period recovery fixtures");
+            std::cout<<count<<" original period recovery cases match\n";return 0;
+        }
+        {
+            FieldPhaseState field{};FieldPlayerProfiles players{};GoalkeeperProfiles keepers{};WorldStepContent content{};
+            players.skills.resize(1);keepers.skills.resize(1);content.stamina_curve.fill(400);
+            for(auto& player:field.roster){player.type=1;player.stamina=100;}
+            field.roster[3].type=32;field.roster[4].stamina=390;
+            const auto first=restore_period_stamina(field,1,players,keepers,content);
+            if(first.roster[0].stamina!=150 || first.roster[3].stamina!=125 || first.roster[4].stamina!=400 ||
+               first.roster[11].stamina!=100 || field.roster[0].stamina!=100) return 1;
+            const auto second=restore_period_stamina(field,2,players,keepers,content);
+            if(second.roster[0].stamina!=200 || second.roster[3].stamina!=150 || second.roster[4].stamina!=400) return 1;
+            if(restore_period_stamina(field,0,players,keepers,content).roster[0].stamina!=100) return 1;
+        }
         std::string records = "CMJWORLDOBS1\n";
         for (unsigned i = 0; i < 22; ++i) records += "1 0 2 3 1 1 160 3\n";
         std::istringstream record_stream(records);
