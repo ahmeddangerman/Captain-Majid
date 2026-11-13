@@ -351,6 +351,26 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(added5->state.session.phase!=FieldSessionPhase::keeper_area_terminal_result || added5->state.session.current.clock.extra_time!=14)throw std::runtime_error("Corner player5 added-time resume differs");
  std::ostringstream terminal5_save(std::ios::binary);write_match_save(terminal5_save,added5->state,identity);std::istringstream terminal5_in(terminal5_save.str(),std::ios::binary);auto terminal5_restore=std::make_unique<MatchRuntimeState>(load_match_save(terminal5_in,identity));
  if(terminal5_restore->session.phase!=FieldSessionPhase::keeper_area_terminal_result || terminal5_restore->session.current.clock.extra_time!=14)throw std::runtime_error("Corner player5 added-time result did not roundtrip");
+ auto dispatch5=std::make_unique<MatchStepResult>(step_match(*terminal5_restore,client_input(*terminal5_restore,0,0),content));
+ if(dispatch5->unsupported)throw std::runtime_error(std::string("Corner player5 area dispatch stopped: ")+capability_name(*dispatch5->unsupported));
+ if(dispatch5->state.session.phase!=FieldSessionPhase::keeper_area_recovery_ready || dispatch5->state.session.current.field.random_first)throw std::runtime_error("Corner player5 area dispatch differs");
+ std::ofstream dispatch5_file(std::string(prefix)+"-corner5-area-dispatch.cmjsession",std::ios::binary);write_phase_session(dispatch5_file,dispatch5->state.session);
+ auto recovery5=std::make_unique<MatchStepResult>(step_match(dispatch5->state,client_input(dispatch5->state,0,0),content));
+ if(recovery5->unsupported)throw std::runtime_error(std::string("Corner player5 loose recovery stopped: ")+capability_name(*recovery5->unsupported));
+ if(recovery5->state.session.phase!=FieldSessionPhase::keeper_area_recovered_owner || recovery5->state.session.current.field.ball_owner!=8)throw std::runtime_error("Corner player5 recovery differs");
+ std::ofstream recovery5_file(std::string(prefix)+"-corner5-area-recovery.cmjsession",std::ios::binary);write_phase_session(recovery5_file,recovery5->state.session);
+ auto control8_entry=std::make_unique<MatchStepResult>(step_match(recovery5->state,client_input(recovery5->state,0,0),content));
+ if(control8_entry->unsupported)throw std::runtime_error(std::string("Corner player8 control entry stopped: ")+capability_name(*control8_entry->unsupported));
+ auto control8=std::make_unique<MatchStepResult>(step_match(control8_entry->state,client_input(control8_entry->state,0,0),content));
+ if(control8->unsupported)throw std::runtime_error(std::string("Corner player8 control stopped: ")+capability_name(*control8->unsupported));
+ if(control8->state.session.phase!=FieldSessionPhase::control_ready || control8->state.session.current.field.ball_owner!=8)throw std::runtime_error("Corner player8 control differs");
+ for(const auto& sample:{std::pair<const char*,const MatchRuntimeState&>{"entry",control8_entry->state},{"ready",control8->state}}){std::ofstream f(std::string(prefix)+"-corner8-control-"+sample.first+".cmjsession",std::ios::binary);write_phase_session(f,sample.second.session);}
+ std::ostringstream control8_save(std::ios::binary);write_match_save(control8_save,control8->state,identity);std::istringstream control8_in(control8_save.str(),std::ios::binary);auto control8_restore=std::make_unique<MatchRuntimeState>(load_match_save(control8_in,identity));
+ if(control8_restore->session.phase!=FieldSessionPhase::control_ready || control8_restore->session.current.field.ball_owner!=8 || control8_restore->session.current.clock.extra_time!=14)throw std::runtime_error("Corner player8 control did not roundtrip");
+
+
+
+
 
 
 

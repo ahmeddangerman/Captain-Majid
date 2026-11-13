@@ -1,5 +1,11 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Player8 recovers during added time
+
+Continued player5's result3 contact after the added-time announcement. Native and original match the field movement, loose-ball relocation and recovery; home player8 receives at (95,109), with clock0 and 14 added-time units. The control setup matches the original and saves and reloads. This confirms that defender18 did not take possession in the sampled action4 outcome.
+
+The observed terminal route reuses the area dispatch and recovery calculations while preserving the original action and carried state for this captured case. Windows CMake build, all 65 tests, private replay and original comparisons passed. Inputs/random samples are controlled, the home keeper Y comes from the original capture and presentation waits are acknowledged; live NMI, rendering, audio and frame timing remain unverified. Next continue player8 possession through added time and toward period end. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Home area contact enters added time
 
 Defender18's action4 against player5's prepared pass produces result3 in the controlled original. Native and original match the defender's 60-point preparation, comparison strength/loss and represented contact state. The subsequent contact clock takes the remaining time from 1 to 0 and triggers an added-time presentation with 14 units. After acknowledgement, native and original match the resumed clock, contact presentation and terminal result; that state saves and reloads.

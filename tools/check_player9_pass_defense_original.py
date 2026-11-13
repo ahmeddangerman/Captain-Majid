@@ -510,6 +510,17 @@ compare_represented((a.trace/'native-corner5-added-time.cmjsession').read_bytes(
 for index,name in ((0,'clock'),(1,'presentation'),(2,'next')):
  original=(a.player3_shot/f'corner5-contact-after-{name}.bin').read_bytes()
  compare_represented((a.trace/f'native-corner5-added-resume-{index}.cmjsession').read_bytes(),export_session(original,0),False,'corner player5 added time',name)
+original=(a.player3_shot/'corner5-dispatch-8a72-1.bin').read_bytes()
+compare_represented((a.trace/'native-corner5-area-dispatch.cmjsession').read_bytes(),export_session(original,0),False,'corner player5','terminal field dispatch')
+original=(a.player3_shot/'corner5-dispatch-8c31-1.bin').read_bytes()
+if (original[0x441],original[0x5fb],original[0x635],original[0x637])!=(8,0,95,109):raise ValueError('Unexpected corner player5 loose-ball recovery')
+compare_represented((a.trace/'native-corner5-area-recovery.cmjsession').read_bytes(),export_session(original,0),False,'corner player5','loose-ball recovery')
+for name,pc in (('entry','e0df-1'),('ready','e145-1')):
+ original=(a.player3_shot/f'corner5-dispatch-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-corner8-control-{name}.cmjsession').read_bytes(),export_session(original,0),False,'corner player8 control',name)
+
+
+
 
 
 
