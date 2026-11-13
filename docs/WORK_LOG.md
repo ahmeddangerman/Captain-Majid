@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-14 - Interceptor goal-area shot chosen and prepared
+
+Original selects no defenders at player17 (77,107), clock156. Native now reaches choices-done, samples seed697902401 (random65/37), chooses action0 subtype1, and prepares power7. All represented states match, including the empty selection. The reusable checker now verifies twelve one-two/goal-area boundaries plus the six defended-pass boundaries. Windows build, all65 CTests and continuous original comparison pass. This remains a bounded captured runtime sequence, not generalized AI or live presentation.
+
+Next implement the unopposed shot dispatch. Private interceptor17-area-shot-original contains 829d-1,82a0-1,83f5-1,83f8-1,e773-1..5,e7cc-1,dd1c-1 RAM. Original no-defender route82AA calls90DD, whose action-indexed elapsed table is9109 (distinct from defended prefix908E). For this shot, clock156 becomes155 with field.elapsed1 at83F5; field step resets elapsed/random-first at83F8; first flight starts at clock154. Do not reuse the old defended shot two-tick prefix or the current empty-pass zero-tick helper. Current native stops deliberately after shot preparation (phase79); shot flight/keeper outcome still unimplemented for this sequence. Overall progress remains unmeasured. Suggested model: GPT-6.1 Terra High.
+
 ## 2026-11-14 - One-two saves and goal-area setup verified
 
 Extended save validation for the observed interception/one-two sequence. Preparation, outward setup, receiver swap, return setup, contact and goal-area setup save/reload byte-identically. Missing new comparison content fails atomically. The new player17 reception at (77,107), clock156 now proceeds to goal-area phase65; represented state matches the original. The original checker covers nine one-two boundaries. Independent review found no remaining important defect in the pass/comparison/save increment; the final goal-area setup extension was verified separately. Next continue the defensive choices and attacking decision from phase65. Overall progress remains unmeasured; complete playable match and visible desktop acceptance remain unfinished. Suggested model: GPT-6.1 Terra High.

@@ -128,6 +128,17 @@ static void verify_equalizer_interception_control(const captain::MatchRuntimeSta
  {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-area.cmjsession",std::ios::binary);write_phase_session(file,area.state.session);}
  std::cout<<"Interceptor goal-area phase "<<static_cast<unsigned>(area.state.session.phase)<<'\n';
  roundtrip(area.state);
+ auto selection=step_match(area.state,client_input(area.state,0,0),content);
+ if(selection.unsupported || selection.state.session.phase!=FieldSessionPhase::keeper_area_choices_done || selection.state.session.current.field.selected_defenders)
+  throw std::runtime_error("Interceptor goal-area empty selection differs");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-area-selection.cmjsession",std::ios::binary);write_phase_session(file,selection.state.session);}
+ auto attack=step_match(selection.state,client_input(selection.state,0,0),content);
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-area-choice.txt");file<<selection.state.demo_rng<<' '<<(attack.unsupported ? static_cast<int>(*attack.unsupported) : -1)<<' '<<attack.state.demo_rng<<'\n';}
+ if(attack.unsupported)throw std::runtime_error("Interceptor goal-area attacking choice unsupported");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-area-choice.cmjsession",std::ios::binary);write_phase_session(file,attack.state.session);}
+ auto shot=step_match(attack.state,client_input(attack.state,0,0),content);
+ if(shot.unsupported)throw std::runtime_error("Interceptor goal-area shot preparation unsupported");
+ {std::ofstream file(std::string(prefix)+"-equalizer17-one-two-area-prepared.cmjsession",std::ios::binary);write_phase_session(file,shot.state.session);}
 }
 static void continue_player14_interception(const captain::MatchRuntimeState& initial,const captain::MatchContent& content,const captain::MatchContentIdentity& identity,const char* prefix) {
  using namespace captain;

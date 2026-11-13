@@ -103,11 +103,12 @@ def main():
                 ('setup-3','return-target'), ('setup-4','flight'),
                 ('swap','swap-after'), ('return-flight','return-flight'),
                 ('return-contact','return-defender-cleanup'), ('received','return-area'),
-                ('area','area-setup')):
+                ('area','area-setup'), ('area-selection','area-selection'),
+                ('area-choice','area-choice'), ('area-prepared','area-prepared')):
             native = Path(str(args.control_prefix) + '-equalizer17-one-two-' + suffix + '.cmjsession').read_bytes()
             raw = (args.one_two_original / (boundary + '.ram')).read_bytes()
             compare_represented(native,export_session(raw,0),False,'interceptor one-two',boundary)
-        print('Nine one-two boundaries match through weakening and player17 goal-area setup.')
+        print('Twelve one-two/goal-area boundaries match through player17 shot preparation.')
     print('Six represented boundaries match; opponent player17 controls at (118,107), clock163, and continues control.')
     print(f'{count} further movement/clock/control boundaries match through player17 AI decision, clock161.')
 
