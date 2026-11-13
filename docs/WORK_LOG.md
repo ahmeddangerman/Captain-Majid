@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Goalkeeper outlet reaches home player5
+
+The controlled original goalkeeper catch automatically passes to home player5, who receives at (71,109) inside the home goal area with clock1. Native and original match outlet selection, pass setup, flight fractions, reception, goal-area setup and the resulting action menu, which selects opposing defender18. The menu saves and reloads. Corrected the keeper comparison's carried defender cursor and the outlet's goal-area handoff.
+
+The replay explicitly supplies the keeper Y position (124) from the original RAM capture; it is not present in ordinary field snapshots, so an uncaptured position remains an explicit limitation. A previously stalled outlet observation was resolved by tracing the actual goal-area entry rather than assuming a field-control return. Windows CMake build, all 65 tests, private replay and original comparisons passed. Inputs/random samples and presentation acknowledgements are controlled; live NMI, rendering, audio and frame timing remain unverified. Next trace player5's action and period transition. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player16 shot caught at clock1
 
 Player16's prepared shot flies toward (52,124). Native and original match flight setup, defender selection, arrival and fractional coordinates. Defender2's result1 reduces power from 8 to 7 and consumes one tick. With goalkeeper action0 and controlled random samples, the original keeper returns result3 and catches the ball; native and original match the goalkeeper menu, comparison and home goalkeeper possession at clock1. The catch saves and reloads.

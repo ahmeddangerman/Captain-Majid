@@ -303,13 +303,35 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream keeper16_file(std::string(prefix)+"-corner16-keeper-entry.cmjsession",std::ios::binary);write_phase_session(keeper16_file,keeper16->state.session);
  std::ofstream keeper16_log(std::string(prefix)+"-corner16-keeper-menu.txt");
  for(int i=0;i<5;++i){const std::uint8_t pressed=i==1 ? 1 : i==2 ? 128 : 0;auto next=std::make_unique<MatchStepResult>(step_match(keeper16->state,client_input(keeper16->state,0,pressed),content));keeper16_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';keeper16_log.flush();if(next->unsupported)throw std::runtime_error(std::string("Corner player16 keeper menu stopped: ")+capability_name(*next->unsupported));std::ofstream f(std::string(prefix)+"-corner16-keeper-menu-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*keeper16=std::move(*next);if(keeper16->state.session.phase!=FieldSessionPhase::keeper_presentation_pending)break;}
- if(keeper16->state.session.phase!=FieldSessionPhase::keeper_decided || !keeper16->state.session.keeper_decision || keeper16->state.session.keeper_decision->result_code!=3)throw std::runtime_error("Corner player16 goalkeeper result differs");
+ if(keeper16->state.session.phase!=FieldSessionPhase::keeper_decided || !keeper16->state.session.keeper_decision || keeper16->state.session.keeper_decision->result_code!=3 || keeper16->state.session.area_defender_cursor!=0)throw std::runtime_error("Corner player16 goalkeeper result differs");
  auto catch16=std::make_unique<MatchStepResult>(step_match(keeper16->state,client_input(keeper16->state,0,0),content));
  if(catch16->unsupported)throw std::runtime_error(std::string("Corner player16 goalkeeper catch stopped: ")+capability_name(*catch16->unsupported));
  if(catch16->state.session.phase!=FieldSessionPhase::keeper_possession || catch16->state.session.current.field.ball_owner!=0 || catch16->state.session.current.field.side!=0)throw std::runtime_error("Corner player16 goalkeeper catch differs");
  std::ofstream catch16_file(std::string(prefix)+"-corner16-keeper-catch.cmjsession",std::ios::binary);write_phase_session(catch16_file,catch16->state.session);
+ // The original RAM capture supplies the keeper position, which is not in the field snapshot.
+ catch16->state.home_keeper_y=124;
  std::ostringstream catch16_save(std::ios::binary);write_match_save(catch16_save,catch16->state,identity);std::istringstream catch16_in(catch16_save.str(),std::ios::binary);auto catch16_restore=std::make_unique<MatchRuntimeState>(load_match_save(catch16_in,identity));
  if(catch16_restore->session.phase!=FieldSessionPhase::keeper_possession || catch16_restore->session.current.field.ball_owner!=0)throw std::runtime_error("Corner player16 goalkeeper catch did not roundtrip");
+ std::ofstream outlet16_log(std::string(prefix)+"-corner16-outlet.txt");
+ for(int i=0;i<40;++i){auto next=std::make_unique<MatchStepResult>(step_match(*catch16_restore,client_input(*catch16_restore,0,0),content));outlet16_log<<i<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<static_cast<unsigned>(next->state.pass_stage)<<' '<<(next->state.keeper_outlet_recipient ? static_cast<int>(*next->state.keeper_outlet_recipient) : -1)<<' '<<next->state.demo_rng<<'\n';outlet16_log.flush();if(next->unsupported)break;std::ofstream f(std::string(prefix)+"-corner16-outlet-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*catch16_restore=std::move(next->state);if(catch16_restore->session.phase!=FieldSessionPhase::keeper_possession)break;}
+ if(catch16_restore->session.phase!=FieldSessionPhase::keeper_interaction || catch16_restore->session.current.field.ball_owner!=5)throw std::runtime_error("Corner keeper outlet reception stopped");
+ auto home_area5=std::make_unique<MatchStepResult>(step_match(*catch16_restore,client_input(*catch16_restore,0,0),content));
+ if(home_area5->unsupported)throw std::runtime_error(std::string("Corner home player5 area stopped: ")+capability_name(*home_area5->unsupported));
+ if(home_area5->state.session.phase!=FieldSessionPhase::keeper_area_prepared || home_area5->state.session.action->menu_route!=2)throw std::runtime_error("Corner home player5 area differs");
+ std::ofstream home_area5_file(std::string(prefix)+"-corner16-outlet-home-area.cmjsession",std::ios::binary);write_phase_session(home_area5_file,home_area5->state.session);
+ if(!home_area5->state.ball_fraction || home_area5->state.ball_fraction->x!=121 || home_area5->state.ball_fraction->y!=94)throw std::runtime_error("Corner keeper outlet flight fraction differs");
+ std::ostringstream home_area5_save(std::ios::binary);write_match_save(home_area5_save,home_area5->state,identity);std::istringstream home_area5_in(home_area5_save.str(),std::ios::binary);auto home_area5_restore=std::make_unique<MatchRuntimeState>(load_match_save(home_area5_in,identity));
+ if(home_area5_restore->session.phase!=FieldSessionPhase::keeper_area_prepared || home_area5_restore->session.current.field.ball_owner!=5)throw std::runtime_error("Corner keeper outlet area did not roundtrip");
+ auto menu5=std::make_unique<MatchStepResult>(step_match(*home_area5_restore,client_input(*home_area5_restore,0,0),content));
+ if(menu5->unsupported)throw std::runtime_error(std::string("Corner home player5 menu stopped: ")+capability_name(*menu5->unsupported));
+ if(menu5->state.session.phase!=FieldSessionPhase::human_action_menu || menu5->state.session.current.field.selected_defenders!=1 || menu5->state.session.scheduling->selected_ids[0]!=18)throw std::runtime_error("Corner home player5 menu differs");
+ std::ofstream menu5_file(std::string(prefix)+"-corner5-area-menu.cmjsession",std::ios::binary);write_phase_session(menu5_file,menu5->state.session);
+ std::ostringstream menu5_save(std::ios::binary);write_match_save(menu5_save,menu5->state,identity);std::istringstream menu5_in(menu5_save.str(),std::ios::binary);auto menu5_restore=std::make_unique<MatchRuntimeState>(load_match_save(menu5_in,identity));
+ if(menu5_restore->session.phase!=FieldSessionPhase::human_action_menu || menu5_restore->session.scheduling->selected_ids[0]!=18)throw std::runtime_error("Corner home player5 menu did not roundtrip");
+
+
+
+
 
 
 

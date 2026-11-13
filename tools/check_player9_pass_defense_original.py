@@ -470,6 +470,22 @@ if (original[0x441],original[0x5fb])!=(0,0):raise ValueError('Unexpected corner 
 exportable=bytearray(original);exportable[0x601]=10
 expected=bytearray(export_session(exportable,0));expected[309]=0
 compare_represented((a.trace/'native-corner16-keeper-catch.cmjsession').read_bytes(),expected,False,'corner player16 goalkeeper','catch')
+for index,name in ((0,'chosen'),(1,'prepared'),(2,'flight_start'),(3,'flight_setup')):
+ original=(a.player3_shot/f'corner16-outlet-seeded-{name}.bin').read_bytes()
+ exportable=bytearray(original)
+ if exportable[0x600]:exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0))
+ if original[0x600]:expected[309]=0
+ compare_represented((a.trace/f'native-corner16-outlet-{index}.cmjsession').read_bytes(),expected,False,'corner goalkeeper outlet',name)
+for native,original_name in (('11','8b4a'),('home-area','8b73')):
+ original=(a.player3_shot/f'corner16-outlet-{original_name}.bin').read_bytes()
+ compare_represented((a.trace/f'native-corner16-outlet-{native}.cmjsession').read_bytes(),export_session(original,0),False,'corner goalkeeper outlet',original_name)
+original=(a.player3_shot/'corner5-area-menu.bin').read_bytes()
+if (original[0x600],original[0x601])!=(1,18):raise ValueError('Unexpected corner outlet goal-area defender')
+compare_represented((a.trace/'native-corner5-area-menu.cmjsession').read_bytes(),export_session(original,0),False,'corner home player5','area menu')
+
+
+
 
 
 
