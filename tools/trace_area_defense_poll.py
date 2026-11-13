@@ -8,6 +8,7 @@ def trace_defense_poll(prg,ram,pressed,*,preparation=False,options_only=False):
     field_route=(len(ram)==2048 and ram[0x621]==0 and ram[0x5fb]==11)
     corner_route=(len(ram)==2048 and ram[0x621]==1 and ram[0x441]==19 and ram[0x635]==52 and ram[0x637]==124 and ram[0x5f7]==6 and ram[0x600:0x605]==bytes((4,0,3,4,7)))
     corner_route=corner_route or (len(ram)==2048 and ram[0x621]==1 and ram[0x441]==16 and ram[0x635]==68 and ram[0x637]==141 and ram[0x5f7]==4 and ram[0x600:0x602]==bytes((1,0)))
+    corner_route=corner_route or (len(ram)==2048 and ram[0x621]==1 and ram[0x441]==17 and ram[0x635]==70 and ram[0x637]==104 and ram[0x5f7]==170 and ram[0x600:0x602]==bytes((1,0)))
     if len(ram)!=2048 or ram[0x22]&64 or ram[0x5fb]!=11 or (ram[0x621]!=2 and not corner_route and not field_route) or not 1<=ram[0x600]<=4 or ram[0x61e]>ram[0x600]:
         raise ValueError('Expected active field, route2 or observed corner human defensive state')
     if preparation and (ram[0x61e]>=ram[0x600] or ram[0x60b+ram[0x61e]]==255 or not pressed&128):

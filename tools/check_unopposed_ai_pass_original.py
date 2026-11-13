@@ -15,7 +15,7 @@ from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def observe(prg, raw):
+def observe(prg, raw, expected_action=1, stop_at_arrival=False, stop_at_second_arrival=False, stop_at_area=False):
     memory=ObservedCartridge(prg,raw,None,{0x43d})
     memory.ram[:0x1a]=bytes(0x1a)
     for address,value in ((0,5),(1,255),(2,0x90),(3,26),(4,27),(5,1),(6,0x50),(7,26),(8,27),
@@ -26,12 +26,21 @@ def observe(prg, raw):
     checkpoints={};targets={(31,0xe1b2):'choice',(31,0xe1cb):'prepared',(26,0x80ed):'preclock',
         (30,0xc612):'handoff',(30,0xde64):'target',(31,0xe773):'flight',
         (31,0xe7cc):'arrival',(31,0xe0df):'control',(31,0xe145):'ready'}
+    if expected_action==3:targets.update({(31,0xe01d):'swap-before',(31,0xe023):'swap-after',(31,0xe073):'return-target'})
     for _ in range(2_000_000):
         bank=memory.bank_at(cpu.pc);name=targets.get((bank,cpu.pc))
+        if stop_at_area and 'return-arrival' in checkpoints and bank==26 and cpu.pc==0x8b4a:
+            checkpoints['return-area']=bytes(memory.ram[:2048]);return 'return-area',checkpoints
+        if expected_action==3 and 'arrival' in checkpoints:
+            if name=='flight':name='return-flight'
+            elif name=='arrival':name='return-arrival'
         if name and name not in checkpoints:
             checkpoints[name]=bytes(memory.ram[:2048])
-            if name=='choice' and memory[0x43b]!=1:return 'other-action',checkpoints
+            if name=='choice' and memory[0x43b]!=expected_action:return 'other-action',checkpoints
             if name=='arrival' and memory[0x600]:return 'defended',checkpoints
+            if name=='arrival' and stop_at_arrival:return 'arrival',checkpoints
+            if name=='return-arrival' and stop_at_second_arrival:
+                return ('return-defended' if memory[0x600] else 'return-arrival'),checkpoints
             if name=='ready':
                 if memory.writes:return 'metadata-changed',checkpoints
                 return 'ready',checkpoints

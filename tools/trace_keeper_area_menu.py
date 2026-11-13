@@ -6,8 +6,9 @@ from trace_field_script import ObservedCartridge
 
 def trace_keeper_area_menu(prg, ram, defense_setup=False, defense_prompt=False):
     if defense_prompt:defense_setup=True
-    if len(ram)!=2048 or ram[0x22]&64 or ram[0x621]!=2:
-        raise ValueError('Expected route2 keeper-area prepared RAM')
+    observed_return=(len(ram)==2048 and ram[0x621]==1 and ram[0x5fb]==11 and ram[0x441]==17 and ram[0x635]==70 and ram[0x637]==104 and ram[0x5f7]==170)
+    if len(ram)!=2048 or ram[0x22]&64 or (ram[0x621]!=2 and not observed_return):
+        raise ValueError('Expected route2 or observed return goal-area prepared RAM')
     memory=ObservedCartridge(prg,ram,None,{0x517,0x532,0x8e,0x469,0x44e,0x62d,0x628,0x61e})
     memory.ram[:0x1a]=bytes(0x1a)
     for address,value in ((0,5),(1,255),(2,0x90),(3,26),(4,27),(5,1),(6,0x50),(7,26),(8,27),

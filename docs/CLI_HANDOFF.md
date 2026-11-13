@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Second-half one-two reaches goal-area shot
+
+Extended the controlled replay through player21's ordinary pass to player17, then the original player17 action3 one-two with player18. Original/native comparisons match the choice, preparation, clock, both flight setups and fractional arrivals, player swap, return possession and goal-area setup. Player17 receives the return at (70,104), clock170. The original selects goalkeeper0; native and original match the keeper selection, the sampled action4 defense menu, and the opponent's subtype1 shot choice and preparation at power8. Both flight states and the prepared shot save and reload.
+
+This is bounded to the captured route and explicitly acknowledges the original's runner movement and presentation-dependent values. The earlier partial trace stalled while the original waited for the defensive menu; advancing the menu exposed the next shot. Original random samples and host presentation acknowledgements are controlled; live NMI, rendering, audio and timing are not simulated. Windows CMake build, all 65 tests, the continuous private replay and original comparisons passed. Next trace and implement the shot through goalkeeper resolution. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/period-restart-original-20261113.
+
 ## 2026-11-13 - Second-half three-defender encounter and pass
 
 Continued opposing player20 through 39 controlled movement/clock steps to field contact with home players5, 8 and 9. The original prompt clears two presentation fields and updates its menu cursor/flash state; the sampled native route now preserves those observed effects. Native and original match the prompt, all three skip choices, the opponent's pass choice/preparation, pre-clock, handoff, target, flight setup and eventual control. Opposing player21 receives at (98,172), clock173; the native control state saves and reloads. The original presentation-facing value is normalized at intermediate presentation boundaries, with final control compared normally.

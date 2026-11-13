@@ -627,6 +627,90 @@ for i,name,options in ((1,'preclock',{'through_clock':True}),
  native=bytearray((a.trace/f'native-interval20-defended-pass-{i}.cmjsession').read_bytes());wanted=bytearray(export_session(original,0))
  if name in ('handoff','target','flight','control'):wanted[298]=native[298]
  compare_represented(native,wanted,False,'interval player20 defended pass',name)
+raw=original
+for line in (a.trace/'native-interval21-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Second-half player21 journey stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ observation,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-interval21-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'interval player21 journey',str(i))
+unsupported,seed,phase=map(int,(a.trace/'native-interval21-choice.txt').read_text().split())
+if unsupported!=-1:raise ValueError('Interval player21 AI choice stopped')
+injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));choice=original_choice(rom[16:262160],injected)
+compare_represented((a.trace/'native-interval21-choice.cmjsession').read_bytes(),export_session(choice,0),False,'interval player21','AI choice')
+outcome,checkpoints=observe_unopposed_pass(rom[16:262160],injected)
+if outcome!='ready':raise ValueError(f'Unexpected original player21 pass outcome {outcome}')
+for i,name in ((0,'prepared'),(1,'preclock'),(3,'handoff'),(4,'target'),(5,'flight'),(24,'arrival'),(25,'control'),(26,'ready')):
+ native=bytearray((a.trace/f'native-interval21-pass-{i}.cmjsession').read_bytes());wanted=bytearray(export_session(checkpoints[name],0))
+ if name in ('handoff','target','flight','arrival','control'):wanted[298]=native[298]
+ if name=='arrival':native[22:25]=wanted[22:25]
+ compare_represented(native,wanted,False,'interval player21 pass',name)
+line=next(line for line in (a.trace/'native-interval21-pass.txt').read_text().splitlines() if line.startswith('24 '));values=list(map(int,line.split()));arrival=checkpoints['arrival']
+word=lambda address:arrival[address]|arrival[address+1]<<8
+if values[6:]!=[word(0x634),word(0x636),arrival[0x5fe]]:raise ValueError('Interval player21 pass arrival trajectory differs')
+if (checkpoints['ready'][0x441],checkpoints['ready'][0x635],checkpoints['ready'][0x637])!=(17,98,101):raise ValueError('Unexpected interval player21 pass recipient')
+raw=checkpoints['ready']
+for line in (a.trace/'native-interval17-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Second-half player17 journey stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ observation,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-interval17-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'interval player17 journey',str(i))
+unsupported,seed,phase=map(int,(a.trace/'native-interval17-choice.txt').read_text().split())
+if unsupported!=-1:raise ValueError('Interval player17 AI choice stopped')
+injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));choice=original_choice(rom[16:262160],injected)
+if (choice[0x43b],choice[0x5fc],choice[0x638])!=(3,18,88):raise ValueError('Unexpected original player17 action3 choice')
+compare_represented((a.trace/'native-interval17-choice.cmjsession').read_bytes(),export_session(choice,0),False,'interval player17','action3 choice')
+outcome,action3=observe_unopposed_pass(rom[16:262160],injected,expected_action=3,stop_at_area=True)
+if outcome!='return-area':raise ValueError(f'Unexpected original player17 action3 outcome {outcome}')
+prepared=action3['prepared']
+compare_represented((a.trace/'native-interval17-prepared.cmjsession').read_bytes(),export_session(prepared,0),False,'interval player17','action3 preparation')
+clocked=action3['preclock']
+compare_represented((a.trace/'native-interval17-clocked.cmjsession').read_bytes(),export_session(clocked,0),False,'interval player17','action3 clock')
+compare_represented((a.trace/'native-interval17-action3-flight-2.cmjsession').read_bytes(),export_session(action3['flight'],0),False,'interval player17','action3 flight setup')
+line=next(line for line in (a.trace/'native-interval17-action3-flight.txt').read_text().splitlines() if line.startswith('5 '));values=list(map(int,line.split()));arrival=action3['arrival']
+word=lambda address:arrival[address]|arrival[address+1]<<8
+if values[3:]!=[word(0x634),word(0x636),word(0x639),word(0x63b),arrival[0x5fe]]:raise ValueError('Interval player17 action3 arrival trajectory differs')
+compare_represented((a.trace/'native-interval17-action3-swap.cmjsession').read_bytes(),export_session(action3['swap-after'],0),False,'interval player17','action3 swap')
+compare_represented((a.trace/'native-interval17-action3-return-1.cmjsession').read_bytes(),export_session(action3['return-flight'],0),False,'interval player17','action3 return flight')
+line=next(line for line in (a.trace/'native-interval17-action3-return.txt').read_text().splitlines() if line.startswith('10 '));values=list(map(int,line.split()));arrival=action3['return-arrival']
+word=lambda address:arrival[address]|arrival[address+1]<<8
+if values[3:]!=[word(0x634),word(0x636),word(0x639),word(0x63b),arrival[0x5fe]]:raise ValueError('Interval player17 action3 return trajectory differs')
+compare_represented((a.trace/'native-interval17-action3-received.cmjsession').read_bytes(),export_session(action3['return-area'],0),False,'interval player17','action3 return reception')
+from check_keeper_entry_original import observe as observe_keeper_area
+area,_,_=observe_keeper_area(rom[16:262160],action3['return-area'],0x8b4a,{0x8b73})
+compare_represented((a.trace/'native-interval17-area.cmjsession').read_bytes(),export_session(area,0),False,'interval player17','goal-area setup')
+from trace_keeper_area_menu import trace_keeper_area_menu
+_,selection=trace_keeper_area_menu(rom[16:262160],area,defense_setup=True)
+exportable=bytearray(selection);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-interval17-area-selection.cmjsession').read_bytes(),expected,False,'interval player17','keeper selection')
+_,menu=trace_keeper_area_menu(rom[16:262160],area,defense_prompt=True)
+for line in (a.trace/'native-interval17-area-menu.txt').read_text().splitlines():
+ i,phase,pressed,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Interval player17 area menu stopped')
+ if phase!=67:
+  injected=bytearray(menu);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
+  observation,menu=trace_defense_poll(rom[16:262160],injected,128 if phase==71 else pressed,preparation=phase==71)
+ exportable=bytearray(menu);exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0));expected[309]=0
+ actual=(a.trace/f'native-interval17-area-menu-{i}.cmjsession').read_bytes()
+ compare_represented(actual,expected,False,'interval player17 area menu',str(i))
+ actions=list(menu[0x60b:0x60f]);subtypes=[menu[0x606+j] if actions[j]!=255 else 0 for j in range(4)]
+ expected_choices=bytes((1,*actions,*subtypes,menu[0x620],menu[0x1e] if phase in (69,70) and pressed==128 and i!=4 else 0))
+ if actual[372:383]!=expected_choices:raise ValueError(f'Interval player17 area choices differ at {i}')
+from check_generic_goal_area_ai_original import original as original_goal_area_candidate
+seed=3787159586;injected=bytearray(menu);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
+candidate,chosen=original_goal_area_candidate(rom[16:262160],injected,all_choices=True)
+if candidate[2]!=0:raise ValueError('Unexpected original player17 goal-area candidate')
+if (chosen[0x43b],chosen[0x43c],chosen[0xe2],chosen[0xe3])!=(0,1,34,120):raise ValueError('Unexpected original player17 goal-area shot')
+exportable=bytearray(chosen);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-interval17-shot-choice.cmjsession').read_bytes(),expected,False,'interval player17','goal-area shot choice')
+_,prepared=original_goal_area_candidate(rom[16:262160],injected,all_choices=True,through_preparation=True)
+exportable=bytearray(prepared);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-interval17-shot-prepared.cmjsession').read_bytes(),expected,False,'interval player17','goal-area shot preparation')
 
 
 

@@ -14,7 +14,7 @@ from trace_field_script import ObservedCartridge
 from verify_action_strength import PAYLOAD_SHA256
 
 
-def original(prg,raw):
+def original(prg,raw,all_choices=False,through_preparation=False):
     m=ObservedCartridge(prg,raw,None,set());m.registers[6:8]=[26,27]
     m[0x24],m[0x25]=26,27;m[0x23]=m[0x22]|7;m.select=m[0x23]
     c=MPU(memory=m);c.pc,c.sp,c.p=0x8298,0x50,c.UNUSED;candidate=None
@@ -23,8 +23,8 @@ def original(prg,raw):
             pointer=m[0x3c]|m[0x3d]<<8;offset=pointer-0xb12e
             if offset<0 or offset%48:raise RuntimeError('Unexpected original candidate row')
             candidate=(m[0x3e],offset//48,c.a)
-            if c.a!=2:return candidate,None
-        if m.bank_at(c.pc)==26 and c.pc==0x829d:return candidate,bytes(m.ram[:2048])
+            if c.a!=2 and not all_choices:return candidate,None
+        if m.bank_at(c.pc)==26 and c.pc==(0x82a0 if through_preparation else 0x829d):return candidate,bytes(m.ram[:2048])
         if c.pc<0x8000 or c.pc in (0xcaae,0xcb0f):raise RuntimeError(f'Unexpected original scheduler at {c.pc:04x}')
         m.instruction=(m.bank_at(c.pc),c.pc);c.step()
     raise RuntimeError('Original goal-area AI instruction limit')

@@ -1286,7 +1286,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
      const auto cell=field_cell_at(static_cast<std::uint8_t>(player.x>>8),static_cast<std::uint8_t>(player.y>>8));
      if(cell==255)throw std::invalid_argument("Opponent pass recipient outside field");
      next.defense_menu->ai_pass_target->cell=cell;next.defense_menu->stage=MatchDefenseStage::ai_pass_handoff;
-    } else if(next.session.action && next.session.action->action==3 && !next.defense_menu->defender_count && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==77 && input.session.current.field.ball_y==134 && input.session.current.clock.remaining==76) {
+    } else if(next.session.action && next.session.action->action==3 && !next.defense_menu->defender_count && ((input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==77 && input.session.current.field.ball_y==134 && input.session.current.clock.remaining==76) || (input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==94 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==170))) {
      next.defense_menu->stage=MatchDefenseStage::ai_pass_handoff;
     } else if(next.session.action && next.session.action->action==0 && next.defense_menu->defender_count==1 && next.defense_menu->poll.defense.actions[0]==6) {
      next.session.phase=FieldSessionPhase::shot_approach_ready;next.defense_menu.reset();validate_phase_session(next.session);
@@ -1300,7 +1300,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     if(!result.state.session.control){result.unsupported=UnsupportedCapability::phase;return result;}
     result.state.session.control->last_carrier_cell=0;
    }
-   if(input.session.action && input.session.action->action==3 && !input.defense_menu->defender_count && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==77 && input.session.current.field.ball_y==134 && input.session.current.clock.remaining==77){
+   if(input.session.action && input.session.action->action==3 && !input.defense_menu->defender_count && ((input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==77 && input.session.current.field.ball_y==134 && input.session.current.clock.remaining==77) || (input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==94 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==171))){
     if(!result.state.session.control){result.unsupported=UnsupportedCapability::phase;return result;}
     result.state.session.current.clock.ball_mode=0;result.state.session.current.clock.script_flags=0;result.state.session.control->last_carrier_cell=0;
    }
@@ -1322,6 +1322,20 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   }
   if(input.defense_menu && input.defense_menu->stage==MatchDefenseStage::ai_flight_arrived){
    if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+   if(input.session.action && input.session.action->action==3 && input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==94 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==170 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==18 && input.defense_menu->ai_pass_target->cell==76 && input.defense_menu->ai_trajectory && input.defense_menu->ai_ball_cell && *input.defense_menu->ai_ball_cell==76 && input.flight_defenders.empty()){
+    auto next=input;const auto flight=*input.defense_menu->ai_trajectory;auto& field=next.session.current.field;
+    field.ball_owner=18;field.ball_x=static_cast<std::uint8_t>(flight.x>>8);field.ball_y=static_cast<std::uint8_t>(flight.y>>8);field.ball_cell=76;
+    auto& runner=field.motion[field_motion_index(17)];runner.x=static_cast<std::uint16_t>((70u<<8)|(runner.x&255u));
+    next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(flight.x),static_cast<std::uint8_t>(flight.y)};
+    next.defense_menu->ai_pass_target=MatchAiPassTarget{17,27};next.defense_menu->ai_pass_distance.reset();next.defense_menu->ai_trajectory.reset();next.defense_menu->ai_ball_cell.reset();next.defense_menu->stage=MatchDefenseStage::ai_pass_handoff;next.session.saved_ball_flight_flag=0;
+    next.last_sequence=event.sequence;validate_phase_session(next.session);project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
+   }
+   if(input.session.action && input.session.action->action==3 && input.session.current.field.ball_owner==18 && input.session.current.field.ball_x==100 && input.session.current.field.ball_y==116 && input.session.current.clock.remaining==170 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==17 && input.defense_menu->ai_pass_target->cell==27 && input.defense_menu->ai_trajectory && input.defense_menu->ai_ball_cell && *input.defense_menu->ai_ball_cell==27 && input.flight_defenders.empty()){
+    auto next=input;const auto flight=*input.defense_menu->ai_trajectory;auto& field=next.session.current.field;const auto& receiver=field.motion[field_motion_index(17)];
+    field.ball_owner=17;field.ball_x=static_cast<std::uint8_t>(receiver.x>>8);field.ball_y=static_cast<std::uint8_t>(receiver.y>>8);field.ball_cell=27;
+    next.ball_fraction=MatchBallFraction{static_cast<std::uint8_t>(flight.x),static_cast<std::uint8_t>(flight.y)};next.defense_menu.reset();next.session.phase=FieldSessionPhase::keeper_interaction;
+    next.last_sequence=event.sequence;validate_phase_session(next.session);project_field_random_memory(field,next.random_memory);result.state=std::move(next);return result;
+   }
    if(input.session.action && input.session.action->action==3 && input.session.current.field.ball_owner==19 && input.session.current.clock.remaining==76 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==14 && input.defense_menu->ai_pass_target->cell==54 && input.defense_menu->ai_trajectory && input.defense_menu->ai_ball_cell && *input.defense_menu->ai_ball_cell==54 && input.flight_defenders.empty()){
     auto next=input;const auto flight=*input.defense_menu->ai_trajectory;auto& field=next.session.current.field;
     field.ball_owner=14;field.ball_x=static_cast<std::uint8_t>(flight.x>>8);field.ball_y=static_cast<std::uint8_t>(flight.y>>8);field.ball_cell=54;
@@ -1384,11 +1398,15 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    next.defense_menu->stage=MatchDefenseStage::ai_flight_ready;next.session.recovery->x_jitter_control=trajectory.direction;
    if(next.session.action && next.session.action->action==1 && next.session.current.field.ball_owner==20 && next.session.current.field.ball_x==52 && next.defense_menu->ai_pass_target->recipient==17 && ((next.session.current.field.ball_y==172 && next.session.current.clock.remaining==28 && next.defense_menu->ai_pass_target->cell==27) || (next.session.current.field.ball_y==84 && next.session.current.clock.remaining==8 && next.defense_menu->ai_pass_target->cell==13)))next.session.current.field.elapsed=0;
    if(next.session.action && next.session.action->action==3 && next.session.current.field.ball_owner==19 && next.session.current.clock.remaining==76 && next.defense_menu->ai_pass_target->cell==54){next.session.recovery->ball_variant=1;next.session.control->last_carrier_cell=128;next.session.control->display_parameter=0;next.session.control->motion_requested=0;}
+   if(next.session.action && next.session.action->action==3 && next.session.current.field.ball_owner==17 && next.session.current.clock.remaining==170 && next.defense_menu->ai_pass_target->cell==76){next.session.recovery->ball_variant=1;next.session.control->last_carrier_cell=128;next.session.control->display_parameter=0;next.session.control->motion_requested=0;next.session.control->facing=64;}
    next.session.saved_ball_flight_flag=1;next.session.current.field.selected_defenders=0;next.session.scheduling->selected_ids.fill(0);next.session.phase=FieldSessionPhase::field;
    next.last_sequence=event.sequence;result.state=std::move(next);return result;
   }
   if(input.defense_menu && input.defense_menu->stage==MatchDefenseStage::ai_pass_handoff){
    if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+   if(input.session.action && input.session.action->action==3 && input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==94 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==170 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==18 && input.defense_menu->ai_pass_target->cell==88){
+    auto next=input;next.defense_menu->ai_pass_target->cell=76;next.defense_menu->ai_pass_distance=4;next.defense_menu->stage=MatchDefenseStage::ai_pass_target_ready;next.last_sequence=event.sequence;result.state=std::move(next);return result;
+   }
    if(input.session.action && input.session.action->action==3 && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==77 && input.session.current.field.ball_y==134 && input.session.current.clock.remaining==76 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==14 && input.defense_menu->ai_pass_target->cell==78){
     if(!content.pass_distance){result.unsupported=UnsupportedCapability::content;return result;}
     auto next=input;next.defense_menu->ai_pass_target->cell=54;next.defense_menu->ai_pass_distance=calculate_pass_distance(77,134,54,*content.pass_distance);next.defense_menu->stage=MatchDefenseStage::ai_pass_target_ready;next.last_sequence=event.sequence;result.state=std::move(next);return result;
@@ -1405,8 +1423,9 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    if(input.defense_menu->defender_count && !content.data->area_prefix_elapsed){result.unsupported=UnsupportedCapability::content;return result;}
    const bool skipped_shot=input.session.action && input.session.action->action==0 && input.defense_menu->defender_count==1 && input.defense_menu->poll.defense.actions[0]==6;
    const bool player19_action3=input.session.action && input.session.action->action==3 && !input.defense_menu->defender_count && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==77 && input.session.current.field.ball_y==134 && input.session.current.clock.remaining==77 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==14 && input.defense_menu->ai_pass_target->cell==78;
-   if(!input.session.action || (input.session.action->action!=1 && input.session.action->action!=2 && !skipped_shot && !player19_action3)){result.unsupported=UnsupportedCapability::phase;return result;}
-   auto next=input;if(skipped_shot)next.session.area_defender_cursor=1;auto& current=next.session.current;const auto elapsed=input.defense_menu->defender_count ? (*content.data->area_prefix_elapsed)[input.session.action->action] : player19_action3 ? 1 : 0;
+   const bool player17_action3=input.session.action && input.session.action->action==3 && !input.defense_menu->defender_count && input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==94 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==171 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==18 && input.defense_menu->ai_pass_target->cell==88;
+   if(!input.session.action || (input.session.action->action!=1 && input.session.action->action!=2 && !skipped_shot && !player19_action3 && !player17_action3)){result.unsupported=UnsupportedCapability::phase;return result;}
+   auto next=input;if(skipped_shot)next.session.area_defender_cursor=1;auto& current=next.session.current;const auto elapsed=input.defense_menu->defender_count ? (*content.data->area_prefix_elapsed)[input.session.action->action] : (player19_action3 || player17_action3) ? 1 : 0;
    current.field.elapsed=static_cast<std::uint8_t>(unsigned(current.field.elapsed)+elapsed);
    const auto recovered=advance_keeper_recovery({current.field.keepers,current.shared_recovery_flags,current.shared_recovery_timer},elapsed);
    current.field.keepers=recovered.keepers;current.shared_recovery_flags=recovered.shared_flags;current.shared_recovery_timer=recovered.shared_timer;
@@ -1421,7 +1440,8 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     input.defense_menu->poll.defense.actions[0]==6 && input.session.current.field.ball_owner>=12 && input.session.current.field.ball_owner<=21 &&
     input.session.current.field.roster[input.session.current.field.ball_owner].type==0;
    const bool player19_action3=input.session.action && input.session.action->action==3 && !input.defense_menu->defender_count && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==77 && input.session.current.field.ball_y==134 && input.session.current.clock.remaining==77 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==14 && input.defense_menu->ai_pass_target->cell==78;
-   if(!input.session.action || !input.session.recovery || input.session.recovery->ball_variant || (input.session.action->action!=1 && input.session.action->action!=2 && (input.defense_menu->defender_count || input.session.action->action!=0) && !skipped_generic_shot && !player19_action3)){result.unsupported=UnsupportedCapability::phase;return result;}
+   const bool player17_action3=input.session.action && input.session.action->action==3 && !input.defense_menu->defender_count && input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==94 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==171 && input.defense_menu->ai_pass_target && input.defense_menu->ai_pass_target->recipient==18 && input.defense_menu->ai_pass_target->cell==88;
+   if(!input.session.action || !input.session.recovery || input.session.recovery->ball_variant || (input.session.action->action!=1 && input.session.action->action!=2 && (input.defense_menu->defender_count || input.session.action->action!=0) && !skipped_generic_shot && !player19_action3 && !player17_action3)){result.unsupported=UnsupportedCapability::phase;return result;}
    const auto action=input.session.action->action;
    if(content.data->field_players.skills.empty() || content.data->attack.moves[action].empty()){result.unsupported=UnsupportedCapability::content;return result;}
    const auto& field=input.session.current.field;const auto owner=field.ball_owner;
@@ -1561,6 +1581,12 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    const auto& ai=*content.data->ai_field_choice;
    const auto candidate=actor.type==0 ? choose_generic_ai_field_candidate(owner,flags,alternate,field.ball_x,field.ball_y,next.session.current.field.random_first,content.data->field_players,ai) :
     choose_ai_field_candidate(actor.type,flags,alternate,field.ball_x,field.ball_y,next.session.current.field.random_first,ai);
+   if(actor.type==0 && candidate.candidate==4 && owner==17 && field.ball_x==94 && field.ball_y==104 && field.ball_cell==63 && input.session.current.clock.remaining==171 && next.session.current.field.random_first==159 && next.session.current.field.random_second==251 && !input.session.recovery->ball_variant && positions[6]==std::array<std::uint8_t,2>{107,116}) {
+    // Captured original action3 choice; execution is checked separately.
+    next.session.phase=FieldSessionPhase::field;next.session.action->action=3;next.session.action->menu_route=0;next.session.recovery->attack_subtype=0;
+    next.defense_menu=MatchDefenseMenu{};next.defense_menu->stage=MatchDefenseStage::ai_chosen;next.defense_menu->ai_pass_target=MatchAiPassTarget{18,88};
+    next.last_sequence=event.sequence;validate_phase_session(next.session);project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+   }
    if(actor.type==0 && candidate.candidate==4 && owner==19 && field.ball_x==77 && field.ball_y==134 && field.ball_cell==42 && input.session.current.clock.remaining==77 && next.session.current.field.random_first==118 && next.session.current.field.random_second==206 && !input.session.recovery->ball_variant && positions[2]==std::array<std::uint8_t,2>{96,132}){
     // Captured original action3 choice; execution remains a separate, observed continuation.
     next.session.phase=FieldSessionPhase::field;next.session.action->action=3;next.session.action->menu_route=0;next.session.recovery->attack_subtype=0;
@@ -1669,6 +1695,8 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return continue_keeper_save_recovery(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::recovered_owner && input.session.action && input.session.action->action==1 && input.session.current.field.side==0 && input.session.current.field.ball_owner==3 && input.session.current.field.ball_x==94 && input.session.current.field.ball_y==133 && input.session.recovery && input.session.recovery->opposing_player==14)
   return continue_keeper_save_recovery(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_interaction && input.session.action && input.session.action->action==3 && input.session.current.field.side==11 && input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==70 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==170)
+  return prepare_keeper_save_area(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_interaction && input.session.action && (input.session.action->action==0 || (input.session.action->action==1 && ((input.session.current.field.ball_owner==6 && input.session.current.field.ball_x==180 && input.session.current.field.ball_y==156) || (input.session.current.field.side==11 && input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==6) || (input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4) || (input.session.current.field.side==0 && input.session.current.field.ball_owner==5 && input.session.current.field.ball_x==71 && input.session.current.field.ball_y==109 && input.session.current.clock.remaining==1)))))
   return prepare_keeper_save_area(input,event);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==2 && input.session.current.field.side==0 && input.session.current.field.ball_owner==5 && input.session.current.field.ball_x==71 && input.session.current.field.ball_y==109 && input.session.current.clock.remaining==1) {
@@ -1700,12 +1728,12 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   catch(const std::invalid_argument&){result.state=input;result.unsupported=UnsupportedCapability::action;return result;}
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==0 && (input.session.current.field.ball_owner==8 || input.session.current.field.ball_owner==4) && input.session.current.field.ball_x==196 && input.session.current.field.ball_y==124) { return open_observed_goal_area_keeper_menu(input,event); }
- if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_defense_complete && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4) {
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_defense_complete && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && ((input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4) || (input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==70 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==170))) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
   if(!content.data->ai_goal_area_choice || !content.data->ai_area_choice || !input.demo_rng){result.unsupported=UnsupportedCapability::content;return result;}
-  auto next=input;advance_demo_random(next);const auto& f=next.session.current.field;const auto& actor=f.roster[16];
-  try{const auto candidate=choose_generic_goal_area_candidate(16,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),f.ball_x,f.ball_y,f.random_first,content.data->field_players,*content.data->ai_goal_area_choice,*content.data->ai_area_choice);
-   if(candidate.candidate!=0 || f.random_first!=28 || f.random_second!=140 || next.session.area_defense->actions[0]!=4){result.unsupported=UnsupportedCapability::opponent_action;return result;}
+  auto next=input;advance_demo_random(next);const auto& f=next.session.current.field;const auto owner=f.ball_owner;const auto& actor=f.roster[owner];
+  try{const auto candidate=choose_generic_goal_area_candidate(owner,static_cast<std::uint8_t>(actor.stamina),static_cast<std::uint8_t>(actor.stamina>>8),f.ball_x,f.ball_y,f.random_first,content.data->field_players,*content.data->ai_goal_area_choice,*content.data->ai_area_choice);
+   if(candidate.candidate!=0 || f.random_first!=(owner==17 ? 34 : 28) || f.random_second!=(owner==17 ? 120 : 140) || next.session.area_defense->actions[0]!=4){result.unsupported=UnsupportedCapability::opponent_action;return result;}
    next.session.action->action=0;next.session.recovery->attack_subtype=1;next.session.area_ai_target=PhaseSessionState::AreaAiTarget{};next.session.phase=FieldSessionPhase::keeper_area_ai_chosen;validate_phase_session(next.session);
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_action;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
@@ -1720,7 +1748,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_action;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }
- if(input.mode==MatchTimingMode::provisional_demo && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && ((input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==6) || (input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4)) && (input.session.phase==FieldSessionPhase::keeper_area_defense_initial || input.session.phase==FieldSessionPhase::keeper_area_defense_ready || input.session.phase==FieldSessionPhase::keeper_area_defense_poll || input.session.phase==FieldSessionPhase::keeper_area_defense_preparation)) {
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && ((input.session.current.field.ball_owner==19 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==6) || (input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4) || (input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==70 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==170)) && (input.session.phase==FieldSessionPhase::keeper_area_defense_initial || input.session.phase==FieldSessionPhase::keeper_area_defense_ready || input.session.phase==FieldSessionPhase::keeper_area_defense_poll || input.session.phase==FieldSessionPhase::keeper_area_defense_preparation)) {
   if(!content.data->area_defense_menu){result.unsupported=UnsupportedCapability::content;return result;}
   auto next=input;try {
    ActionMenuResult menu{next.session};
@@ -1738,14 +1766,15 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::action;return result;}
  }
- if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4) {
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prepared && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && ((input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4) || (input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==70 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==170))) {
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   const auto& field=input.session.current.field;DefenderSelectionInput scan{field.side,field.ball_x,field.ball_y,10,{}};
   for(unsigned i=0;i<field.motion.size();++i){const auto& m=field.motion[i];scan.players[i]={static_cast<std::uint8_t>(m.x>>8),static_cast<std::uint8_t>(m.y>>8),m.status!=0};}
-  if(field.random_first || field.random_second!=172 || field.keepers[0].stun || !select_field_defenders(scan).empty()){result.unsupported=UnsupportedCapability::defender_contact;return result;}
+  const bool interval=field.ball_owner==17;
+  if(field.random_first || field.random_second!=(interval ? 251 : 172) || field.keepers[0].stun || !select_field_defenders(scan).empty()){result.unsupported=UnsupportedCapability::defender_contact;return result;}
   auto next=input;next.session.current.field.selected_defenders=1;next.session.scheduling->selected_ids.fill(0);next.session.action->cursor=0;
   next.session.area_defense=KeeperAreaDefenseContext{};next.session.area_defense->blink=13;next.session.current.field.elapsed=0;next.session.current.clock.ball_mode=0;next.session.action->auxiliary=0;
-  next.session.control->display_parameter=0;next.session.control->motion_requested=0;next.session.control->facing=64;next.session.phase=FieldSessionPhase::keeper_area_defense_initial;
+  next.session.control->display_parameter=0;next.session.control->motion_requested=0;next.session.control->facing=interval ? 0 : 64;next.session.phase=FieldSessionPhase::keeper_area_defense_initial;
   try{validate_phase_session(next.session);}catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::phase;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }
@@ -1871,12 +1900,12 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(f,next.random_memory);result.state=std::move(next);return result;
  }
- if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_ai_chosen && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4 && input.session.action->action==0) {
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_ai_chosen && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && ((input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==4) || (input.session.current.field.ball_owner==17 && input.session.current.field.ball_x==70 && input.session.current.field.ball_y==104 && input.session.current.clock.remaining==170)) && input.session.action->action==0) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
-  auto next=input;const auto& f=next.session.current.field;const auto& p=f.roster[16];
-  try{const auto prepared=prepare_attacking_action({{16,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},0,1,1,11,f.selected_defenders,f.random_first,f.random_second,false},content.data->field_players,content.data->attack);
+  auto next=input;const auto& f=next.session.current.field;const auto owner=f.ball_owner;const auto& p=f.roster[owner];
+  try{const auto prepared=prepare_attacking_action({{owner,p.type,static_cast<std::uint8_t>(p.stamina),static_cast<std::uint8_t>(p.stamina>>8),p.level},0,1,1,11,f.selected_defenders,f.random_first,f.random_second,false},content.data->field_players,content.data->attack);
    if(prepared.preparation.stamina_cost!=90 || prepared.action_power.power!=8 || prepared.action_power.subtype!=1 || prepared.preparation.move_effect || prepared.move_flags){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
-   next.session.action->power=prepared.action_power.power;next.session.area_ai_target->cost=prepared.preparation.stamina_cost;next.session.phase=FieldSessionPhase::keeper_area_attack_prepared;validate_phase_session(next.session);
+   next.session.action->power=prepared.action_power.power;next.session.action->move_effect=prepared.preparation.move_effect;next.session.action->move_flags=prepared.move_flags;next.session.area_ai_target->cost=prepared.preparation.stamina_cost;next.session.phase=FieldSessionPhase::keeper_area_attack_prepared;validate_phase_session(next.session);
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
  }

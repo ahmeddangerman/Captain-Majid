@@ -165,9 +165,10 @@ PhaseSessionState prepare_session_keeper_area(const PhaseSessionState& input) {
  const bool corner_keeper_pass_recovery=f.side==0 && f.ball_owner==5 && f.ball_x==71 && f.ball_y==109 && input.current.clock.remaining==1 && input.action && input.action->action==1 && input.recovery && input.recovery->ball_variant==1;
  const bool corner13_pass_recovery=f.side==11 && f.ball_owner==16 && f.ball_x==68 && f.ball_y==141 && input.current.clock.remaining==4 && input.action && input.action->action==1 && input.recovery && input.recovery->ball_variant==1;
  const bool corner17_pass_recovery=f.side==11 && f.ball_owner==19 && f.ball_x==52 && f.ball_y==124 && input.current.clock.remaining==6 && input.action && input.action->action==1 && input.recovery && input.recovery->ball_variant==1;
+ const bool interval17_one_two=f.side==11 && f.ball_owner==17 && f.ball_x==70 && f.ball_y==104 && input.current.clock.remaining==170 && input.action && input.action->action==3 && input.recovery && input.recovery->ball_variant==1;
  const bool player6_pass_recovery=f.side==0 && f.ball_owner==6 && f.ball_x==180 && f.ball_y==156 && input.action && input.action->action==1 && input.recovery && input.recovery->opposing_player==16 && input.recovery->ball_variant==2;
  if(input.phase!=FieldSessionPhase::keeper_interaction || !input.action || !input.scheduling ||
-    (input.action->action && !player6_pass_recovery && !corner17_pass_recovery && !corner13_pass_recovery && !corner_keeper_pass_recovery) || f.ball_y<96 || f.ball_y>=160 || (f.ball_x>=80 && f.ball_x<176))
+    (input.action->action && !player6_pass_recovery && !corner17_pass_recovery && !corner13_pass_recovery && !corner_keeper_pass_recovery && !interval17_one_two) || f.ball_y<96 || f.ball_y>=160 || (f.ball_x>=80 && f.ball_x<176))
   throw std::invalid_argument("Keeper-area setup requires an ordinary recovered ball in the goal area");
  auto state=input;auto& field=state.current.field;
  if(!state.recovery->ball_variant)state.recovery->ball_variant=(field.random_first&1u)+1;
