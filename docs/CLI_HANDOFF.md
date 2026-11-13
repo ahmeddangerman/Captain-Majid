@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Second-half three-defender encounter and pass
+
+Continued opposing player20 through 39 controlled movement/clock steps to field contact with home players5, 8 and 9. The original prompt clears two presentation fields and updates its menu cursor/flash state; the sampled native route now preserves those observed effects. Native and original match the prompt, all three skip choices, the opponent's pass choice/preparation, pre-clock, handoff, target, flight setup and eventual control. Opposing player21 receives at (98,172), clock173; the native control state saves and reloads. The original presentation-facing value is normalized at intermediate presentation boundaries, with final control compared normally.
+
+Corrected field pass presentation to select the displayed defender using the original random-derived index. A separate original CPU survey matched all 1,024 random-byte/count combinations for counts1..4. Added reusable field-prompt observation and route0 menu polling. Windows CMake build, all 65 tests, private continuous replay and original comparisons passed. Inputs/random samples and presentation waits are controlled, not live NMI, rendering, audio or timing; the selected defenders chose skip, so this is not evidence of a successful tackle. Next continue player21 and investigate the next interaction. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/period-restart-original-20261113.
+
 ## 2026-11-13 - Second-half opponent pass reaches player20
 
 Extended the continuous replay through four player18 control input samples, 37 controlled control/clock/field steps to the next AI decision, and an ordinary pass to opposing player20. The existing native calculations match original represented states at the AI choice, preparation, pre-clock, handoff, target, flight setup, reception and ready control. The original/native arrival trajectory fractions and cell also match; the transient field ball position is held in the native trajectory until arrival. At one intermediate control-entry boundary the original presentation's facing is normalized; final control matches. Player20 controls at (128,116), clock178, and the match save reloads.

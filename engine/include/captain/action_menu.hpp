@@ -48,6 +48,8 @@ struct DefenseMenuPollResult {
     std::optional<std::uint8_t> opposing_player{};
     std::vector<ControlPresentationRequest> presentation{};
 };
+// Original field encounter presentation selects one defender from the random sample.
+std::uint8_t defense_presentation_slot(std::uint8_t random,std::uint8_t count);
 // Pure D3AB menu polling: callers own the encounter and subsequent preparation.
 DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState&,std::uint8_t count,
  const std::array<std::uint8_t,5>& selected_ids,bool field,std::uint8_t pressed,

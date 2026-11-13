@@ -5,10 +5,11 @@ from trace_field_script import ObservedCartridge
 
 
 def trace_defense_poll(prg,ram,pressed,*,preparation=False,options_only=False):
+    field_route=(len(ram)==2048 and ram[0x621]==0 and ram[0x5fb]==11)
     corner_route=(len(ram)==2048 and ram[0x621]==1 and ram[0x441]==19 and ram[0x635]==52 and ram[0x637]==124 and ram[0x5f7]==6 and ram[0x600:0x605]==bytes((4,0,3,4,7)))
     corner_route=corner_route or (len(ram)==2048 and ram[0x621]==1 and ram[0x441]==16 and ram[0x635]==68 and ram[0x637]==141 and ram[0x5f7]==4 and ram[0x600:0x602]==bytes((1,0)))
-    if len(ram)!=2048 or ram[0x22]&64 or ram[0x5fb]!=11 or (ram[0x621]!=2 and not corner_route) or not 1<=ram[0x600]<=4 or ram[0x61e]>ram[0x600]:
-        raise ValueError('Expected active route2 or observed corner human defensive state')
+    if len(ram)!=2048 or ram[0x22]&64 or ram[0x5fb]!=11 or (ram[0x621]!=2 and not corner_route and not field_route) or not 1<=ram[0x600]<=4 or ram[0x61e]>ram[0x600]:
+        raise ValueError('Expected active field, route2 or observed corner human defensive state')
     if preparation and (ram[0x61e]>=ram[0x600] or ram[0x60b+ram[0x61e]]==255 or not pressed&128):
         raise ValueError('Expected confirmed active defensive choice')
     if options_only and not preparation:raise ValueError('Option observation requires preparation entry')
@@ -19,7 +20,7 @@ def trace_defense_poll(prg,ram,pressed,*,preparation=False,options_only=False):
     m[0x23]=m[0x22]|7;m.select=m[0x23];m.registers[6:8]=[26,27]
     # Explicit host parent returns: D573 -> D568 bank restore -> area caller8B8F.
     # The resumed sample uses SP50 rather than retaining the observer's CPU object.
-    m[0x151:0x155]=[0x67,0xd5,0x8e,0x8b]
+    m[0x151:0x155]=[0x67,0xd5,0x46,0x80] if field_route else [0x67,0xd5,0x8e,0x8b]
     m[0x1c],m[0x1e]=pressed,pressed
     cpu=MPU(memory=m);cpu.pc,cpu.sp,cpu.p=0xd3d4 if preparation else 0xd3ab,0x50,cpu.UNUSED
     if preparation:
@@ -32,7 +33,7 @@ def trace_defense_poll(prg,ram,pressed,*,preparation=False,options_only=False):
             if m[0x430]>1:raise RuntimeError('Unexpected defensive special option count')
             return {'boundary':'options_loaded','instructions':step,'frames':frames,'requests':requests,
                     'option':m[0x431] if m[0x430] else None},bytes(m.ram[:2048])
-        if (bank==30 and (cpu.pc==0xd3a6 or (cpu.pc==0xd3d4 and not preparation))) or (bank==26 and cpu.pc==0x8b8f):
+        if (bank==30 and (cpu.pc==0xd3a6 or (cpu.pc==0xd3d4 and not preparation))) or (bank==26 and cpu.pc==(0x8047 if field_route else 0x8b8f)):
             return {'boundary':'complete' if bank==26 else 'preparation_pending' if cpu.pc==0xd3d4 else 'poll_wait',
                     'instructions':step,'frames':frames,'requests':requests},bytes(m.ram[:2048])
         if cpu.pc==0xe93d:requests.append({'kind':3,'id':cpu.a,'slot':cpu.x})

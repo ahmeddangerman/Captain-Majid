@@ -9,6 +9,10 @@
 #include <stdexcept>
 
 namespace captain {
+std::uint8_t defense_presentation_slot(std::uint8_t random,std::uint8_t count) {
+ if(!count || count>4)throw std::invalid_argument("Defensive presentation requires one to four defenders");
+ return static_cast<std::uint8_t>((random&7u)%count);
+}
 namespace {
 std::uint8_t defense_title(std::uint8_t id,bool field,bool opponent_area,const AreaDefenseMenuContent& content) {
  return id==0 ? 13 : content.titles[field ? 0 : (opponent_area ? 1 : 2)];

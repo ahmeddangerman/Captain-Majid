@@ -450,6 +450,66 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(interval_pass->session.phase!=FieldSessionPhase::control_ready || interval_pass->session.current.field.ball_owner!=20 || interval_pass->session.current.field.ball_x!=128 || interval_pass->session.current.field.ball_y!=116)throw std::runtime_error("Second-half opponent pass reception differs");
  std::ostringstream received_save(std::ios::binary);write_match_save(received_save,*interval_pass,identity);std::istringstream received_in(received_save.str(),std::ios::binary);
  if(load_match_save(received_in,identity).session.current.field.ball_owner!=20)throw std::runtime_error("Second-half pass reception did not roundtrip");
+ std::ofstream player20_log(std::string(prefix)+"-interval20-journey.txt");
+ for(int i=0;i<200;++i) {
+  const auto phase=interval_pass->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+  const auto next=step_match(*interval_pass,client_input(*interval_pass,0,0),content);
+  player20_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<unsigned(next.state.demo_rng&255)<<' '<<unsigned((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<next.state.demo_rng<<'\n';player20_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-interval20-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*interval_pass=next.state;
+ }
+ if(interval_pass->session.phase!=FieldSessionPhase::ai_cell_decision || interval_pass->session.current.field.ball_owner!=20 || interval_pass->session.current.field.ball_cell!=112 || interval_pass->session.current.clock.remaining!=177)throw std::runtime_error("Second-half player20 decision differs");
+ const auto player20_choice=step_match(*interval_pass,client_input(*interval_pass,0,0),content);
+ std::ofstream player20_choice_log(std::string(prefix)+"-interval20-choice.txt");player20_choice_log<<(player20_choice.unsupported ? static_cast<int>(*player20_choice.unsupported) : -1)<<' '<<player20_choice.state.demo_rng<<' '<<static_cast<unsigned>(player20_choice.state.session.phase)<<'\n';
+ if(player20_choice.unsupported || player20_choice.state.session.phase!=FieldSessionPhase::control_clock_pending || player20_choice.state.session.action->action!=2)throw std::runtime_error("Second-half player20 AI continuation differs");
+ {std::ofstream f(std::string(prefix)+"-interval20-choice.cmjsession",std::ios::binary);write_phase_session(f,player20_choice.state.session);}
+ *interval_pass=player20_choice.state;std::ofstream player20_next_log(std::string(prefix)+"-interval20-next.txt");
+ for(int i=0;i<200;++i) {
+  const auto phase=interval_pass->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+  const auto next=step_match(*interval_pass,client_input(*interval_pass,0,0),content);
+  player20_next_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<unsigned(next.state.demo_rng&255)<<' '<<unsigned((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<next.state.demo_rng<<'\n';player20_next_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-interval20-next-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*interval_pass=next.state;
+ }
+ if(interval_pass->session.phase!=FieldSessionPhase::field_contact_pending || interval_pass->session.current.field.selected_defenders!=3 || interval_pass->session.current.field.ball_owner!=20)throw std::runtime_error("Second-half player20 contact differs");
+ const auto contact=step_match(*interval_pass,client_input(*interval_pass,0,0),content);
+ std::ofstream interval_contact_log(std::string(prefix)+"-interval20-contact.txt");interval_contact_log<<(contact.unsupported ? static_cast<int>(*contact.unsupported) : -1)<<' '<<static_cast<unsigned>(contact.state.session.phase)<<' '<<contact.state.demo_rng<<' '<<(contact.state.defense_menu ? static_cast<int>(contact.state.defense_menu->stage) : -1)<<'\n';
+ if(!contact.unsupported){std::ofstream f(std::string(prefix)+"-interval20-contact.cmjsession",std::ios::binary);write_phase_session(f,contact.state.session);}
+ if(contact.unsupported || !contact.state.defense_menu)throw std::runtime_error("Second-half defense prompt stopped");
+ auto defense=std::make_unique<MatchRuntimeState>(contact.state);std::ofstream defense_log(std::string(prefix)+"-interval20-defense.txt");
+ for(int i=0;i<30;++i) {
+  if(!defense->defense_menu || defense->defense_menu->stage==MatchDefenseStage::complete)break;
+  const auto& menu=*defense->defense_menu;std::uint8_t pressed=0;
+  if(menu.stage==MatchDefenseStage::polling)pressed=menu.poll.cursor==menu.defender_count || menu.poll.defense.actions[menu.poll.cursor]!=255 ? 128 : 4;
+  const auto next=step_match(*defense,client_input(*defense,0,pressed),content);
+  defense_log<<i<<' '<<unsigned(pressed)<<' '<<static_cast<unsigned>(menu.stage)<<' '<<unsigned(menu.poll.cursor)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<next.state.demo_rng;
+  if(next.state.defense_menu){const auto& p=next.state.defense_menu->poll;defense_log<<' '<<unsigned(p.cursor)<<' '<<unsigned(p.flash_counter)<<' '<<unsigned(p.defense.blink);for(auto action:p.defense.actions)defense_log<<' '<<unsigned(action);}
+  defense_log<<'\n';defense_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-interval20-defense-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*defense=next.state;
+ }
+ if(!defense->defense_menu || defense->defense_menu->stage!=MatchDefenseStage::complete || defense->defense_menu->poll.defense.actions[0]!=6 || defense->defense_menu->poll.defense.actions[1]!=6 || defense->defense_menu->poll.defense.actions[2]!=6)throw std::runtime_error("Second-half skip defense did not complete");
+ const auto defended_choice=step_match(*defense,client_input(*defense,0,0),content);
+ std::ofstream defended_choice_log(std::string(prefix)+"-interval20-defended-choice.txt");defended_choice_log<<(defended_choice.unsupported ? static_cast<int>(*defended_choice.unsupported) : -1)<<' '<<defended_choice.state.demo_rng<<' '<<static_cast<unsigned>(defended_choice.state.session.phase)<<'\n';
+ if(defended_choice.unsupported || !defended_choice.state.session.action || defended_choice.state.session.action->action!=1 || !defended_choice.state.defense_menu)throw std::runtime_error("Second-half defended AI choice differs");
+ {std::ofstream f(std::string(prefix)+"-interval20-defended-choice.cmjsession",std::ios::binary);write_phase_session(f,defended_choice.state.session);}
+ const auto defended_prepared=step_match(defended_choice.state,client_input(defended_choice.state,0,0),content);
+ std::ofstream defended_prepared_log(std::string(prefix)+"-interval20-defended-prepared.txt");defended_prepared_log<<(defended_prepared.unsupported ? static_cast<int>(*defended_prepared.unsupported) : -1)<<' '<<defended_prepared.state.demo_rng<<'\n';
+ if(!defended_prepared.unsupported){std::ofstream f(std::string(prefix)+"-interval20-defended-prepared.cmjsession",std::ios::binary);write_phase_session(f,defended_prepared.state.session);}
+ if(defended_prepared.unsupported)throw std::runtime_error("Second-half defended pass preparation stopped");
+ auto defended_pass=std::make_unique<MatchRuntimeState>(defended_prepared.state);std::ofstream defended_pass_log(std::string(prefix)+"-interval20-defended-pass.txt");
+ for(int i=0;i<50;++i) {
+  const auto next=step_match(*defended_pass,client_input(*defended_pass,0,0),content);
+  defended_pass_log<<i<<' '<<static_cast<unsigned>(defended_pass->session.phase)<<' '<<(defended_pass->defense_menu ? static_cast<int>(defended_pass->defense_menu->stage) : -1)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<next.state.demo_rng<<'\n';defended_pass_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-interval20-defended-pass-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*defended_pass=next.state;
+  if(defended_pass->session.phase==FieldSessionPhase::control_ready && defended_pass->session.current.field.ball_owner!=20)break;
+ }
+ if(defended_pass->session.phase!=FieldSessionPhase::control_ready || defended_pass->session.current.field.ball_owner!=21 || defended_pass->session.current.field.ball_x!=98 || defended_pass->session.current.field.ball_y!=172 || defended_pass->session.current.clock.remaining!=173)throw std::runtime_error("Second-half defended pass recipient differs");
+ std::ostringstream defended_received_save(std::ios::binary);write_match_save(defended_received_save,*defended_pass,identity);std::istringstream defended_received_in(defended_received_save.str(),std::ios::binary);
+ if(load_match_save(defended_received_in,identity).session.current.field.ball_owner!=21)throw std::runtime_error("Second-half defended pass did not roundtrip");
 
 
 

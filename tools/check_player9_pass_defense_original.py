@@ -577,6 +577,56 @@ values=list(map(int,line.split()));arrival=checkpoints['arrival']
 word=lambda address:arrival[address]|arrival[address+1]<<8
 if values[6:]!=[word(0x634),word(0x636),arrival[0x5fe]]:raise ValueError('Interval pass arrival trajectory differs')
 if (checkpoints['ready'][0x441],checkpoints['ready'][0x635],checkpoints['ready'][0x637])!=(20,128,116):raise ValueError('Unexpected interval pass recipient')
+raw=checkpoints['ready']
+for line in (a.trace/'native-interval20-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Second-half player20 journey stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ observation,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-interval20-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'interval player20 journey',str(i))
+unsupported,seed,phase=map(int,(a.trace/'native-interval20-choice.txt').read_text().split())
+if unsupported!=-1:raise ValueError('Interval player20 AI choice stopped')
+injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));choice=original_choice(rom[16:262160],injected)
+compare_represented((a.trace/'native-interval20-choice.cmjsession').read_bytes(),export_session(choice,0),False,'interval player20','AI choice')
+raw=choice
+for line in (a.trace/'native-interval20-next.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Second-half player20 continuation stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ observation,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-interval20-next-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'interval player20 continuation',str(i))
+from trace_field_defense_prompt import trace_field_defense_prompt
+from trace_area_defense_poll import trace_defense_poll
+_,prompt=trace_field_defense_prompt(rom[16:262160],raw)
+compare_represented((a.trace/'native-interval20-contact.cmjsession').read_bytes(),export_session(prompt,0),False,'interval player20','defense prompt')
+raw=prompt
+for line in (a.trace/'native-interval20-defense.txt').read_text().splitlines():
+ values=list(map(int,line.split()));i,pressed,stage,cursor,unsupported,seed=values[:6]
+ if unsupported!=-1:raise ValueError('Second-half defensive menu stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255))
+ observation,raw=trace_defense_poll(rom[16:262160],injected,128 if stage==1 else pressed,preparation=stage==1)
+ actual=(a.trace/f'native-interval20-defense-{i}.cmjsession').read_bytes()
+ compare_represented(actual,export_session(raw,0),False,'interval player20 defense',str(i))
+ expected=[raw[0x61e],raw[0x61f],raw[0x620],*raw[0x60b:0x60f]]
+ if values[6:]!=expected:raise ValueError(f'Interval defensive menu state differs at {i}: {values[6:]} != {expected}')
+unsupported,seed,phase=map(int,(a.trace/'native-interval20-defended-choice.txt').read_text().split())
+if unsupported!=-1:raise ValueError('Interval defended AI choice stopped')
+injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));choice=original_choice(rom[16:262160],injected)
+compare_represented((a.trace/'native-interval20-defended-choice.cmjsession').read_bytes(),export_session(choice,0),False,'interval player20 defense','opponent choice')
+from check_ai_field_preparation_original import original_preparation
+prepared=original_preparation(rom[16:262160],injected)
+if int((a.trace/'native-interval20-defended-prepared.txt').read_text().split()[0])!=-1:raise ValueError('Interval defended pass preparation stopped')
+compare_represented((a.trace/'native-interval20-defended-prepared.cmjsession').read_bytes(),export_session(prepared,0),False,'interval player20 defense','opponent preparation')
+for i,name,options in ((1,'preclock',{'through_clock':True}),
+                       (2,'handoff',{'through_handoff':True}),
+                       (3,'target',{'through_handoff':True,'through_target':True}),
+                       (4,'flight',{'through_handoff':True,'through_target':True,'through_flight':True}),
+                       (25,'control',{'through_return':True}),
+                       (26,'ready',{'through_return':True,'through_control':True})):
+ original=original_preparation(rom[16:262160],injected,**options)
+ native=bytearray((a.trace/f'native-interval20-defended-pass-{i}.cmjsession').read_bytes());wanted=bytearray(export_session(original,0))
+ if name in ('handoff','target','flight','control'):wanted[298]=native[298]
+ compare_represented(native,wanted,False,'interval player20 defended pass',name)
 
 
 

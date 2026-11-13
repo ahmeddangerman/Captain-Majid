@@ -16,6 +16,16 @@ std::string bytes(const captain::PhaseSessionState& state) {
 int main(int argc,char** argv) {
     using namespace captain;
     try {
+        if(argc==3 && std::string(argv[1])=="--defense-slot") {
+            std::ifstream cases(argv[2],std::ios::binary);if(!cases)throw std::invalid_argument("Missing defensive presentation fixtures");
+            unsigned count=0;char raw[3];
+            while(cases.read(raw,sizeof(raw))) {
+                if(defense_presentation_slot(static_cast<unsigned char>(raw[0]),static_cast<unsigned char>(raw[1]))!=static_cast<unsigned char>(raw[2]))throw std::runtime_error("Original defender presentation selection differs");
+                ++count;
+            }
+            if(cases.gcount()!=0 || !count)throw std::invalid_argument("Invalid defensive presentation fixtures");
+            std::cout<<count<<" original defensive presentation selections match\n";return 0;
+        }
         if(argc==5 && std::string(argv[1])=="--period-stamina") {
             std::ifstream pack(argv[2],std::ios::binary),session(argv[3],std::ios::binary),cases(argv[4],std::ios::binary);
             if(!pack || !session || !cases)throw std::invalid_argument("Missing period recovery fixture");

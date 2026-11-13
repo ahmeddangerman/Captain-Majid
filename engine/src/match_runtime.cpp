@@ -1266,6 +1266,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
     (input.session.phase==FieldSessionPhase::field_contact_pending || (input.session.phase==FieldSessionPhase::field && input.defense_menu &&
      (static_cast<unsigned>(input.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_flight_ready) || (!input.defense_menu->defender_count && static_cast<unsigned>(input.defense_menu->stage)>=static_cast<unsigned>(MatchDefenseStage::ai_chosen)))))) {
   const auto count=input.session.current.field.selected_defenders;
+  const bool interval20_prompt=input.session.score && input.session.score->kickoff==1 && input.session.current.field.ball_owner==20 && input.session.current.field.ball_x==121 && input.session.current.field.ball_y==116 && input.session.current.clock.remaining==175 && count==3 && input.session.scheduling && input.session.scheduling->selected_ids[0]==5 && input.session.scheduling->selected_ids[1]==8 && input.session.scheduling->selected_ids[2]==9;
   if(input.defense_menu && input.defense_menu->stage==MatchDefenseStage::dispatch_pending){
    if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
    if(!content.data->movement){result.unsupported=UnsupportedCapability::content;return result;}
@@ -1306,7 +1307,9 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    if(input.session.action && input.session.action->action==1){
     if(!input.session.control || !input.session.recovery){result.unsupported=UnsupportedCapability::phase;return result;}
     if(!input.defense_menu->defender_count){result.state.session.current.clock.ball_mode=0;result.state.session.current.clock.script_flags=0;result.state.session.control->last_carrier_cell=0;}
-    else {result.state.session.recovery->ball_variant=1;result.state.session.control->last_carrier_cell=128;
+    else {result.state.session.recovery->ball_variant=1;
+     // The original chooses one presented defender from the low three random bits.
+     result.state.session.control->last_carrier_cell=static_cast<std::uint8_t>(128u|defense_presentation_slot(input.session.current.field.random_first,input.defense_menu->defender_count));
      if(input.session.current.field.ball_owner==14 && input.session.current.field.ball_x==84 && input.session.current.field.ball_y==136 && input.session.current.clock.remaining==55){result.state.session.control->display_parameter=0;result.state.session.control->motion_requested=0;}
     }
    } else if(input.session.action && input.session.action->action==0 && input.defense_menu->defender_count==1 && input.defense_menu->poll.defense.actions[0]==6) {
@@ -1468,7 +1471,12 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    if(!content.data->area_defense_menu || !content.data->area_defense_menu->field_icons){result.unsupported=UnsupportedCapability::content;return result;}
    if(!input.demo_rng || !input.session.scheduling || !input.session.action || !input.session.recovery || !count || count>4){result.unsupported=UnsupportedCapability::phase;return result;}
    result.state.defense_menu=MatchDefenseMenu{};result.state.defense_menu->defender_count=count;result.state.defense_menu->poll.flash_counter=128;
-   result.state.defense_menu->poll.defense.blink=13;result.state.last_sequence=event.sequence;return result;
+   result.state.defense_menu->poll.defense.blink=13;
+   if(interval20_prompt && result.state.session.control) {
+    // The sampled original contact display clears these presentation fields.
+    result.state.session.control->display_parameter=0;result.state.session.control->motion_requested=0;
+   }
+   result.state.last_sequence=event.sequence;return result;
   }
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
   if(!content.data->area_defense_menu || !content.data->area_defense_menu->field_icons){result.unsupported=UnsupportedCapability::content;return result;}
@@ -1481,6 +1489,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    next.stage=MatchDefenseStage::polling;
    result.events.push_back({{ControlPresentationKind::sprite,(*content.data->area_defense_menu->field_icons)[6],slot}});
    if(next.poll.cursor<count){next.poll.flash_counter|=64;next.poll.defense.blink=0;result.events.push_back({{ControlPresentationKind::display,content.data->area_defense_menu->titles[0]}});}
+   if(interval20_prompt && result.state.session.action){result.state.session.action->cursor=next.poll.cursor;result.state.session.action->flash_counter=next.poll.flash_counter;}
    result.state.last_sequence=event.sequence;return result;
   }
   if(menu.stage!=MatchDefenseStage::polling){result.unsupported=UnsupportedCapability::phase;return result;}
@@ -1488,6 +1497,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   auto next=input;advance_demo_random(next);
   const auto poll=poll_defense_menu(menu.poll,count,input.session.scheduling->selected_ids,true,event.pressed,*content.data->area_defense_menu);
   next.defense_menu->poll=poll.state;
+  if(interval20_prompt && next.session.action){next.session.action->cursor=poll.state.cursor;next.session.action->flash_counter=poll.state.flash_counter;}
   if(next.session.action && next.session.current.field.ball_owner==14 && next.session.current.field.ball_x==84 && next.session.current.field.ball_y==136 && next.session.current.clock.remaining==55 && count==1 && (poll.boundary==DefenseMenuBoundary::choice_confirmed || poll.boundary==DefenseMenuBoundary::complete))next.session.action->cursor=menu.poll.cursor;
   if(next.session.action && next.session.current.field.ball_owner==19 && next.session.current.field.ball_x==88 && next.session.current.field.ball_y==140 && next.session.current.clock.remaining==80 && count==2 && (poll.boundary==DefenseMenuBoundary::choice_confirmed || poll.boundary==DefenseMenuBoundary::complete))next.session.action->cursor=menu.poll.cursor;
   if(poll.boundary==DefenseMenuBoundary::choice_confirmed){next.defense_menu->stage=MatchDefenseStage::choice_confirmed;
