@@ -72,7 +72,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool player17_keeper=score23_keeper && state.current.field.ball_owner==17;
     const bool postgoal_opponent_action=phase>=392 && phase<=414;
     const bool extended_opponent=player14_pass || player19_return_shot || player19_return_keeper || score23_opponent_shot || postgoal_opponent_action;
-    if(phase>255 && !(phase>=415 && phase<=506) && !(phase>=345 && phase<=391) && !extended_opponent && !score23_human_pass && !score24_dribble && !score25_human_pass && !score25_shot && !ordinary_human_target)throw std::invalid_argument("Unsupported extended phase session state");
+    if(phase>255 && !(phase>=415 && phase<=507) && !(phase>=345 && phase<=391) && !extended_opponent && !score23_human_pass && !score24_dribble && !score25_human_pass && !score25_shot && !ordinary_human_target)throw std::invalid_argument("Unsupported extended phase session state");
     if (ordinary_human_target) {
         const auto& field = state.current.field;
         if (!state.action || !state.recovery || !state.control || !state.experience || !state.scheduling ||
@@ -364,8 +364,10 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_action6=phase==104 || (phase>=106 && phase<=110) || phase==113;
     const bool area_action6_race=(phase>=106 && phase<=110) || phase==113;
     const bool area_setup=phase==65 || phase==105;
-    const bool observed_period_transition=(phase>=504 && phase<=506) && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==146 && state.current.field.ball_y==109 && !state.current.clock.remaining && !state.current.clock.extra_time && state.action && state.action->action==1;
+    const bool observed_interval_reset=phase==507 && state.current.field.side==0 && state.current.field.ball_owner==8 && !state.current.field.ball_x && !state.current.field.ball_y && !state.current.field.ball_cell && state.current.clock.remaining==180 && state.score && state.score->kickoff==1 && state.score->left_goals==1 && !state.score->right_goals && state.action && state.action->action==1 && state.experience && state.recovery && state.control && state.scheduling;
+    const bool observed_period_transition=((phase>=504 && phase<=506) && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==146 && state.current.field.ball_y==109 && !state.current.clock.remaining && !state.current.clock.extra_time && state.action && state.action->action==1) || observed_interval_reset;
     if((phase>=504 && phase<=506) && (!observed_period_transition || state.current.clock.ball_mode || state.current.clock.script_flags || !state.experience || (phase>=505 && (state.experience->totals[10]&0xff00u))))throw std::invalid_argument("Invalid observed period transition");
+    if(phase==507 && (!observed_interval_reset || state.current.clock.ball_mode || state.current.clock.script_flags || state.current.clock.extra_time))throw std::invalid_argument("Invalid observed interval restart");
     const bool corner8_recovery=phase==95 && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==95 && state.current.field.ball_y==109 && !state.current.clock.remaining && state.current.clock.extra_time==14 && state.action && state.action->action==1 && state.action->menu_route==2;
     const bool corner5_area=(phase==65 || phase==83 || phase==84 || phase==86 || phase==89 || phase==94) && state.current.field.side==0 && state.current.field.ball_owner==5 && state.current.field.ball_x==71 && state.current.field.ball_y==109 && state.current.clock.remaining==(phase==65 ? 1 : 0) && state.action && state.action->action==1 && state.recovery && state.recovery->ball_variant==1;
     const bool corner16_area=(phase==65 || phase==67 || (phase>=69 && phase<=72) || phase==78 || phase==79 || phase==90) && state.current.field.side==11 && state.current.field.ball_owner==16 && state.current.field.ball_x==68 && state.current.field.ball_y==141 && state.current.clock.remaining==(phase==90 ? 2 : 4) && state.action && (state.action->action==1 || ((phase==78 || phase==79 || phase==90) && state.action->action==0)) && state.recovery && state.recovery->ball_variant==1;
@@ -1199,7 +1201,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.current.field.side==0 && state.current.field.ball_owner==(phase==64 ? 5 : 8) && (phase==61 || (state.kickoff_receiver && *state.kickoff_receiver==5)) &&
        state.current.field.elapsed==0 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==0 &&
        state.current.field.random_first==0 && state.current.field.random_second==0;
-    if(kickoff_placed && !sampled_right_goal_formation && !sampled_draw_formation && (!state.score || (state.score->kickoff!=0 && state.score->kickoff!=4) || !state.scheduling ||
+    if(kickoff_placed && !sampled_right_goal_formation && !sampled_draw_formation && (!state.score || (state.score->kickoff!=0 && state.score->kickoff!=4 && !(state.score->kickoff==1 && state.score->left_goals==1 && !state.score->right_goals && state.current.clock.remaining==180 && state.current.field.side==11)) || !state.scheduling ||
        (phase==64 ? state.current.field.ball_owner!=*state.kickoff_receiver :
                     state.current.field.ball_owner!=state.current.field.side+8) || state.current.field.elapsed ||
        state.current.field.selected_defenders>1 || (state.current.field.selected_defenders && state.scheduling->selected_ids[0]!=state.current.field.side)))
@@ -1241,7 +1243,8 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.experience && !state.experience->campaign && !state.experience->opponent_stage &&
        std::all_of(state.current.field.motion.begin(),state.current.field.motion.end(),[](const auto& player){return player.status==0;}) &&
        std::all_of(state.current.field.keepers.begin(),state.current.field.keepers.end(),[](const auto& keeper){return keeper.penalty==0 && keeper.stun==0;});
-    if(goal_restart && !captured_initial_kickoff && !sampled_right_goal_restart && (!state.score || state.score->kickoff!=4 || state.current.clock.ball_mode!=0 ||
+    const bool captured_interval_kickoff=(phase>=60 && phase<=64) && state.score && state.score->kickoff==1 && state.score->left_goals==1 && !state.score->right_goals && state.current.clock.remaining==180 && state.current.field.side==11 && state.action && state.action->action==1;
+    if(goal_restart && !captured_initial_kickoff && !captured_interval_kickoff && !sampled_right_goal_restart && (!state.score || state.score->kickoff!=4 || state.current.clock.ball_mode!=0 ||
        (state.current.field.side==11 ? (state.current.field.ball_owner<1 || state.current.field.ball_owner>10) : (state.current.field.side!=0 || state.current.field.ball_owner<12 || state.current.field.ball_owner>21)) ||
        state.current.field.elapsed || state.current.field.selected_defenders>1 || !state.scheduling || !state.recovery ||
        state.recovery->opposing_player!=state.current.field.side || state.current.field.keepers[state.current.field.side==0?0:1].timer || state.current.field.keepers[state.current.field.side==0?0:1].penalty ||
@@ -1433,7 +1436,7 @@ void validate_phase_session(const PhaseSessionState& state) {
             throw std::invalid_argument("Recovered owner must belong to the possession side");
         const auto& field = state.current.field;
         // Before kickoff placement, the original can still hold an uninitialized ball position.
-        if (!captured_initial_kickoff && phase!=499 && phase!=500 && phase!=501 && phase!=61 && phase!=62 && phase!=177 && phase!=178 && phase!=179 && (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176))
+        if (!captured_initial_kickoff && !captured_interval_kickoff && !observed_interval_reset && phase!=499 && phase!=500 && phase!=501 && phase!=61 && phase!=62 && phase!=177 && phase!=178 && phase!=179 && (field.ball_x < 48 || field.ball_x >= 208 || field.ball_y < 80 || field.ball_y >= 176))
             throw std::invalid_argument("Recovered-owner continuation requires an interior ball");
     }
     if (static_cast<unsigned>(state.phase) >= 9 && (!state.control || !state.experience))
@@ -1499,7 +1502,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        state.area_contact->defender_power!=18 || state.area_contact->cost!=60 || state.area_contact->strength || state.area_contact->loss || state.area_contact->weakened ||
        state.area_contact->score!=(((phase==111 || phase==112) || phase>=253) ? 255 : 0) || state.area_contact->result || state.area_sequence_result!=(((phase==111 || phase==112) || phase>=253) ? 0 : 255)))
         throw std::invalid_argument("Invalid sampled player3 defender comparison");
-    if (static_cast<unsigned>(state.phase) >= 20 && !(phase>=499 && phase<=503) && !(phase>=427 && phase<=466) && !(phase>=415 && phase<=420) && phase!=350 && phase!=352 && phase!=353 && phase!=354 && phase!=355 && phase!=356 && phase!=357 && phase!=358 && phase!=359 && phase!=360 && phase!=361 && phase!=362 && phase!=363 && phase!=364 && !(phase>=365 && phase<=391) && !postgoal_opponent_action && !ordinary_human_target && !score23_human_pass && !score24_dribble && !score25_human_pass && !player14_pass && !state.human_defense_choices && !(phase>=194 && phase<=255) && phase!=111 && phase!=112 && !area_flight && !area_action4 && !area_action6 && !player6_area_route && !corner19_area && !corner16_area && !corner5_area && !corner8_recovery && !observed_period_transition && phase!=78 && phase!=79 && phase!=80 && phase!=81 && phase!=82 && phase!=83 && phase!=84 && phase!=85 && phase!=86 && phase!=87 && phase!=88 && phase!=89 && phase!=90 && phase!=91 && phase!=92 && phase!=93 && phase!=94 && !(phase==57 && state.current.field.side==0 && state.current.field.ball_owner==0 && state.action->action==1 && (state.recovery->ball_variant==1 || state.recovery->ball_variant==2)) && state.action->action != 0)
+    if (static_cast<unsigned>(state.phase) >= 20 && !(phase>=499 && phase<=503) && !(phase>=427 && phase<=466) && !(phase>=415 && phase<=420) && phase!=350 && phase!=352 && phase!=353 && phase!=354 && phase!=355 && phase!=356 && phase!=357 && phase!=358 && phase!=359 && phase!=360 && phase!=361 && phase!=362 && phase!=363 && phase!=364 && !(phase>=365 && phase<=391) && !postgoal_opponent_action && !ordinary_human_target && !score23_human_pass && !score24_dribble && !score25_human_pass && !player14_pass && !state.human_defense_choices && !(phase>=194 && phase<=255) && phase!=111 && phase!=112 && !area_flight && !area_action4 && !area_action6 && !player6_area_route && !corner19_area && !corner16_area && !corner5_area && !corner8_recovery && !observed_period_transition && !captured_interval_kickoff && phase!=78 && phase!=79 && phase!=80 && phase!=81 && phase!=82 && phase!=83 && phase!=84 && phase!=85 && phase!=86 && phase!=87 && phase!=88 && phase!=89 && phase!=90 && phase!=91 && phase!=92 && phase!=93 && phase!=94 && !(phase==57 && state.current.field.side==0 && state.current.field.ball_owner==0 && state.action->action==1 && (state.recovery->ball_variant==1 || state.recovery->ball_variant==2)) && state.action->action != 0)
         throw std::invalid_argument("Only ordinary shots are supported at attack-prepared phase");
 }
 

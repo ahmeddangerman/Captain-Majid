@@ -1143,6 +1143,26 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::observed_interval_restart) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  try {auto next=input;next.session.current.field.side=11;
+   // This value was captured after the acknowledged original kickoff-side display.
+   next.session.control->travel_accumulator=0xec25;next.session.phase=FieldSessionPhase::goal_kickoff_pending;
+   validate_phase_session(next.session);next.last_sequence=event.sequence;result.state=std::move(next);return result;
+  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::period_transition;return result;}
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::observed_interval_stamina) {
+  if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
+  try {auto next=input;auto& session=next.session;auto& field=session.current.field;
+   field.ball_x=field.ball_y=field.ball_cell=field.elapsed=field.movement_region=0;
+   session.current.clock.remaining=180;session.current.clock.flags=0;
+   session.experience->totals[10]|=256u;session.recovery->x_jitter_control=0;
+   session.control->decision_timer=0;session.control->controlled_player=0;session.scheduling->field_cycle=0;
+   session.action->menu_route=0;session.action->cursor=0;session.action->flash_counter=0;session.action->power=0;
+   session.score->kickoff=1;session.phase=FieldSessionPhase::observed_interval_restart;next.ball_fraction.reset();
+   validate_phase_session(session);next.last_sequence=event.sequence;result.state=std::move(next);return result;
+  } catch(const std::invalid_argument&) {result.unsupported=UnsupportedCapability::period_transition;return result;}
+ }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::observed_period_dispatch) {
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   if(!content.data->world_step){result.unsupported=UnsupportedCapability::content;return result;}
@@ -1869,9 +1889,13 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
   return step_first_rebound_defender(input,event,content);
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::area_pass_capture_control_entry && input.session.current.field.side==0 && input.session.current.field.ball_owner==1 && input.session.area_ai_target && input.session.area_ai_target->recipient==19 && input.session.area_ai_target->cell==79)
   return setup_first_rebound_control(input,event);
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::kickoff_control_pending && input.session.score && input.session.score->kickoff==1) {
+  result.unsupported=UnsupportedCapability::presentation;return result;
+ }
  if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::goal_kickoff_pending || input.session.phase==FieldSessionPhase::kickoff_formation_placed ||
     input.session.phase==FieldSessionPhase::kickoff_receiver_selected || input.session.phase==FieldSessionPhase::kickoff_ball_placed || input.session.phase==FieldSessionPhase::kickoff_control_pending) &&
     input.session.score && (input.session.score->kickoff==4 ||
+     (input.session.score->kickoff==1 && input.session.score->left_goals==1 && !input.session.score->right_goals && input.session.current.clock.remaining==180 && input.session.current.field.side==11 && (!input.session.kickoff_receiver || *input.session.kickoff_receiver==18)) ||
      (input.session.score->kickoff==0 && input.session.score->left_goals==0 && input.session.score->right_goals==0 &&
       input.session.current.clock.remaining==180 && input.session.current.field.side==0 && input.session.experience &&
       input.session.experience->campaign==0 && input.session.experience->opponent_stage==0 && input.session.current.field.roster[9].type==1 &&

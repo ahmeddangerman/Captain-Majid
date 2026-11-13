@@ -535,6 +535,13 @@ for player in range(11):
  original_stamina=original[0x301+12*player]|original[0x302+12*player]<<8
  offset=34+4*player+2;native_stamina=native[offset]|native[offset+1]<<8
  if native_stamina!=original_stamina:raise ValueError(f'Interval stamina differs for player {player}')
+restart=(a.player3_shot/'period-restart-30-daaa.bin').read_bytes()
+compare_represented((a.trace/'native-interval-restart.cmjsession').read_bytes(),export_session(restart,0),True,'interval restart','initialization')
+side=(a.player3_shot/'period-restart-30-dae9.bin').read_bytes()
+compare_represented((a.trace/'native-interval-kickoff-side.cmjsession').read_bytes(),export_session(side,0),False,'interval restart','kickoff side')
+for name,pc in (('formation','daf5'),('receiver','db0b'),('ball','db0e'),('handoff','db1e')):
+ raw=(a.player3_shot/f'period-restart-30-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-interval-kickoff-{name}.cmjsession').read_bytes(),export_session(raw,0),False,'interval kickoff',name)
 
 
 

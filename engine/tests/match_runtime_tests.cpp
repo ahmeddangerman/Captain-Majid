@@ -391,6 +391,25 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream interval_file(std::string(prefix)+"-interval-stamina.cmjsession",std::ios::binary);write_phase_session(interval_file,interval->state.session);
  std::ostringstream interval_save(std::ios::binary);write_match_save(interval_save,interval->state,identity);std::istringstream interval_in(interval_save.str(),std::ios::binary);
  if(load_match_save(interval_in,identity).session.phase!=FieldSessionPhase::observed_interval_stamina)throw std::runtime_error("Interval recovery did not roundtrip");
+ auto restart=std::make_unique<MatchStepResult>(step_match(interval->state,client_input(interval->state,0,0),content));
+ if(restart->unsupported || restart->state.session.phase!=FieldSessionPhase::observed_interval_restart)throw std::runtime_error("Interval restart initialization stopped");
+ std::ofstream restart_file(std::string(prefix)+"-interval-restart.cmjsession",std::ios::binary);write_phase_session(restart_file,restart->state.session);
+ std::ostringstream restart_save(std::ios::binary);write_match_save(restart_save,restart->state,identity);std::istringstream restart_in(restart_save.str(),std::ios::binary);
+ if(load_match_save(restart_in,identity).session.phase!=FieldSessionPhase::observed_interval_restart)throw std::runtime_error("Interval restart did not roundtrip");
+ auto kickoff_side=std::make_unique<MatchStepResult>(step_match(restart->state,client_input(restart->state,0,0),content));
+ if(kickoff_side->unsupported || kickoff_side->state.session.phase!=FieldSessionPhase::goal_kickoff_pending || kickoff_side->state.session.current.field.side!=11)throw std::runtime_error("Interval kickoff side stopped");
+ std::ofstream kickoff_side_file(std::string(prefix)+"-interval-kickoff-side.cmjsession",std::ios::binary);write_phase_session(kickoff_side_file,kickoff_side->state.session);
+ for(const auto* name:{"formation","receiver","ball","handoff"}) {
+  auto next=std::make_unique<MatchStepResult>(step_match(kickoff_side->state,client_input(kickoff_side->state,0,0),content));
+  if(next->unsupported)throw std::runtime_error(std::string("Interval kickoff ")+name+" stopped: "+capability_name(*next->unsupported));
+  std::ofstream capture(std::string(prefix)+"-interval-kickoff-"+name+".cmjsession",std::ios::binary);write_phase_session(capture,next->state.session);
+  *kickoff_side=std::move(*next);
+ }
+ if(kickoff_side->state.session.phase!=FieldSessionPhase::kickoff_control_pending || kickoff_side->state.session.current.field.ball_owner!=18)throw std::runtime_error("Interval kickoff receiver differs");
+ const auto after_kickoff=step_match(kickoff_side->state,client_input(kickoff_side->state,0,0),content);
+ if(after_kickoff.unsupported!=UnsupportedCapability::presentation || after_kickoff.state.last_sequence!=kickoff_side->state.last_sequence)throw std::runtime_error("Uncaptured interval kickoff presentation must stop atomically");
+ std::ostringstream kickoff_save(std::ios::binary);write_match_save(kickoff_save,kickoff_side->state,identity);std::istringstream kickoff_in(kickoff_save.str(),std::ios::binary);
+ if(load_match_save(kickoff_in,identity).session.current.field.ball_owner!=18)throw std::runtime_error("Interval kickoff did not roundtrip");
 
 
 

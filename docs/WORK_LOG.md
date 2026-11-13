@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Controlled second-half kickoff handoff
+
+Extended the continuous replay through the interval reset and opposing kickoff. Original/native represented state matches at initialization, selected side, formation, receiver selection, ball placement and handoff; the score remains1-0, clock180 and opposing player18 receives at (132,132). The interval restart, stamina and final kickoff handoff save and reload. The controlled route reuses the original-derived formation and receiver calculations and explicitly acknowledges the sampled presentation scratch/facing effects.
+
+After this handoff the original presentation moves the ball and players before control; the native runtime stops atomically until those effects are represented. The trace uses a chosen menu input, acknowledged waits and stubbed PPU/mapper writes, not live rendering, NMI, audio or timing. Windows CMake build, all 65 tests, the private continuous replay and original comparisons passed. Next trace and reproduce the kickoff presentation handoff and resume player18 control. Overall progress is unmeasured; a complete playable match is unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/period-restart-original-20261113.
+
 ## 2026-11-13 - Interval stamina and observed restart
 
 The original period-end route enters an interval menu; repeatedly confirming its default choice caused the previous observer to loop. Supplying a directional input then confirmation reaches a new kickoff with score1-0 preserved, clock180 and opposing player18 receiving at (132,132). This controlled CPU trace acknowledges presentation and input, stubs PPU/mapper writes and does not execute live NMI or rendering; it is not a completed playable match.

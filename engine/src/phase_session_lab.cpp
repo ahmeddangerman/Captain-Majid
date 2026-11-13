@@ -83,6 +83,7 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::observed_period_display: return "observed period display acknowledgement pending";
     case captain::FieldSessionPhase::observed_period_dispatch: return "observed period return dispatcher pending";
     case captain::FieldSessionPhase::observed_interval_stamina: return "observed interval stamina recovery complete";
+    case captain::FieldSessionPhase::observed_interval_restart: return "observed interval kickoff initialization";
     case captain::FieldSessionPhase::player7_shot_defender_prepared: return "player7 shot defender prepared";
     case captain::FieldSessionPhase::player7_shot_defender_compared: return "player7 shot defender compared";
     case captain::FieldSessionPhase::player7_shot_contact_clocked: return "player7 terminal shot contact clocked";

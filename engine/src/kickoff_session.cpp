@@ -10,6 +10,11 @@ PhaseSessionState continue_prepared_session_kickoff(const PhaseSessionState& inp
  auto state=input;
  state.current.field.ball_owner=*state.kickoff_receiver;
  state.control->controlled_player=1;
+ // Captured interval kickoff display leaves this travel scratch before control resumes.
+ if(state.score && state.score->kickoff==1 && state.score->left_goals==1 && !state.score->right_goals &&
+    state.current.clock.remaining==180 && state.current.field.side==11 && *state.kickoff_receiver==18) {
+  state.control->travel_accumulator=0x1bff;state.control->facing=64;
+ }
  // Captured first kickoff: the acknowledged original display sets facing64.
  if(state.score && state.score->kickoff==0 && !state.score->left_goals && !state.score->right_goals &&
     state.current.clock.remaining==180 && state.current.field.side==0 &&
