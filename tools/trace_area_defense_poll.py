@@ -5,8 +5,9 @@ from trace_field_script import ObservedCartridge
 
 
 def trace_defense_poll(prg,ram,pressed,*,preparation=False,options_only=False):
-    if len(ram)!=2048 or ram[0x22]&64 or ram[0x5fb]!=11 or ram[0x621]!=2 or not 1<=ram[0x600]<=4 or ram[0x61e]>ram[0x600]:
-        raise ValueError('Expected active route2 human defensive state')
+    corner_route=(len(ram)==2048 and ram[0x621]==1 and ram[0x441]==19 and ram[0x635]==52 and ram[0x637]==124 and ram[0x5f7]==6 and ram[0x600:0x605]==bytes((4,0,3,4,7)))
+    if len(ram)!=2048 or ram[0x22]&64 or ram[0x5fb]!=11 or (ram[0x621]!=2 and not corner_route) or not 1<=ram[0x600]<=4 or ram[0x61e]>ram[0x600]:
+        raise ValueError('Expected active route2 or observed corner human defensive state')
     if preparation and (ram[0x61e]>=ram[0x600] or ram[0x60b+ram[0x61e]]==255 or not pressed&128):
         raise ValueError('Expected confirmed active defensive choice')
     if options_only and not preparation:raise ValueError('Option observation requires preparation entry')

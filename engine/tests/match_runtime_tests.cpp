@@ -184,6 +184,19 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream defense_file(std::string(prefix)+"-corner19-defense-initial.cmjsession",std::ios::binary);write_phase_session(defense_file,area_defense->state.session);
  std::ostringstream defense_save(std::ios::binary);write_match_save(defense_save,area_defense->state,identity);std::istringstream defense_in(defense_save.str(),std::ios::binary);auto defense_restored=std::make_unique<MatchRuntimeState>(load_match_save(defense_in,identity));
  if(defense_restored->session.scheduling->selected_ids!=std::array<std::uint8_t,5>{0,3,4,7,0})throw std::runtime_error("Corner defense selection did not roundtrip");
+ std::ofstream area_menu_log(std::string(prefix)+"-corner19-menu.txt");
+ for(int i=0;i<20 && defense_restored->session.phase!=FieldSessionPhase::keeper_area_defense_complete;++i){
+  const auto phase=defense_restored->session.phase;std::uint8_t pressed=0;
+  if(phase==FieldSessionPhase::keeper_area_defense_ready || phase==FieldSessionPhase::keeper_area_defense_poll){const auto cursor=defense_restored->session.action->cursor;pressed=cursor==4 || defense_restored->session.area_defense->actions[cursor]!=255 ? 128 : 1;}
+  auto next=std::make_unique<MatchStepResult>(step_match(*defense_restored,client_input(*defense_restored,0,pressed),content));
+  area_menu_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<next->state.demo_rng<<'\n';area_menu_log.flush();
+  if(next->unsupported)throw std::runtime_error(std::string("Corner defense menu stopped: ")+capability_name(*next->unsupported));
+  std::ofstream f(std::string(prefix)+"-corner19-menu-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*defense_restored=std::move(next->state);
+ }
+ if(defense_restored->session.phase!=FieldSessionPhase::keeper_area_defense_complete || defense_restored->session.area_defense->actions!=std::array<std::uint8_t,4>{4,3,3,3})throw std::runtime_error("Corner defense choices differ");
+ std::ostringstream choices_save(std::ios::binary);write_match_save(choices_save,*defense_restored,identity);std::istringstream choices_in(choices_save.str(),std::ios::binary);auto choices_restored=std::make_unique<MatchRuntimeState>(load_match_save(choices_in,identity));
+ if(choices_restored->session.phase!=FieldSessionPhase::keeper_area_defense_complete || choices_restored->session.area_defense->actions!=std::array<std::uint8_t,4>{4,3,3,3})throw std::runtime_error("Corner defense choices did not roundtrip");
+
 
 
 

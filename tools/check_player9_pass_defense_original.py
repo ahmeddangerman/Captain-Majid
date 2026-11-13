@@ -5,6 +5,7 @@ import hashlib
 from pathlib import Path
 from check_generic_pass_defense_original import original
 from export_phase_session import export_session
+from trace_area_defense_poll import trace_defense_poll
 from trace_ball_recovery_phase import trace_recovery
 from trace_action_menu import trace_menu
 from verify_ordinary_pass_initialization import original_target
@@ -344,4 +345,27 @@ assert original[0x600:0x605]==bytes((4,0,3,4,7))
 exportable=bytearray(original);exportable[0x601]=10
 expected=bytearray(export_session(exportable,0));expected[309]=0
 compare_represented((a.trace/'native-corner19-defense-initial.cmjsession').read_bytes(),expected,False,'corner player19','defense initialization')
+menu=original
+for slot in range(4):
+ for label,pressed,preparation in (('direction',1,False),('confirm',128,False),('prepare',128,True)):
+  observation,menu=trace_defense_poll(rom[16:262160],menu,pressed,preparation=preparation)
+  captured=(a.player3_shot/f'corner19-menu-{slot}-{label}.bin').read_bytes()
+  if menu!=captured:raise ValueError('Corner defensive menu trace differs from captured original')
+ if menu[0x60b+slot]!=(4 if slot==0 else 3):raise ValueError('Corner defensive direction differs by player role')
+
+menu=original
+for line in (a.trace/'native-corner19-menu.txt').read_text().splitlines():
+ i,phase,pressed,unsupported,rng=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Corner goal-area defensive menu stopped')
+ if phase!=67:
+  injected=bytearray(menu);injected[0xe2:0xe4]=bytes((rng&255,(rng>>8)&255))
+  observation,menu=trace_defense_poll(rom[16:262160],injected,128 if phase==71 else pressed,preparation=phase==71)
+ exportable=bytearray(menu);exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0));expected[309]=0
+ actual=(a.trace/f'native-corner19-menu-{i}.cmjsession').read_bytes()
+ compare_represented(actual,expected,False,'corner defensive menu',str(i))
+ actions=list(menu[0x60b:0x60f]);subtypes=[menu[0x606+j] if actions[j]!=255 else 0 for j in range(4)]
+ expected_choices=bytes((1,*actions,*subtypes,menu[0x620],menu[0x1e] if phase in (69,70) and pressed==128 and i!=13 else 0))
+ if actual[372:383]!=expected_choices:raise ValueError(f'Corner defensive menu choices differ at {i}: {list(actual[372:383])} vs {list(expected_choices)}')
+
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

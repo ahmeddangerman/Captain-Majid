@@ -222,7 +222,9 @@ DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState& input,std::u
  }
  if(directions) {
   unsigned direction=0;while(!(directions&(1u<<direction)))++direction;
-  const auto action=content.directions[field ? 0 : 2][direction];
+  const auto id=selected_ids[menu.cursor];
+  const auto row=field ? 0u : (id==0 || id==11 ? 2u : 1u);
+  const auto action=content.directions[row][direction];
   if(action!=255) {
    if(action>6)throw std::invalid_argument("Unsupported defensive menu action");
    if(action!=defense.actions[menu.cursor]) {

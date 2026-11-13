@@ -162,7 +162,17 @@ int main(){try{
  auto old_initial=bytes(initialized_defense);old_initial[10]='m';old_initial.resize(382);std::istringstream old_initial_stream(old_initial);
  check(bytes(load_phase_session(old_initial_stream))==bytes(initialized_defense),"Legacy m initial defense loads");
  rejects([&]{open_keeper_area_defense_prompt(prompt.state,defense_content);});
- defense_content.directions[2][0]=4;defense_content.field_icons=std::array<std::uint8_t,7>{10,11,12,13,55,15,16};
+
+ // Original goal-area input uses the goalkeeper row for ID0 and the field-player row afterward.
+ AreaDefenseMenuContent mixed_content{};mixed_content.directions[1][0]=3;mixed_content.directions[2][0]=4;
+ mixed_content.field_icons=std::array<std::uint8_t,7>{10,11,12,13,14,15,16};
+ DefenseMenuPollState mixed_poll{};mixed_poll.defense.blink=13;
+ const std::array<std::uint8_t,5> mixed_ids{0,3,4,7,0};
+ const auto keeper_choice=poll_defense_menu(mixed_poll,4,mixed_ids,false,1,mixed_content);
+ mixed_poll.cursor=1;
+ const auto field_choice=poll_defense_menu(mixed_poll,4,mixed_ids,false,1,mixed_content);
+ check(keeper_choice.state.defense.actions[0]==4 && field_choice.state.defense.actions[1]==3,"Goal-area defensive directions use the selected player's role");
+ defense_content.directions[1][0]=4;defense_content.field_icons=std::array<std::uint8_t,7>{10,11,12,13,55,15,16};
  auto defense_poll=poll_keeper_area_defense(prompt.state,1,defense_content);
  check(static_cast<unsigned>(defense_poll.state.phase)==70 && defense_poll.state.area_defense->actions[0]==4 &&
        defense_poll.state.area_defense->blink==13 && defense_poll.presentation[0].id==55 &&
@@ -1547,7 +1557,7 @@ int main(){try{
  auto resumed=selected_redraw.state;resumed.phase=FieldSessionPhase::keeper_area_defense_poll;
  resumed.area_special_option.reset();resumed.area_special_decision.reset();resumed.area_special_cursor=0;resumed.area_special_pressed=0;
  resumed.action->cursor=0;resumed.area_defense->blink=0;resumed.action->flash_counter=0;
- defense_content.directions[2][0]=2;defense_content.directions[2][1]=4;
+ defense_content.directions[1][0]=2;defense_content.directions[1][1]=4;
  auto same=poll_keeper_area_defense(resumed,1,defense_content);
  check(same.state.area_defense->subtypes[0]==1 && same.presentation[0].id==77,
        "Same action preserves and blinks the special icon");
@@ -1699,3 +1709,4 @@ int main(){try{
  s.keeper_decision->result_code=0;rejects([&]{resolve_session_keeper_save(s,content);});
  std::cout<<"Keeper save handoff checks passed\n";
  }catch(const std::exception&e){std::cerr<<e.what()<<'\n';return 1;}}
+

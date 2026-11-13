@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Corner defensive menu choices
+
+Continued the player19 goal-area prompt through four controlled defensive choices. The original and native agree at each sampled menu input, confirmation and registration: direction1 chooses action4 for goalkeeper0 and action3 for field players3, 4 and 7, producing [4,3,3,3]. Represented state, choice arrays, subtypes and blink state match; the completed prompt saves and reloads.
+
+Fixed the general goal-area direction lookup to use the selected player's goalkeeper or field-player table. Corrected the observed initialization blink counter to zero. The runtime continuation is bounded to this captured prompt. Windows CMake build, all 65 tests, private replay and original comparisons passed. Inputs and random samples are controlled, with presentation waits acknowledged; live NMI, rendering, audio and hardware timing remain unverified. Next trace the opponent's resulting attack and contact outcomes. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Corner goal-area defense initialized
 
 Continued the original player19 goal-area entry beyond the preliminary single-cell defender4 selection. The subsequent proximity scan selects players3, 4 and 7, and the original adds goalkeeper0 ahead of them. The engine reaches the same initialized four-slot defensive choice state for this controlled continuation; represented state matches the original at the initial menu boundary, and the state saves and reloads. This corrects the earlier impression that defender4 was the final lineup.
