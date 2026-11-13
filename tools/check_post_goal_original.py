@@ -8,6 +8,15 @@ from check_keeper_entry_original import keeper_checkpoint
 from check_keeper_saves_original import post_save_checkpoint
 from verify_action_strength import PAYLOAD_SHA256
 
+def observe_post_goal(prg,ram):
+ m=ObservedCartridge(prg,ram,None,set());m.registers[6:8]=[26,27];m[0x24],m[0x25]=26,27;m[0x23]=m[0x22]|7;m.select=m[0x23]
+ cpu=MPU(memory=m);cpu.pc=0x85bf;cpu.sp=0xfd;cpu.p=cpu.UNUSED
+ for _ in range(1000):
+  if cpu.pc==0x85dd:return bytes(m.ram[:2048])
+  if cpu.pc<0x8000:raise RuntimeError('Post-goal original left PRG')
+  cpu.step()
+ raise RuntimeError('Post-goal original bound')
+
 def main():
  p=argparse.ArgumentParser(description=__doc__)
  for name in ('rom','pack','ram','output_dir'):p.add_argument(name,type=Path)

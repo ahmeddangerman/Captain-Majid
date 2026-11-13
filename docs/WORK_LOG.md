@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Second-half equalizer and home kickoff
+
+Continued player17's controlled goal-area shot through its two-tick clock update, field movement, four flight boundaries, goalkeeper menu and original result0. Native and original represented states agree through goal registration: the score becomes1-1. The subsequent acknowledged goal cleanup, kickoff formation, receiver, ball placement, handoff and control also match; home player5 controls at (108,108), clock168. The goal and kickoff control save and reload. Corrected stale move flags during the sampled shot preparation and added a reusable private-output original shot observer.
+
+Windows CMake build, all 65 tests, the continuous private replay and original comparisons passed. Random samples and presentation acknowledgements are controlled; real rendering, NMI, audio and frame timing remain unverified. This is one controlled match sequence, not a complete playable match. Next follow player5 possession and implement the next original-observed missing behavior. Overall progress remains unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/period-restart-original-20261113.
+
 ## 2026-11-13 - Second-half one-two reaches goal-area shot
 
 Extended the controlled replay through player21's ordinary pass to player17, then the original player17 action3 one-two with player18. Original/native comparisons match the choice, preparation, clock, both flight setups and fractional arrivals, player swap, return possession and goal-area setup. Player17 receives the return at (70,104), clock170. The original selects goalkeeper0; native and original match the keeper selection, the sampled action4 defense menu, and the opponent's subtype1 shot choice and preparation at power8. Both flight states and the prepared shot save and reload.

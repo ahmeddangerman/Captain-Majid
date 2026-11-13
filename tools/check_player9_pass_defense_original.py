@@ -711,6 +711,42 @@ _,prepared=original_goal_area_candidate(rom[16:262160],injected,all_choices=True
 exportable=bytearray(prepared);exportable[0x601]=10
 expected=bytearray(export_session(exportable,0));expected[309]=0
 compare_represented((a.trace/'native-interval17-shot-prepared.cmjsession').read_bytes(),expected,False,'interval player17','goal-area shot preparation')
+from trace_area_shot_original import trace_area_shot
+shot_trace=trace_area_shot(rom[16:262160],menu,34,120)
+for name,pc in (('clock','83f5'),('field','83f8')):
+ raw=shot_trace[f'{pc}-1'];exportable=bytearray(raw);exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0));expected[309]=0
+ compare_represented((a.trace/f'native-interval17-shot-{name}.cmjsession').read_bytes(),expected,False,'interval player17',f'shot {name}')
+for index,pc in ((0,'e773-1'),(2,'e773-2'),(4,'e773-3'),(6,'e773-4'),(7,'e7cc-1')):
+ original=shot_trace[pc]
+ compare_represented((a.trace/f'native-interval17-shot-flight-{index}.cmjsession').read_bytes(),export_session(original,0),False,'interval player17 shot flight',pc)
+original=shot_trace['dd1c-1']
+compare_represented((a.trace/'native-interval17-keeper-entry.cmjsession').read_bytes(),export_session(original,0),False,'interval player17','keeper entry')
+keeper=menu_trace(rom[16:262160],original,1,3787159586)
+for index,name in ((0,'open'),(1,'selected'),(2,'compared')):
+ raw=keeper[name];exportable=bytearray(raw);exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0));expected[309]=0
+ compare_represented((a.trace/f'native-interval17-keeper-menu-{index}.cmjsession').read_bytes(),expected,False,'interval player17 keeper',name)
+if keeper['compared'][0x612]!=0:raise ValueError('Unexpected original interval goalkeeper result')
+from check_scored_goal_original import observe_scored_goal
+goal,_=observe_scored_goal(rom[16:262160],keeper['compared'])
+exportable=bytearray(goal);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-interval17-goal.cmjsession').read_bytes(),expected,False,'interval player17','goal registration')
+if (goal[0x28],goal[0x29])!=(1,1):raise ValueError('Unexpected original second-half score')
+from check_post_goal_original import observe_post_goal
+restart=observe_post_goal(rom[16:262160],goal);exportable=bytearray(restart);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-interval17-goal-restart.cmjsession').read_bytes(),expected,False,'interval player17','goal restart')
+from check_human_keeper_menu_original import kickoff_trace
+equalizer_kickoff=kickoff_trace(rom[16:262160],restart)
+if (equalizer_kickoff['control'][0x5fb],equalizer_kickoff['control'][0x441],equalizer_kickoff['control'][0x635],equalizer_kickoff['control'][0x637])!=(0,5,108,108):raise ValueError('Unexpected original equalizer kickoff control')
+for name in ('formation','receiver','ball','handoff','control'):
+ raw=equalizer_kickoff[name];exportable=bytearray(raw)
+ if exportable[0x600] and exportable[0x601]==0:exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0))
+ if raw[0x600] and raw[0x601]==0:expected[309]=0
+ compare_represented((a.trace/f'native-interval17-goal-{name}.cmjsession').read_bytes(),expected,False,'interval equalizer kickoff',name)
 
 
 

@@ -615,6 +615,63 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  {std::ofstream f(std::string(prefix)+"-interval17-shot-prepared.cmjsession",std::ios::binary);write_phase_session(f,interval17_shot_prepared.state.session);}
  std::ostringstream interval17_shot_save(std::ios::binary);write_match_save(interval17_shot_save,interval17_shot_prepared.state,identity);std::istringstream interval17_shot_in(interval17_shot_save.str(),std::ios::binary);
  if(load_match_save(interval17_shot_in,identity).session.phase!=FieldSessionPhase::keeper_area_attack_prepared)throw std::runtime_error("Second-half player17 shot preparation did not roundtrip");
+ const auto interval17_shot_clock=step_match(interval17_shot_prepared.state,client_input(interval17_shot_prepared.state,0,0),content);
+ if(interval17_shot_clock.unsupported || interval17_shot_clock.state.session.phase!=FieldSessionPhase::keeper_area_prefix_clock_done || interval17_shot_clock.state.session.current.clock.remaining!=168)throw std::runtime_error(std::string("Second-half player17 shot clock stopped: ")+(interval17_shot_clock.unsupported ? capability_name(*interval17_shot_clock.unsupported) : "unexpected state"));
+ {std::ofstream f(std::string(prefix)+"-interval17-shot-clock.cmjsession",std::ios::binary);write_phase_session(f,interval17_shot_clock.state.session);}
+ const auto interval17_shot_field=step_match(interval17_shot_clock.state,client_input(interval17_shot_clock.state,0,0),content);
+ if(interval17_shot_field.unsupported || interval17_shot_field.state.session.current.field.elapsed)throw std::runtime_error("Second-half player17 shot field movement stopped");
+ {std::ofstream f(std::string(prefix)+"-interval17-shot-field.cmjsession",std::ios::binary);write_phase_session(f,interval17_shot_field.state.session);}
+ auto interval17_shot=std::make_unique<MatchStepResult>(step_match(interval17_shot_field.state,client_input(interval17_shot_field.state,0,0),content));
+ if(interval17_shot->unsupported || interval17_shot->state.session.phase!=FieldSessionPhase::shot_flight_pending)throw std::runtime_error(std::string("Second-half player17 shot targeting stopped: ")+(interval17_shot->unsupported ? capability_name(*interval17_shot->unsupported) : "unexpected state"));
+ *interval17_shot=step_match(interval17_shot->state,client_input(interval17_shot->state,0,0),content);
+ if(interval17_shot->unsupported)throw std::runtime_error("Second-half player17 shot flight setup stopped");
+ std::ofstream interval17_shot_flight_log(std::string(prefix)+"-interval17-shot-flight.txt");
+ for(int i=0;i<30;++i) {
+  interval17_shot_flight_log<<i<<' '<<static_cast<unsigned>(interval17_shot->state.session.phase)<<' '<<unsigned(interval17_shot->state.session.current.field.ball_x)<<' '<<unsigned(interval17_shot->state.session.current.field.ball_y)<<' '<<unsigned(interval17_shot->state.session.current.field.selected_defenders)<<'\n';interval17_shot_flight_log.flush();
+  std::ofstream f(std::string(prefix)+"-interval17-shot-flight-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,interval17_shot->state.session);
+  if(interval17_shot->state.session.phase==FieldSessionPhase::ball_arrival_callback)break;
+  *interval17_shot=step_match(interval17_shot->state,client_input(interval17_shot->state,0,0),content);
+  if(interval17_shot->unsupported)throw std::runtime_error(std::string("Second-half player17 shot flight stopped: ")+capability_name(*interval17_shot->unsupported));
+ }
+ if(interval17_shot->state.session.phase!=FieldSessionPhase::ball_arrival_callback || interval17_shot->state.session.current.field.selected_defenders || !interval17_shot->state.session.ball_trajectory)throw std::runtime_error("Second-half player17 shot arrival differs");
+ if(interval17_shot->state.session.ball_trajectory->x!=((52u<<8)|164u) || interval17_shot->state.session.ball_trajectory->y!=((124u<<8)|3u))throw std::runtime_error("Second-half player17 shot fractional arrival differs");
+ const auto interval17_keeper_entry=step_match(interval17_shot->state,client_input(interval17_shot->state,0,0),content);
+ if(interval17_keeper_entry.unsupported || interval17_keeper_entry.state.session.phase!=FieldSessionPhase::shot_keeper_entry)throw std::runtime_error(std::string("Second-half player17 goalkeeper entry stopped: ")+(interval17_keeper_entry.unsupported ? capability_name(*interval17_keeper_entry.unsupported) : "unexpected state"));
+ {std::ofstream f(std::string(prefix)+"-interval17-keeper-entry.cmjsession",std::ios::binary);write_phase_session(f,interval17_keeper_entry.state.session);}
+ auto interval17_keeper=std::make_unique<MatchStepResult>(step_match(interval17_keeper_entry.state,client_input(interval17_keeper_entry.state,0,0),content));
+ if(interval17_keeper->unsupported || interval17_keeper->state.session.phase!=FieldSessionPhase::keeper_presentation_pending)throw std::runtime_error("Second-half goalkeeper menu entry stopped");
+ {std::ofstream f(std::string(prefix)+"-interval17-keeper-open-entry.cmjsession",std::ios::binary);write_phase_session(f,interval17_keeper->state.session);}
+ std::ofstream interval17_keeper_log(std::string(prefix)+"-interval17-keeper-menu.txt");
+ for(int i=0;i<6;++i){const std::uint8_t pressed=i==1 ? 1 : i==2 ? 128 : 0;
+  const auto next=step_match(interval17_keeper->state,client_input(interval17_keeper->state,0,pressed),content);
+  interval17_keeper_log<<i<<' '<<unsigned(pressed)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<next.state.demo_rng<<'\n';interval17_keeper_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-interval17-keeper-menu-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*interval17_keeper=next;
+  if(interval17_keeper->state.session.phase!=FieldSessionPhase::keeper_presentation_pending)break;
+ }
+ if(interval17_keeper->state.session.phase!=FieldSessionPhase::keeper_decided || !interval17_keeper->state.session.keeper_decision || interval17_keeper->state.session.keeper_decision->result_code!=0)throw std::runtime_error("Second-half player17 goalkeeper result differs");
+ const auto interval17_goal=step_match(interval17_keeper->state,client_input(interval17_keeper->state,0,0),content);
+ if(interval17_goal.unsupported || interval17_goal.state.session.phase!=FieldSessionPhase::goal_celebration_pending || !interval17_goal.state.session.score || interval17_goal.state.session.score->left_goals!=1 || interval17_goal.state.session.score->right_goals!=1)throw std::runtime_error(std::string("Second-half player17 goal stopped: ")+(interval17_goal.unsupported ? capability_name(*interval17_goal.unsupported) : "unexpected state"));
+ {std::ofstream f(std::string(prefix)+"-interval17-goal.cmjsession",std::ios::binary);write_phase_session(f,interval17_goal.state.session);}
+ std::ostringstream interval17_goal_save(std::ios::binary);write_match_save(interval17_goal_save,interval17_goal.state,identity);std::istringstream interval17_goal_in(interval17_goal_save.str(),std::ios::binary);
+ const auto interval17_goal_restored=load_match_save(interval17_goal_in,identity);
+ if(!interval17_goal_restored.session.score || interval17_goal_restored.session.score->right_goals!=1)throw std::runtime_error("Second-half goal did not roundtrip");
+ const auto interval17_restart=step_match(interval17_goal_restored,client_input(interval17_goal_restored,0,0),content);
+ if(interval17_restart.unsupported || interval17_restart.state.session.phase!=FieldSessionPhase::goal_kickoff_pending || interval17_restart.state.session.current.field.side!=0)throw std::runtime_error(std::string("Second-half equalizer restart stopped: ")+(interval17_restart.unsupported ? capability_name(*interval17_restart.unsupported) : "unexpected state"));
+ {std::ofstream f(std::string(prefix)+"-interval17-goal-restart.cmjsession",std::ios::binary);write_phase_session(f,interval17_restart.state.session);}
+ const auto interval17_formation=step_match(interval17_restart.state,client_input(interval17_restart.state,0,0),content);
+ std::ofstream interval17_formation_log(std::string(prefix)+"-interval17-goal-formation.txt");interval17_formation_log<<(interval17_formation.unsupported ? static_cast<int>(*interval17_formation.unsupported) : -1)<<' '<<static_cast<unsigned>(interval17_formation.state.session.phase)<<'\n';
+ if(interval17_formation.unsupported || interval17_formation.state.session.phase!=FieldSessionPhase::kickoff_formation_placed)throw std::runtime_error("Second-half equalizer kickoff formation stopped");
+ {std::ofstream f(std::string(prefix)+"-interval17-goal-formation.cmjsession",std::ios::binary);write_phase_session(f,interval17_formation.state.session);}
+ auto equalizer_kickoff=std::make_unique<MatchRuntimeState>(interval17_formation.state);std::ofstream equalizer_log(std::string(prefix)+"-interval17-goal-kickoff.txt");
+ for(const auto* name:{"receiver","ball","handoff","control"}) {
+  const auto next=step_match(*equalizer_kickoff,client_input(*equalizer_kickoff,0,0),content);equalizer_log<<name<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<'\n';equalizer_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-interval17-goal-"+name+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*equalizer_kickoff=next.state;
+ }
+ if(equalizer_kickoff->session.phase!=FieldSessionPhase::control_ready || equalizer_kickoff->session.current.field.side!=0 || equalizer_kickoff->session.current.field.ball_owner!=5 || equalizer_kickoff->session.current.field.ball_x!=108 || equalizer_kickoff->session.current.field.ball_y!=108)throw std::runtime_error("Second-half equalizer kickoff control differs");
+ std::ostringstream equalizer_kickoff_save(std::ios::binary);write_match_save(equalizer_kickoff_save,*equalizer_kickoff,identity);std::istringstream equalizer_kickoff_in(equalizer_kickoff_save.str(),std::ios::binary);
+ if(load_match_save(equalizer_kickoff_in,identity).session.current.field.ball_owner!=5)throw std::runtime_error("Second-half equalizer kickoff did not roundtrip");
 
 
 
