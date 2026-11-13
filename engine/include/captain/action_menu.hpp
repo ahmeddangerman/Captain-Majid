@@ -49,7 +49,7 @@ struct DefenseMenuPollResult {
 // Pure D3AB menu polling: callers own the encounter and subsequent preparation.
 DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState&,std::uint8_t count,
  const std::array<std::uint8_t,5>& selected_ids,bool field,std::uint8_t pressed,
- const AreaDefenseMenuContent&);
+ const AreaDefenseMenuContent&,bool opponent_area=false);
 ActionMenuResult open_human_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
 ActionMenuResult open_ordinary_return_action_menu(const PhaseSessionState& input, const ActionMenuContent& content);
 ActionMenuResult poll_ordinary_return_action_menu(const PhaseSessionState& input, std::uint8_t pressed,const ActionMenuContent& content);

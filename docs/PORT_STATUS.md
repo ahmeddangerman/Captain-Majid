@@ -1,5 +1,11 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Corrected goal-area defensive input routing
+
+A broad original-game comparison exposed a regression in the recent goal-area menu change: the home-area route uses direction table 2 for field players, while the sampled opponent-area route uses table 2 for the goalkeeper and table 1 for field players. The engine now selects the table by route and role; a focused regression covers both. Updated the original comparison tool for current snapshots and Windows executable naming.
+
+The home-area survey matched 1,024 controlled original/native input comparisons; the separate controlled opponent-area match replay and original comparisons also passed. Windows CMake build and all 65 tests passed. The comparisons sample constructed inputs and acknowledged presentation, not live rendering, audio or timing. Next investigate the period-end dispatcher toward the next playable period. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/area-defense-poll-20261113-review4.
+
 ## 2026-11-13 - Observed period-end return boundary
 
 Continued the controlled original from the period-end clock boundary. It clears ball and script clock modes, requests display51, then clears the high byte of experience slot10 and returns to the higher-level dispatcher with selector255. The engine now exposes the display request, accepts an explicit acknowledgement, and reaches a saved dispatcher boundary. Original/native represented states match at both boundaries, and both save and reload.

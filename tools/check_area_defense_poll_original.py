@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Compare sampled defensive directions/blinking/back/confirmation to the ROM."""
-import argparse, hashlib, json, re, subprocess
+import argparse, hashlib, json, os, re, subprocess
 from pathlib import Path
 from check_keeper_entry_original import observe
 from check_keeper_saves_original import observe_keeper_save
@@ -16,6 +16,7 @@ def poll_snapshot(ram,phase):
     actions=list(ram[0x60b:0x60f]);subtypes=[ram[0x606+i] if actions[i]!=255 else 0 for i in range(4)]
     data[372:382]=bytes([1,*actions,*subtypes,ram[0x620]])
     data[382]=ram[0x1e] if phase==71 else 0
+    data[10]=130;data.append(255)  # Current format includes the untouched area-sequence result.
     return bytes(data)
 
 
@@ -46,7 +47,8 @@ def main():
     out=a.output_dir.resolve()
     if out.is_relative_to(Path(__file__).resolve().parents[1]):p.error('Private output must stay outside checkout')
     out.mkdir(parents=True,exist_ok=False);prg=rom[16:262160];base=bytearray(a.keeper_ram.read_bytes())
-    binary=str(Path('build/captain-phase-session').resolve());results=[]
+    executable=Path('build/captain-phase-session.exe') if os.name=='nt' else Path('build/captain-phase-session')
+    binary=str(executable.resolve());results=[]
     for name,entry in defense_entries(prg,base):
         source=out/f'{name}-entry.cmjsession';source.write_bytes(poll_snapshot(entry,70))
         for pressed in range(256):

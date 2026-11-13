@@ -190,7 +190,7 @@ ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,cons
  validate_phase_session(state);return result;
 }
 DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState& input,std::uint8_t count,
- const std::array<std::uint8_t,5>& selected_ids,bool field,std::uint8_t pressed,const AreaDefenseMenuContent& content) {
+ const std::array<std::uint8_t,5>& selected_ids,bool field,std::uint8_t pressed,const AreaDefenseMenuContent& content,bool opponent_area) {
  if(!count || count>4 || input.cursor>count)throw std::invalid_argument("Invalid defensive menu count or cursor");
  for(unsigned slot=0;slot<count;++slot)
   if(input.defense.actions[slot]!=255 && input.defense.actions[slot]>6)
@@ -223,7 +223,7 @@ DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState& input,std::u
  if(directions) {
   unsigned direction=0;while(!(directions&(1u<<direction)))++direction;
   const auto id=selected_ids[menu.cursor];
-  const auto row=field ? 0u : (id==0 || id==11 ? 2u : 1u);
+  const auto row=field ? 0u : (opponent_area && id!=0 && id!=11 ? 1u : 2u);
   const auto action=content.directions[row][direction];
   if(action!=255) {
    if(action>6)throw std::invalid_argument("Unsupported defensive menu action");
@@ -247,7 +247,7 @@ ActionMenuResult poll_keeper_area_defense(const PhaseSessionState& input,std::ui
  if(input.phase!=FieldSessionPhase::keeper_area_defense_ready && input.phase!=FieldSessionPhase::keeper_area_defense_poll && !field)
   throw std::invalid_argument("Defensive input requires prompt/poll state");
  const DefenseMenuPollState menu{input.action->cursor,input.action->flash_counter,*input.area_defense};
- const auto poll=poll_defense_menu(menu,input.current.field.selected_defenders,input.scheduling->selected_ids,field,pressed,content);
+ const auto poll=poll_defense_menu(menu,input.current.field.selected_defenders,input.scheduling->selected_ids,field,pressed,content,!field && input.action->menu_route==1);
  ActionMenuResult result{input};auto& state=result.state;
  state.action->cursor=poll.state.cursor;state.action->flash_counter=poll.state.flash_counter;state.area_defense=poll.state.defense;
  result.presentation=poll.presentation;
