@@ -1,5 +1,11 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Second-half opponent pass reaches player20
+
+Extended the continuous replay through four player18 control input samples, 37 controlled control/clock/field steps to the next AI decision, and an ordinary pass to opposing player20. The existing native calculations match original represented states at the AI choice, preparation, pre-clock, handoff, target, flight setup, reception and ready control. The original/native arrival trajectory fractions and cell also match; the transient field ball position is held in the native trajectory until arrival. At one intermediate control-entry boundary the original presentation's facing is normalized; final control matches. Player20 controls at (128,116), clock178, and the match save reloads.
+
+The original checks inject the provisional runtime's sampled random values and acknowledge presentation; this is not live NMI, rendering, audio or hardware timing. Windows CMake build, all 65 tests, the continuous private replay and original comparisons passed. No engine code changed in this verification increment. Next follow player20 toward the next interaction and implement any observed missing behavior. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/period-restart-original-20261113.
+
 ## 2026-11-13 - Player18 controls after the interval
 
 Connected the controlled second-half kickoff handoff to the existing player-control setup. Native and original represented states match at the original E145 boundary: opposing player18 controls at (148,108), score1-0 and clock180. Original kickoff presentation/NMI-dependent ball mode and travel are acknowledged as captured values; ball fractions0/0 and the control state survive a match save and reload. The original calculation moves the ball to the receiver's existing formation coordinates; no separate live player animation is claimed.

@@ -544,6 +544,39 @@ for name,pc in (('formation','daf5'),('receiver','db0b'),('ball','db0e'),('hando
  compare_represented((a.trace/f'native-interval-kickoff-{name}.cmjsession').read_bytes(),export_session(raw,0),False,'interval kickoff',name)
 ready=(a.player3_shot/'period-next-boundary.bin').read_bytes()
 compare_represented((a.trace/'native-interval-kickoff-control.cmjsession').read_bytes(),export_session(ready,0),False,'interval kickoff','control')
+for held,pressed in ((0,0),(1,0),(64,64),(128,128)):
+ native=(a.trace/f'native-interval18-poll-{held}-{pressed}.cmjsession').read_bytes()
+ injected=bytearray(ready);injected[0xe2:0xe4]=native[26:28]
+ observation,raw=trace_recovery(rom[16:262160],injected,control_input=(held,pressed))
+ if observation['boundary']!='control_poll_wait':raise ValueError('Unexpected interval control poll boundary')
+ compare_represented(native,export_session(raw,0),False,'interval player18 poll',str((held,pressed)))
+raw=ready
+for line in (a.trace/'native-interval18-journey.txt').read_text().splitlines():
+ i,phase,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Second-half player18 journey stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ observation,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(0,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-interval18-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'interval player18 journey',str(i))
+from check_ai_field_plan_original import original_choice
+unsupported,seed,phase=map(int,(a.trace/'native-interval18-choice.txt').read_text().split())
+if unsupported!=-1:raise ValueError('Interval opponent AI choice stopped')
+injected=bytearray(raw);injected[0xe2:0xe4]=bytes((seed&255,(seed>>8)&255));choice=original_choice(rom[16:262160],injected)
+if (choice[0x43b],choice[0x5fc])!=(1,20):raise ValueError('Unexpected original interval pass choice')
+compare_represented((a.trace/'native-interval18-choice.cmjsession').read_bytes(),export_session(choice,0),False,'interval player18','AI pass choice')
+from check_unopposed_ai_pass_original import observe as observe_unopposed_pass
+outcome,checkpoints=observe_unopposed_pass(rom[16:262160],injected)
+if outcome!='ready':raise ValueError(f'Unexpected original interval pass outcome {outcome}')
+for i,name in ((0,'prepared'),(1,'preclock'),(3,'handoff'),(4,'target'),(5,'flight'),(6,'arrival'),(7,'control'),(8,'ready')):
+ native=bytearray((a.trace/f'native-interval18-pass-{i}.cmjsession').read_bytes())
+ wanted=bytearray(export_session(checkpoints[name],0))
+ if i in (3,4,5,6,7):wanted[298]=native[298]  # acknowledged original presentation facing
+ if i==6:native[22:25]=wanted[22:25]  # Flight position is in the separate trajectory until arrival.
+ compare_represented(native,wanted,False,'interval player18 pass',name)
+line=next(line for line in (a.trace/'native-interval18-pass.txt').read_text().splitlines() if line.startswith('6 '))
+values=list(map(int,line.split()));arrival=checkpoints['arrival']
+word=lambda address:arrival[address]|arrival[address+1]<<8
+if values[6:]!=[word(0x634),word(0x636),arrival[0x5fe]]:raise ValueError('Interval pass arrival trajectory differs')
+if (checkpoints['ready'][0x441],checkpoints['ready'][0x635],checkpoints['ready'][0x637])!=(20,128,116):raise ValueError('Unexpected interval pass recipient')
 
 
 

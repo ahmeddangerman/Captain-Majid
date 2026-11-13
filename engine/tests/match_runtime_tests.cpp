@@ -414,6 +414,42 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ostringstream interval_control_save(std::ios::binary);write_match_save(interval_control_save,after_kickoff.state,identity);std::istringstream interval_control_in(interval_control_save.str(),std::ios::binary);
  const auto interval_control_restored=load_match_save(interval_control_in,identity);
  if(interval_control_restored.session.phase!=FieldSessionPhase::control_ready || interval_control_restored.session.current.field.ball_owner!=18 || !interval_control_restored.ball_fraction || interval_control_restored.ball_fraction->x || interval_control_restored.ball_fraction->y)throw std::runtime_error("Interval kickoff control did not roundtrip");
+ for(const auto buttons:{std::pair<std::uint8_t,std::uint8_t>{0,0},{1,0},{64,64},{128,128}}) {
+  const auto polled=step_match(interval_control_restored,client_input(interval_control_restored,buttons.first,buttons.second),content);
+  if(polled.unsupported || polled.state.session.phase!=FieldSessionPhase::control_ready || polled.state.session.current.field.ball_owner!=18)throw std::runtime_error("Interval opponent control poll stopped");
+  std::ofstream f(std::string(prefix)+"-interval18-poll-"+std::to_string(buttons.first)+"-"+std::to_string(buttons.second)+".cmjsession",std::ios::binary);write_phase_session(f,polled.state.session);
+ }
+ auto interval_journey=std::make_unique<MatchRuntimeState>(interval_control_restored);
+ std::ofstream interval_log(std::string(prefix)+"-interval18-journey.txt");
+ for(int i=0;i<200;++i) {
+  const auto phase=interval_journey->session.phase;
+  if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+  const auto next=step_match(*interval_journey,client_input(*interval_journey,0,0),content);
+  interval_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(next.state.demo_rng&255)<<' '<<static_cast<unsigned>((next.state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<next.state.demo_rng<<'\n';interval_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-interval18-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);
+  *interval_journey=next.state;
+ }
+ if(interval_journey->session.phase!=FieldSessionPhase::ai_cell_decision || interval_journey->session.current.field.ball_owner!=18 || interval_journey->session.current.field.ball_cell!=135 || interval_journey->session.current.clock.remaining!=178)throw std::runtime_error("Second-half opponent decision differs");
+ std::ostringstream decision_save(std::ios::binary);write_match_save(decision_save,*interval_journey,identity);std::istringstream decision_in(decision_save.str(),std::ios::binary);
+ if(load_match_save(decision_in,identity).session.phase!=FieldSessionPhase::ai_cell_decision)throw std::runtime_error("Second-half decision did not roundtrip");
+ const auto decision=step_match(*interval_journey,client_input(*interval_journey,0,0),content);
+ std::ofstream decision_log(std::string(prefix)+"-interval18-choice.txt");decision_log<<(decision.unsupported ? static_cast<int>(*decision.unsupported) : -1)<<' '<<decision.state.demo_rng<<' '<<static_cast<unsigned>(decision.state.session.phase)<<'\n';
+ if(decision.unsupported || !decision.state.session.action || decision.state.session.action->action!=1 || !decision.state.defense_menu || !decision.state.defense_menu->ai_pass_target || decision.state.defense_menu->ai_pass_target->recipient!=20)throw std::runtime_error("Second-half opponent pass choice differs");
+ {std::ofstream f(std::string(prefix)+"-interval18-choice.cmjsession",std::ios::binary);write_phase_session(f,decision.state.session);}
+ auto interval_pass=std::make_unique<MatchRuntimeState>(decision.state);std::ofstream pass_log(std::string(prefix)+"-interval18-pass.txt");
+ for(int i=0;i<50;++i) {
+  const auto next=step_match(*interval_pass,client_input(*interval_pass,0,0),content);
+  pass_log<<i<<' '<<static_cast<unsigned>(interval_pass->session.phase)<<' '<<(interval_pass->defense_menu ? static_cast<int>(interval_pass->defense_menu->stage) : -1)<<' '<<(next.unsupported ? static_cast<int>(*next.unsupported) : -1)<<' '<<static_cast<unsigned>(next.state.session.phase)<<' '<<next.state.demo_rng;
+  if(next.state.defense_menu && next.state.defense_menu->ai_trajectory && next.state.defense_menu->ai_ball_cell){const auto& trajectory=*next.state.defense_menu->ai_trajectory;pass_log<<' '<<trajectory.x<<' '<<trajectory.y<<' '<<unsigned(*next.state.defense_menu->ai_ball_cell);}
+  pass_log<<'\n';pass_log.flush();
+  if(next.unsupported)break;
+  std::ofstream f(std::string(prefix)+"-interval18-pass-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next.state.session);*interval_pass=next.state;
+  if(interval_pass->session.phase==FieldSessionPhase::control_ready && interval_pass->session.current.field.ball_owner!=18)break;
+ }
+ if(interval_pass->session.phase!=FieldSessionPhase::control_ready || interval_pass->session.current.field.ball_owner!=20 || interval_pass->session.current.field.ball_x!=128 || interval_pass->session.current.field.ball_y!=116)throw std::runtime_error("Second-half opponent pass reception differs");
+ std::ostringstream received_save(std::ios::binary);write_match_save(received_save,*interval_pass,identity);std::istringstream received_in(received_save.str(),std::ios::binary);
+ if(load_match_save(received_in,identity).session.current.field.ball_owner!=20)throw std::runtime_error("Second-half pass reception did not roundtrip");
 
 
 
