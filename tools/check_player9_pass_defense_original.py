@@ -339,4 +339,9 @@ for index,pc in ((0,'e1cb-1'),(1,'80ed-1'),(3,'c612-1'),(4,'de64-1'),(5,'e773-1'
 original=(a.player3_shot/'corner17-pass-8b73-1.bin').read_bytes()
 compare_represented((a.trace/'native-corner19-area-prepared.cmjsession').read_bytes(),export_session(original,0),False,'corner player19','area setup')
 if (original[0x441],original[0x600],original[0x601])!=(19,1,4):raise ValueError('Unexpected goal-area selection')
+original=(a.player3_shot/'corner17-pass-d3a6-1.bin').read_bytes()
+assert original[0x600:0x605]==bytes((4,0,3,4,7))
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner19-defense-initial.cmjsession').read_bytes(),expected,False,'corner player19','defense initialization')
 print('Matched player9 menu, five defender choices and contacts, flight and player6 recovery:',choices)

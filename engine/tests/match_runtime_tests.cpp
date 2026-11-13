@@ -178,6 +178,13 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream area_file(std::string(prefix)+"-corner19-area-prepared.cmjsession",std::ios::binary);write_phase_session(area_file,area->state.session);
  std::ostringstream area_save(std::ios::binary);write_match_save(area_save,area->state,identity);std::istringstream area_in(area_save.str(),std::ios::binary);auto area_restored=std::make_unique<MatchRuntimeState>(load_match_save(area_in,identity));
  if(area_restored->session.phase!=FieldSessionPhase::keeper_area_prepared || area_restored->session.scheduling->selected_ids[0]!=4)throw std::runtime_error("Corner player19 area did not roundtrip");
+ auto area_defense=std::make_unique<MatchStepResult>(step_match(*area_restored,client_input(*area_restored,0,0),content));
+ if(area_defense->unsupported)throw std::runtime_error(std::string("Corner player19 defense selection stopped: ")+capability_name(*area_defense->unsupported));
+ if(area_defense->state.session.phase!=FieldSessionPhase::keeper_area_defense_initial || area_defense->state.session.scheduling->selected_ids!=std::array<std::uint8_t,5>{0,3,4,7,0})throw std::runtime_error("Corner player19 defense selection differs");
+ std::ofstream defense_file(std::string(prefix)+"-corner19-defense-initial.cmjsession",std::ios::binary);write_phase_session(defense_file,area_defense->state.session);
+ std::ostringstream defense_save(std::ios::binary);write_match_save(defense_save,area_defense->state,identity);std::istringstream defense_in(defense_save.str(),std::ios::binary);auto defense_restored=std::make_unique<MatchRuntimeState>(load_match_save(defense_in,identity));
+ if(defense_restored->session.scheduling->selected_ids!=std::array<std::uint8_t,5>{0,3,4,7,0})throw std::runtime_error("Corner defense selection did not roundtrip");
+
 
 
 

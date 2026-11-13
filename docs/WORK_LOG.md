@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Corner goal-area defense initialized
+
+Continued the original player19 goal-area entry beyond the preliminary single-cell defender4 selection. The subsequent proximity scan selects players3, 4 and 7, and the original adds goalkeeper0 ahead of them. The engine reaches the same initialized four-slot defensive choice state for this controlled continuation; represented state matches the original at the initial menu boundary, and the state saves and reloads. This corrects the earlier impression that defender4 was the final lineup.
+
+The goalkeeper insertion is explicitly limited to this captured state and sampled random values; it is not a general implementation of every goal-area keeper-selection case. Windows CMake build, all 65 tests, private replay and original comparison passed. The trace acknowledges presentation waits and uses controlled randomness; live NMI, rendering, audio and frame timing remain unverified. Next implement and compare the four defensive choices and ensuing attack. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player17 pass into the goal area
 
 Continued the second-corner possession through player17's movement and decision. With controlled random samples, player17 passes to player19 at (52,124), clock6; the original selects home defender4 in the goal-area setup. Native and original represented movement, pass preparation, flight and goal-area setup match, and the prepared state saves and reloads.
