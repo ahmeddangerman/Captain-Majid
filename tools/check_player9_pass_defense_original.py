@@ -448,6 +448,33 @@ original=(a.player3_shot/'corner16-attack-83f8-1.bin').read_bytes()
 exportable=bytearray(original);exportable[0x601]=10
 expected=bytearray(export_session(exportable,0));expected[309]=0
 compare_represented((a.trace/'native-corner16-attack-world.cmjsession').read_bytes(),expected,False,'corner player16 shot','field update')
+for index,pc in ((0,'e773-1'),(2,'e773-2'),(5,'e7cc-1')):
+ original=(a.player3_shot/f'corner16-attack-{pc}.bin').read_bytes()
+ compare_represented((a.trace/f'native-corner16-shot-flight-{index}.cmjsession').read_bytes(),export_session(original,0),False,'corner player16 shot flight',pc)
+ if pc=='e7cc-1' and (original[0x600],original[0x601],original[0x635],original[0x637])!=(1,2,52,124):raise ValueError('Unexpected corner shot flight defender')
+original=(a.player3_shot/'corner16-attack-84f8-1.bin').read_bytes()
+compare_represented((a.trace/'native-corner16-flight-contact.cmjsession').read_bytes(),export_session(original,0),False,'corner player16 shot','defender contact')
+original=(a.player3_shot/'corner16-attack-8509-1.bin').read_bytes()
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner16-keeper-entry.cmjsession').read_bytes(),expected,False,'corner player16 shot','keeper entry')
+raw=(a.player3_shot/'corner16-attack-dd1c-1.bin').read_bytes()
+checks=menu_trace(rom[16:262160],raw,1,4169960476)
+for index,name in ((0,'open'),(1,'selected'),(2,'compared')):
+ original=checks[name];exportable=bytearray(original);exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0));expected[309]=0
+ compare_represented((a.trace/f'native-corner16-keeper-menu-{index}.cmjsession').read_bytes(),expected,False,'corner player16 goalkeeper',name)
+if checks['compared'][0x612]!=3:raise ValueError('Unexpected corner goalkeeper result')
+original=(a.player3_shot/'corner16-keeper-save.bin').read_bytes()
+if (original[0x441],original[0x5fb])!=(0,0):raise ValueError('Unexpected corner goalkeeper possession')
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner16-keeper-catch.cmjsession').read_bytes(),expected,False,'corner player16 goalkeeper','catch')
+
+
+
+
+
 
 
 

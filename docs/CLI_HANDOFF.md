@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player16 shot caught at clock1
+
+Player16's prepared shot flies toward (52,124). Native and original match flight setup, defender selection, arrival and fractional coordinates. Defender2's result1 reduces power from 8 to 7 and consumes one tick. With goalkeeper action0 and controlled random samples, the original keeper returns result3 and catches the ball; native and original match the goalkeeper menu, comparison and home goalkeeper possession at clock1. The catch saves and reloads.
+
+The continuation uses existing shot-flight, defender and keeper calculations, with routing limited to the captured sequence. The subsequent automatic outlet remains to be traced; an initial isolated attempt reached the original scheduler without completing, so it is not evidence of an outlet or period result. Windows CMake build, all 65 tests, private replay and original comparisons passed. Inputs/random samples and presentation acknowledgements are controlled; live NMI, rendering, audio and frame timing remain unverified. Next trace the goalkeeper outlet and end-of-period behavior. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player16 shot prepared at clock2
 
 The controlled original selects a subtype1 shot for player16. Native and original match the AI choice, the 90-point shot preparation, the two-tick clock update and the subsequent field movement, leaving clock2 and shot power8. The field-update state saves and reloads. The native continuation is restricted to the sampled state and choices.

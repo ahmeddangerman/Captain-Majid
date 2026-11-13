@@ -434,7 +434,7 @@ MatchStepResult handle_human_keeper_menu(const MatchRuntimeState& input,const Ma
  if(input.session.action->menu_route==0){
   if(event.kind!=MatchInputKind::presentation_complete){result.unsupported=UnsupportedCapability::presentation;return result;}
   result.state.session.action->menu_route=4;result.state.session.action->cursor=0;result.state.session.action->auxiliary=0;
-  if(input.session.current.field.ball_owner==21 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==46)result.state.session.control->facing=0;
+  if((input.session.current.field.ball_owner==21 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==46) || (input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==52 && input.session.current.field.ball_y==124 && input.session.current.clock.remaining==1))result.state.session.control->facing=0;
   result.state.session.control->motion_requested=0;result.state.session.control->display_parameter=0;result.state.last_sequence=event.sequence;return result;
  }
  if(input.session.action->menu_route!=4 || event.kind!=MatchInputKind::tick || !input.demo_rng){result.unsupported=UnsupportedCapability::phase;return result;}
@@ -1721,6 +1721,18 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
    next.session.current=applied.state;next.session.control->motion_requested=2;next.session.control->facing=0;next.session.phase=FieldSessionPhase::keeper_area_contact_clock_done;validate_phase_session(next.session);
   }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::defender_contact;return result;}
   next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+ }
+ if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prefix_clock_done && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==2 && !input.session.current.field.elapsed) {
+  if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
+  if(!content.data->approach || !input.ball_fraction){result.unsupported=UnsupportedCapability::content;return result;}
+  auto next=input;auto& s=next.session;
+  try{const auto approach=calculate_shot_approach({s.current.field.ball_x,s.current.field.ball_y,s.current.field.side,s.recovery->attack_subtype,s.current.field.random_first},*content.data->approach);
+   if(approach.loose_ball || approach.destination_cell!=5 || approach.distance_adjustment!=18 || approach.random_first || input.ball_fraction->x!=30 || input.ball_fraction->y!=41){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+   s.current.field.random_first=approach.random_first;s.shot_flight=ShotFlightContext{approach.distance_adjustment,approach.destination_cell,255,false};
+   s.keeper_area.reset();s.area_defense.reset();s.area_ai_target.reset();s.current.field.selected_defenders=0;s.scheduling->selected_ids.fill(0);s.saved_ball_flight_flag=0;
+   s.control->motion_requested=0;s.action->menu_route=0;s.phase=FieldSessionPhase::shot_flight_pending;validate_phase_session(s);
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::opponent_execution;return result;}
+  next.last_sequence=event.sequence;project_field_random_memory(s.current.field,next.random_memory);result.state=std::move(next);return result;
  }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::keeper_area_prefix_clock_done && input.session.action && input.session.action->menu_route==1 && input.session.current.field.side==11 && input.session.current.field.ball_owner==16 && input.session.current.field.ball_x==68 && input.session.current.field.ball_y==141 && input.session.current.clock.remaining==2 && input.session.current.field.elapsed==2) {
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}

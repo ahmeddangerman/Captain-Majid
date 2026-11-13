@@ -278,6 +278,45 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream world16_file(std::string(prefix)+"-corner16-attack-world.cmjsession",std::ios::binary);write_phase_session(world16_file,world16->state.session);
  std::ostringstream world16_save(std::ios::binary);write_match_save(world16_save,world16->state,identity);std::istringstream world16_in(world16_save.str(),std::ios::binary);auto world16_restore=std::make_unique<MatchRuntimeState>(load_match_save(world16_in,identity));
  if(world16_restore->session.phase!=FieldSessionPhase::keeper_area_prefix_clock_done || world16_restore->session.current.clock.remaining!=2)throw std::runtime_error("Corner player16 shot world did not roundtrip");
+ auto target16=std::make_unique<MatchStepResult>(step_match(*world16_restore,client_input(*world16_restore,0,0),content));
+ if(target16->unsupported)throw std::runtime_error(std::string("Corner player16 shot target stopped: ")+capability_name(*target16->unsupported));
+ if(target16->state.session.phase!=FieldSessionPhase::shot_flight_pending || !target16->state.session.shot_flight || target16->state.session.shot_flight->destination!=5)throw std::runtime_error("Corner player16 target differs");
+ auto flight16=std::make_unique<MatchStepResult>(step_match(target16->state,client_input(target16->state,0,0),content));
+ if(flight16->unsupported)throw std::runtime_error(std::string("Corner player16 flight start stopped: ")+capability_name(*flight16->unsupported));
+ std::ofstream flight16_log(std::string(prefix)+"-corner16-shot-flight.txt");
+ for(int i=0;i<30;++i){flight16_log<<i<<' '<<static_cast<unsigned>(flight16->state.session.phase)<<' '<<static_cast<unsigned>(flight16->state.session.current.field.ball_x)<<' '<<static_cast<unsigned>(flight16->state.session.current.field.ball_y)<<' '<<static_cast<unsigned>(flight16->state.session.current.field.selected_defenders)<<'\n';flight16_log.flush();
+  std::ofstream f(std::string(prefix)+"-corner16-shot-flight-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,flight16->state.session);
+  if(flight16->state.session.phase==FieldSessionPhase::ball_arrival_callback)break;
+  *flight16=step_match(flight16->state,client_input(flight16->state,0,0),content);if(flight16->unsupported)throw std::runtime_error(std::string("Corner player16 flight stopped: ")+capability_name(*flight16->unsupported));
+ }
+ if(flight16->state.session.phase!=FieldSessionPhase::ball_arrival_callback || flight16->state.session.current.field.selected_defenders!=1 || flight16->state.session.scheduling->selected_ids[0]!=2)throw std::runtime_error("Corner player16 flight contact differs");
+ auto flight_contact16=std::make_unique<MatchStepResult>(step_match(flight16->state,client_input(flight16->state,0,0),content));
+ if(flight_contact16->unsupported)throw std::runtime_error(std::string("Corner player16 flight defender stopped: ")+capability_name(*flight_contact16->unsupported));
+ std::ofstream flight_contact16_file(std::string(prefix)+"-corner16-flight-contact.cmjsession",std::ios::binary);write_phase_session(flight_contact16_file,flight_contact16->state.session);
+ if(flight_contact16->state.session.phase!=FieldSessionPhase::shot_keeper_entry || flight_contact16->state.session.current.clock.remaining!=1 || flight_contact16->state.session.action->power!=7)throw std::runtime_error("Corner player16 flight contact outcome differs");
+ if(!flight16->state.session.ball_trajectory || (flight16->state.session.ball_trajectory->x&255u)!=185 || (flight16->state.session.ball_trajectory->y&255u)!=186)throw std::runtime_error("Corner player16 flight fraction differs");
+ std::ostringstream contact16_save(std::ios::binary);write_match_save(contact16_save,flight_contact16->state,identity);std::istringstream contact16_in(contact16_save.str(),std::ios::binary);auto contact16_restore=std::make_unique<MatchRuntimeState>(load_match_save(contact16_in,identity));
+ if(contact16_restore->session.phase!=FieldSessionPhase::shot_keeper_entry || contact16_restore->session.action->power!=7)throw std::runtime_error("Corner player16 flight contact did not roundtrip");
+ auto keeper16=std::make_unique<MatchStepResult>(step_match(*contact16_restore,client_input(*contact16_restore,0,0),content));
+ if(keeper16->unsupported)throw std::runtime_error(std::string("Corner player16 keeper entry stopped: ")+capability_name(*keeper16->unsupported));
+ if(keeper16->state.session.phase!=FieldSessionPhase::keeper_presentation_pending || keeper16->state.session.current.field.selected_defenders!=1 || keeper16->state.session.scheduling->selected_ids[0]!=0)throw std::runtime_error("Corner player16 keeper entry differs");
+ std::ofstream keeper16_file(std::string(prefix)+"-corner16-keeper-entry.cmjsession",std::ios::binary);write_phase_session(keeper16_file,keeper16->state.session);
+ std::ofstream keeper16_log(std::string(prefix)+"-corner16-keeper-menu.txt");
+ for(int i=0;i<5;++i){const std::uint8_t pressed=i==1 ? 1 : i==2 ? 128 : 0;auto next=std::make_unique<MatchStepResult>(step_match(keeper16->state,client_input(keeper16->state,0,pressed),content));keeper16_log<<i<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<next->state.demo_rng<<'\n';keeper16_log.flush();if(next->unsupported)throw std::runtime_error(std::string("Corner player16 keeper menu stopped: ")+capability_name(*next->unsupported));std::ofstream f(std::string(prefix)+"-corner16-keeper-menu-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*keeper16=std::move(*next);if(keeper16->state.session.phase!=FieldSessionPhase::keeper_presentation_pending)break;}
+ if(keeper16->state.session.phase!=FieldSessionPhase::keeper_decided || !keeper16->state.session.keeper_decision || keeper16->state.session.keeper_decision->result_code!=3)throw std::runtime_error("Corner player16 goalkeeper result differs");
+ auto catch16=std::make_unique<MatchStepResult>(step_match(keeper16->state,client_input(keeper16->state,0,0),content));
+ if(catch16->unsupported)throw std::runtime_error(std::string("Corner player16 goalkeeper catch stopped: ")+capability_name(*catch16->unsupported));
+ if(catch16->state.session.phase!=FieldSessionPhase::keeper_possession || catch16->state.session.current.field.ball_owner!=0 || catch16->state.session.current.field.side!=0)throw std::runtime_error("Corner player16 goalkeeper catch differs");
+ std::ofstream catch16_file(std::string(prefix)+"-corner16-keeper-catch.cmjsession",std::ios::binary);write_phase_session(catch16_file,catch16->state.session);
+ std::ostringstream catch16_save(std::ios::binary);write_match_save(catch16_save,catch16->state,identity);std::istringstream catch16_in(catch16_save.str(),std::ios::binary);auto catch16_restore=std::make_unique<MatchRuntimeState>(load_match_save(catch16_in,identity));
+ if(catch16_restore->session.phase!=FieldSessionPhase::keeper_possession || catch16_restore->session.current.field.ball_owner!=0)throw std::runtime_error("Corner player16 goalkeeper catch did not roundtrip");
+
+
+
+
+
+
+
 
 
 
