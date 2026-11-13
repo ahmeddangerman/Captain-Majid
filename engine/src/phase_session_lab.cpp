@@ -80,6 +80,8 @@ const char* phase_name(captain::FieldSessionPhase phase) {
     case captain::FieldSessionPhase::player21_corner_taker_chosen: return "player21 corner taker chosen";
     case captain::FieldSessionPhase::player21_corner_formation_placed: return "player21 corner formation placed";
     case captain::FieldSessionPhase::player21_corner_clocked: return "player21 corner clocked";
+    case captain::FieldSessionPhase::observed_period_display: return "observed period display acknowledgement pending";
+    case captain::FieldSessionPhase::observed_period_dispatch: return "observed period return dispatcher pending";
     case captain::FieldSessionPhase::player7_shot_defender_prepared: return "player7 shot defender prepared";
     case captain::FieldSessionPhase::player7_shot_defender_compared: return "player7 shot defender compared";
     case captain::FieldSessionPhase::player7_shot_contact_clocked: return "player7 terminal shot contact clocked";

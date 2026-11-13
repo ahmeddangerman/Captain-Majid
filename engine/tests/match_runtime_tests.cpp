@@ -376,6 +376,16 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(control8_restore->session.phase!=FieldSessionPhase::period_end || control8_restore->session.current.clock.remaining || control8_restore->session.current.clock.extra_time || control8_restore->session.current.field.ball_owner!=8 || control8_restore->session.current.field.ball_x!=146 || control8_restore->session.current.field.ball_y!=109)throw std::runtime_error("Controlled first period did not reach original ending");
  std::ostringstream period_save(std::ios::binary);write_match_save(period_save,*control8_restore,identity);std::istringstream period_in(period_save.str(),std::ios::binary);auto period_restore=std::make_unique<MatchRuntimeState>(load_match_save(period_in,identity));
  if(period_restore->session.phase!=FieldSessionPhase::period_end || period_restore->session.current.field.ball_owner!=8)throw std::runtime_error("Controlled period end did not roundtrip");
+ auto period_display=std::make_unique<MatchStepResult>(step_match(*period_restore,client_input(*period_restore,0,0),content));
+ if(period_display->unsupported)throw std::runtime_error(std::string("Period display setup stopped: ")+capability_name(*period_display->unsupported));
+ if(period_display->state.session.phase!=FieldSessionPhase::observed_period_display || period_display->events.empty() || period_display->events[0].presentation.kind!=ControlPresentationKind::display || period_display->events[0].presentation.id!=51)throw std::runtime_error("Period display request differs");
+ auto period_dispatch=std::make_unique<MatchStepResult>(step_match(period_display->state,client_input(period_display->state,0,0),content));
+ if(period_dispatch->unsupported)throw std::runtime_error(std::string("Period return dispatch stopped: ")+capability_name(*period_dispatch->unsupported));
+ if(period_dispatch->state.session.phase!=FieldSessionPhase::observed_period_dispatch)throw std::runtime_error("Period return dispatch differs");
+ for(const auto& sample:{std::pair<const char*,const MatchRuntimeState&>{"display",period_display->state},{"dispatch",period_dispatch->state}}){std::ofstream f(std::string(prefix)+"-period-transition-"+sample.first+".cmjsession",std::ios::binary);write_phase_session(f,sample.second.session);}
+ for(const auto* sample:{&period_display->state,&period_dispatch->state}){std::ostringstream saved(std::ios::binary);write_match_save(saved,*sample,identity);std::istringstream in(saved.str(),std::ios::binary);const auto restored=load_match_save(in,identity);if(restored.session.phase!=sample->session.phase)throw std::runtime_error("Period transition did not roundtrip");}
+
+
 
 
 
@@ -3535,4 +3545,5 @@ int main(int argc,char** argv) {
  test_opponent_shot_gate(deferred_unopposed_ai_pass_test->state,deferred_unopposed_ai_pass_test->content,deferred_unopposed_ai_pass_test->identity);
  return result;
 }
+
 

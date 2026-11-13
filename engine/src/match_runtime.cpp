@@ -1143,6 +1143,14 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  MatchStepResult result{input};
  if(!content.data){result.unsupported=UnsupportedCapability::content;return result;}
  if(event.sequence<=input.last_sequence){result.unsupported=UnsupportedCapability::input_sequence;return result;}
+ if(input.mode==MatchTimingMode::provisional_demo && (input.session.phase==FieldSessionPhase::period_end || input.session.phase==FieldSessionPhase::observed_period_display) && input.session.current.field.side==0 && input.session.current.field.ball_owner==8 && input.session.current.field.ball_x==146 && input.session.current.field.ball_y==109 && !input.session.current.clock.remaining && !input.session.current.clock.extra_time && input.session.action && input.session.action->action==1) {
+  const bool display=input.session.phase==FieldSessionPhase::period_end;
+  if(event.kind!=(display ? MatchInputKind::tick : MatchInputKind::presentation_complete)){result.unsupported=UnsupportedCapability::presentation;return result;}
+  try{auto next=input;if(display){next.session.current.clock.ball_mode=0;next.session.current.clock.script_flags=0;next.session.phase=FieldSessionPhase::observed_period_display;result.events.push_back({{ControlPresentationKind::display,51}});}
+   else {next.session.experience->totals[10]&=255u;next.session.control->facing=0;next.session.control->display_parameter=0;next.session.control->motion_requested=0;next.session.phase=FieldSessionPhase::observed_period_dispatch;}
+   validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;
+  }catch(const std::invalid_argument&){result.unsupported=UnsupportedCapability::period_transition;return result;}
+ }
  if(input.mode==MatchTimingMode::provisional_demo && input.session.phase==FieldSessionPhase::boundary_restart && input.session.current.field.side==11 && input.session.current.field.ball_x==44 && ((input.session.current.field.ball_owner==21 && input.session.current.field.ball_y==116 && input.session.current.clock.remaining==46) || (input.session.current.field.ball_owner==20 && input.session.current.field.ball_y==148 && input.session.current.clock.remaining==26))){
   if(event.kind!=MatchInputKind::tick){result.unsupported=UnsupportedCapability::action;return result;}
   try {auto next=input;for(auto& player:next.session.current.field.motion)player.status=0;for(auto& keeper:next.session.current.field.keepers){keeper.penalty=0;keeper.stun=0;}next.session.recovery->ball_variant=0;next.session.phase=FieldSessionPhase::player21_corner_setup;validate_phase_session(next.session);next.last_sequence=event.sequence;project_field_random_memory(next.session.current.field,next.random_memory);result.state=std::move(next);return result;}
@@ -2105,6 +2113,7 @@ MatchStepResult step_match(const MatchRuntimeState& input,const MatchInput& even
  return result;
 }
 }
+
 
 
 

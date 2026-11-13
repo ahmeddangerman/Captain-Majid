@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Observed period-end return boundary
+
+Continued the controlled original from the period-end clock boundary. It clears ball and script clock modes, requests display51, then clears the high byte of experience slot10 and returns to the higher-level dispatcher with selector255. The engine now exposes the display request, accepts an explicit acknowledgement, and reaches a saved dispatcher boundary. Original/native represented states match at both boundaries, and both save and reload.
+
+The original observation acknowledged display waits and stubbed PPU and mapper interrupt-control writes; it did not execute real PPU, audio or NMI. A later CPU trace entered a higher-level scene and has not yet established the next playable period, so no halftime or match-completion claim is made. Windows CMake build, all 65 tests, private replay and original comparisons passed. Next investigate the dispatcher and scene transition toward the next playable period. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Controlled match reaches period end
 
 Extended the continuous controlled first-match replay from player8's added-time possession to the original period-end boundary. With explicit rightward input and sampled random bytes, all 194 represented movement and clock boundaries match the original. The period ends with player8 at (146,109), remaining time0 and added time exhausted; the native period-end state saves and reloads. This is a meaningful period milestone, not a completed playable match.

@@ -526,6 +526,10 @@ for line in (a.trace/'native-added8-journey.txt').read_text().splitlines():
  observation,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(held,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
  compare_represented((a.trace/f'native-added8-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'player8 added time',str(i))
  if next_phase==4 and (observation['boundary']!='period_end' or (raw[0x441],raw[0x5f7],raw[0x5f8],raw[0x5f9])!=(8,0,0,0)):raise ValueError('Original period-end boundary differs')
+for name,pc in (('display','daa0'),('dispatch','c400')):
+ original=(a.player3_shot/f'period-transition-30-{pc}-1.bin').read_bytes()
+ compare_represented((a.trace/f'native-period-transition-{name}.cmjsession').read_bytes(),export_session(original,0),True,'period transition',name)
+
 
 
 
