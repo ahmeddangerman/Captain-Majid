@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Player16 faces the goalkeeper
+
+The original player16 goal-area scan selects no field defenders and then adds goalkeeper0. The engine reproduces the selected goalkeeper and the controlled action4 choice, with original/native represented menu states and choice/blink arrays matching at each step. The completed menu saves and reloads.
+
+The subsequent original trace chooses a subtype1 shot, reaches clock2, and produces result1 against defender2 in flight; that continuation is not yet implemented. Goalkeeper selection is bounded to the sampled state. Windows CMake build, all 65 tests, private replay and original comparisons passed. Random samples and presentation acknowledgements are controlled; live NMI, rendering, audio and frame timing remain unverified. Next implement the observed shot and flight. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player13 passes into player16's goal area
 
 Continued the controlled player13 possession from clock5 to clock4. The original preserves a defender cursor from the earlier contact; the engine now accepts it through movement, the AI decision and pass. Player13 selects an ordinary pass to player16. Native and original represented movement, choice, preparation, flight and goal-area entry match; player16 reaches (68,141), clock4, with no preliminary cell defenders. The goal-area setup saves and reloads.

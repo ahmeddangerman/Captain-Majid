@@ -414,6 +414,29 @@ for index,pc in ((0,'e1cb-1'),(1,'80ed-1'),(3,'c612-1'),(4,'de64-1'),(5,'e773-1'
  compare_represented((a.trace/f'native-corner13-pass-{index}.cmjsession').read_bytes(),export_session(original,0),False,'corner player13 pass',pc)
 original=(a.player3_shot/'corner13-decision-8b73-1.bin').read_bytes()
 compare_represented((a.trace/'native-corner16-area-prepared.cmjsession').read_bytes(),export_session(original,0),False,'corner player16','area setup')
+original=(a.player3_shot/'corner16-area-d3a6-1.bin').read_bytes()
+if original[0x600:0x602]!=bytes((1,0)):raise ValueError('Unexpected corner player16 defensive lineup')
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+actual=(a.trace/'native-corner16-defense-initial.cmjsession').read_bytes()
+compare_represented(actual,expected,False,'corner player16','defense initialization')
+if actual[372:383]!=bytes((1,255,255,255,255,0,0,0,0,original[0x620],0)):raise ValueError('Corner player16 defensive initialization differs')
+menu=original
+for line in (a.trace/'native-corner16-menu.txt').read_text().splitlines():
+ i,phase,pressed,unsupported,rng=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Corner player16 defensive menu stopped')
+ if phase!=67:
+  injected=bytearray(menu);injected[0xe2:0xe4]=bytes((rng&255,(rng>>8)&255))
+  observation,menu=trace_defense_poll(rom[16:262160],injected,128 if phase==71 else pressed,preparation=phase==71)
+ exportable=bytearray(menu);exportable[0x601]=10
+ expected=bytearray(export_session(exportable,0));expected[309]=0
+ actual=(a.trace/f'native-corner16-menu-{i}.cmjsession').read_bytes()
+ compare_represented(actual,expected,False,'corner player16 menu',str(i))
+ actions=list(menu[0x60b:0x60f]);subtypes=[menu[0x606+j] if actions[j]!=255 else 0 for j in range(4)]
+ expected_choices=bytes((1,*actions,*subtypes,menu[0x620],menu[0x1e] if phase in (69,70) and pressed==128 and i!=4 else 0))
+ if actual[372:383]!=expected_choices:raise ValueError(f'Corner player16 menu choices differ at {i}')
+
+
 
 
 

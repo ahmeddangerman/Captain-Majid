@@ -363,7 +363,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool area_action6=phase==104 || (phase>=106 && phase<=110) || phase==113;
     const bool area_action6_race=(phase>=106 && phase<=110) || phase==113;
     const bool area_setup=phase==65 || phase==105;
-    const bool corner16_area=phase==65 && state.current.field.side==11 && state.current.field.ball_owner==16 && state.current.field.ball_x==68 && state.current.field.ball_y==141 && state.current.clock.remaining==4 && state.action && state.action->action==1 && state.recovery && state.recovery->ball_variant==1;
+    const bool corner16_area=(phase==65 || phase==67 || (phase>=69 && phase<=72)) && state.current.field.side==11 && state.current.field.ball_owner==16 && state.current.field.ball_x==68 && state.current.field.ball_y==141 && state.current.clock.remaining==4 && state.action && state.action->action==1 && state.recovery && state.recovery->ball_variant==1;
     const bool corner19_area=(phase==65 || phase==67 || (phase>=69 && phase<=72) || phase==78 || phase==79 || phase==82 || phase==83) && state.current.field.side==11 && state.current.field.ball_owner==19 && state.current.field.ball_x==52 && state.current.field.ball_y==124 && state.current.clock.remaining==(phase==83 ? 5 : 6) && state.action && (state.action->action==1 || ((phase==78 || phase==79 || phase==82 || phase==83) && state.action->action==0)) && state.recovery && state.recovery->ball_variant==1;
     const bool player6_area_route=(phase==7 || phase==65 || phase==18 || phase==19 || (phase>=474 && phase<=476)) && state.current.field.side==0 && state.current.field.ball_owner==6 && state.current.field.ball_x==180 && state.current.field.ball_y==156 && !state.current.field.selected_defenders && ((phase==18 || phase==19 || (phase>=474 && phase<=476)) || (state.current.field.random_first==0 && state.current.field.random_second==94)) && state.recovery && state.recovery->opposing_player==16 && state.recovery->ball_variant==2 && state.area_defender_cursor==1 && state.saved_ball_flight_flag==1;
     const bool area_menu=(phase>=66 && phase<=94) || ((phase==18 || phase==19 || (phase>=485 && phase<=492) || (phase>=478 && phase<=483) || (phase>=474 && phase<=476) || (phase>=467 && phase<=472)) && state.keeper_area);
@@ -424,7 +424,7 @@ void validate_phase_session(const PhaseSessionState& state) {
        (state.current.field.ball_x>=80 && state.current.field.ball_x<176) ||
        state.action->menu_route!=(((state.current.field.ball_x<80 ? 0 : 11)==state.current.field.side)?2:1)))
         throw std::invalid_argument("Keeper-area setup requires its original area and route (phase " + std::to_string(phase) + ", ball " + std::to_string(state.current.field.ball_x) + "," + std::to_string(state.current.field.ball_y) + ", side " + std::to_string(state.current.field.side) + ", route " + std::to_string(state.action ? state.action->menu_route : 255) + ")");
-    if(area_menu && !empty_attacking_area && !player8_keeper_area_menu && !player4_keeper_area_menu && !player3_area_menu && !player6_area_route && !corner19_area &&
+    if(area_menu && !empty_attacking_area && !player8_keeper_area_menu && !player4_keeper_area_menu && !player3_area_menu && !player6_area_route && !corner19_area && !corner16_area &&
        (state.action->menu_route!=2 || (phase>=66 ? state.current.field.side!=11 : state.current.field.side!=0)))
         throw std::invalid_argument("Prepared own-area menu requires its matching attack or defense side");
     if(bool(state.area_defense)!=(((phase>=485 && phase<=494) || (phase>=415 && phase<=420) || (phase>=238 && phase<=243) || ((phase>=202 && phase<=208) || ((phase>=215 && phase<=218) || phase==227 || (phase==228 || phase==229))) || phase==67 || ((phase>=69 && phase<=92) && !empty_attacking_area) || phase==94 || area_action4 || ((phase==93 || area_action6) && state.action && (state.action->action==4 || state.action->action==6) && state.area_defense))))
@@ -774,7 +774,7 @@ void validate_phase_session(const PhaseSessionState& state) {
     const bool player14_interception_contact_cursor=(phase==15 || phase==0) && state.area_defender_cursor==1 && state.saved_ball_flight_flag==1 && state.current.field.side==11 && state.current.field.ball_owner==14 && state.current.field.ball_x==84 && state.current.field.ball_y==136 && (state.current.clock.remaining==55 || state.current.clock.remaining==54) && ((phase==15 && state.current.field.selected_defenders==1 && state.scheduling && state.scheduling->selected_ids[0]==3) || (phase==0 && !state.current.field.selected_defenders));
     const bool player4_stolen_pass_cursor=(phase==1 || phase==9 || phase==10 || phase==13 || phase==12) && state.area_defender_cursor==1 && state.current.field.side==11 && state.current.field.ball_owner==14 && state.current.clock.remaining<=60 && state.current.clock.remaining>=55 && state.saved_ball_flight_flag==1 && !state.area_contact && !state.ordinary_pass_defenses;
     const bool corner13_recovery_cursor=(phase==0 || phase==1 || phase==9 || phase==10 || phase==12 || phase==13) && state.area_defender_cursor==1 && state.area_sequence_result==3 && state.current.field.side==11 && state.current.field.ball_owner==13 && state.current.field.ball_x>=64 && state.current.field.ball_x<88 && state.current.field.ball_y>=84 && state.current.field.ball_y<96 && state.current.clock.remaining<=5;
-    const bool corner16_recovery_cursor=(phase==7 || phase==65) && state.area_defender_cursor==1 && state.area_sequence_result==3 && state.current.field.side==11 && state.current.field.ball_owner==16 && state.current.field.ball_x==68 && state.current.field.ball_y==141 && state.current.clock.remaining==4;
+    const bool corner16_recovery_cursor=(phase==7 || phase==65 || phase==67 || (phase>=69 && phase<=72)) && state.area_defender_cursor==1 && state.area_sequence_result==3 && state.current.field.side==11 && state.current.field.ball_owner==16 && state.current.field.ball_x==68 && state.current.field.ball_y==141 && state.current.clock.remaining==4;
     const bool player4_pass_contact_cursor=(phase==15 || phase==18 || phase==19) && state.area_defender_cursor==2 && state.saved_ball_flight_flag==1 && state.current.field.side==0 && state.current.field.ball_owner==4 && state.current.field.ball_x==101 && state.current.field.ball_y==140 && state.current.clock.remaining==63 && state.current.field.selected_defenders==5 && state.scheduling && state.scheduling->selected_ids==std::array<std::uint8_t,5>{12,14,17,18,19};
     const bool player1_loose_shot_cursor=(phase==6 || phase==7 || phase==65 || player8_keeper_area_menu) && state.area_defender_cursor==1 && !state.saved_ball_flight_flag && state.current.field.side==0 && state.current.field.ball_owner==8 && state.current.field.ball_x==196 && state.current.field.ball_y==124 && state.recovery && state.recovery->opposing_player==12;
     const bool player6_shot_cursor=(phase>=46 && phase<=56) && state.current.field.side==0 && state.current.field.ball_owner==6 && state.current.clock.remaining==99 && state.area_defender_cursor==1 && state.shot_flight && state.shot_flight->distance==27 && state.shot_flight->destination==233 && !state.shot_flight->loose_ball && state.recovery && state.recovery->attack_subtype==2 && state.action && state.action->power==9 && state.saved_ball_flight_flag==(phase==46 ? 1 : 0);
@@ -1442,7 +1442,7 @@ void validate_phase_session(const PhaseSessionState& state) {
         const auto count = state.current.field.selected_defenders;
         if (count > 5) throw std::invalid_argument("Selected defender prefix exceeds five slots");
         for (unsigned i = 0; i < 5; ++i) {
-            if (i < count && !keeper_selected && !keeper_possession && !goal_restart && !kickoff_placed && !(corner19_area && phase!=65 && i==0 && state.scheduling->selected_ids[i]==0)) field_motion_index(state.scheduling->selected_ids[i]);
+            if (i < count && !keeper_selected && !keeper_possession && !goal_restart && !kickoff_placed && !((corner19_area || corner16_area) && phase!=65 && i==0 && state.scheduling->selected_ids[i]==0)) field_motion_index(state.scheduling->selected_ids[i]);
             else if (i < count) { /* Keeper prefix checked above; not a field-motion slot. */ }
             else if (state.scheduling->selected_ids[i] != 0)
                 throw std::invalid_argument("Nonzero unused selected defender slot");
@@ -1556,6 +1556,7 @@ PhaseSessionResult resolve_session_rewarded_terminal(const PhaseSessionState& in
     return result;
 }
 }
+
 
 
 

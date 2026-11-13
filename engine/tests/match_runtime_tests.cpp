@@ -249,6 +249,21 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream area16_file(std::string(prefix)+"-corner16-area-prepared.cmjsession",std::ios::binary);write_phase_session(area16_file,area16->state.session);
  std::ostringstream area16_save(std::ios::binary);write_match_save(area16_save,area16->state,identity);std::istringstream area16_in(area16_save.str(),std::ios::binary);auto area16_restore=std::make_unique<MatchRuntimeState>(load_match_save(area16_in,identity));
  if(area16_restore->session.phase!=FieldSessionPhase::keeper_area_prepared || area16_restore->session.current.field.ball_owner!=16)throw std::runtime_error("Corner player16 area did not roundtrip");
+ auto defense16=std::make_unique<MatchStepResult>(step_match(*area16_restore,client_input(*area16_restore,0,0),content));
+ if(defense16->unsupported)throw std::runtime_error(std::string("Corner player16 defender selection stopped: ")+capability_name(*defense16->unsupported));
+ if(defense16->state.session.phase!=FieldSessionPhase::keeper_area_defense_initial || defense16->state.session.current.field.selected_defenders!=1 || defense16->state.session.scheduling->selected_ids[0]!=0)throw std::runtime_error("Corner player16 defender selection differs");
+ std::ofstream defense16_file(std::string(prefix)+"-corner16-defense-initial.cmjsession",std::ios::binary);write_phase_session(defense16_file,defense16->state.session);
+ std::ofstream menu16_log(std::string(prefix)+"-corner16-menu.txt");
+ for(int i=0;i<8 && defense16->state.session.phase!=FieldSessionPhase::keeper_area_defense_complete;++i){auto& current=defense16->state;const auto phase=current.session.phase;std::uint8_t pressed=0;
+  if(phase==FieldSessionPhase::keeper_area_defense_ready || phase==FieldSessionPhase::keeper_area_defense_poll){const auto cursor=current.session.action->cursor;pressed=cursor==1 || current.session.area_defense->actions[cursor]!=255 ? 128 : 1;}
+  auto next=std::make_unique<MatchStepResult>(step_match(current,client_input(current,0,pressed),content));menu16_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(pressed)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<next->state.demo_rng<<'\n';menu16_log.flush();if(next->unsupported)throw std::runtime_error(std::string("Corner player16 menu stopped: ")+capability_name(*next->unsupported));
+  std::ofstream f(std::string(prefix)+"-corner16-menu-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*defense16=std::move(*next);
+ }
+ if(defense16->state.session.phase!=FieldSessionPhase::keeper_area_defense_complete || defense16->state.session.area_defense->actions[0]!=4)throw std::runtime_error("Corner player16 defense choice differs");
+ std::ostringstream menu16_save(std::ios::binary);write_match_save(menu16_save,defense16->state,identity);std::istringstream menu16_in(menu16_save.str(),std::ios::binary);auto menu16_restore=std::make_unique<MatchRuntimeState>(load_match_save(menu16_in,identity));
+ if(menu16_restore->session.phase!=FieldSessionPhase::keeper_area_defense_complete || menu16_restore->session.area_defense->actions[0]!=4)throw std::runtime_error("Corner player16 defense did not roundtrip");
+
+
 
 
 
