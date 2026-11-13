@@ -5,6 +5,7 @@
 #include "captain/phase_session_io.hpp"
 #include "captain/field_state_io.hpp"
 #include "captain/defender_selection.hpp"
+#include "captain/clearance_race.hpp"
 #include "captain/field_player_profile.hpp"
 #include "captain/kickoff_selection.hpp"
 #include "captain/staged_shot.hpp"
@@ -220,6 +221,21 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  if(contact_world->unsupported)throw std::runtime_error(std::string("Corner contact field update stopped: ")+capability_name(*contact_world->unsupported));
  if(contact_world->state.session.current.field.elapsed || contact_world->state.session.current.field.random_first)throw std::runtime_error("Corner contact field update differs");
  std::ofstream contact_world_file(std::string(prefix)+"-corner19-contact-world.cmjsession",std::ios::binary);write_phase_session(contact_world_file,contact_world->state.session);
+ auto loose_field=contact_world->state.session.current.field;loose_field.side=0;loose_field.ball_x=76;loose_field.ball_y=84;loose_field.ball_cell=36;
+ auto race=resolve_field_loose_ball_race(loose_field,3,4,content.data->field_players,*content.data->movement,*content.data->pass_race);
+ std::ofstream race_log(std::string(prefix)+"-corner19-race.txt");race_log<<race.rounds<<' '<<static_cast<unsigned>(race.remaining)<<' '<<static_cast<unsigned>(race.active_candidate)<<' '<<static_cast<unsigned>(race.opposing_candidate)<<' '<<(race.winner ? static_cast<int>(*race.winner) : -1)<<'\n';
+ if(race.rounds!=2 || race.active_candidate!=10 || race.opposing_candidate!=13 || race.winner!=13)throw std::runtime_error("Corner loose-ball race differs");
+ race.field.side=11;race.field.ball_owner=13;auto& race_winner=race.field.motion[field_motion_index(13)];race_winner.x=static_cast<std::uint16_t>((race_winner.x&255u)|(76u<<8));race_winner.y=static_cast<std::uint16_t>((race_winner.y&255u)|(84u<<8));
+ std::ofstream race_field(std::string(prefix)+"-corner19-race-field.cmjstate",std::ios::binary);write_field_state(race_field,race.field);
+ auto corner_recovered=std::make_unique<MatchStepResult>(step_match(contact_world->state,client_input(contact_world->state,0,0),content));
+ if(corner_recovered->unsupported)throw std::runtime_error(std::string("Corner player13 recovery stopped: ")+capability_name(*corner_recovered->unsupported));
+ if(corner_recovered->state.session.phase!=FieldSessionPhase::control_ready || corner_recovered->state.session.current.field.ball_owner!=13)throw std::runtime_error("Corner player13 control differs");
+ std::ofstream corner_recovered_file(std::string(prefix)+"-corner19-player13-control.cmjsession",std::ios::binary);write_phase_session(corner_recovered_file,corner_recovered->state.session);
+ std::ostringstream recovered_save(std::ios::binary);write_match_save(recovered_save,corner_recovered->state,identity);std::istringstream recovered_in(recovered_save.str(),std::ios::binary);auto recovered_restore=std::make_unique<MatchRuntimeState>(load_match_save(recovered_in,identity));
+ if(recovered_restore->session.phase!=FieldSessionPhase::control_ready || recovered_restore->session.current.field.ball_owner!=13 || recovered_restore->session.area_defender_cursor!=1)throw std::runtime_error("Corner player13 control did not roundtrip");
+
+
+
 
 
 

@@ -393,6 +393,13 @@ original=(a.player3_shot/'corner19-attack-83f8-1.bin').read_bytes()
 exportable=bytearray(original);exportable[0x601]=10
 expected=bytearray(export_session(exportable,0));expected[309]=0
 compare_represented((a.trace/'native-corner19-contact-world.cmjsession').read_bytes(),expected,False,'corner player19','field update')
+from export_field_state import export_state
+original=(a.player3_shot/'corner19-attack-df0d-1.bin').read_bytes()
+if (original[0x441],original[0x5fb],original[0x635],original[0x637])!=(13,11,76,84):raise ValueError('Unexpected corner recovery winner')
+if (a.trace/'native-corner19-race-field.cmjstate').read_bytes()!=export_state(original):raise ValueError('Corner loose-ball race field differs')
+original=(a.player3_shot/'corner19-attack-e145-1.bin').read_bytes()
+compare_represented((a.trace/'native-corner19-player13-control.cmjsession').read_bytes(),export_session(original,0),False,'corner player13','control')
+
 
 
 

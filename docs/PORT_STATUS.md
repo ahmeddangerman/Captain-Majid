@@ -1,5 +1,11 @@
 # Port status and completion checkpoints
 
+## 2026-11-13 - Player13 wins the relocated ball
+
+After defender3's result3 and the contact field update, the controlled original runs a scripted relocation to (76,84), then a four-step loose-ball race. The engine reproduces the observed two-round contest between players10 and 13; opposing player13 wins. The native race field, including player coordinates and fractional bytes, matches the original, as does the resulting player13 control state at clock5. That control state saves and reloads.
+
+The relocation is bounded to this captured result and random sample; the existing race and experience routines perform the numeric continuation. Windows CMake build, all 65 tests, private replay and original comparisons passed. Inputs/random samples are controlled and presentation waits acknowledged; live NMI, rendering, audio and frame timing remain unverified. Next continue player13 possession toward period end. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Shot contact clock and field update
 
 Continued the player19 goal-area shot after defender3's result3. The engine applies the original contact clock cost, reaching clock5, then reproduces the following field update and random-byte result. Native represented snapshots match the controlled original at both boundaries. The observed recovery next runs a scripted relocation and a loose-ball race; the original gives the ball to opposing player13, but that recovery remains to be implemented.
