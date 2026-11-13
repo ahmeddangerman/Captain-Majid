@@ -166,14 +166,21 @@ int main(){try{
  // Opponent-area input uses the goalkeeper row for ID0 and the field-player row afterward.
  AreaDefenseMenuContent mixed_content{};mixed_content.directions[1][0]=3;mixed_content.directions[2][0]=4;
  mixed_content.field_icons=std::array<std::uint8_t,7>{10,11,12,13,14,15,16};
+ mixed_content.home_keeper_directions=std::array<std::uint8_t,4>{4,4,255,3};
+ mixed_content.home_keeper_icons=std::array<std::uint8_t,7>{20,21,22,23,24,25,26};
  DefenseMenuPollState mixed_poll{};mixed_poll.defense.blink=13;
  const std::array<std::uint8_t,5> mixed_ids{0,3,4,7,0};
  const auto keeper_choice=poll_defense_menu(mixed_poll,4,mixed_ids,false,1,mixed_content,true);
  mixed_poll.cursor=1;
  const auto field_choice=poll_defense_menu(mixed_poll,4,mixed_ids,false,1,mixed_content,true);
  check(keeper_choice.state.defense.actions[0]==4 && field_choice.state.defense.actions[1]==3,"Goal-area defensive directions use the selected player's role");
+ check(keeper_choice.presentation[0].id==24,"Goalkeeper defense uses the goalkeeper icon table");
  const auto home_choice=poll_defense_menu(mixed_poll,4,mixed_ids,false,1,mixed_content);
  check(home_choice.state.defense.actions[1]==4,"Home-area defensive directions use the goalkeeper row for field players");
+ const auto back_to_keeper=poll_defense_menu(mixed_poll,4,mixed_ids,false,64,mixed_content,true);
+ check(back_to_keeper.presentation.back().id==13,"Returning to goalkeeper selects the goalkeeper title");
+ auto no_keeper_tables=mixed_content;no_keeper_tables.home_keeper_directions.reset();
+ rejects([&]{poll_defense_menu(DefenseMenuPollState{},4,mixed_ids,false,1,no_keeper_tables,true);});
  defense_content.directions[2][0]=4;defense_content.field_icons=std::array<std::uint8_t,7>{10,11,12,13,55,15,16};
  auto defense_poll=poll_keeper_area_defense(prompt.state,1,defense_content);
  check(static_cast<unsigned>(defense_poll.state.phase)==70 && defense_poll.state.area_defense->actions[0]==4 &&

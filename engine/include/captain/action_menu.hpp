@@ -22,6 +22,8 @@ struct AreaDefenseMenuContent {
     std::array<std::uint8_t,3> titles{};
     std::array<std::array<std::uint8_t,4>,3> directions{};
     std::optional<std::array<std::uint8_t,7>> field_icons{};
+    std::optional<std::array<std::uint8_t,4>> home_keeper_directions{};
+    std::optional<std::array<std::uint8_t,7>> home_keeper_icons{};
     std::optional<AreaDefenseSpecialOptions> special_options{};
     std::optional<std::array<std::uint8_t,2>> special_cursor{}; // tile, x
     std::optional<std::uint8_t> special_cursor_y_base{};

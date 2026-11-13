@@ -9,6 +9,11 @@
 #include <stdexcept>
 
 namespace captain {
+namespace {
+std::uint8_t defense_title(std::uint8_t id,bool field,bool opponent_area,const AreaDefenseMenuContent& content) {
+ return id==0 ? 13 : content.titles[field ? 0 : (opponent_area ? 1 : 2)];
+}
+}
 ActionMenuResult open_area_pass_human_action_menu(const PhaseSessionState& input,const ActionMenuContent& content) {
  validate_phase_session(input);
  if(input.phase!=FieldSessionPhase::area_pass_capture_action_menu && input.phase!=FieldSessionPhase::area_pass_blocked_action_menu)
@@ -32,16 +37,20 @@ ActionMenuResult continue_keeper_area_special(const PhaseSessionState& input,con
  if(!canceled && state.action->cursor<state.current.field.selected_defenders) {
   state.action->flash_counter|=64u;state.area_defense->blink=0;
   ActionMenuResult result{state};
-  result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
+  result.presentation.push_back({ControlPresentationKind::display,defense_title(state.scheduling->selected_ids[state.action->cursor],false,state.action->menu_route==1,content)});
   validate_phase_session(result.state);return result;
  }
  // D438 continues with B/directions only; this is the chooser's same sample.
  return poll_keeper_area_defense(state,static_cast<std::uint8_t>(pressed&127u),content);
 }
 namespace {
-std::uint8_t defense_icon(const KeeperAreaDefenseContext& defense,unsigned slot,const AreaDefenseMenuContent& content) {
+std::uint8_t defense_icon(const KeeperAreaDefenseContext& defense,unsigned slot,const AreaDefenseMenuContent& content,std::uint8_t id) {
  const auto action=defense.actions[slot];
  if(action==255)return 29;
+ if(id==0) {
+  if(!content.home_keeper_icons)throw std::invalid_argument("Missing goalkeeper defensive icons");
+  return (*content.home_keeper_icons)[action];
+ }
  if(defense.subtypes[slot]) {
   if(action!=2 || defense.subtypes[slot]!=1 || !content.action2_special_icon)
    throw std::invalid_argument("Missing supported special defensive icon");
@@ -67,7 +76,7 @@ ActionMenuResult redraw_keeper_area_special(const PhaseSessionState& input,const
  const auto count=state.current.field.selected_defenders;
  result.presentation.push_back({ControlPresentationKind::display,static_cast<std::uint8_t>(17+count)});
  for(unsigned slot=0;slot<count;++slot)
-  result.presentation.push_back({ControlPresentationKind::sprite,defense_icon(defense,slot,content),static_cast<std::uint8_t>(slot)});
+  result.presentation.push_back({ControlPresentationKind::sprite,defense_icon(defense,slot,content,state.scheduling->selected_ids[slot]),static_cast<std::uint8_t>(slot)});
  if(menu.cursor<count)result.presentation.push_back({ControlPresentationKind::display,22});
  state.phase=FieldSessionPhase::keeper_area_special_redrawn;
  validate_phase_session(state);return result;
@@ -178,12 +187,12 @@ ActionMenuResult prepare_keeper_area_defense(const PhaseSessionState& input,cons
  ActionMenuResult result{input};auto& state=result.state;auto& menu=*state.action;auto& defense=*state.area_defense;
  const auto pressed=defense.pressed;
  defense.subtypes[slot]=0;
- result.presentation.push_back({ControlPresentationKind::sprite,(*content.field_icons)[action],slot});
+ result.presentation.push_back({ControlPresentationKind::sprite,defense_icon(defense,slot,content,state.scheduling->selected_ids[slot]),slot});
  ++menu.cursor;state.phase=field ? FieldSessionPhase::sampled_field_defense_poll : FieldSessionPhase::keeper_area_defense_poll;defense.pressed=0;
  if(menu.cursor<state.current.field.selected_defenders || (pressed&64u)) {
   if(menu.cursor==state.current.field.selected_defenders)--menu.cursor;
   menu.flash_counter|=64u;defense.blink=0;
-  result.presentation.push_back({ControlPresentationKind::display,content.titles[field ? 0 : 2]});
+  result.presentation.push_back({ControlPresentationKind::display,defense_title(state.scheduling->selected_ids[menu.cursor],field,!field && menu.menu_route==1,content)});
  } else if(pressed&15u) {
   throw std::invalid_argument("Full defensive prefix direction scratch slots are not represented");
  }
@@ -197,7 +206,7 @@ DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState& input,std::u
    throw std::invalid_argument("Invalid defensive menu action");
  DefenseMenuPollResult result{input};auto& menu=result.state;auto& defense=menu.defense;
  defense.pressed=0;
- const auto icon=[&](unsigned slot) {return defense_icon(defense,slot,content);};
+ const auto icon=[&](unsigned slot) {return defense_icon(defense,slot,content,selected_ids[slot]);};
  if((pressed&128u) && menu.cursor==count) {
   result.boundary=DefenseMenuBoundary::complete;
   result.presentation.push_back({ControlPresentationKind::clear_overlay,0});
@@ -212,7 +221,7 @@ DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState& input,std::u
  if((pressed&64u) && menu.cursor) {
   if(menu.cursor<count)result.presentation.push_back({ControlPresentationKind::sprite,icon(menu.cursor),menu.cursor});
   --menu.cursor;menu.flash_counter|=64u;defense.blink=0;
-  result.presentation.push_back({ControlPresentationKind::display,content.titles[field ? 0 : 2]});
+  result.presentation.push_back({ControlPresentationKind::display,defense_title(selected_ids[menu.cursor],field,opponent_area,content)});
   return result;
  }
  auto directions=static_cast<unsigned>(pressed&15u);
@@ -223,8 +232,9 @@ DefenseMenuPollResult poll_defense_menu(const DefenseMenuPollState& input,std::u
  if(directions) {
   unsigned direction=0;while(!(directions&(1u<<direction)))++direction;
   const auto id=selected_ids[menu.cursor];
-  const auto row=field ? 0u : (opponent_area && id!=0 && id!=11 ? 1u : 2u);
-  const auto action=content.directions[row][direction];
+  const auto row=field ? 0u : (opponent_area ? 1u : 2u);
+  if(id==0 && !content.home_keeper_directions)throw std::invalid_argument("Missing goalkeeper defensive directions");
+  const auto action=id==0 ? (*content.home_keeper_directions)[direction] : content.directions[row][direction];
   if(action!=255) {
    if(action>6)throw std::invalid_argument("Unsupported defensive menu action");
    if(action!=defense.actions[menu.cursor]) {
@@ -264,7 +274,7 @@ ActionMenuResult open_keeper_area_defense_prompt(const PhaseSessionState& input,
  result.presentation.push_back({ControlPresentationKind::display,static_cast<std::uint8_t>(17+count)});
  for(unsigned slot=0;slot<count;++slot)
   result.presentation.push_back({ControlPresentationKind::sprite,29,static_cast<std::uint8_t>(slot)});
- result.presentation.push_back({ControlPresentationKind::display,content.titles[2]});
+ result.presentation.push_back({ControlPresentationKind::display,defense_title(input.scheduling->selected_ids[0],false,input.action->menu_route==1,content)});
  result.state.phase=FieldSessionPhase::keeper_area_defense_ready;
  validate_phase_session(result.state);return result;
 }

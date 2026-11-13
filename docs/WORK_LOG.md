@@ -1,5 +1,11 @@
 # Development log
 
+## 2026-11-13 - Goalkeeper defense directions and presentation
+
+A broader opponent-area survey found that the original overrides the route direction table when selected defender ID is zero, uses a separate goalkeeper icon table, and selects title 13 for that goalkeeper. Other defenders use their route's direction and title tables. Corrected polling, backward navigation, prompt and registration presentation; the earlier description of a shared goalkeeper row was incomplete. The optional CMJSHOTf private pack extends e with the original four directions and seven icons. Older packs remain readable but do not supply this goalkeeper-menu capability.
+
+Controlled original/native comparisons now match 1,024 opponent-area and 1,024 home-area input cases, including represented state and presentation requests. The f pack preserved the e payload, matched all 11 new original bytes, and rejected truncated, trailing and invalid-direction variants. Windows CMake build, all 65 tests, the continuous controlled replay and its original comparisons passed. The input surveys use constructed states and acknowledged presentation; actual rendering, audio and timing remain unverified. The period-end scene remains incompletely traced; next pursue its transition or another original-observed match behavior. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/opponent-area-poll-20261113-review4 and ../Captain-Majid-analysis/area-defense-poll-20261113-review5.
+
 ## 2026-11-13 - Corrected goal-area defensive input routing
 
 A broad original-game comparison exposed a regression in the recent goal-area menu change: the home-area route uses direction table 2 for field players, while the sampled opponent-area route uses table 2 for the goalkeeper and table 1 for field players. The engine now selects the table by route and role; a focused regression covers both. Updated the original comparison tool for current snapshots and Windows executable naming.

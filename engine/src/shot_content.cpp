@@ -63,7 +63,7 @@ ShotContent load_shot_content(std::istream& input) {
         if (reader.byte() != static_cast<std::uint8_t>(expected))
             throw std::invalid_argument("Unsupported shot content pack format/version");
     const auto version = reader.byte();
-    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a' && version!='b' && version!='c' && version!='d' && version!='e')
+    if ((version < '1' || version > '9') && version!='A' && version!='B' && version!='C' && version!='D' && version!='E' && version!='F' && version!='G' && version!='H' && version!='I' && version!='J' && version!='K' && version!='L' && version!='M' && version!='N' && version!='O' && version!='P' && version!='Q' && version!='R' && version!='S' && version!='T' && version!='U' && version!='V' && version!='W' && version!='X' && version!='Y' && version!='Z' && version!='a' && version!='b' && version!='c' && version!='d' && version!='e' && version!='f')
         throw std::invalid_argument("Unsupported shot content pack format/version");
     ShotContent content{};
     reader.bytes(content.source_payload_sha256);
@@ -343,6 +343,12 @@ ShotContent load_shot_content(std::istream& input) {
         for(auto& cells:formations.cells){reader.bytes(cells);if(cells[0]!=255 || cells[11]!=255)throw std::invalid_argument("Invalid restart keeper cells");for(auto cell:cells)if(cell>=240 && cell!=255)throw std::invalid_argument("Invalid restart formation cell");}
         reader.bytes(formations.taker_cells);for(auto cell:formations.taker_cells)if(cell>=240)throw std::invalid_argument("Invalid restart taker cell");
         content.restart_formations=formations;
+    }
+    if(version>='f') {
+        auto& menu=*content.area_defense_menu;
+        menu.home_keeper_directions=std::array<std::uint8_t,4>{};reader.bytes(*menu.home_keeper_directions);
+        for(auto action:*menu.home_keeper_directions)if(action!=255 && action>6)throw std::invalid_argument("Invalid goalkeeper defensive direction");
+        menu.home_keeper_icons=std::array<std::uint8_t,7>{};reader.bytes(*menu.home_keeper_icons);
     }
     reader.end();
     return content;

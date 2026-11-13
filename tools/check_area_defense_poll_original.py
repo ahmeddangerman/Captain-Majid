@@ -39,9 +39,23 @@ def defense_entries(prg,keeper_ram):
         yield name,entry
 
 
+def opponent_entries(directory):
+    # Construct cursor/action variants from two explicitly captured opponent-area lineups.
+    cases=(('keeper','corner16-area-d3a6-1.bin',0,[255]*4,0,0),
+           ('field','corner19-menu-0-direction.bin',1,[4,255,255,255],128,7),
+           ('back','corner19-menu-0-direction.bin',2,[4,3,255,255],211,0),
+           ('last','corner19-menu-0-direction.bin',3,[4,3,6,5],128,255))
+    for name,filename,cursor,actions,flags,blink in cases:
+        entry=bytearray((directory/filename).read_bytes())
+        entry[0x61e],entry[0x61f],entry[0x620]=cursor,flags,blink
+        entry[0x60b:0x60f]=bytes(actions);entry[0x606:0x60a]=bytes(4)
+        yield name,entry
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     for name in ('rom','pack','keeper_ram','output_dir'):p.add_argument(name,type=Path)
+    p.add_argument('--opponent-menu-dir',type=Path,help='Use captured opponent-area lineups instead of constructed home-area lineups')
     a=p.parse_args();rom=a.rom.read_bytes()
     if len(rom)!=393232 or hashlib.sha256(rom[16:]).hexdigest()!=PAYLOAD_SHA256:p.error('Expected approved Japanese ROM')
     out=a.output_dir.resolve()
@@ -49,7 +63,8 @@ def main():
     out.mkdir(parents=True,exist_ok=False);prg=rom[16:262160];base=bytearray(a.keeper_ram.read_bytes())
     executable=Path('build/captain-phase-session.exe') if os.name=='nt' else Path('build/captain-phase-session')
     binary=str(executable.resolve());results=[]
-    for name,entry in defense_entries(prg,base):
+    entries=opponent_entries(a.opponent_menu_dir) if a.opponent_menu_dir else defense_entries(prg,base)
+    for name,entry in entries:
         source=out/f'{name}-entry.cmjsession';source.write_bytes(poll_snapshot(entry,70))
         for pressed in range(256):
             report,final=trace_defense_poll(prg,entry,pressed)
@@ -66,7 +81,7 @@ def main():
                 if final[0x43d]!=final[0x60b+cur] or final[0x442]!=final[0x601+cur]:raise RuntimeError('Pending choice projection mismatch')
             results.append({'seed':name,'pressed':pressed,'phase':phase,'requests':len(requests)})
     packed=a.pack.read_bytes()
-    if packed[:8]in (b'CMJSHOTC',b'CMJSHOTD',b'CMJSHOTE',b'CMJSHOTF',b'CMJSHOTG',b'CMJSHOTH',b'CMJSHOTI',b'CMJSHOTJ',b'CMJSHOTK'):packed=b'CMJSHOTB'+packed[8:20088]
+    if packed[:8] in tuple(b'CMJSHOT'+bytes((version,)) for version in b'CDEFGHIJKLMNOPQRSTUVWXYZabcdef'):packed=b'CMJSHOTB'+packed[8:20088]
     if packed[:8]!=b'CMJSHOTB':raise RuntimeError('Defensive input requires version11 pack')
     prior=bytearray(packed[:-7]);prior[7]=ord('A')
     legacy=bytearray(packed[:-22]);legacy[7]=ord('9')
@@ -76,7 +91,8 @@ def main():
         bad_output=out/f'rejected{index}.cmjsession'
         rejected=subprocess.run([binary,str(bad_pack),str(source),'--poll-keeper-area-defense','0','--capture',str(bad_output)],capture_output=True,timeout=30)
         if rejected.returncode==0 or bad_output.exists():raise RuntimeError('Invalid/missing defensive icon content accepted')
-    (out/'verification.json').write_text(json.dumps({'cases':results,'scope':'Four constructed defensive UI seeds on captured area state; all256 pressed bytes each. All represented state and slot-aware sprite/subject requests compared from originalD3AB sampled input to D3A6 or D3D4 before preparation. Confirmation pressed byte retained in pending snapshots. Pending043D derived from stored selected action; unread FF subtypes canonicalized. Host frame acknowledgements; no stat/energy/special-move preparation or actual rendering/NMI/audio.'},indent=2)+'\n')
+    scope='opponent-area captured lineups' if a.opponent_menu_dir else 'home-area constructed lineups'
+    (out/'verification.json').write_text(json.dumps({'cases':results,'scope':f'Four constructed defensive UI seeds using {scope}; all256 pressed bytes each. All represented state and slot-aware sprite/subject requests compared from originalD3AB sampled input to D3A6 or D3D4 before preparation. Confirmation pressed byte retained in pending snapshots. Pending043D derived from stored selected action; unread FF subtypes canonicalized. Host frame acknowledgements; no stat/energy/special-move preparation or actual rendering/NMI/audio.'},indent=2)+'\n')
     print(f'{len(results)} defensive input comparisons match: {out}')
 
 if __name__=='__main__':main()

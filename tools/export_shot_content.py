@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Export private Japanese development data to a local CMJSHOTK/L/M/N/O/P/Q pack."""
+"""Export verified Japanese development data to a private local CMJSHOT pack."""
 import argparse
 import hashlib
 import struct
@@ -43,10 +43,11 @@ def selected_team_bytes(stats, team_id):
     return bytes(stats[pointer:pointer + size])
 
 
-def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False, include_kickoff=False, include_cell_ai=False, include_cell_shots=False, include_keeper_menu=False, include_pass_defense=False, include_first_match=False, include_generic_pass_defense=False, include_pass_action2=False, include_goal_area_ai=False, include_area_shot_keeper=False, include_area_shot_field=False, include_corner_formations=False):
+def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass=False, include_pass_flight=False, include_pass_race=False, include_keeper_ai=False, include_kickoff=False, include_cell_ai=False, include_cell_shots=False, include_keeper_menu=False, include_pass_defense=False, include_first_match=False, include_generic_pass_defense=False, include_pass_action2=False, include_goal_area_ai=False, include_area_shot_keeper=False, include_area_shot_field=False, include_corner_formations=False, include_keeper_defense_menu=False):
     if len(rom) != 393232 or rom[:4] != b'NES\x1a' or hashlib.sha256(rom[16:]).hexdigest() != PAYLOAD_SHA256:
         raise ValueError('ROM does not match verified Japanese reference')
     prg = rom[16:262160]
+    include_corner_formations = include_corner_formations or include_keeper_defense_menu
     include_area_shot_field = include_area_shot_field or include_corner_formations
     include_area_shot_keeper = include_area_shot_keeper or include_area_shot_field
     include_goal_area_ai = include_goal_area_ai or include_area_shot_keeper
@@ -70,7 +71,7 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
     include_pass_flight = include_pass_flight or include_pass_race
     include_field_ai_pass = include_field_ai_pass or include_pass_flight
     include_field_ai = include_field_ai or include_field_ai_pass
-    data = bytearray((b'CMJSHOTe' if include_corner_formations else b'CMJSHOTd' if include_area_shot_field else b'CMJSHOTc' if include_area_shot_keeper else b'CMJSHOTb' if include_goal_area_ai else b'CMJSHOTa' if include_pass_action2 else b'CMJSHOTZ' if include_generic_pass_defense else b'CMJSHOTY' if include_first_match else b'CMJSHOTX' if include_pass_defense else b'CMJSHOTT' if include_keeper_menu else b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
+    data = bytearray((b'CMJSHOTf' if include_keeper_defense_menu else b'CMJSHOTe' if include_corner_formations else b'CMJSHOTd' if include_area_shot_field else b'CMJSHOTc' if include_area_shot_keeper else b'CMJSHOTb' if include_goal_area_ai else b'CMJSHOTa' if include_pass_action2 else b'CMJSHOTZ' if include_generic_pass_defense else b'CMJSHOTY' if include_first_match else b'CMJSHOTX' if include_pass_defense else b'CMJSHOTT' if include_keeper_menu else b'CMJSHOTS' if include_cell_shots else b'CMJSHOTR' if include_cell_ai else b'CMJSHOTQ' if include_kickoff else b'CMJSHOTP' if include_keeper_ai else b'CMJSHOTO' if include_pass_race else b'CMJSHOTN' if include_pass_flight else b'CMJSHOTM' if include_field_ai_pass else b'CMJSHOTL' if include_field_ai else b'CMJSHOTK') + hashlib.sha256(rom[16:]).digest())
 
     def vector(values):
         data.extend(struct.pack('<H', len(values)))
@@ -340,6 +341,8 @@ def export_data(rom, team_id=None, include_field_ai=False, include_field_ai_pass
         cells=bytes(gameplay[0xa0f8:0xa100])
         if any(value>=240 for value in cells):raise ValueError('Invalid original restart taker cells')
         data.extend(cells)
+    if include_keeper_defense_menu:
+        data.extend(menu[0xD561:0xD565]);data.extend(menu[0xD548:0xD54F])
     return bytes(data)
 
 
@@ -365,11 +368,12 @@ def main():
     parser.add_argument('--include-area-shot-keeper', action='store_true', help='Include attacking-area shot goalkeeper comparison (CMJSHOTc)')
     parser.add_argument('--include-area-shot-field', action='store_true', help='Include attacking-area shot field-defender comparisons (CMJSHOTd)')
     parser.add_argument('--include-corner-formations', action='store_true', help='Include original restart formations (CMJSHOTe)')
+    parser.add_argument('--include-keeper-defense-menu', action='store_true', help='Include goalkeeper defensive direction and icon tables (CMJSHOTf)')
     args = parser.parse_args()
     if args.output.suffix != '.cmjpack':
         parser.error('Output must use the .cmjpack extension (ignored by Git)')
     try:
-        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai, args.include_kickoff, args.include_cell_ai, args.include_cell_shots, args.include_keeper_menu, args.include_pass_defense, args.include_first_match, args.include_generic_pass_defense, args.include_pass_action2, args.include_goal_area_ai, args.include_area_shot_keeper, args.include_area_shot_field, args.include_corner_formations)
+        data = export_data(args.rom.read_bytes(), args.team_id, args.include_field_ai, args.include_field_ai_pass, args.include_pass_flight, args.include_pass_race, args.include_keeper_ai, args.include_kickoff, args.include_cell_ai, args.include_cell_shots, args.include_keeper_menu, args.include_pass_defense, args.include_first_match, args.include_generic_pass_defense, args.include_pass_action2, args.include_goal_area_ai, args.include_area_shot_keeper, args.include_area_shot_field, args.include_corner_formations, args.include_keeper_defense_menu)
         with args.output.open('xb') as output:
             output.write(data)
     except (OSError, ValueError) as error:
