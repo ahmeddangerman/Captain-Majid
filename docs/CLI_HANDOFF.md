@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Controlled match reaches period end
+
+Extended the continuous controlled first-match replay from player8's added-time possession to the original period-end boundary. With explicit rightward input and sampled random bytes, all 194 represented movement and clock boundaries match the original. The period ends with player8 at (146,109), remaining time0 and added time exhausted; the native period-end state saves and reloads. This is a meaningful period milestone, not a completed playable match.
+
+The replay still requires the explicit captured keeper Y coordinate and follows one controlled sequence; it does not establish general play, live NMI, rendering, audio or hardware timing. Windows CMake build, all 65 tests, private integration and original comparisons passed. Next trace and implement the original transition after period end, then extend toward a complete playable match. Overall progress is unmeasured. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player8 recovers during added time
 
 Continued player5's result3 contact after the added-time announcement. Native and original match the field movement, loose-ball relocation and recovery; home player8 receives at (95,109), with clock0 and 14 added-time units. The control setup matches the original and saves and reloads. This confirms that defender18 did not take possession in the sampled action4 outcome.

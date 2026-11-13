@@ -367,6 +367,17 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  for(const auto& sample:{std::pair<const char*,const MatchRuntimeState&>{"entry",control8_entry->state},{"ready",control8->state}}){std::ofstream f(std::string(prefix)+"-corner8-control-"+sample.first+".cmjsession",std::ios::binary);write_phase_session(f,sample.second.session);}
  std::ostringstream control8_save(std::ios::binary);write_match_save(control8_save,control8->state,identity);std::istringstream control8_in(control8_save.str(),std::ios::binary);auto control8_restore=std::make_unique<MatchRuntimeState>(load_match_save(control8_in,identity));
  if(control8_restore->session.phase!=FieldSessionPhase::control_ready || control8_restore->session.current.field.ball_owner!=8 || control8_restore->session.current.clock.extra_time!=14)throw std::runtime_error("Corner player8 control did not roundtrip");
+ std::ofstream added8_log(std::string(prefix)+"-added8-journey.txt");
+ for(int i=0;i<350;++i){const auto phase=control8_restore->session.phase;if(phase!=FieldSessionPhase::control_ready && phase!=FieldSessionPhase::control_clock_pending && phase!=FieldSessionPhase::field_round_pending)break;
+  const std::uint8_t held=phase==FieldSessionPhase::control_ready ? 1 : 0;auto next=std::make_unique<MatchStepResult>(step_match(*control8_restore,client_input(*control8_restore,held,0),content));
+  added8_log<<i<<' '<<static_cast<unsigned>(phase)<<' '<<static_cast<unsigned>(held)<<' '<<static_cast<unsigned>(next->state.demo_rng&255)<<' '<<static_cast<unsigned>((next->state.demo_rng>>8)&255)<<' '<<static_cast<unsigned>(next->state.session.phase)<<' '<<(next->unsupported ? static_cast<int>(*next->unsupported) : -1)<<' '<<next->state.demo_rng<<'\n';added8_log.flush();
+  if(next->unsupported)break;std::ofstream f(std::string(prefix)+"-added8-journey-"+std::to_string(i)+".cmjsession",std::ios::binary);write_phase_session(f,next->state.session);*control8_restore=std::move(next->state);
+ }
+ if(control8_restore->session.phase!=FieldSessionPhase::period_end || control8_restore->session.current.clock.remaining || control8_restore->session.current.clock.extra_time || control8_restore->session.current.field.ball_owner!=8 || control8_restore->session.current.field.ball_x!=146 || control8_restore->session.current.field.ball_y!=109)throw std::runtime_error("Controlled first period did not reach original ending");
+ std::ostringstream period_save(std::ios::binary);write_match_save(period_save,*control8_restore,identity);std::istringstream period_in(period_save.str(),std::ios::binary);auto period_restore=std::make_unique<MatchRuntimeState>(load_match_save(period_in,identity));
+ if(period_restore->session.phase!=FieldSessionPhase::period_end || period_restore->session.current.field.ball_owner!=8)throw std::runtime_error("Controlled period end did not roundtrip");
+
+
 
 
 

@@ -518,6 +518,15 @@ compare_represented((a.trace/'native-corner5-area-recovery.cmjsession').read_byt
 for name,pc in (('entry','e0df-1'),('ready','e145-1')):
  original=(a.player3_shot/f'corner5-dispatch-{pc}.bin').read_bytes()
  compare_represented((a.trace/f'native-corner8-control-{name}.cmjsession').read_bytes(),export_session(original,0),False,'corner player8 control',name)
+raw=(a.player3_shot/'corner5-dispatch-e145-1.bin').read_bytes()
+for line in (a.trace/'native-added8-journey.txt').read_text().splitlines():
+ i,phase,held,first,second,next_phase,unsupported,seed=map(int,line.split())
+ if unsupported!=-1:raise ValueError('Player8 added-time journey stopped')
+ injected=bytearray(raw);injected[0xe2:0xe4]=bytes((first,second))
+ observation,raw=trace_recovery(rom[16:262160],injected,**{9:{'control_input':(held,0)},10:{'control_tick':True},13:{'world_inputs':[(0,0)]*22}}[phase])
+ compare_represented((a.trace/f'native-added8-journey-{i}.cmjsession').read_bytes(),export_session(raw,0),False,'player8 added time',str(i))
+ if next_phase==4 and (observation['boundary']!='period_end' or (raw[0x441],raw[0x5f7],raw[0x5f8],raw[0x5f9])!=(8,0,0,0)):raise ValueError('Original period-end boundary differs')
+
 
 
 
