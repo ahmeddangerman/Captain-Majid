@@ -385,6 +385,16 @@ expected=bytearray(export_session(exportable,0));expected[309]=0
 compare_represented((a.trace/'native-corner19-shot-contact.cmjsession').read_bytes(),expected,False,'corner player19','defender contact')
 contact=(a.trace/'native-corner19-shot-contact.cmjsession').read_bytes()
 if contact[398]!=1 or contact[399]!=1 or contact[400]!=3 or contact[407]!=original[0x71] or contact[408]!=original[0x619] or contact[410]!=3:raise ValueError('Corner shot saved contact details differ')
+original=(a.player3_shot/'corner19-attack-83f5-1.bin').read_bytes()
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner19-contact-clock.cmjsession').read_bytes(),expected,False,'corner player19','contact clock')
+original=(a.player3_shot/'corner19-attack-83f8-1.bin').read_bytes()
+exportable=bytearray(original);exportable[0x601]=10
+expected=bytearray(export_session(exportable,0));expected[309]=0
+compare_represented((a.trace/'native-corner19-contact-world.cmjsession').read_bytes(),expected,False,'corner player19','field update')
+
+
 
 
 

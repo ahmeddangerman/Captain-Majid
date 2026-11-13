@@ -212,6 +212,16 @@ static void continue_player14_interception(const captain::MatchRuntimeState& ini
  std::ofstream shot_contact_file(std::string(prefix)+"-corner19-shot-contact.cmjsession",std::ios::binary);write_phase_session(shot_contact_file,shot_contact->state.session);
  std::ostringstream contact_save(std::ios::binary);write_match_save(contact_save,shot_contact->state,identity);std::istringstream contact_in(contact_save.str(),std::ios::binary);auto contact_restored=std::make_unique<MatchRuntimeState>(load_match_save(contact_in,identity));
  if(contact_restored->session.area_sequence_result!=3 || contact_restored->session.recovery->opposing_player!=3)throw std::runtime_error("Corner shot contact did not roundtrip");
+ auto contact_clock=std::make_unique<MatchStepResult>(step_match(*contact_restored,client_input(*contact_restored,0,0),content));
+ if(contact_clock->unsupported)throw std::runtime_error(std::string("Corner contact clock stopped: ")+capability_name(*contact_clock->unsupported));
+ if(contact_clock->state.session.phase!=FieldSessionPhase::keeper_area_contact_clock_done || contact_clock->state.session.current.clock.remaining!=5)throw std::runtime_error("Corner contact clock differs");
+ std::ofstream contact_clock_file(std::string(prefix)+"-corner19-contact-clock.cmjsession",std::ios::binary);write_phase_session(contact_clock_file,contact_clock->state.session);
+ auto contact_world=std::make_unique<MatchStepResult>(step_match(contact_clock->state,client_input(contact_clock->state,0,0),content));
+ if(contact_world->unsupported)throw std::runtime_error(std::string("Corner contact field update stopped: ")+capability_name(*contact_world->unsupported));
+ if(contact_world->state.session.current.field.elapsed || contact_world->state.session.current.field.random_first)throw std::runtime_error("Corner contact field update differs");
+ std::ofstream contact_world_file(std::string(prefix)+"-corner19-contact-world.cmjsession",std::ios::binary);write_phase_session(contact_world_file,contact_world->state.session);
+
+
 
 
 

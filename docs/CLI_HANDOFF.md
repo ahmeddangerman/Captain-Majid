@@ -1,5 +1,11 @@
 # Codex CLI handoff
 
+## 2026-11-13 - Shot contact clock and field update
+
+Continued the player19 goal-area shot after defender3's result3. The engine applies the original contact clock cost, reaching clock5, then reproduces the following field update and random-byte result. Native represented snapshots match the controlled original at both boundaries. The observed recovery next runs a scripted relocation and a loose-ball race; the original gives the ball to opposing player13, but that recovery remains to be implemented.
+
+Windows CMake build, all 65 tests, private replay and original comparisons passed. This is a captured continuation with controlled randomness and acknowledged presentation; live NMI, rendering, audio and frame timing remain unverified. Next reproduce the relocation and race rather than treating result3 as automatic possession by defender3. Overall progress is unmeasured; a complete playable match remains unfinished. Suggested model: GPT-6.1 Terra High. Private evidence: ../Captain-Majid-analysis/player3-shot-original-20261113.
+
 ## 2026-11-13 - Player19 shot contact
 
 The sampled subtype1 goal-area shot meets defender3, whose selected action3 costs 80 stamina. The engine now uses the original shot-defense comparison data and reproduces the observed result3, including defender stamina, contact strength and loss; the state saves and reloads. Represented native and original state match at the comparison boundary.
